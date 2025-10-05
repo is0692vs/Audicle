@@ -287,10 +287,15 @@ audioPlayer.addEventListener("error", (e) => {
 // 現在のページのホスト名を取得
 function getCurrentHostname() {
   try {
-    return window.location.hostname;
+    const h = window.location.hostname;
+    // normalize: ensure a non-empty string and avoid 'undefined' literal
+    if (typeof h !== "string" || h.trim() === "" || h === "undefined") {
+      return null;
+    }
+    return h;
   } catch (e) {
     console.error("Failed to get hostname:", e);
-    return "";
+    return null;
   }
 }
 
@@ -298,8 +303,25 @@ function getCurrentHostname() {
 function loadCurrentUrlState(callback) {
   const hostname = getCurrentHostname();
   chrome.storage.local.get(["urlStates", "enabled"], (result) => {
-    const urlStates = result.urlStates || {};
-    // URLごとの状態が存在すればそれを使用、なければグローバルのenabledを使用（後方互換性）
+    let urlStates = result.urlStates || {};
+
+    // マイグレーション/クリーンアップ: 無効キーが残っている場合は削除
+    const invalidKeys = Object.keys(urlStates).filter(
+      (k) => k === "" || k === "undefined" || k === null
+    );
+    if (invalidKeys.length > 0) {
+      invalidKeys.forEach((k) => delete urlStates[k]);
+      // 保存してクリーンアップ
+      chrome.storage.local.set({ urlStates });
+      console.log("content: cleaned up invalid urlStates keys:", invalidKeys);
+    }
+
+    // ホスト名が取得できない場合はグローバルのenabledを使う
+    if (!hostname) {
+      callback(!!result.enabled);
+      return;
+    }
+
     const isEnabled =
       hostname in urlStates ? urlStates[hostname] : !!result.enabled;
     callback(isEnabled);

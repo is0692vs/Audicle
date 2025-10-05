@@ -10,18 +10,31 @@ document.addEventListener("DOMContentLoaded", () => {
     const url = tabs[0].url;
     const hostname = getHostnameFromUrl(url);
 
+    // 無効なホスト名（空文字や'undefined'）は保存対象外として扱う
+    const isValidHostname = (h) =>
+      typeof h === "string" && h.trim() !== "" && h !== "undefined";
+
     // URLごとの状態を読み込む
     chrome.storage.local.get(["urlStates", "enabled"], (result) => {
       const urlStates = result.urlStates || {};
-      // URLごとの状態が存在すればそれを使用、なければグローバルのenabledを使用（後方互換性）
-      const isEnabled =
-        hostname in urlStates ? urlStates[hostname] : !!result.enabled;
+      // ホスト名が無効な場合はグローバルのenabledのみ使用
+      const isEnabled = isValidHostname(hostname)
+        ? hostname in urlStates
+          ? urlStates[hostname]
+          : !!result.enabled
+        : !!result.enabled;
       toggleSwitch.checked = isEnabled;
     });
 
     // スイッチが操作されたら、そのURLの状態を保存
     toggleSwitch.addEventListener("change", () => {
       const isEnabled = toggleSwitch.checked;
+
+      // 無効なホスト名の場合は保存しない（誤って"undefined"キー等が作られるのを防ぐ）
+      if (!isValidHostname(hostname)) {
+        console.warn("popup: invalid hostname, skipping save:", hostname);
+        return;
+      }
 
       chrome.storage.local.get(["urlStates"], (result) => {
         const urlStates = result.urlStates || {};
@@ -58,7 +71,7 @@ function getHostnameFromUrl(url) {
     return urlObj.hostname;
   } catch (e) {
     console.error("Invalid URL:", url, e);
-    return url; // フォールバック
+    // 不正な URL の場合は空文字を返し、保存処理やキー作成を防ぐ
+    return "";
   }
 }
-
