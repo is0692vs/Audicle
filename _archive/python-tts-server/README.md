@@ -1,4 +1,4 @@
-# Edge TTS Server for Auticle
+# Edge TTS Server for Audicle
 
 Microsoft Edge の Text-to-Speech 機能を使用した音声合成サーバーです。  
 Audicle Chrome 拡張機能と連携して、高品質な日本語音声合成を提供します。
@@ -31,7 +31,7 @@ Audicle Chrome 拡張機能と連携して、高品質な日本語音声合成�
 - **高速**: 段階的読み込みに対応した効率的なレスポンス
 - **デバッグ対応**: リクエストテキストの内容をログ出力
 
-## 🚀 クイックスタート ver for Auticle
+## 🚀 クイックスタート ver for Audicle
 
 Microsoft Edge の Text-to-Speech 機能を使用した音声合成サーバーです。  
 Audicle Chrome 拡張機能と連携して、高品質な日本語音声合成を提供します。
@@ -101,7 +101,7 @@ Content-Type: application/json
 }
 ```
 
-### 音声合成 (シンプル - Auticle 互換)
+### 音声合成 (シンプル - Audicle 互換)
 
 ```bash
 POST /synthesize/simple

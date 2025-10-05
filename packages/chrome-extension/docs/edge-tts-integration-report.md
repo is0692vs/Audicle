@@ -7,7 +7,7 @@
 - **責任**: テキスト入力 → Edge TTS → MP3 出力のみ
 - **ポート**: 8001
 - **エンドポイント**:
-  - `POST /synthesize/simple` - Auticle 互換シンプル合成
+  - `POST /synthesize/simple` - Audicle 互換シンプル合成
   - `GET /voices` - 利用可能音声一覧
 - **ログ**: 受信テキスト内容をデバッグ表示
 - **音声品質**: Microsoft Edge TTS（最高品質）

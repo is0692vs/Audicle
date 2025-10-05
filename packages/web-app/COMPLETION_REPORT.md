@@ -1,4 +1,4 @@
-# Auticle Web App 開発完了レポート
+# Audicle Web App 開発完了レポート
 
 ## やったことのまとめ
 
@@ -16,7 +16,7 @@ Next.js (React) + TypeScript を使用して、音楽アプリの歌詞表示の
 #### 2. 基本的な UI レイアウトの実装 (コミット 2)
 
 - **ヘッダー部分**:
-  - アプリケーション名「Auticle」を表示
+  - アプリケーション名「Audicle」を表示
   - URL 入力フォーム (記事 URL の入力欄と「読込」ボタン)
   - 記事タイトルの表示エリア
 - **リーダービュー** (`components/ReaderView.tsx`):

@@ -1,4 +1,4 @@
-# Auticle ブランチ開発レポート
+# Audicle ブランチ開発レポート
 
 ## ブランチ情報
 
@@ -17,7 +17,7 @@ d8bdc96 fix: コードのフォーマットを整え、不要な空白を削除
 1f1b864 fix: CORS設定とHydration Errorを修正、不要ファイルを削除
 808a6df fix: コードのフォーマットを整え、説明文のスペースを修正
 5ff45b6 docs: 開発完了レポートを追加
-905fa52 feat: Auticle Web App の新規開発完了
+905fa52 feat: Audicle Web App の新規開発完了
 a686345 feat: Next.jsプロジェクトの初期設定
 7d7e9c1 feat: Next.jsプロジェクトの初期設定
 ```
