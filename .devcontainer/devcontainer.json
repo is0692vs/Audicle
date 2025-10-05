@@ -43,7 +43,8 @@
         "yzhang.markdown-all-in-one",
         "marp-team.marp-vscode",
         "donjayamanne.python-extension-pack",
-        "cweijan.vscode-mysql-client2"
+        "cweijan.vscode-mysql-client2",
+        "ritwickdey.LiveServer"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",
