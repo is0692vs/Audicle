@@ -294,6 +294,27 @@ function cleanText(text) {
   return text;
 }
 
+// アイコン管理機能
+function setActiveIcon() {
+  chrome.action.setIcon({
+    path: {
+      16: "images/icon-active16.png",
+      48: "images/icon-active48.png",
+      128: "images/icon-active128.png",
+    },
+  });
+}
+
+function setDefaultIcon() {
+  chrome.action.setIcon({
+    path: {
+      16: "images/icon16.png",
+      48: "images/icon48.png",
+      128: "images/icon128.png",
+    },
+  });
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.command === "play") {
     loadConfig().then(async (config) => {
@@ -381,5 +402,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
 
     return true;
+  }
+
+  // 再生開始通知
+  if (message.command === "playbackStarted") {
+    setActiveIcon();
+    console.log("Playback started - icon set to active");
+  }
+
+  // 再生停止通知
+  if (message.command === "playbackStopped") {
+    setDefaultIcon();
+    console.log("Playback stopped - icon set to default");
   }
 });

@@ -24,6 +24,15 @@ const BATCH_SIZE = 3;
 // テキスト分割設定
 const CHUNK_SIZE = 200; // 200文字ごとに分割（0にすると分割なし）
 
+// アイコン状態管理のためのヘルパー関数
+function notifyPlaybackStarted() {
+  chrome.runtime.sendMessage({ command: "playbackStarted" });
+}
+
+function notifyPlaybackStopped() {
+  chrome.runtime.sendMessage({ command: "playbackStopped" });
+}
+
 // **レート制限関連の追加変数**
 let lastRequestTime = 0; // 最後のリクエスト時刻
 const REQUEST_COOLDOWN = 500; // 0.5秒のクールタイム（ミリ秒）
@@ -181,6 +190,7 @@ function injectReadabilityLib() {
 chrome.runtime.onMessage.addListener((message) => {
   if (message.command === "playAudio") {
     isPlaying = true;
+    notifyPlaybackStarted();
     // プレーヤーが「再生準備完了(canplay)」になったら一度だけ実行するリスナーを登録
     audioPlayer.addEventListener(
       "canplay",
@@ -200,6 +210,7 @@ chrome.runtime.onMessage.addListener((message) => {
   if (message.command === "audioError") {
     console.error("音声合成エラー:", message.error);
     isPlaying = false;
+    notifyPlaybackStopped();
   }
 });
 
@@ -210,6 +221,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       // 一時停止
       audioPlayer.pause();
       isPlaying = false;
+      notifyPlaybackStopped();
       console.log("Playback paused");
       sendResponse({ isPlaying: false });
     } else if (playbackQueue.length > 0) {
@@ -239,6 +251,7 @@ audioPlayer.addEventListener("ended", () => {
   } else {
     console.log("Queue finished");
     isPlaying = false;
+    notifyPlaybackStopped();
     // キュー終了時にハイライト解除
     updateHighlight(null);
     playbackQueue = [];
@@ -259,6 +272,7 @@ audioPlayer.addEventListener("error", (e) => {
     console.log(`Max retries reached for index ${queueIndex}, skipping`);
     retryCount = 0;
     isPlaying = false;
+    notifyPlaybackStopped();
     queueIndex += 1;
     if (queueIndex < playbackQueue.length) {
       playQueue();
@@ -402,6 +416,7 @@ function clearAdaptiveStyles(element) {
 function cleanupPage() {
   audioPlayer.pause();
   isPlaying = false;
+  notifyPlaybackStopped();
   const paragraphs = document.querySelectorAll(".audicle-clickable");
   paragraphs.forEach((p) => {
     p.classList.remove("audicle-clickable");
@@ -1210,6 +1225,7 @@ function playQueue() {
   if (cached) {
     console.log("playQueue: Using cached audio for index:", queueIndex);
     isPlaying = true;
+    notifyPlaybackStarted();
     // 既に取得済みの dataUrl をセットして再生
     audioPlayer.addEventListener(
       "canplay",
@@ -1238,6 +1254,7 @@ function playQueue() {
       );
       retryCount = 0;
       isPlaying = false;
+      notifyPlaybackStopped();
       queueIndex += 1;
       if (queueIndex < playbackQueue.length) {
         playQueue();
