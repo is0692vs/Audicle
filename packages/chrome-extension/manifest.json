@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "description": "A browser extension to read articles aloud.",
   "manifest_version": 3,
-  "permissions": ["storage"],
+  "permissions": ["storage", "activeTab"],
   "host_permissions": ["https://*.google.com/", "http://localhost:8001/*"],
   "background": {
     "service_worker": "background.js"

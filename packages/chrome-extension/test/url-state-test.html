@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>URL State Test - Audicle</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        line-height: 1.6;
+      }
+      .test-section {
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+        background-color: #f9f9f9;
+      }
+      h1 {
+        color: #333;
+      }
+      h2 {
+        color: #666;
+        margin-top: 0;
+      }
+      .test-steps {
+        background-color: #fff;
+        padding: 15px;
+        border-left: 4px solid #4CAF50;
+        margin: 10px 0;
+      }
+      .test-steps ol {
+        margin: 10px 0;
+      }
+      .test-steps li {
+        margin: 8px 0;
+      }
+      .expected-result {
+        background-color: #e8f5e9;
+        padding: 10px;
+        border-radius: 4px;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Audicle URL State Test Page</h1>
+    
+    <div class="test-section">
+      <h2>Test 1: URL固有の状態保存</h2>
+      <div class="test-steps">
+        <p><strong>テスト手順:</strong></p>
+        <ol>
+          <li>この test.html ページでAudicle拡張機能を開く</li>
+          <li>「読み上げモード」をONにする</li>
+          <li>別のURL（例: test/qiitasample.html）を開く</li>
+          <li>新しいページでAudicle拡張機能を開く</li>
+          <li>状態を確認する</li>
+        </ol>
+        <div class="expected-result">
+          <strong>期待結果:</strong> 新しいURLではデフォルト状態（OFF）が表示される
+        </div>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h2>Test 2: URL間の状態独立性</h2>
+      <div class="test-steps">
+        <p><strong>テスト手順:</strong></p>
+        <ol>
+          <li>このページでAudicleをONにする</li>
+          <li>別のページでAudicleをOFFにする</li>
+          <li>このページに戻る</li>
+          <li>Audicle拡張機能を開く</li>
+        </ol>
+        <div class="expected-result">
+          <strong>期待結果:</strong> このページではON状態が保持されている
+        </div>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h2>Test 3: 後方互換性</h2>
+      <div class="test-steps">
+        <p><strong>テスト手順:</strong></p>
+        <ol>
+          <li>Chrome DevToolsを開く（F12）</li>
+          <li>Consoleタブで以下を実行: <code>chrome.storage.local.set({enabled: true})</code></li>
+          <li>新しいページを開く</li>
+          <li>Audicle拡張機能を開く</li>
+        </ol>
+        <div class="expected-result">
+          <strong>期待結果:</strong> グローバルなenabled状態がフォールバックとして使われ、ONと表示される
+        </div>
+      </div>
+    </div>
+
+    <article>
+      <h2>テスト用コンテンツ</h2>
+      <p>
+        これはテスト用の段落です。Audicle拡張機能をONにして、この段落をクリックすると読み上げが始まります。
+      </p>
+      <p>
+        二番目の段落です。読み上げ機能が正しく動作するか確認してください。
+      </p>
+      <p>
+        三番目の段落です。URL固有の状態が正しく保存されているか確認できます。
+      </p>
+    </article>
+  </body>
+</html>
