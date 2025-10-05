@@ -1,4 +1,4 @@
-# Auticle Web App
+# Audicle Web App
 
 Next.js ベースのモダンな Web アプリケーション。音楽プレイヤーのような直感的な UI で、Web ページの記事を音声読み上げします。
 
