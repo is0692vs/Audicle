@@ -218,7 +218,7 @@ class APIServerSynthesizer extends AudioSynthesizer {
         },
         body: JSON.stringify({
           text: cleanedText,
-          voice: "ja-JP-NanamiNeural",
+          voice: "ja-JP-Standard-A",
         }),
       });
 
