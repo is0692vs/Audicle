@@ -1,3 +1,4 @@
 {
-  "synthesizerType": "api_server"
+  "synthesizerType": "api_server",
+  "playbackRate": 1.0
 }

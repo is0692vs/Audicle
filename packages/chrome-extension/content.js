@@ -24,6 +24,21 @@ const BATCH_SIZE = 3;
 // テキスト分割設定
 const CHUNK_SIZE = 200; // 200文字ごとに分割（0にすると分割なし）
 
+// 設定
+let config = null;
+
+async function loadConfig() {
+  try {
+    const response = await fetch(chrome.runtime.getURL("config.json"));
+    config = await response.json();
+  } catch (error) {
+    console.error("Failed to load config:", error);
+    config = { synthesizerType: "api_server", playbackRate: 1.0 }; // fallback
+  }
+}
+
+loadConfig();
+
 // アイコン状態管理のためのヘルパー関数
 function notifyPlaybackStarted() {
   chrome.runtime.sendMessage({ command: "playbackStarted" });
@@ -196,7 +211,7 @@ chrome.runtime.onMessage.addListener((message) => {
       "canplay",
       () => {
         // 準備が完了したこのタイミングで速度を設定し、再生を開始する
-        audioPlayer.playbackRate = 2.0;
+        audioPlayer.playbackRate = config.playbackRate || 1.0;
         audioPlayer.play();
       },
       { once: true }
@@ -1277,7 +1292,7 @@ function playQueue() {
     audioPlayer.addEventListener(
       "canplay",
       () => {
-        audioPlayer.playbackRate = 2.0;
+        audioPlayer.playbackRate = config.playbackRate || 1.0;
         audioPlayer.play();
       },
       { once: true }
