@@ -30,6 +30,8 @@ export default function ReaderPage() {
     pause,
     stop,
     seekToChunk,
+    playbackRate,
+    setPlaybackRate,
   } = usePlayback({ chunks });
 
   // 記事IDが指定されている場合は読み込み
@@ -92,7 +94,7 @@ export default function ReaderPage() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* ヘッダー: URL入力欄 */}
-      <header className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+      <header className="sticky top-0 z-10 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
         <div className="max-w-4xl mx-auto p-4">
           <div className="flex items-center gap-4 mb-4">
             <button
@@ -139,25 +141,48 @@ export default function ReaderPage() {
 
           {/* 再生コントロール */}
           {chunks.length > 0 && (
-            <div className="mt-4 flex gap-2">
-              <button
-                onClick={isPlaying ? pause : play}
-                disabled={isPlaybackLoading}
-                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-              >
-                {isPlaybackLoading
-                  ? "処理中..."
-                  : isPlaying
-                  ? "一時停止"
-                  : "再生"}
-              </button>
-              <button
-                onClick={stop}
-                disabled={!isPlaying && !isPlaybackLoading}
-                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-              >
-                停止
-              </button>
+            <div className="mt-4 flex items-center gap-4">
+              <div className="flex gap-2">
+                <button
+                  onClick={isPlaying ? pause : play}
+                  disabled={isPlaybackLoading}
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isPlaybackLoading
+                    ? "処理中..."
+                    : isPlaying
+                    ? "一時停止"
+                    : "再生"}
+                </button>
+                <button
+                  onClick={stop}
+                  disabled={!isPlaying && !isPlaybackLoading}
+                  className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                  停止
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <label
+                  htmlFor="playback-rate"
+                  className="text-sm text-gray-600 dark:text-gray-400"
+                >
+                  再生速度:
+                </label>
+                <input
+                  id="playback-rate"
+                  type="range"
+                  min="0.8"
+                  max="3.0"
+                  step="0.1"
+                  value={playbackRate}
+                  onChange={(e) => setPlaybackRate(parseFloat(e.target.value))}
+                  className="w-32"
+                />
+                <span className="text-sm text-gray-600 dark:text-gray-400 w-12">
+                  {playbackRate.toFixed(1)}x
+                </span>
+              </div>
             </div>
           )}
         </div>
