@@ -62,9 +62,9 @@ class TestSynthesizer extends AudioSynthesizer {
 
 // Edge TTS実装（Python TTS Serverを使用）
 class EdgeTTSSynthesizer extends AudioSynthesizer {
-  constructor(serverUrl = "http://localhost:8001") {
+  constructor(config) {
     super();
-    this.serverUrl = serverUrl;
+    this.serverUrl = config.serverUrls?.edge_tts || "http://localhost:8001";
   }
 
   async synthesize(text) {
@@ -105,10 +105,9 @@ class EdgeTTSSynthesizer extends AudioSynthesizer {
 
 // Docker Edge TTS実装（Docker化されたTTS Serverを使用）
 class EdgeTTSDockerSynthesizer extends AudioSynthesizer {
-  constructor() {
+  constructor(config) {
     super();
-    // 固定設定：Docker環境はlocalhost:8001で統一
-    this.serverUrl = "http://localhost:8001";
+    this.serverUrl = config.serverUrls?.edge_tts_docker || "http://localhost:8001";
   }
 
   async synthesize(text) {
@@ -150,9 +149,9 @@ class EdgeTTSDockerSynthesizer extends AudioSynthesizer {
 
 // Google Cloud TTS Docker 実装
 class GoogleCloudTTSDockerSynthesizer extends AudioSynthesizer {
-  constructor() {
+  constructor(config) {
     super();
-    this.serverUrl = "http://localhost:8002";
+    this.serverUrl = config.serverUrls?.google_cloud_tts_docker || "http://localhost:8002";
   }
 
   async synthesize(text) {
@@ -199,9 +198,9 @@ class GoogleCloudTTSDockerSynthesizer extends AudioSynthesizer {
 
 // API Server実装（新しいAPIサーバーを使用）
 class APIServerSynthesizer extends AudioSynthesizer {
-  constructor() {
+  constructor(config) {
     super();
-    this.serverUrl = "http://localhost:8000";
+    this.serverUrl = config.serverUrls?.api_server || "http://localhost:8000";
   }
 
   async synthesize(text) {
@@ -243,20 +242,20 @@ class APIServerSynthesizer extends AudioSynthesizer {
 
 // 音声合成ファクトリー
 class SynthesizerFactory {
-  static create(type) {
+  static create(type, config) {
     switch (type) {
       case "google_tts":
         return new GoogleTTSSynthesizer();
       case "test":
         return new TestSynthesizer();
       case "edge_tts":
-        return new EdgeTTSSynthesizer();
+        return new EdgeTTSSynthesizer(config);
       case "edge_tts_docker":
-        return new EdgeTTSDockerSynthesizer();
+        return new EdgeTTSDockerSynthesizer(config);
       case "google_cloud_tts_docker":
-        return new GoogleCloudTTSDockerSynthesizer();
+        return new GoogleCloudTTSDockerSynthesizer(config);
       case "api_server":
-        return new APIServerSynthesizer();
+        return new APIServerSynthesizer(config);
       default:
         throw new Error(`Unknown synthesizer type: ${type}`);
     }
@@ -324,7 +323,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.command === "play") {
     loadConfig().then(async (config) => {
       try {
-        const synthesizer = SynthesizerFactory.create(config.synthesizerType);
+        const synthesizer = SynthesizerFactory.create(config.synthesizerType, config);
         const audioDataUrl = await synthesizer.synthesize(message.text);
 
         if (sender.tab?.id) {
@@ -351,7 +350,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.command === "fetch") {
     loadConfig().then(async (config) => {
       try {
-        const synthesizer = SynthesizerFactory.create(config.synthesizerType);
+        const synthesizer = SynthesizerFactory.create(config.synthesizerType, config);
         const audioDataUrl = await synthesizer.synthesize(message.text);
         sendResponse({ audioDataUrl: audioDataUrl });
       } catch (error) {
@@ -366,7 +365,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // バッチフェッチ
   if (message.command === "batchFetch") {
     loadConfig().then(async (config) => {
-      const synthesizer = SynthesizerFactory.create(config.synthesizerType);
+      const synthesizer = SynthesizerFactory.create(config.synthesizerType, config);
 
       const promises = message.batch.map(async ({ index, text }) => {
         try {
@@ -389,7 +388,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // 全キュー一括フェッチ
   if (message.command === "fullBatchFetch") {
     loadConfig().then(async (config) => {
-      const synthesizer = SynthesizerFactory.create(config.synthesizerType);
+      const synthesizer = SynthesizerFactory.create(config.synthesizerType, config);
 
       const promises = message.batch.map(async ({ index, text }) => {
         try {

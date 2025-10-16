@@ -12,17 +12,17 @@ let queueIndex = 0;
 // prefetch cache: queueIndex -> audioDataUrl
 let audioCache = new Map();
 // 先読みするチャンク数
-const PREFETCH_AHEAD = 2;
+let prefetchAhead = 2;
 
 // リトライカウンター
 let retryCount = 0;
-const MAX_RETRIES = 2;
+let maxRetries = 2;
 
 // バッチサイズ
-const BATCH_SIZE = 3;
+let batchSize = 3;
 
 // テキスト分割設定
-const CHUNK_SIZE = 200; // 200文字ごとに分割（0にすると分割なし）
+let chunkSize = 200; // 200文字ごとに分割（0にすると分割なし）
 
 // 設定
 let config = null;
@@ -31,9 +31,30 @@ async function loadConfig() {
   try {
     const response = await fetch(chrome.runtime.getURL("config.json"));
     config = await response.json();
+    // 設定から定数を更新
+    prefetchAhead = config.prefetchAhead || 2;
+    maxRetries = config.maxRetries || 2;
+    batchSize = config.batchSize || 3;
+    chunkSize = config.chunkSize || 200;
+    requestCooldown = config.requestCooldown || 500;
   } catch (error) {
     console.error("Failed to load config:", error);
-    config = { synthesizerType: "api_server", playbackRate: 1.0 }; // fallback
+    config = { 
+      synthesizerType: "api_server", 
+      playbackRate: 1.0,
+      prefetchAhead: 2,
+      maxRetries: 2,
+      batchSize: 3,
+      chunkSize: 200,
+      requestCooldown: 500,
+      jumpBatchSize: 3
+    };
+    // fallbackでも定数を更新
+    prefetchAhead = config.prefetchAhead;
+    maxRetries = config.maxRetries;
+    batchSize = config.batchSize;
+    chunkSize = config.chunkSize;
+    requestCooldown = config.requestCooldown;
   }
 }
 
@@ -50,7 +71,7 @@ function notifyPlaybackStopped() {
 
 // **レート制限関連の追加変数**
 let lastRequestTime = 0; // 最後のリクエスト時刻
-const REQUEST_COOLDOWN = 500; // 0.5秒のクールタイム（ミリ秒）
+let requestCooldown = 500; // 0.5秒のクールタイム（ミリ秒）
 let requestQueue = []; // 待機中のリクエストキュー
 let isProcessingRequests = false; // リクエスト処理中フラグ
 
@@ -72,7 +93,7 @@ function processRequestQueue() {
 
   const now = Date.now();
   const timeSinceLastRequest = now - lastRequestTime;
-  const waitTime = Math.max(0, REQUEST_COOLDOWN - timeSinceLastRequest);
+  const waitTime = Math.max(0, requestCooldown - timeSinceLastRequest);
 
   setTimeout(() => {
     if (requestQueue.length > 0) {
@@ -283,7 +304,7 @@ audioPlayer.addEventListener("ended", () => {
 // audio のエラーを処理
 audioPlayer.addEventListener("error", (e) => {
   console.error("Audio error:", e);
-  if (retryCount < MAX_RETRIES) {
+  if (retryCount < maxRetries) {
     retryCount++;
     console.log(
       `Retrying playback for index ${queueIndex}, attempt ${retryCount}`
@@ -839,10 +860,10 @@ function buildQueueWithNewRulesManager() {
 
     // 200文字ごとに分割して音声キューに追加
     if (text && text.length > 0) {
-      if (CHUNK_SIZE > 0) {
+      if (chunkSize > 0) {
         // チャンク分割を行う場合
-        for (let i = 0; i < text.length; i += CHUNK_SIZE) {
-          const chunk = text.slice(i, i + CHUNK_SIZE).trim();
+        for (let i = 0; i < text.length; i += chunkSize) {
+          const chunk = text.slice(i, i + chunkSize).trim();
           if (chunk) {
             queue.push({
               text: chunk,
@@ -1122,8 +1143,8 @@ function convertBlocksToQueue(blocks) {
   const queue = [];
 
   blocks.forEach((block, index) => {
-    // 各ブロックのテキストを200文字ごとに分割
-    const chunkSize = 200;
+    // 各ブロックのテキストをchunkSize文字ごとに分割
+    const chunkSize = config.chunkSize || 200;
     const text = block.text;
 
     for (let i = 0; i < text.length; i += chunkSize) {
@@ -1179,8 +1200,8 @@ function buildQueueWithCustomRule(rule) {
         "text length:",
         text.length
       );
-      // 200文字ごとに分割
-      const chunkSize = 200;
+      // chunkSize文字ごとに分割
+      const chunkSize = config.chunkSize || 200;
       for (let i = 0; i < text.length; i += chunkSize) {
         const chunk = text.slice(i, i + chunkSize);
         queue.push({ text: chunk, paragraphId });
@@ -1221,8 +1242,8 @@ function buildQueueWithReadability() {
   paragraphs.forEach((p, index) => {
     const text = (p.textContent || "").trim();
     if (text) {
-      // 200文字ごとに分割
-      const chunkSize = 200;
+      // chunkSize文字ごとに分割
+      const chunkSize = config.chunkSize || 200;
       for (let i = 0; i < text.length; i += chunkSize) {
         const chunk = text.slice(i, i + chunkSize);
         queue.push({ text: chunk, paragraphId: index });
@@ -1243,8 +1264,8 @@ function buildQueueWithFallback() {
     const text = (p.textContent || "").trim();
     if (text) {
       const paragraphId = parseInt(p.dataset.audicleId);
-      // 200文字ごとに分割
-      const chunkSize = 200;
+      // chunkSize文字ごとに分割
+      const chunkSize = config.chunkSize || 200;
       for (let i = 0; i < text.length; i += chunkSize) {
         const chunk = text.slice(i, i + chunkSize);
         queue.push({ text: chunk, paragraphId });
@@ -1313,7 +1334,7 @@ function playQueue() {
     );
     // 全フェッチ済みのはずなので、エラー扱い
     retryCount++;
-    if (retryCount < MAX_RETRIES) {
+    if (retryCount < maxRetries) {
       console.log("playQueue: Retrying in 3s, attempt:", retryCount);
       setTimeout(() => playQueue(), 3000);
     } else {
@@ -1338,11 +1359,11 @@ function playQueue() {
   prefetchBatch(queueIndex + 1);
 }
 
-// 指定された startIndex 以降で PREFETCH_AHEAD 個を先読みして audioCache に格納
+// 指定された startIndex 以降で prefetchAhead 個を先読みして audioCache に格納
 function prefetchNext(startIndex) {
   for (
     let i = startIndex;
-    i < Math.min(playbackQueue.length, startIndex + PREFETCH_AHEAD);
+    i < Math.min(playbackQueue.length, startIndex + prefetchAhead);
     i++
   ) {
     if (audioCache.has(i)) continue;
@@ -1367,7 +1388,7 @@ function fetchBatch(startIndex) {
   const batch = [];
   for (
     let i = startIndex;
-    i < Math.min(playbackQueue.length, startIndex + BATCH_SIZE);
+    i < Math.min(playbackQueue.length, startIndex + batchSize);
     i++
   ) {
     if (!audioCache.has(i)) {
@@ -1398,10 +1419,10 @@ function prefetchBatch(startIndex) {
   for (
     let i = startIndex;
     i <
-    Math.min(playbackQueue.length, startIndex + PREFETCH_AHEAD * BATCH_SIZE);
-    i += BATCH_SIZE
+    Math.min(playbackQueue.length, startIndex + prefetchAhead * batchSize);
+    i += batchSize
   ) {
-    for (let j = i; j < Math.min(playbackQueue.length, i + BATCH_SIZE); j++) {
+    for (let j = i; j < Math.min(playbackQueue.length, i + batchSize); j++) {
       if (!audioCache.has(j)) {
         const item = playbackQueue[j];
         if (item && item.text) {
