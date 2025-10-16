@@ -148,7 +148,7 @@ SynthesizerFactory.create(config.synthesizerType)
    ```bash
    curl -X POST http://localhost:8000/synthesize \
      -H "Content-Type: application/json" \
-     -d '{"text": "こんにちは", "voice": "ja-JP-NanamiNeural"}' \
+     -d '{"text": "こんにちは", "voice": "ja-JP-Neural2-B"}' \
      --output test.mp3
    ```
 

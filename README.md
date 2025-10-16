@@ -37,12 +37,14 @@ Audicle（Article + Audio）は、ウェブページ上の記事コンテンツ�
 Audicle は、Web ブラウジング中に記事を「読む」のではなく「聴く」ことを可能にするプラットフォームです。
 
 **こんな方におすすめ:**
+
 - 家事や運動をしながら情報収集したい方
 - 長時間の画面注視による眼精疲労を軽減したい方
 - 通勤・通学中にニュース記事やブログを楽しみたい方
 - 読書バリアフリーを求める方
 
 **特徴:**
+
 - Chrome 拡張機能と Web アプリケーションの両方で利用可能
 - モノレポ構成で、拡張機能・API サーバー・Web UI を一元管理
 - 複数の音声合成エンジン（Google TTS、Edge TTS など）に対応
@@ -97,6 +99,7 @@ docker-compose up -d
 ```
 
 **確認方法:**
+
 ```bash
 curl http://localhost:8000/
 # {"message": "Audicle TTS API Server is running"} が返ればOK
@@ -191,7 +194,7 @@ curl http://localhost:8000/
 # 音声合成テスト
 curl -X POST http://localhost:8000/synthesize \
   -H "Content-Type: application/json" \
-  -d '{"text": "こんにちは", "voice": "ja-JP-NanamiNeural"}' \
+  -d '{"text": "こんにちは", "voice": "ja-JP-Neural2-B"}' \
   --output test.mp3
 
 # 本文抽出テスト
@@ -307,6 +310,7 @@ SITE_SPECIFIC_RULES = {
 ### Q: 音声が再生されません
 
 **A:** 以下を確認してください：
+
 1. API サーバーが起動しているか（`curl http://localhost:8000/` で確認）
 2. `config.json` の `synthesizerType` 設定が正しいか
 3. Chrome 拡張機能がリロードされているか（`chrome://extensions/` でリロードボタンをクリック）
@@ -315,6 +319,7 @@ SITE_SPECIFIC_RULES = {
 ### Q: 一部のサイトで本文が正しく抽出されません
 
 **A:** サイト固有のルールを追加することで改善できます：
+
 1. `packages/chrome-extension/content-extract/rules.js` を開く
 2. `SITE_SPECIFIC_RULES` に新しいルールを追加
 3. 詳細は [Chrome 拡張機能 README](packages/chrome-extension/README.md) の「新サイト対応ルール追加手順」を参照
@@ -322,18 +327,21 @@ SITE_SPECIFIC_RULES = {
 ### Q: Google TTS が「429 Too Many Requests」エラーになります
 
 **A:** Google TTS は非公式 API のため、大量リクエストでブロックされる可能性があります：
+
 - API サーバー（Edge TTS）への切り替えを推奨します
 - `config.json` で `"synthesizerType": "api_server"` に変更
 
 ### Q: 2 倍速再生を使いたい
 
 **A:** 2 倍速再生は API サーバーまたは Web アプリで利用可能です：
+
 - Chrome 拡張機能: `config.json` で `"synthesizerType": "api_server"` に設定
 - Web アプリ: デフォルトで 2 倍速再生に対応
 
 ### Q: Dev Container で開発したい
 
 **A:** VS Code の Dev Containers 拡張機能を使用してください：
+
 1. VS Code で `Dev Containers: Reopen in Container` を実行
 2. 自動的に開発環境が構築されます
 3. 詳細は「🔧 開発」セクションを参照

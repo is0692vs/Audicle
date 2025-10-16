@@ -61,7 +61,7 @@ class ExtractRequest(BaseModel):
 
 class SynthesizeRequest(BaseModel):
     text: str
-    voice: str = "ja-JP-Wavenet-B"  # Google TTS のデフォルト音声
+    voice: str = os.getenv("DEFAULT_VOICE", "ja-JP-Neural2-B")
 
 
 # Response models

@@ -9,6 +9,7 @@ services:
       - PYTHONUNBUFFERED=1
       - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/service-account.json
       - TTS_SPEAKING_RATE=1.0
+      - DEFAULT_VOICE=ja-JP-Neural2-B
       - PORT=8000
     volumes:
       - ./temp:/app/temp

@@ -8,19 +8,21 @@
 
 以下はリポジトリ内で検出した、voice 名や既定音声がハードコードされている場所です。これらは将来的に 1 箇所に集約すべき箇所です。
 
-- `packages/chrome-extension/background.js` — `voice: "ja-JP-Standard-A"`（APIServerSynthesizer の呼び出し）。
+- `packages/chrome-extension/background.js` — `voice: config.voice || "ja-JP-Neural2-B"`（APIServerSynthesizer の呼び出し）。
+- `packages/chrome-extension/config.json` — `"voice": "ja-JP-Neural2-B"`（設定ファイル）。
+- `packages/api-server/main.py` — API のデフォルト `voice: str = "ja-JP-Neural2-B"`。
+- `packages/web-app/lib/api.ts` — `voice: string = "ja-JP-Neural2-B"`（API 呼び出し既定）。
 - `_archive/docker-tts-server/.env` — `DEFAULT_VOICE=ja-JP-NanamiNeural`（アーカイブ内の旧 docker 構成）。
 - `_archive/google-tts-server/docker-compose.yml` — `GOOGLE_TTS_DEFAULT_VOICE: ${GOOGLE_TTS_DEFAULT_VOICE:-ja-JP-Standard-A}`（アーカイブ）。
 - `_archive/docker-tts-server/server.py` — `voice: Optional[str] = "ja-JP-NanamiNeural"`（アーカイブ）。
 - `_archive/google-tts-server/server.py` — `_DEFAULT_VOICE = os.getenv("GOOGLE_TTS_DEFAULT_VOICE", "ja-JP-Wavenet-B")`（アーカイブ）。
-- `packages/completion-report.md` — ドキュメント中のサンプルに `ja-JP-NanamiNeural` が使用されている。
-- `packages/api-server/main.py` — API のデフォルト `voice: str = "ja-JP-Wavenet-B"`。
-- `packages/chrome-extension/AUDIO_SYNTHESIS_MODULES.md` — ドキュメント中に `ja-JP-NanamiNeural` 記載あり。
-- `packages/chrome-extension/README.md` — curl サンプルに `ja-JP-NanamiNeural` を参照。
-- `packages/chrome-extension/docs/edge-tts-integration-report.md` — `ja-JP-NanamiNeural` がデフォルトとして記載。
-- `_archive/python-tts-server/*` — 複数箇所で `ja-JP-NanamiNeural` を使用。
-- `packages/web-app/lib/audioCache.ts` — `voice: string = "ja-JP-Wavenet-B"`（フロント側キャッシュ既定）。
-- `packages/web-app/lib/api.ts` — `voice: string = "ja-JP-Wavenet-B"`（API 呼び出し既定）。
+- `packages/completion-report.md` — ドキュメント中のサンプルに `ja-JP-Neural2-B` が使用されている。
+- `packages/chrome-extension/AUDIO_SYNTHESIS_MODULES.md` — ドキュメント中に `ja-JP-NanamiNeural` 記載あり（更新予定）。
+- `packages/chrome-extension/README.md` — curl サンプルに `ja-JP-Neural2-B` を参照。
+- `packages/chrome-extension/docs/edge-tts-integration-report.md` — `ja-JP-NanamiNeural` がデフォルトとして記載（更新予定）。
+- `_archive/python-tts-server/*` — 複数箇所で `ja-JP-NanamiNeural` を使用（アーカイブ）。
+
+※上記はコード検索（正規表現: Nanami|Wavenet|Standard|"voice"|"ja-JP-"）による抽出結果を要約しています。アーカイブ内にも古い実装が残っているため、本番に影響するメインの実装（`packages/` 以下）とアーカイブ（`_archive/`）を区別して扱ってください。
 
 ※上記はコード検索（正規表現: Nanami|Wavenet|Standard|"voice"|"ja-JP-"）による抽出結果を要約しています。アーカイブ内にも古い実装が残っているため、本番に影響するメインの実装（`packages/` 以下）とアーカイブ（`_archive/`）を区別して扱ってください。
 
