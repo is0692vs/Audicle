@@ -17,6 +17,13 @@ export function usePlayback({ chunks, onChunkChange }: UsePlaybackProps) {
   const [currentIndex, setCurrentIndex] = useState<number>(-1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>("");
+  const [playbackRate, setPlaybackRate] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("audicle-playback-rate");
+      return saved ? parseFloat(saved) : 1.0;
+    }
+    return 1.0;
+  });
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -25,6 +32,19 @@ export function usePlayback({ chunks, onChunkChange }: UsePlaybackProps) {
     currentIndex >= 0 && currentIndex < chunks.length
       ? chunks[currentIndex].id
       : undefined;
+
+  // playbackRateの変更をlocalStorageに保存
+  useEffect(() => {
+    localStorage.setItem("audicle-playback-rate", playbackRate.toString());
+  }, [playbackRate]);
+
+  // playbackRateを設定する関数
+  const updatePlaybackRate = useCallback((rate: number) => {
+    setPlaybackRate(rate);
+    if (audioRef.current) {
+      audioRef.current.playbackRate = rate;
+    }
+  }, []);
 
   // 先読み処理
   const prefetchAudio = useCallback(
@@ -69,6 +89,7 @@ export function usePlayback({ chunks, onChunkChange }: UsePlaybackProps) {
 
         const audio = new Audio(audioUrl);
         audioRef.current = audio;
+        audio.playbackRate = playbackRate;
 
         audio.onended = () => {
           // 次のチャンクがあれば自動的に再生
@@ -154,5 +175,7 @@ export function usePlayback({ chunks, onChunkChange }: UsePlaybackProps) {
     pause,
     stop,
     seekToChunk,
+    playbackRate,
+    setPlaybackRate: updatePlaybackRate,
   };
 }

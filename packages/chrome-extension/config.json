@@ -1,3 +1,18 @@
 {
-  "synthesizerType": "api-server"
+  "synthesizerType": "api_server",
+  "playbackRate": 1.5,
+  "prefetchAhead": 2,
+  "maxRetries": 2,
+  "batchSize": 3,
+  "chunkSize": 200,
+  "requestCooldown": 500,
+  "jumpBatchSize": 3,
+  "initialBatchSize": 5,
+  "serverUrls": {
+    "edge_tts": "http://localhost:8001",
+    "edge_tts_docker": "http://localhost:8001",
+    "google_cloud_tts": "http://localhost:8002",
+    "google_cloud_tts_docker": "http://localhost:8002",
+    "api_server": "http://localhost:8000"
+  }
 }

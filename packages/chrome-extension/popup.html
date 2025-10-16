@@ -27,6 +27,19 @@
       </label>
     </div>
     <div class="control-group">
+      <label for="playback-rate"
+        >再生速度: <span id="playback-rate-value">1.0</span>x</label
+      >
+      <input
+        type="range"
+        id="playback-rate"
+        min="0.8"
+        max="3.0"
+        step="0.1"
+        value="1.0"
+      />
+    </div>
+    <div class="control-group">
       <button id="pause-resume-btn">一時停止</button>
     </div>
     <script src="popup.js"></script>

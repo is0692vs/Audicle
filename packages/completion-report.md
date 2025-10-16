@@ -22,7 +22,7 @@
 
 #### POST /synthesize
 
-- **入力**: `{ "text": "...", "voice": "ja-JP-NanamiNeural" }`
+- **入力**: `{ "text": "...", "voice": "ja-JP-Neural2-B" }`
 - **処理**: edge-tts でテキストを MP3 に変換
 - **出力**: `Content-Type: audio/mpeg` の音声データ
 - **実装**: edge-tts ライブラリを使用し、一時ファイル経由で音声データを生成
@@ -112,7 +112,7 @@ curl http://localhost:8000/
 ```bash
 curl -X POST http://localhost:8000/synthesize \
   -H "Content-Type: application/json" \
-  -d '{"text": "こんにちは、これは音声合成のテストです", "voice": "ja-JP-NanamiNeural"}' \
+  -d '{"text": "こんにちは、これは音声合成のテストです", "voice": "ja-JP-Neural2-B"}' \
   --output test.mp3
 ```
 

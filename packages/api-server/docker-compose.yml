@@ -8,7 +8,9 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/service-account.json
-      - TTS_SPEAKING_RATE=2.0
+      - TTS_SPEAKING_RATE=1.0
+      - DEFAULT_VOICE=ja-JP-Neural2-B
+      - PORT=8000
     volumes:
       - ./temp:/app/temp
       - ./credentials:/app/credentials:ro
@@ -18,3 +20,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+      - 192.168.1.1

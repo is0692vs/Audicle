@@ -41,9 +41,12 @@ export async function extractContent(url: string): Promise<ExtractResponse> {
  */
 export async function synthesizeSpeech(
   text: string,
-  voice: string = "ja-JP-Wavenet-B"
+  voice?: string
 ): Promise<Blob> {
-  const request: SynthesizeRequest = { text, voice };
+  const request: SynthesizeRequest = { text };
+  if (voice) {
+    request.voice = voice;
+  }
 
   logger.apiRequest("POST", `${API_BASE_URL}/synthesize`, {
     text: text.substring(0, 50) + "...",
