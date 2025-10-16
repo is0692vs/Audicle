@@ -8,3 +8,5 @@ gen-lang-client-*.json
 packages/google-tts-server/credentials/*.json
 packages/api-server/credentials/*.json
 _archive/google-tts-server/credentials/*.json
+.gemini/
+gha-creds-*.json
