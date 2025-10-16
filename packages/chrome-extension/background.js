@@ -272,9 +272,15 @@ async function loadConfig() {
   try {
     const response = await fetch(chrome.runtime.getURL("config.json"));
     config = await response.json();
+
+    // chrome.storage からユーザー設定を読み込んで上書き
+    const storageData = await chrome.storage.local.get(["playbackRate"]);
+    if (storageData.playbackRate !== undefined) {
+      config.playbackRate = storageData.playbackRate;
+    }
   } catch (error) {
     console.warn("Config file not found, using default settings");
-    config = { synthesizerType: "google_tts" };
+    config = { synthesizerType: "google_tts", playbackRate: 1.0 };
   }
   return config;
 }

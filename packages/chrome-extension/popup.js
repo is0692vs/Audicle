@@ -2,6 +2,32 @@
 document.addEventListener("DOMContentLoaded", () => {
   const toggleSwitch = document.getElementById("toggle-switch");
   const pauseResumeBtn = document.getElementById("pause-resume-btn");
+  const playbackRateSlider = document.getElementById("playback-rate");
+  const playbackRateValue = document.getElementById("playback-rate-value");
+
+  // 再生速度スライダーの初期化
+  chrome.storage.local.get(["playbackRate"], (result) => {
+    const rate = result.playbackRate || 1.0;
+    playbackRateSlider.value = rate;
+    playbackRateValue.textContent = rate;
+  });
+
+  // 再生速度スライダーの変更
+  playbackRateSlider.addEventListener("input", () => {
+    const rate = parseFloat(playbackRateSlider.value);
+    playbackRateValue.textContent = rate;
+    chrome.storage.local.set({ playbackRate: rate });
+
+    // リアルタイムで再生中のオーディオに反映
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]) {
+        chrome.tabs.sendMessage(tabs[0].id, {
+          command: "updatePlaybackRate",
+          rate: rate,
+        });
+      }
+    });
+  });
 
   // 現在のタブのURLを取得して、そのURLの状態を読み込む
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {

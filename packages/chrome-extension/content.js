@@ -248,6 +248,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ isPlaying: false });
     }
   }
+
+  // 再生速度のリアルタイム更新
+  if (message.command === "updatePlaybackRate") {
+    audioPlayer.playbackRate = message.rate;
+    console.log("Playback rate updated to:", message.rate);
+  }
 });
 
 // audio の再生終了を受け取り、キューの次へ進める
