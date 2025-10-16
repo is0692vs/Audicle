@@ -107,7 +107,8 @@ class EdgeTTSSynthesizer extends AudioSynthesizer {
 class EdgeTTSDockerSynthesizer extends AudioSynthesizer {
   constructor(config) {
     super();
-    this.serverUrl = config.serverUrls?.edge_tts_docker || "http://localhost:8001";
+    this.serverUrl =
+      config.serverUrls?.edge_tts_docker || "http://localhost:8001";
   }
 
   async synthesize(text) {
@@ -151,7 +152,8 @@ class EdgeTTSDockerSynthesizer extends AudioSynthesizer {
 class GoogleCloudTTSDockerSynthesizer extends AudioSynthesizer {
   constructor(config) {
     super();
-    this.serverUrl = config.serverUrls?.google_cloud_tts_docker || "http://localhost:8002";
+    this.serverUrl =
+      config.serverUrls?.google_cloud_tts_docker || "http://localhost:8002";
   }
 
   async synthesize(text) {
@@ -323,7 +325,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.command === "play") {
     loadConfig().then(async (config) => {
       try {
-        const synthesizer = SynthesizerFactory.create(config.synthesizerType, config);
+        const synthesizer = SynthesizerFactory.create(
+          config.synthesizerType,
+          config
+        );
         const audioDataUrl = await synthesizer.synthesize(message.text);
 
         if (sender.tab?.id) {
@@ -350,7 +355,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.command === "fetch") {
     loadConfig().then(async (config) => {
       try {
-        const synthesizer = SynthesizerFactory.create(config.synthesizerType, config);
+        const synthesizer = SynthesizerFactory.create(
+          config.synthesizerType,
+          config
+        );
         const audioDataUrl = await synthesizer.synthesize(message.text);
         sendResponse({ audioDataUrl: audioDataUrl });
       } catch (error) {
@@ -365,7 +373,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // バッチフェッチ
   if (message.command === "batchFetch") {
     loadConfig().then(async (config) => {
-      const synthesizer = SynthesizerFactory.create(config.synthesizerType, config);
+      const synthesizer = SynthesizerFactory.create(
+        config.synthesizerType,
+        config
+      );
 
       const promises = message.batch.map(async ({ index, text }) => {
         try {
@@ -388,7 +399,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // 全キュー一括フェッチ
   if (message.command === "fullBatchFetch") {
     loadConfig().then(async (config) => {
-      const synthesizer = SynthesizerFactory.create(config.synthesizerType, config);
+      const synthesizer = SynthesizerFactory.create(
+        config.synthesizerType,
+        config
+      );
 
       const promises = message.batch.map(async ({ index, text }) => {
         try {

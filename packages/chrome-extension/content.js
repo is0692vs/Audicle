@@ -39,15 +39,15 @@ async function loadConfig() {
     requestCooldown = config.requestCooldown || 500;
   } catch (error) {
     console.error("Failed to load config:", error);
-    config = { 
-      synthesizerType: "api_server", 
+    config = {
+      synthesizerType: "api_server",
       playbackRate: 1.0,
       prefetchAhead: 2,
       maxRetries: 2,
       batchSize: 3,
       chunkSize: 200,
       requestCooldown: 500,
-      jumpBatchSize: 3
+      jumpBatchSize: 3,
     };
     // fallbackでも定数を更新
     prefetchAhead = config.prefetchAhead;
@@ -1418,8 +1418,7 @@ function prefetchBatch(startIndex) {
   const batch = [];
   for (
     let i = startIndex;
-    i <
-    Math.min(playbackQueue.length, startIndex + prefetchAhead * batchSize);
+    i < Math.min(playbackQueue.length, startIndex + prefetchAhead * batchSize);
     i += batchSize
   ) {
     for (let j = i; j < Math.min(playbackQueue.length, i + batchSize); j++) {
