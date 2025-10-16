@@ -111,17 +111,34 @@ jobs:
               core.setOutput('command', 'fallthrough');
             }
 
-      - name: 'Acknowledge request'
+      - name: 'React to comment'
+        if: github.event.comment && startsWith(github.event.comment.body, '@gemini-cli')
         env:
           GITHUB_TOKEN: '${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
-          ISSUE_NUMBER: '${{ github.event.pull_request.number || github.event.issue.number }}'
-          MESSAGE: |-
-            🤖 Hi @${{ github.actor }}, I've received your request, and I'm working on it now! You can track my progress [in the logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for more details.
+          COMMENT_ID: '${{ github.event.comment.id }}'
           REPOSITORY: '${{ github.repository }}'
-        run: |-
-          gh issue comment "${ISSUE_NUMBER}" \
-            --body "${MESSAGE}" \
-            --repo "${REPOSITORY}"
+          EVENT_NAME: '${{ github.event_name }}'
+        run: |
+          set -x
+          API_URL=""
+          if [[ "$EVENT_NAME" == "issue_comment" ]]; then
+            API_URL="/repos/$REPOSITORY/issues/comments/$COMMENT_ID/reactions"
+          elif [[ "$EVENT_NAME" == "pull_request_review_comment" ]]; then
+            API_URL="/repos/$REPOSITORY/pulls/comments/$COMMENT_ID/reactions"
+          fi
+
+          if [[ -n "$API_URL" ]]; then
+            gh api --method POST -H "Accept: application/vnd.github+json" "$API_URL" -f content='eyes'
+          fi
+
+      - name: 'React to issue, PR, or review'
+        if: '!github.event.comment && startsWith(github.event.review.body || github.event.issue.body, ''@gemini-cli'')'
+        env:
+          GITHUB_TOKEN: '${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
+          ISSUE_OR_PR_NUMBER: '${{ github.event.pull_request.number || github.event.issue.number }}'
+          REPOSITORY: '${{ github.repository }}'
+        run: |
+          gh issue react "$ISSUE_OR_PR_NUMBER" --content "eyes" --repo "$REPOSITORY"
 
   review:
     needs: 'dispatch'
