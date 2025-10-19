@@ -55,7 +55,7 @@ export function usePlayback({ chunks, onChunkChange }: UsePlaybackProps) {
         .map((chunk) => chunk.text);
 
       if (textsToFetch.length > 0) {
-        await audioCache.prefetch(textsToFetch);
+        await audioCache.prefetch(textsToFetch, "ja-JP-Wavenet-B");
       }
     },
     [chunks]
@@ -77,7 +77,10 @@ export function usePlayback({ chunks, onChunkChange }: UsePlaybackProps) {
         logger.info(`▶️ 再生開始: チャンク ${index + 1}/${chunks.length}`);
 
         // キャッシュから音声URLを取得（なければ合成）
-        const audioUrl = await audioCache.get(chunk.text);
+        const audioUrl = await audioCache.get(
+          chunk.text,
+          "ja-JP-Wavenet-B"
+        );
 
         // 先読み処理（非同期で実行）
         prefetchAudio(index + 1);
@@ -118,7 +121,7 @@ export function usePlayback({ chunks, onChunkChange }: UsePlaybackProps) {
         setIsLoading(false);
       }
     },
-    [chunks, onChunkChange, prefetchAudio]
+    [chunks, onChunkChange, prefetchAudio, playbackRate]
   );
 
   // 再生開始

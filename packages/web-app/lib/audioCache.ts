@@ -32,7 +32,7 @@ class AudioCache {
   }
 
   // 音声を取得（キャッシュがあればそれを、なければ合成）
-  async get(text: string, voice: string = "ja-JP-Wavenet-B"): Promise<string> {
+  async get(text: string, voice: string): Promise<string> {
     const key = this.getCacheKey(text);
 
     // キャッシュチェック
@@ -64,10 +64,7 @@ class AudioCache {
   }
 
   // 複数の音声を先読み
-  async prefetch(
-    texts: string[],
-    voice: string = "ja-JP-Wavenet-B"
-  ): Promise<void> {
+  async prefetch(texts: string[], voice: string): Promise<void> {
     logger.info(`🔄 先読み開始: ${texts.length}件`);
 
     const promises = texts.map(async (text) => {
