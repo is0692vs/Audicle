@@ -118,7 +118,7 @@ export function usePlayback({ chunks, onChunkChange }: UsePlaybackProps) {
         setIsLoading(false);
       }
     },
-    [chunks, onChunkChange, prefetchAudio]
+    [chunks, onChunkChange, prefetchAudio, playbackRate]
   );
 
   // 再生開始
