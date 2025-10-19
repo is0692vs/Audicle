@@ -7,6 +7,7 @@ import subprocess
 import json
 import os
 import logging
+import re
 from typing import List
 import aiofiles
 from google.api_core.exceptions import GoogleAPICallError, RetryError
@@ -68,6 +69,69 @@ class SynthesizeRequest(BaseModel):
 class ExtractResponse(BaseModel):
     title: str
     chunks: List[str]
+
+
+# Google Cloud TTS APIの最大リクエストバイト数
+MAX_TTS_BYTES = 5000
+
+
+def _split_text(text: str) -> List[str]:
+    """テキストをGoogle Cloud TTS APIの制限内に分割する"""
+    chunks = []
+    current_chunk = ""
+    # 。、！、？、\nなどで分割
+    sentences = [s for s in re.split(r'([。！？\n])', text) if s]
+
+    # 句読点を前の文に結合
+    i = 0
+    while i < len(sentences) - 1:
+        if sentences[i+1] in '。！？':
+            sentences[i] += sentences[i+1]
+            del sentences[i+1]
+        else:
+            i += 1
+
+    for sentence in sentences:
+        if len((current_chunk + sentence).encode('utf-8')) > MAX_TTS_BYTES:
+            if current_chunk:
+                chunks.append(current_chunk)
+            current_chunk = sentence
+        else:
+            current_chunk += sentence
+
+    if current_chunk:
+        chunks.append(current_chunk)
+
+    # 1文が5000バイトを超える場合の処理
+    final_chunks = []
+    for chunk in chunks:
+        if len(chunk.encode('utf-8')) > MAX_TTS_BYTES:
+            # さらに句読点「、」で分割
+            sub_sentences = [s for s in re.split(r'(、)', chunk) if s]
+
+            # 句読点を前の文に結合
+            i = 0
+            while i < len(sub_sentences) - 1:
+                if sub_sentences[i+1] == '、':
+                    sub_sentences[i] += sub_sentences[i+1]
+                    del sub_sentences[i+1]
+                else:
+                    i += 1
+
+            sub_chunk = ""
+            for s in sub_sentences:
+                if len((sub_chunk + s).encode('utf-8')) > MAX_TTS_BYTES:
+                    if sub_chunk:
+                        final_chunks.append(sub_chunk)
+                    sub_chunk = s
+                else:
+                    sub_chunk += s
+            if sub_chunk:
+                final_chunks.append(sub_chunk)
+        else:
+            final_chunks.append(chunk)
+
+    return final_chunks
 
 
 async def _synthesize_to_bytes(text: str, voice: str) -> bytes:
@@ -158,13 +222,22 @@ async def extract_content(request: ExtractRequest):
 async def synthesize_speech(request: SynthesizeRequest):
     """テキストを音声化してMP3を返す"""
     try:
-        logger.info(f"Synthesizing text: {request.text}")
+        logger.info(f"Synthesizing text: {request.text[:100]}...")
         logger.info(f"Using voice: {request.voice}")
 
-        audio_data = await _synthesize_to_bytes(request.text, request.voice)
+        text_chunks = _split_text(request.text)
+        logger.info(f"Split text into {len(text_chunks)} chunks")
+
+        audio_chunks = []
+        for i, chunk in enumerate(text_chunks):
+            logger.info(f"Synthesizing chunk {i+1}/{len(text_chunks)}")
+            audio_chunk = await _synthesize_to_bytes(chunk, request.voice)
+            audio_chunks.append(audio_chunk)
+
+        full_audio = b"".join(audio_chunks)
 
         return Response(
-            content=audio_data,
+            content=full_audio,
             media_type="audio/mpeg",
             headers={"Content-Disposition": "attachment; filename=speech.mp3"}
         )
