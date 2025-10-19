@@ -75,21 +75,27 @@ class ExtractResponse(BaseModel):
 MAX_TTS_BYTES = 5000
 
 
+def _merge_punctuation(sentences: List[str], delimiters: set) -> List[str]:
+    """句読点を前の文に結合する"""
+    merged_sentences = []
+    i = 0
+    while i < len(sentences):
+        current_sentence = sentences[i]
+        while i + 1 < len(sentences) and sentences[i+1] in delimiters:
+            current_sentence += sentences[i+1]
+            i += 1
+        merged_sentences.append(current_sentence)
+        i += 1
+    return merged_sentences
+
+
 def _split_text(text: str) -> List[str]:
     """テキストをGoogle Cloud TTS APIの制限内に分割する"""
     chunks = []
     current_chunk = ""
     # 。、！、？、\nなどで分割
     sentences = [s for s in re.split(r'([。！？\n])', text) if s]
-
-    # 句読点を前の文に結合
-    i = 0
-    while i < len(sentences) - 1:
-        if sentences[i+1] in '。！？':
-            sentences[i] += sentences[i+1]
-            del sentences[i+1]
-        else:
-            i += 1
+    sentences = _merge_punctuation(sentences, {'。', '！', '？', '\n'})
 
     for sentence in sentences:
         if len((current_chunk + sentence).encode('utf-8')) > MAX_TTS_BYTES:
@@ -108,15 +114,7 @@ def _split_text(text: str) -> List[str]:
         if len(chunk.encode('utf-8')) > MAX_TTS_BYTES:
             # さらに句読点「、」で分割
             sub_sentences = [s for s in re.split(r'(、)', chunk) if s]
-
-            # 句読点を前の文に結合
-            i = 0
-            while i < len(sub_sentences) - 1:
-                if sub_sentences[i+1] == '、':
-                    sub_sentences[i] += sub_sentences[i+1]
-                    del sub_sentences[i+1]
-                else:
-                    i += 1
+            sub_sentences = _merge_punctuation(sub_sentences, {'、'})
 
             sub_chunk = ""
             for s in sub_sentences:
@@ -131,7 +129,22 @@ def _split_text(text: str) -> List[str]:
         else:
             final_chunks.append(chunk)
 
-    return final_chunks
+    # それでも5000バイトを超えるチャンクを強制的に分割
+    result_chunks = []
+    for chunk in final_chunks:
+        if len(chunk.encode('utf-8')) > MAX_TTS_BYTES:
+            start = 0
+            while start < len(chunk):
+                end = start + MAX_TTS_BYTES
+                # utf-8のバイト境界を考慮
+                while len(chunk[start:end].encode('utf-8')) > MAX_TTS_BYTES:
+                    end -= 1
+                result_chunks.append(chunk[start:end])
+                start = end
+        else:
+            result_chunks.append(chunk)
+
+    return result_chunks
 
 
 async def _synthesize_to_bytes(text: str, voice: str) -> bytes:
