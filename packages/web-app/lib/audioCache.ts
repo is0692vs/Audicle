@@ -11,6 +11,7 @@ interface CacheEntry {
 
 const CACHE_PREFIX = "audio_";
 const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24時間
+const DEFAULT_VOICE = "ja-JP-Wavenet-B";
 
 class AudioCache {
   private cache = new Map<string, CacheEntry>();
@@ -32,7 +33,7 @@ class AudioCache {
   }
 
   // 音声を取得（キャッシュがあればそれを、なければ合成）
-  async get(text: string, voice: string = "ja-JP-Wavenet-B"): Promise<string> {
+  async get(text: string, voice: string = DEFAULT_VOICE): Promise<string> {
     const key = this.getCacheKey(text);
 
     // キャッシュチェック
@@ -66,7 +67,7 @@ class AudioCache {
   // 複数の音声を先読み
   async prefetch(
     texts: string[],
-    voice: string = "ja-JP-Wavenet-B"
+    voice: string = DEFAULT_VOICE
   ): Promise<void> {
     logger.info(`🔄 先読み開始: ${texts.length}件`);
 
