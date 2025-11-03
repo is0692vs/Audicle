@@ -14,13 +14,19 @@ export async function OPTIONS() {
 }
 
 export async function POST(request: NextRequest) {
+    const corsHeaders = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+    };
+
     try {
         const { url } = await request.json();
 
         if (!url || typeof url !== 'string') {
             return NextResponse.json(
                 { error: 'URL is required' },
-                { status: 400 }
+                { status: 400, headers: corsHeaders }
             );
         }
 
@@ -30,7 +36,7 @@ export async function POST(request: NextRequest) {
         } catch {
             return NextResponse.json(
                 { error: 'Invalid URL format' },
-                { status: 400 }
+                { status: 400, headers: corsHeaders }
             );
         }
 
@@ -47,7 +53,7 @@ export async function POST(request: NextRequest) {
         if (!article) {
             return NextResponse.json(
                 { error: 'Failed to extract content from URL' },
-                { status: 422 }
+                { status: 422, headers: corsHeaders }
             );
         }
 
@@ -63,37 +69,33 @@ export async function POST(request: NextRequest) {
         };
 
         return NextResponse.json(response, {
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type',
-            },
+            headers: corsHeaders,
         });
     } catch (error) {
-        if (error instanceof SyntaxError) {
-            return NextResponse.json(
-                { error: 'Invalid request body' },
-                { status: 400 }
-            );
-        }
-
-        const headers = {
+        const corsHeaders = {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'POST, OPTIONS',
             'Access-Control-Allow-Headers': 'Content-Type',
         };
 
+        if (error instanceof SyntaxError) {
+            return NextResponse.json(
+                { error: 'Invalid request body' },
+                { status: 400, headers: corsHeaders }
+            );
+        }
+
         if (error instanceof TimeoutError) {
             return NextResponse.json(
                 { error: 'Request timeout - URL took too long to fetch' },
-                { status: 408, headers }
+                { status: 408, headers: corsHeaders }
             );
         }
 
         console.error('Extract error:', error);
         return NextResponse.json(
             { error: 'Failed to extract content' },
-            { status: 500, headers }
+            { status: 500, headers: corsHeaders }
         );
     }
 }
