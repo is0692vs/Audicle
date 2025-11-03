@@ -6,7 +6,10 @@ export interface ExtractRequest {
 
 export interface ExtractResponse {
   title: string;
-  chunks: string[];
+  content: string;
+  textLength: number;
+  author?: string;
+  siteName?: string;
 }
 
 export interface SynthesizeRequest {

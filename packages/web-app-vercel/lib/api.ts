@@ -13,9 +13,9 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export async function extractContent(url: string): Promise<ExtractResponse> {
   const request: ExtractRequest = { url };
 
-  logger.apiRequest("POST", `${API_BASE_URL}/extract`, request);
+  logger.apiRequest("POST", "/api/extract", request);
 
-  const response = await fetch(`${API_BASE_URL}/extract`, {
+  const response = await fetch("/api/extract", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -30,7 +30,7 @@ export async function extractContent(url: string): Promise<ExtractResponse> {
   }
 
   const data = await response.json();
-  logger.apiResponse(`${API_BASE_URL}/extract`, data);
+  logger.apiResponse("/api/extract", data);
 
   return data;
 }
