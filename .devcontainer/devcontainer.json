@@ -43,7 +43,8 @@
         "marp-team.marp-vscode",
         "donjayamanne.python-extension-pack",
         "cweijan.vscode-mysql-client2",
-        "ritwickdey.LiveServer"
+        "ritwickdey.LiveServer",
+        "ms-vscode.vscode-websearchforcopilot"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",
