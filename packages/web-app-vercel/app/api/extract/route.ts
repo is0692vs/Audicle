@@ -3,6 +3,16 @@ import { Readability } from '@mozilla/readability';
 import { JSDOM } from 'jsdom';
 import { ExtractResponse } from '@/types/api';
 
+export async function OPTIONS() {
+    return NextResponse.json({}, {
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+        },
+    });
+}
+
 export async function POST(request: NextRequest) {
     try {
         const { url } = await request.json();
@@ -52,7 +62,13 @@ export async function POST(request: NextRequest) {
             siteName: article.siteName || undefined,
         };
 
-        return NextResponse.json(response);
+        return NextResponse.json(response, {
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type',
+            },
+        });
     } catch (error) {
         if (error instanceof SyntaxError) {
             return NextResponse.json(
@@ -61,17 +77,23 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        const headers = {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+        };
+
         if (error instanceof TimeoutError) {
             return NextResponse.json(
                 { error: 'Request timeout - URL took too long to fetch' },
-                { status: 408 }
+                { status: 408, headers }
             );
         }
 
         console.error('Extract error:', error);
         return NextResponse.json(
             { error: 'Failed to extract content' },
-            { status: 500 }
+            { status: 500, headers }
         );
     }
 }
