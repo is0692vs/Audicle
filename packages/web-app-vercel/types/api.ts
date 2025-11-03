@@ -17,6 +17,12 @@ export interface SynthesizeRequest {
   voice?: string;
 }
 
+export interface SynthesizeResponse {
+  audio: string; // base64エンコードされた音声データ
+  mediaType: string;
+  duration: number;
+}
+
 // チャンク情報の拡張型（クライアント側で使用）
 export interface Chunk {
   id: string;

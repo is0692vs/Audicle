@@ -1,11 +1,11 @@
+'use client';
+
 import {
   ExtractRequest,
   ExtractResponse,
   SynthesizeRequest,
 } from "@/types/api";
 import { logger } from "./logger";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 /**
  * URLから本文を抽出する
@@ -41,19 +41,24 @@ export async function extractContent(url: string): Promise<ExtractResponse> {
  */
 export async function synthesizeSpeech(
   text: string,
-  voice?: string
+  voice?: string,
+  speed?: number
 ): Promise<Blob> {
-  const request: SynthesizeRequest = { text };
+  const request: SynthesizeRequest & { speed?: number } = { text };
   if (voice) {
     request.voice = voice;
   }
+  if (speed) {
+    request.speed = speed;
+  }
 
-  logger.apiRequest("POST", `${API_BASE_URL}/synthesize`, {
+  logger.apiRequest("POST", "/api/synthesize", {
     text: text.substring(0, 50) + "...",
     voice,
+    speed,
   });
 
-  const response = await fetch(`${API_BASE_URL}/synthesize`, {
+  const response = await fetch("/api/synthesize", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -67,7 +72,17 @@ export async function synthesizeSpeech(
     throw new Error(`音声合成に失敗しました: ${error}`);
   }
 
-  const blob = await response.blob();
+  const data = await response.json();
+
+  // base64エンコードされた音声データをBlobに変換
+  const audioData = data.audio;
+  const binaryString = atob(audioData);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+
+  const blob = new Blob([bytes], { type: 'audio/mpeg' });
   logger.success(`音声合成完了: ${blob.size} bytes`);
 
   return blob;
