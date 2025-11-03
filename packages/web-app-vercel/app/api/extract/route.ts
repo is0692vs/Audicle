@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Readability } from '@mozilla/readability';
 import { JSDOM } from 'jsdom';
 import { ExtractResponse } from '@/types/api';
-import { extractionRulesManager } from '@/lib/extraction-rules';
 
 export async function POST(request: NextRequest) {
     try {
@@ -32,11 +31,8 @@ export async function POST(request: NextRequest) {
         const dom = new JSDOM(html, { url });
         const doc = dom.window.document;
 
-        // カスタムルールの確認
-        const customRule = extractionRulesManager.getRule(url);
-
         // Readabilityで本文抽出
-        let article = new Readability(doc).parse();
+        const article = new Readability(doc).parse();
 
         if (!article) {
             return NextResponse.json(
