@@ -3,6 +3,11 @@ import { auth } from '@/lib/auth';
 import { SynthesizeRequest } from '@/types/api';
 import { TextToSpeechClient, protos } from '@google-cloud/text-to-speech';
 
+// Node.js runtimeを明示的に指定（Google Cloud TTS SDKはEdge Runtimeで動作しない）
+export const runtime = 'nodejs';
+// 動的レンダリングを強制（キャッシュを無効化）
+export const dynamic = 'force-dynamic';
+
 // 許可リスト（環境変数から取得、カンマ区切り）
 const ALLOWED_EMAILS = process.env.ALLOWED_EMAILS?.split(',').map(e => e.trim()) || [];
 

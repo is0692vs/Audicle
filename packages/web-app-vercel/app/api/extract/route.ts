@@ -3,6 +3,11 @@ import { Readability } from '@mozilla/readability';
 import { JSDOM } from 'jsdom';
 import { ExtractResponse } from '@/types/api';
 
+// Node.js runtimeを明示的に指定（JSDOMはEdge Runtimeで動作しない）
+export const runtime = 'nodejs';
+// 動的レンダリングを強制（キャッシュを無効化）
+export const dynamic = 'force-dynamic';
+
 export async function OPTIONS() {
     return NextResponse.json({}, {
         headers: {
@@ -14,6 +19,8 @@ export async function OPTIONS() {
 }
 
 export async function POST(request: NextRequest) {
+    console.log('[Extract API] POST request received');
+
     const corsHeaders = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -22,6 +29,7 @@ export async function POST(request: NextRequest) {
 
     try {
         const { url } = await request.json();
+        console.log('[Extract API] Extracting content from:', url);
 
         if (!url || typeof url !== 'string') {
             return NextResponse.json(
@@ -67,6 +75,11 @@ export async function POST(request: NextRequest) {
             author: article.byline || undefined,
             siteName: article.siteName || undefined,
         };
+
+        console.log('[Extract API] Successfully extracted:', {
+            title: response.title,
+            textLength: response.textLength,
+        });
 
         return NextResponse.json(response, {
             headers: corsHeaders,
