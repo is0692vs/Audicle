@@ -1,11 +1,9 @@
 {
   "functions": {
     "app/api/extract/route.ts": {
-      "runtime": "nodejs20.x",
       "maxDuration": 10
     },
     "app/api/synthesize/route.ts": {
-      "runtime": "nodejs20.x",
       "maxDuration": 10
     }
   }
