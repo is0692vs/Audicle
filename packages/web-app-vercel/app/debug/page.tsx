@@ -1,10 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
+type SessionInfo = Record<string, unknown> | null;
+type EnvInfo = Record<string, unknown> | null;
+
 export default function DebugPage() {
-  const [sessionInfo, setSessionInfo] = useState<any>(null);
-  const [envInfo, setEnvInfo] = useState<any>(null);
+  const [sessionInfo, setSessionInfo] = useState<SessionInfo>(null);
+  const [envInfo, setEnvInfo] = useState<EnvInfo>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -115,18 +119,18 @@ export default function DebugPage() {
 
         {/* ナビゲーション */}
         <div className="flex gap-4">
-          <a
+          <Link
             href="/"
             className="py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             ホームに戻る
-          </a>
-          <a
+          </Link>
+          <Link
             href="/auth/signin"
             className="py-2 px-4 bg-gray-600 text-white rounded hover:bg-gray-700"
           >
             ログイン画面に戻る
-          </a>
+          </Link>
         </div>
       </div>
     </div>

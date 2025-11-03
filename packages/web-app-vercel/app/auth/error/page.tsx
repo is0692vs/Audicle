@@ -10,11 +10,8 @@ export default function AuthError() {
   // URLパラメータからエラー情報を抽出
   let errorMessage = "アクセスが拒否されました";
   let userEmail = "";
-  let errorDetails = "";
 
   if (error === "AccessDenied") {
-    errorDetails =
-      "エラーコード: AccessDenied - ユーザーが許可されたリストにありません";
     if (errorDescription) {
       try {
         const decoded = decodeURIComponent(errorDescription);
@@ -25,8 +22,8 @@ export default function AuthError() {
             errorMessage = `このメールアドレスはアクセスできません: ${userEmail}`;
           }
         }
-      } catch (e) {
-        errorDetails = errorDescription;
+      } catch (_e) {
+        // エラーハンドリング
       }
     }
   }
