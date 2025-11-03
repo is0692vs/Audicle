@@ -1,8 +1,10 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 
-export default function AuthError() {
+function AuthErrorContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
   const errorDescription = searchParams.get("error_description");
@@ -75,14 +77,32 @@ export default function AuthError() {
         </div>
 
         <div className="text-center">
-          <a
+          <Link
             href="/auth/signin"
             className="inline-block py-2 px-4 text-blue-600 hover:text-blue-700 font-medium"
           >
             ← ログイン画面に戻る
-          </a>
+          </Link>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AuthError() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+          <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
+            <div className="text-center">
+              <p className="text-gray-600">読み込み中...</p>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <AuthErrorContent />
+    </Suspense>
   );
 }
