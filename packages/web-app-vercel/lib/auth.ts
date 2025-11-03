@@ -13,10 +13,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     callbacks: {
         async signIn({ user }) {
             const email = user.email;
-            if (!email) return false;
+            if (!email) {
+                throw new Error('NO_EMAIL: メールアドレスが取得できませんでした');
+            }
             const isAllowed = allowedUsers.includes(email);
-            console.log('SignIn attempt:', email, 'Allowed:', isAllowed);
-            return isAllowed;
+            console.log('SignIn attempt:', email, 'Allowed:', isAllowed, 'AllowedUsers:', allowedUsers);
+            
+            if (!isAllowed) {
+                // エラーメッセージをURLパラメータで渡す
+                const errorMessage = `ACCESS_DENIED: ${email}`;
+                throw new Error(errorMessage);
+            }
+            return true;
         },
     },
     pages: {
