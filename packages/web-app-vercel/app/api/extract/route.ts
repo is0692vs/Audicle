@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Readability } from '@mozilla/readability';
-import { JSDOM } from 'jsdom';
+import { parseHTML } from 'linkedom';
 import { ExtractResponse } from '@/types/api';
 
 // Node.js runtimeを明示的に指定（JSDOMはEdge Runtimeで動作しない）
@@ -51,12 +51,11 @@ export async function POST(request: NextRequest) {
         // HTMLを取得
         const html = await fetchWithTimeout(url);
 
-        // JSDOMでパース
-        const dom = new JSDOM(html, { url });
-        const doc = dom.window.document;
+        // linkedomでパース
+        const { document } = parseHTML(html);
 
         // Readabilityで本文抽出
-        const article = new Readability(doc).parse();
+        const article = new Readability(document).parse();
 
         if (!article) {
             return NextResponse.json(
