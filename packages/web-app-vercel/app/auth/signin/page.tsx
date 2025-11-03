@@ -1,5 +1,3 @@
-"use client";
-
 import { signIn } from "@/lib/auth";
 
 export default function SignIn() {
@@ -10,12 +8,19 @@ export default function SignIn() {
           <h2 className="text-3xl font-bold">Audicle</h2>
           <p className="mt-2 text-gray-600">Web記事読み上げアプリ</p>
         </div>
-        <button
-          onClick={() => signIn("google", { callbackUrl: "/" })}
-          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+        <form
+          action={async () => {
+            "use server";
+            await signIn("google", { redirectTo: "/" });
+          }}
         >
-          Googleでログイン
-        </button>
+          <button
+            type="submit"
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+          >
+            Googleでログイン
+          </button>
+        </form>
       </div>
     </div>
   );
