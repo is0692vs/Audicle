@@ -1,12 +1,24 @@
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { auth } from "@/lib/auth";
 
-export default auth((req) => {
-    if (!req.auth && !req.nextUrl.pathname.startsWith('/auth')) {
-        const newUrl = new URL('/auth/signin', req.nextUrl.origin);
-        return Response.redirect(newUrl);
+export async function middleware(request: NextRequest) {
+    // APIルートと認証ルートはスキップ
+    const pathname = request.nextUrl.pathname;
+    if (pathname.startsWith('/api') || pathname.startsWith('/auth')) {
+        return NextResponse.next();
     }
-});
+
+    // 認証チェック
+    const session = await auth();
+    if (!session) {
+        const signInUrl = new URL('/auth/signin', request.url);
+        return NextResponse.redirect(signInUrl);
+    }
+
+    return NextResponse.next();
+}
 
 export const config = {
-    matcher: ['/((?!api|auth|_next/static|_next/image|favicon.ico).*)'],
+    matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };

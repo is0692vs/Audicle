@@ -1,4 +1,5 @@
 {
+  "buildCommand": "npm run build",
   "functions": {
     "app/api/extract/route.ts": {
       "maxDuration": 10
