@@ -1,15 +1,15 @@
-# Auticle Web App (Vercel版)
+# Auticle Web App (Vercel 版)
 
-**完全サーバーレス構成**のNext.js 15アプリケーション。Vercelにデプロイ可能で、外部APIサーバー不要。音楽プレイヤーのような直感的な UI で、Web ページの記事を音声読み上げします。
+**完全サーバーレス構成**の Next.js 15 アプリケーション。Vercel にデプロイ可能で、外部 API サーバー不要。音楽プレイヤーのような直感的な UI で、Web ページの記事を音声読み上げします。
 
-> **注意**: このプロジェクトは`web-app`（セルフホスト版）とは異なり、完全にサーバーレスです。外部APIサーバー（FastAPI）は不要です。
+> **注意**: このプロジェクトは`web-app`（セルフホスト版）とは異なり、完全にサーバーレスです。外部 API サーバー（FastAPI）は不要です。
 
 ## ✨ 主な機能
 
 - **記事抽出・表示**: URL から本文を抽出し、チャンク単位で表示（サーバーレス）
-- **音声合成**: Google Cloud Text-to-Speech APIで高品質な音声合成（サーバーレス）
+- **音声合成**: Google Cloud Text-to-Speech API で高品質な音声合成（サーバーレス）
 - **音声再生**: 連続再生、自動スクロール、クリック再生（Seek 機能）
-- **速度調整**: 0.8x〜3.0xの可変速再生
+- **速度調整**: 0.8x〜3.0x の可変速再生
 - **記事管理**: 保存した記事の一覧表示と管理機能
 - **音声キャッシュ**: 3 チャンク先読みによるスムーズな再生
 - **認証**: Google OAuth によるアクセス制御
@@ -50,9 +50,10 @@ web-app-vercel/
 ```
 
 **重要な違い**:
-- ❌ 外部APIサーバー（FastAPI）は不要
+
+- ❌ 外部 API サーバー（FastAPI）は不要
 - ✅ `/api/extract`, `/api/synthesize` は内部エンドポイント
-- ✅ 同一オリジンのため、CORS不要
+- ✅ 同一オリジンのため、CORS 不要
 
 詳細は [ARCHITECTURE.md](./ARCHITECTURE.md) を参照してください。
 
@@ -61,7 +62,7 @@ web-app-vercel/
 ### 前提条件
 
 - Node.js 18+
-- Google Cloud プロジェクト（Text-to-Speech API有効化）
+- Google Cloud プロジェクト（Text-to-Speech API 有効化）
 - Google OAuth クライアント（認証用）
 
 ### インストール & 起動
@@ -108,15 +109,17 @@ ALLOWED_EMAILS=user1@example.com,user2@example.com
 ### 環境変数の取得方法
 
 1. **Google Cloud TTS**
+
    - [Google Cloud Console](https://console.cloud.google.com/)でプロジェクト作成
-   - Text-to-Speech APIを有効化
-   - サービスアカウントを作成してJSONキーをダウンロード
-   - JSONの内容を1行に圧縮して`GOOGLE_APPLICATION_CREDENTIALS_JSON`に設定
+   - Text-to-Speech API を有効化
+   - サービスアカウントを作成して JSON キーをダウンロード
+   - JSON の内容を 1 行に圧縮して`GOOGLE_APPLICATION_CREDENTIALS_JSON`に設定
 
 2. **Google OAuth**
+
    - [Google Cloud Console](https://console.cloud.google.com/)で認証情報作成
-   - OAuth 2.0 クライアントIDを作成（Webアプリケーション）
-   - リダイレクトURIに`https://your-domain.vercel.app/api/auth/callback/google`を追加
+   - OAuth 2.0 クライアント ID を作成（Web アプリケーション）
+   - リダイレクト URI に`https://your-domain.vercel.app/api/auth/callback/google`を追加
 
 3. **AUTH_SECRET**
    - ランダムな文字列を生成（例: `openssl rand -base64 32`）

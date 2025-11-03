@@ -20,7 +20,7 @@ export async function OPTIONS() {
 
 export async function POST(request: NextRequest) {
     console.log('[Extract API] POST request received');
-    
+
     const corsHeaders = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
