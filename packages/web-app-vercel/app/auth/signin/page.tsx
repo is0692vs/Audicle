@@ -1,9 +1,10 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { handleGoogleSignIn } from "./actions";
 
-export default function SignIn() {
+function SignInContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
 
@@ -69,5 +70,23 @@ export default function SignIn() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function SignIn() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+          <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
+            <div className="text-center">
+              <p className="text-gray-600">読み込み中...</p>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <SignInContent />
+    </Suspense>
   );
 }

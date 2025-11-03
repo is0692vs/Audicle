@@ -24,7 +24,7 @@ function AuthErrorContent() {
             errorMessage = `このメールアドレスはアクセスできません: ${userEmail}`;
           }
         }
-      } catch (_e) {
+      } catch {
         // エラーハンドリング
       }
     }
