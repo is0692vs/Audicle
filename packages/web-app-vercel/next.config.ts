@@ -4,7 +4,7 @@ import withPWA from "next-pwa";
 
 const nextConfig: NextConfig = {
   // Node.js APIを使用するため、serverExternalPackagesに追加
-  serverExternalPackages: ['@mozilla/readability', 'jsdom', '@google-cloud/text-to-speech'],
+  serverExternalPackages: ['@mozilla/readability', 'linkedom', '@google-cloud/text-to-speech'],
   
   // API Routesの明示的な設定
   experimental: {
