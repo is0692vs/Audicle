@@ -18,7 +18,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             }
             const isAllowed = allowedUsers.includes(email);
             console.log('SignIn attempt:', email, 'Allowed:', isAllowed, 'AllowedUsers:', allowedUsers);
-            
+
             if (!isAllowed) {
                 // エラーメッセージをURLパラメータで渡す
                 const errorMessage = `ACCESS_DENIED: ${email}`;

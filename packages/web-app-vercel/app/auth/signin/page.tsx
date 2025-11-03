@@ -1,16 +1,17 @@
-'use client';
+"use client";
 
-import { signIn } from "@/lib/auth";
 import { useSearchParams } from "next/navigation";
+import { handleGoogleSignIn } from "./actions";
 
 export default function SignIn() {
   const searchParams = useSearchParams();
-  const error = searchParams.get('error');
-  
+  const error = searchParams.get("error");
+
   // ALLOWED_USERS環境変数の値を取得（セキュリティ上、最初の3文字のみ表示）
-  const allowedUsersPreview = process.env.NEXT_PUBLIC_DEBUG_MODE === 'true' 
-    ? (process.env.NEXT_PUBLIC_ALLOWED_USERS_PREVIEW || 'Not configured')
-    : 'Hidden (enable DEBUG_MODE to view)';
+  const allowedUsersPreview =
+    process.env.NEXT_PUBLIC_DEBUG_MODE === "true"
+      ? process.env.NEXT_PUBLIC_ALLOWED_USERS_PREVIEW || "Not configured"
+      : "Hidden (enable DEBUG_MODE to view)";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -28,12 +29,7 @@ export default function SignIn() {
           </div>
         )}
 
-        <form
-          action={async () => {
-            "use server";
-            await signIn("google", { redirectTo: "/" });
-          }}
-        >
+        <form action={handleGoogleSignIn}>
           <button
             type="submit"
             className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
@@ -43,9 +39,11 @@ export default function SignIn() {
         </form>
 
         {/* デバッグ情報セクション */}
-        {process.env.NEXT_PUBLIC_DEBUG_MODE === 'true' && (
+        {process.env.NEXT_PUBLIC_DEBUG_MODE === "true" && (
           <div className="mt-8 pt-8 border-t border-gray-300">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">🔍 デバッグ情報（開発環境）</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-4">
+              🔍 デバッグ情報（開発環境）
+            </h3>
             <div className="bg-gray-100 p-4 rounded text-left text-xs space-y-2">
               <div>
                 <p className="text-gray-600">
@@ -54,12 +52,16 @@ export default function SignIn() {
               </div>
               <div>
                 <p className="text-gray-600">
-                  <strong>現在時刻:</strong> {new Date().toLocaleString('ja-JP')}
+                  <strong>現在時刻:</strong>{" "}
+                  {new Date().toLocaleString("ja-JP")}
                 </p>
               </div>
               <div>
                 <p className="text-gray-600">
-                  <strong>ユーザーエージェント:</strong> {typeof navigator !== 'undefined' ? navigator.userAgent.substring(0, 50) + '...' : 'N/A'}
+                  <strong>ユーザーエージェント:</strong>{" "}
+                  {typeof navigator !== "undefined"
+                    ? navigator.userAgent.substring(0, 50) + "..."
+                    : "N/A"}
                 </p>
               </div>
             </div>
