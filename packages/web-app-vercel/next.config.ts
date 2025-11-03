@@ -19,19 +19,30 @@ export default withPWA({
   dest: "public",
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === "development",
+  disable: false,
   // PWAがAPI Routesをキャッシュしないように設定
   runtimeCaching: [
     {
-      urlPattern: /^https?.*/,
+      urlPattern: /^https?.*(?!\/api\/).*/ ,
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'staticCache',
+        expiration: {
+          maxEntries: 60,
+          maxAgeSeconds: 24 * 60 * 60,
+        },
+      },
+    },
+    {
+      urlPattern: /\/api\/.*/,
       handler: 'NetworkFirst',
       options: {
-        cacheName: 'offlineCache',
+        cacheName: 'apiCache',
         expiration: {
-          maxEntries: 200,
+          maxEntries: 50,
+          maxAgeSeconds: 60 * 60,
         },
-        // API Routesを除外
-        networkTimeoutSeconds: 10,
+        networkTimeoutSeconds: 5,
       },
     },
   ],
