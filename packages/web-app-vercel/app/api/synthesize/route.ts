@@ -133,17 +133,33 @@ async function synthesizeToBuffer(text: string, voice: string, speakingRate: num
     }
 }
 
+export async function OPTIONS() {
+    return NextResponse.json({}, {
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+        },
+    });
+}
+
 export async function POST(request: NextRequest) {
+    const corsHeaders = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+    };
+
     try {
         // 認証チェック
         const session = await auth();
         if (!session?.user?.email) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
         }
 
         // 許可リストチェック
         if (ALLOWED_EMAILS.length > 0 && !ALLOWED_EMAILS.includes(session.user.email)) {
-            return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+            return NextResponse.json({ error: 'Access denied' }, { status: 403, headers: corsHeaders });
         }
 
         // リクエストボディをパース
@@ -153,14 +169,14 @@ export async function POST(request: NextRequest) {
         if (!text || typeof text !== 'string') {
             return NextResponse.json(
                 { error: 'Text is required and must be a string' },
-                { status: 400 }
+                { status: 400, headers: corsHeaders }
             );
         }
 
         if (text.trim().length === 0) {
             return NextResponse.json(
                 { error: 'Text must not be empty' },
-                { status: 400 }
+                { status: 400, headers: corsHeaders }
             );
         }
 
@@ -172,7 +188,7 @@ export async function POST(request: NextRequest) {
         if (textChunks.length === 0) {
             return NextResponse.json(
                 { error: 'Failed to process text' },
-                { status: 400 }
+                { status: 400, headers: corsHeaders }
             );
         }
 
@@ -196,24 +212,28 @@ export async function POST(request: NextRequest) {
                 duration: 0, // 実際の長さは計算が複雑なため0
             },
             {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: corsHeaders,
             }
         );
     } catch (error) {
+        const corsHeaders = {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+        };
+
         console.error('Synthesize error:', error);
 
         if (error instanceof SyntaxError) {
             return NextResponse.json(
                 { error: 'Invalid request body' },
-                { status: 400 }
+                { status: 400, headers: corsHeaders }
             );
         }
 
         return NextResponse.json(
             { error: 'Failed to synthesize speech' },
-            { status: 500 }
+            { status: 500, headers: corsHeaders }
         );
     }
 }
