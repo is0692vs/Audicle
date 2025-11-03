@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
         }
 
         const voiceToUse = voice || 'ja-JP-Neural2-B';
-        const speakingRate = speed || 2.0;
+        const speakingRate = speed || 1.0;
 
         // テキストを分割
         const textChunks = splitText(text);
