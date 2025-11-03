@@ -16,6 +16,13 @@ export const metadata: Metadata = {
   title: "Auticle - Web Reader with TTS",
   description:
     "音楽アプリの歌詞表示のような体験で、Webページの本文を読み上げます",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Audicle",
+  },
+  themeColor: "#000000",
 };
 
 export default function RootLayout({

@@ -10,3 +10,9 @@ packages/api-server/credentials/*.json
 _archive/google-tts-server/credentials/*.json
 .gemini/
 gha-creds-*.json
+
+# PWA Service Worker
+packages/web-app/public/sw.js
+packages/web-app/public/workbox-*.js
+packages/web-app/public/worker-*.js
+packages/web-app/public/*.map
