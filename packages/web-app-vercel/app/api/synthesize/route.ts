@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { SynthesizeRequest } from '@/types/api';
-import { TextToSpeechClient } from '@google-cloud/text-to-speech';
+import { TextToSpeechClient, protos } from '@google-cloud/text-to-speech';
 
 // 許可リスト（環境変数から取得、カンマ区切り）
 const ALLOWED_EMAILS = process.env.ALLOWED_EMAILS?.split(',').map(e => e.trim()) || [];
@@ -25,7 +25,7 @@ function getTTSClient(): TextToSpeechClient {
             credentials,
         });
         return ttsCLient;
-    } catch (error) {
+    } catch {
         throw new Error('Failed to parse GOOGLE_APPLICATION_CREDENTIALS_JSON');
     }
 }
@@ -100,25 +100,25 @@ function splitText(text: string): string[] {
 async function synthesizeToBuffer(text: string, voice: string, speakingRate: number = 2.0): Promise<Buffer> {
     const client = getTTSClient();
 
-    const synthesisInput = {
+    const synthesisInput: protos.google.cloud.texttospeech.v1.ISynthesisInput = {
         text: text,
     };
 
-    const voiceParams = {
+    const voiceParams: protos.google.cloud.texttospeech.v1.IVoiceSelectionParams = {
         languageCode: 'ja-JP',
         name: voice || 'ja-JP-Neural2-B',
     };
 
-    const audioConfig = {
-        audioEncoding: 'MP3',
+    const audioConfig: protos.google.cloud.texttospeech.v1.IAudioConfig = {
+        audioEncoding: protos.google.cloud.texttospeech.v1.AudioEncoding.MP3,
         speakingRate: speakingRate,
     };
 
     try {
         const [response] = await client.synthesizeSpeech({
-            input: synthesisInput as any,
-            voice: voiceParams as any,
-            audioConfig: audioConfig as any,
+            input: synthesisInput,
+            voice: voiceParams,
+            audioConfig: audioConfig,
         });
 
         const audioContent = response.audioContent;
@@ -126,7 +126,7 @@ async function synthesizeToBuffer(text: string, voice: string, speakingRate: num
             throw new Error('No audio content in response');
         }
 
-        return Buffer.isBuffer(audioContent) ? audioContent : Buffer.from(audioContent as any);
+        return Buffer.isBuffer(audioContent) ? audioContent : Buffer.from(audioContent);
     } catch (error) {
         console.error('Google Cloud TTS API error:', error);
         throw new Error(`TTS synthesis failed: ${error instanceof Error ? error.message : String(error)}`);
