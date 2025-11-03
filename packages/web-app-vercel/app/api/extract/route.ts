@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
             title: article.title || '',
             content: article.content || textContent,
             textLength: textContent.length,
-            author: article.author || undefined,
+            author: article.byline || undefined,
             siteName: article.siteName || undefined,
         };
 
