@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Chunk } from "@/types/api";
 import { audioCache } from "@/lib/audioCache";
 import { logger } from "@/lib/logger";
+import { needsPauseBefore, needsPauseAfter, getPauseDuration } from "@/lib/paragraphParser";
 
 interface UsePlaybackProps {
   chunks: Chunk[];
@@ -11,6 +12,13 @@ interface UsePlaybackProps {
 }
 
 const PREFETCH_AHEAD = 3; // 3つ先まで先読み
+
+/**
+ * 指定時間待機する
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export function usePlayback({ chunks, onChunkChange }: UsePlaybackProps) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -46,13 +54,13 @@ export function usePlayback({ chunks, onChunkChange }: UsePlaybackProps) {
     }
   }, []);
 
-  // 先読み処理
+  // 先読み処理（クリーンアップ済みテキストを使用）
   const prefetchAudio = useCallback(
     async (startIndex: number) => {
       const endIndex = Math.min(startIndex + PREFETCH_AHEAD, chunks.length);
       const textsToFetch = chunks
         .slice(startIndex, endIndex)
-        .map((chunk) => chunk.text);
+        .map((chunk) => chunk.cleanedText);
 
       if (textsToFetch.length > 0) {
         await audioCache.prefetch(textsToFetch);
@@ -74,10 +82,15 @@ export function usePlayback({ chunks, onChunkChange }: UsePlaybackProps) {
       try {
         const chunk = chunks[index];
 
-        logger.info(`▶️ 再生開始: チャンク ${index + 1}/${chunks.length}`);
+        logger.info(`▶️ 再生開始: チャンク ${index + 1}/${chunks.length} (${chunk.type})`);
 
-        // キャッシュから音声URLを取得（なければ合成）
-        const audioUrl = await audioCache.get(chunk.text);
+        // 見出しの前にポーズ
+        if (needsPauseBefore(chunk.type)) {
+          await sleep(getPauseDuration('heading'));
+        }
+
+        // キャッシュから音声URLを取得（cleanedTextを使用）
+        const audioUrl = await audioCache.get(chunk.cleanedText);
 
         // 先読み処理（非同期で実行）
         prefetchAudio(index + 1);
@@ -91,7 +104,14 @@ export function usePlayback({ chunks, onChunkChange }: UsePlaybackProps) {
         audioRef.current = audio;
         audio.playbackRate = playbackRate;
 
-        audio.onended = () => {
+        audio.onended = async () => {
+          // 見出しの後、または段落間にポーズ
+          if (needsPauseAfter(chunk.type)) {
+            await sleep(getPauseDuration('heading'));
+          } else {
+            await sleep(getPauseDuration('paragraph'));
+          }
+
           // 次のチャンクがあれば自動的に再生
           if (index + 1 < chunks.length) {
             playFromIndex(index + 1);

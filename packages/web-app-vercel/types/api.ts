@@ -26,5 +26,7 @@ export interface SynthesizeResponse {
 // チャンク情報の拡張型（クライアント側で使用）
 export interface Chunk {
   id: string;
-  text: string;
+  text: string; // 表示用テキスト
+  cleanedText: string; // TTS送信用のクリーンアップ済みテキスト
+  type: string; // 段落タイプ（p, h1, h2, li等）
 }
