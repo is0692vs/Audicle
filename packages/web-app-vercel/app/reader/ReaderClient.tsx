@@ -8,39 +8,19 @@ import { extractContent } from "@/lib/api";
 import { usePlayback } from "@/hooks/usePlayback";
 import { articleStorage, type Article } from "@/lib/storage";
 import { logger } from "@/lib/logger";
+import { parseHTMLToParagraphs } from "@/lib/paragraphParser";
 
-function splitContentIntoChunks(content: string): string[] {
-  // HTMLタグを除去
-  const textContent = content.replace(/<[^>]*>/g, "").trim();
-
-  // 文末の句読点で分割（日本語対応）
-  const sentences = textContent.split(/(?<=[。．！？\n])/);
-
-  // 空の要素を除去し、適切な長さのチャンクにまとめる
-  const chunks: string[] = [];
-  let currentChunk = "";
-
-  for (const sentence of sentences) {
-    if (sentence.trim()) {
-      if (currentChunk.length + sentence.length > 500) {
-        // 約500文字で区切る
-        if (currentChunk) {
-          chunks.push(currentChunk.trim());
-          currentChunk = sentence;
-        } else {
-          chunks.push(sentence.trim());
-        }
-      } else {
-        currentChunk += sentence;
-      }
-    }
-  }
-
-  if (currentChunk) {
-    chunks.push(currentChunk.trim());
-  }
-
-  return chunks.filter((chunk) => chunk.length > 0);
+function convertParagraphsToChunks(htmlContent: string): Chunk[] {
+  // HTML構造を保持して段落を抽出
+  const paragraphs = parseHTMLToParagraphs(htmlContent);
+  
+  // Chunk形式に変換
+  return paragraphs.map((para) => ({
+    id: para.id,
+    text: para.originalText,
+    cleanedText: para.cleanedText,
+    type: para.type,
+  }));
 }
 
 export default function ReaderPageClient() {
@@ -92,30 +72,22 @@ export default function ReaderPageClient() {
     try {
       const response = await extractContent(url);
 
-      // contentをチャンクに分割
-      const contentChunks = splitContentIntoChunks(response.content);
-
-      // chunksにIDを付与
-      const chunksWithId: Chunk[] = contentChunks.map((text, index) => ({
-        id: `chunk-${index}`,
-        text,
-      }));
+      // HTML構造を保持して段落単位でチャンクに分割
+      const chunksWithId = convertParagraphsToChunks(response.content);
 
       setChunks(chunksWithId);
       setTitle(response.title);
 
       // 記事を保存
-      const newArticle: Article = {
-        id: Date.now().toString(),
+      const newArticle = articleStorage.add({
         url,
         title: response.title,
         chunks: chunksWithId,
-        createdAt: Date.now(),
-      };
-      articleStorage.add(newArticle);
+      });
       logger.success("記事を保存", {
         id: newArticle.id,
         title: newArticle.title,
+        chunkCount: chunksWithId.length,
       });
 
       // URLに記事IDを追加
