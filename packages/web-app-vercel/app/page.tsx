@@ -50,7 +50,7 @@ export default function Home() {
       <header className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
         <div className="max-w-4xl mx-auto p-4">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold">Auticle - 記事一覧</h1>
+            <h1 className="text-2xl font-bold">Audicle - 記事一覧</h1>
             <button
               onClick={() => handleSignOut()}
               className="px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 rounded transition-colors border border-red-200 dark:border-red-800"
