@@ -3,7 +3,7 @@
 <aside>
 ℹ️
 
-本ドキュメントではプロダクト名を「Audicle」に統一しています。コード上の識別子（例: `auticle/`, `.auticle-clickable`, `data-auticle-id`）は互換性維持のため現状のまま表記・運用している箇所があります。
+本ドキュメントではプロダクト名を「Audicle」に統一しています。コード上の識別子（例: `audicle/`, `.audicle-clickable`, `data-audicle-id`）は互換性維持のため現状のまま表記・運用している箇所があります。
 
 </aside>
 
@@ -18,7 +18,7 @@
 - マイルストーン: 1. プロジェクト基盤と基本操作の構築
 - 背景: 開発を開始するための土台となる、最低限のファイル構成と設定を準備する。
 - 実装方針
-  1. `auticle/` フォルダを作成。
+  1. `audicle/` フォルダを作成。
   2. `manifest.json` を作成し、Manifest V3 仕様に準拠した設定を記述（`name`, `version`, `permissions`: `"storage"`, `"activeTab"`, `"scripting"` など）。
   3. `popup.html`, `popup.js`, `content.js`, `background.js`, `icon.png` を空または動作確認用コードを記述した状態で作成。
 - [x] 完了条件
@@ -73,9 +73,9 @@
 - 実装方針
   1. `content.js`:
      - `preparePage()` と `cleanupPage()` を定義し、Issue #3 のメッセージに応じて呼び出す。
-     - `preparePage()`: 段落要素（`p` など）に `data-auticle-id` 属性と `.auticle-clickable` クラスを付与。
+     - `preparePage()`: 段落要素（`p` など）に `data-audicle-id` 属性と `.audicle-clickable` クラスを付与。
      - `cleanupPage()`: 追加した属性・クラスを削除して原状復帰。
-  2. `styles.css`: `.auticle-clickable` に `{ cursor: pointer; }` などを定義し、`preparePage()` 実行時に動的注入。
+  2. `styles.css`: `.audicle-clickable` に `{ cursor: pointer; }` などを定義し、`preparePage()` 実行時に動的注入。
 - [x] 完了条件
   - [x] 拡張機能を ON にすると、対象段落がクリック可能な見た目になること。
   - [x] 拡張機能を OFF にすると、ページが完全に元の状態に戻ること。
@@ -91,8 +91,8 @@
 - 実装方針
   1. `content.js`:
      - `preparePage` 内でクリックイベントを登録（イベント委任）。
-     - クリック対象が `.auticle-clickable` なら `data-auticle-id` を取得。
-     - すべての `.auticle-clickable` を走査し、クリック ID 以降のテキストを収集・結合。
+     - クリック対象が `.audicle-clickable` なら `data-audicle-id` を取得。
+     - すべての `.audicle-clickable` を走査し、クリック ID 以降のテキストを収集・結合。
      - `chrome.runtime.sendMessage` で `background.js` に `{ command: 'play', text: 収集テキスト }` を送信。
 - [x] 完了条件
   - [x] 加工された段落をクリックすると `background.js` に `play` コマンドが送信されること。

@@ -326,4 +326,4 @@ rm -rf .next
 - 📊 **ログ機能**: 詳細なデバッグ情報出力
 
 総計 **7,475 行** のコード追加により、ユーザーの記事読み体験を大幅に向上させました。</content>
-<parameter name="filePath">/workspaces/Auticle/BRANCH_REPORT.md
+<parameter name="filePath">/workspaces/Audicle/packages/web-app-vercel/BRANCH_REPORT.md
