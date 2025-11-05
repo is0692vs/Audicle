@@ -93,7 +93,7 @@ Next.js (React) + TypeScript を使用して、音楽アプリの歌詞表示の
 
 ```bash
 # 1. プロジェクトディレクトリに移動
-cd /workspaces/Auticle/packages/web-app
+cd /workspaces/Audicle/packages/web-app
 
 # 2. 依存関係をインストール (初回のみ)
 npm install

@@ -63,7 +63,7 @@ DEFAULT_RATE=+0%
 DEFAULT_PITCH=+0Hz
 
 # Docker設定
-COMPOSE_PROJECT_NAME=auticle-edge-tts
+COMPOSE_PROJECT_NAME=audicle-edge-tts
 ```
 
 ### ポート変更

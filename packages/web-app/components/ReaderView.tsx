@@ -61,7 +61,7 @@ export default function ReaderView({
                 <p
                   key={chunk.id}
                   ref={isActive ? activeChunkRef : null}
-                  data-auticle-id={chunk.id}
+                  data-audicle-id={chunk.id}
                   onClick={() => onChunkClick?.(chunk.id)}
                   className={`
                     text-lg leading-relaxed cursor-pointer transition-all duration-200 p-4 rounded-lg

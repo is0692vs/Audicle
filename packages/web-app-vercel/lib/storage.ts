@@ -10,7 +10,7 @@ export interface Article {
   createdAt: number;
 }
 
-const STORAGE_KEY = "auticle_articles";
+const STORAGE_KEY = "audicle_articles";
 
 export const articleStorage = {
   // すべての記事を取得

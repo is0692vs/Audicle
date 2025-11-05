@@ -44,7 +44,7 @@ const synthesizer = await SynthesizerFactory.create(config.synthesizerType);
 
 ### 2. 新規ファイル・設定
 
-#### `auticle/config.json`
+#### `packages/chrome-extension/audicle/config.json`
 
 ```json
 {
@@ -52,7 +52,7 @@ const synthesizer = await SynthesizerFactory.create(config.synthesizerType);
 }
 ```
 
-#### `auticle/manifest.json` 更新
+#### `packages/chrome-extension/audicle/manifest.json` 更新
 
 ```json
 {
@@ -214,7 +214,7 @@ audioPlayer.addEventListener("error", (event) => {
 
 ### 2. 設定変更確認
 
-1. `auticle/config.json` の `synthesizerType` を確認
+1. `packages/chrome-extension/audicle/config.json` の `synthesizerType` を確認
 2. 不正な値（例：`"invalid_tts"`）に変更
 3. 拡張機能リロード → コンソールエラー確認
 4. 正しい値（`"google_tts"`）に戻して正常動作確認

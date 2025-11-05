@@ -103,7 +103,7 @@ export default function ReaderPageClient() {
             >
               ← 記事一覧
             </button>
-            <h1 className="text-2xl font-bold">Auticle</h1>
+            <h1 className="text-2xl font-bold">Audicle</h1>
           </div>
           {title && (
             <h2 className="text-lg text-gray-600 dark:text-gray-400 mb-4">

@@ -5,8 +5,8 @@
 ## 配置方法
 
 1. お好みの MP3 音声ファイルを用意(本リポジトリでは[このサイト](https://pro-video.jp/voice/announce/)の`G-22`を使用しています)
-2. `auticle/sample.mp3` として配置
-3. `auticle/config.json` で `"synthesizerType": "test"` に設定
+2. `packages/chrome-extension/audicle/sample.mp3` として配置
+3. `packages/chrome-extension/audicle/config.json` で `"synthesizerType": "test"` に設定
 4. Chrome 拡張機能をリロード
 
 ## 動作

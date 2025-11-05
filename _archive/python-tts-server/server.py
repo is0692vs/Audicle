@@ -1,5 +1,5 @@
 """
-Edge TTS API Server for Auticle
+Edge TTS API Server for Audicle
 テキストを受け取ってEdge TTSで音声合成し、MP3として返すサーバー
 """
 
@@ -51,7 +51,7 @@ async def list_voices():
 async def synthesize_text(request: SynthesizeRequest):
     """
     テキストを音声に変換してMP3として返す
-    Auticleからのリクエストを受け取るメインエンドポイント
+    Audicleからのリクエストを受け取るメインエンドポイント
     """
     try:
         if not request.text.strip():

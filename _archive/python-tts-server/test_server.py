@@ -45,7 +45,7 @@ def test_synthesize():
     print("\n🔊 音声合成をテスト中...")
     try:
         data = {
-            "text": "こんにちは、Auticleの音声合成テストです。",
+            "text": "こんにちは、Audicleの音声合成テストです。",
             "voice": "ja-JP-NanamiNeural"
         }
         
@@ -74,7 +74,7 @@ def test_synthesize():
         return False
 
 def test_simple_synthesize():
-    """シンプル音声合成のテスト (Auticle互換性)"""
+    """シンプル音声合成のテスト (Audicle互換性)"""
     print("\n🔄 シンプル音声合成をテスト中...")
     try:
         data = {"text": "これはシンプルな音声合成のテストです。"}
