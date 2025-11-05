@@ -1,6 +1,6 @@
 // ログユーティリティ
 
-const LOG_PREFIX = "[Auticle]";
+const LOG_PREFIX = "[Audicle]";
 const LOG_STYLES = {
   info: "color: #3b82f6; font-weight: bold",
   success: "color: #10b981; font-weight: bold",
