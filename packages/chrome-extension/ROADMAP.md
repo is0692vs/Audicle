@@ -152,7 +152,7 @@
   - `content.js`
     - 再生キュー導入: クリック位置以降の本文を約 200 文字で分割し、`playbackQueue` に `{ text, paragraphId }` で格納。
     - 連続再生: `<audio>.onended` をトリガーに次チャンク再生を `background.js` に要求。キューが空になるまで繰り返し。
-    - 同期ハイライト: `updateHighlight()` を新設。現在チャンクの `paragraphId` に `.auticle-highlight` を付与し、それ以外を解除。
+    - 同期ハイライト: `updateHighlight()` を新設。現在チャンクの `paragraphId` に `.audicle-highlight` を付与し、それ以外を解除。
     - プリフェッチ: 次に再生するチャンク（デフォルト 2 つ先まで）を非同期で要求し、`audioCache` に保存。
   - `background.js`
     - プリフェッチ用 `fetch` コマンドを追加。受け取ったテキストから音声 `data:` URL を生成して返却。
@@ -227,7 +227,7 @@ Mozilla Readability.js を導入し、メインコンテンツ自動特定と構
 - `injectReadabilityLib()` で動的読み込み
 - キュー構築: `buildQueueWithCustomRule` / `buildQueueWithReadability` / `buildQueueWithFallback`
 - 構造化テキスト: 見出し「見出し。」、箇条書き「箇条書きです。」の前置き（任意）
-- ハイライト: `data-auticle-id` 基点の `updateHighlight()`
+  - ハイライト: `data-audicle-id` 基点の `updateHighlight()`
 - バッチ処理: `BATCH_SIZE=3`、`MAX_RETRIES=2` によるエラー低減
 
 3. `background.js`
@@ -279,7 +279,7 @@ Mozilla Readability.js を導入し、メインコンテンツ自動特定と構
 - popup.js の責務: トグル OFF 時は [`chrome.storage`](http://chrome.storage) に `enabled: false` を記録するだけ。停止メッセージは送らない。
 - content.js の責務: [`chrome.storage`](http://chrome.storage) の変化を監視し、`enabled: false` を検知したらリセット処理を実行。
   - 音声リセット: 再生中の `<audio>` を即停止。
-  - ハイライトリセット: `.auticle-highlight` をすべて解除。
+  - ハイライトリセット: `.audicle-highlight` をすべて解除。
   - 再生キューリセット: `playbackQueue = []`、`queueIndex = 0` にし、意図せぬ再開を防止。
 - 追加実装（ユーザーフィードバック反映）
 - 一時停止機能を追加（電源 OFF とは別軸）。
