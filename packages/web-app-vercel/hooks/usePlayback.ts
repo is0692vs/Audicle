@@ -107,7 +107,8 @@ export function usePlayback({ chunks, articleUrl, voice, speed, onChunkChange }:
           } else {
             // キャッシュミス: API呼び出し
             logger.info(`🌐 キャッシュミス: API呼び出し`);
-            audioUrl = await audioCache.get(chunk.cleanedText);
+            const audioBlob = await synthesizeSpeech(chunk.cleanedText, voice, playbackRate);
+            audioUrl = URL.createObjectURL(audioBlob);
           }
         } else {
           // articleURLがない場合は既存の動作
