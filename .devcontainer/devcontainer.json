@@ -55,10 +55,11 @@
     }
   },
   "forwardPorts": [3000, 8000],
-  "postCreateCommand": "sudo npm install -g @google/gemini-cli @github/copilot vercel && curl -LsSf https://astral.sh/uv/install.sh | sh && curl -L https://github.com/gitkraken/gk-cli/releases/latest/download/gk-linux-amd64.tar.gz -o gk.tar.gz && tar -xzf gk.tar.gz && sudo mv gk /usr/local/bin/ && rm gk.tar.gz && cd packages/api-server && /home/vscode/.cargo/bin/uv pip install -r requirements.txt",
+  "postCreateCommand": "bash .devcontainer/postCreateCommand.sh",
   "remoteUser": "vscode",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "remoteEnv": {
-    "GEMINI_API_KEY": "${localEnv:GEMINI_API_KEY}"
+    "GEMINI_API_KEY": "${localEnv:GEMINI_API_KEY}",
+    "PATH": "${containerEnv:PATH}:/home/vscode/.local/bin"
   }
 }
