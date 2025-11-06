@@ -2,11 +2,7 @@
 
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import {
-  UserSettings,
-  VOICE_MODELS_BY_LANGUAGE,
-  Language,
-} from "@/types/settings";
+import { UserSettings, VOICE_MODELS } from "@/types/settings";
 
 export default function UserSettingsPanel() {
   const [settings, setSettings] = useState<UserSettings | null>(null);
@@ -60,14 +56,12 @@ export default function UserSettingsPanel() {
     }
   };
 
-  const handleLanguageChange = (value: Language) => {
+  const handleLanguageChange = (value: string) => {
     if (settings) {
-      // 言語変更時に、その言語のデフォルト音声モデルに設定
-      const defaultVoiceModel = VOICE_MODELS_BY_LANGUAGE[value][0].value;
+      // 言語変更 (音声モデルは独立)
       setSettings({
         ...settings,
         language: value,
-        voice_model: defaultVoiceModel,
       });
       setHasChanged(true);
     }
@@ -148,7 +142,7 @@ export default function UserSettingsPanel() {
             </span>
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            0.5x～3.0x（デフォルト: 2.0x）
+            0.5x～3.0x（デフォルト: 1.0x）
           </p>
         </div>
 
@@ -159,7 +153,7 @@ export default function UserSettingsPanel() {
           </label>
           <select
             value={settings.language}
-            onChange={(e) => handleLanguageChange(e.target.value as Language)}
+            onChange={(e) => handleLanguageChange(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="ja-JP">日本語</option>
@@ -177,7 +171,7 @@ export default function UserSettingsPanel() {
             onChange={(e) => handleVoiceModelChange(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            {VOICE_MODELS_BY_LANGUAGE[settings.language].map((model) => (
+            {VOICE_MODELS.map((model) => (
               <option key={model.value} value={model.value}>
                 {model.label}
               </option>

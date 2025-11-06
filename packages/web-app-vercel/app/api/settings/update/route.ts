@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 import { validatePlaybackSpeed, validateVoiceModel, validateLanguage } from '@/lib/settingsValidator'
-import { UpdateSettingsRequest, UpdateSettingsResponse, VOICE_MODELS_BY_LANGUAGE } from '@/types/settings'
+import { UpdateSettingsRequest, UpdateSettingsResponse, VOICE_MODELS } from '@/types/settings'
 
 export async function PUT(request: NextRequest) {
     try {
@@ -35,10 +35,10 @@ export async function PUT(request: NextRequest) {
         }
 
         if (voice_model !== undefined && !validateVoiceModel(voice_model)) {
-            const allModels = Object.values(VOICE_MODELS_BY_LANGUAGE).flat().map(item => item.value);
+            const validModels = VOICE_MODELS.map(m => m.value).join(', ');
             return NextResponse.json(
                 {
-                    error: `Invalid voice_model. Must be one of: ${allModels.join(', ')}`,
+                    error: `Invalid voice_model. Must be one of: ${validModels}`,
                     success: false,
                 },
                 { status: 400 }

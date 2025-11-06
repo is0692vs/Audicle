@@ -1,6 +1,6 @@
-import { UserSettings, VoiceModel, Language, VOICE_MODELS_BY_LANGUAGE } from '@/types/settings'
+import { UserSettings, VoiceModel, Language, VOICE_MODELS } from '@/types/settings'
 
-const VALID_VOICE_MODELS = Object.values(VOICE_MODELS_BY_LANGUAGE).flat().map(item => item.value) as VoiceModel[];
+const VALID_VOICE_MODELS: VoiceModel[] = VOICE_MODELS.map(m => m.value);
 
 const VALID_LANGUAGES = ['ja-JP', 'en-US'] as const;
 
