@@ -1,6 +1,6 @@
 -- Create user_settings table for storing user preferences
 CREATE TABLE IF NOT EXISTS user_settings (
-  user_email VARCHAR(255) PRIMARY KEY,
+  user_id UUID PRIMARY KEY,  -- NextAuthのユーザーID（外部キー制約なし）
   playback_speed FLOAT DEFAULT 1.0,
   voice_model VARCHAR(100) DEFAULT 'ja-JP-Standard-B',
   language VARCHAR(10) DEFAULT 'ja-JP',
@@ -26,10 +26,5 @@ CREATE TRIGGER update_user_settings_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
--- Enable RLS if needed (adjust based on your security requirements)
-ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
-
--- Users can manage their own settings
-CREATE POLICY "Users can manage their own settings" ON user_settings
-  FOR ALL USING (auth.email() = user_email)
-  WITH CHECK (auth.email() = user_email);
+-- RLSは無効化（NextAuthがAPI Route側で認証を行うため）
+ALTER TABLE user_settings DISABLE ROW LEVEL SECURITY;

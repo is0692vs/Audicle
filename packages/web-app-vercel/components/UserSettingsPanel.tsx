@@ -2,7 +2,12 @@
 
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { UserSettings, VOICE_MODELS, Language } from "@/types/settings";
+import {
+  UserSettings,
+  VOICE_MODELS,
+  Language,
+  VoiceModel,
+} from "@/types/settings";
 
 export default function UserSettingsPanel() {
   const [settings, setSettings] = useState<UserSettings | null>(null);
@@ -50,7 +55,7 @@ export default function UserSettingsPanel() {
     if (settings) {
       setSettings({
         ...settings,
-        voice_model: value as typeof settings.voice_model,
+        voice_model: value as VoiceModel,
       });
       setHasChanged(true);
     }

@@ -28,6 +28,12 @@ export interface UpdateSettingsResponse {
     error?: string
 }
 
+export interface UpdateSettingsSuccessResponse extends UpdateSettingsResponse {
+    success: true
+    message: string
+    data: UserSettingsResponse
+}
+
 export const DEFAULT_SETTINGS: UserSettings = {
     playback_speed: 1.0,
     voice_model: 'ja-JP-Standard-B',

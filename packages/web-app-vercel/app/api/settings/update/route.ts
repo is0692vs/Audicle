@@ -2,53 +2,46 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 import { validatePlaybackSpeed, validateVoiceModel, validateLanguage } from '@/lib/settingsValidator'
-import { UpdateSettingsRequest, UpdateSettingsResponse, VOICE_MODELS } from '@/types/settings'
+import { UpdateSettingsRequest, UpdateSettingsSuccessResponse, VOICE_MODELS } from '@/types/settings'
 
 export async function PUT(request: NextRequest) {
     try {
         // Verify authentication
         const session = await auth()
 
-        if (!session || !session.user?.email) {
+        if (!session || !session.user?.id) {
             return NextResponse.json(
                 { error: 'Unauthorized', success: false },
                 { status: 401 }
             )
         }
 
-        const userEmail = session.user.email
+        const userId = session.user.id
 
         // Parse request body
         const body: UpdateSettingsRequest = await request.json()
 
         // Validate input
         const { playback_speed, voice_model, language } = body
+        const errors: string[] = []
 
         if (playback_speed !== undefined && !validatePlaybackSpeed(playback_speed)) {
-            return NextResponse.json(
-                {
-                    error: 'Invalid playback_speed. Must be between 0.5 and 3.0',
-                    success: false,
-                },
-                { status: 400 }
-            )
+            errors.push('Invalid playback_speed. Must be between 0.5 and 3.0')
         }
 
         if (voice_model !== undefined && !validateVoiceModel(voice_model)) {
-            const validModels = VOICE_MODELS.map(m => m.value).join(', ');
-            return NextResponse.json(
-                {
-                    error: `Invalid voice_model. Must be one of: ${validModels}`,
-                    success: false,
-                },
-                { status: 400 }
-            )
+            const validModels = VOICE_MODELS.map(m => m.value).join(', ')
+            errors.push(`Invalid voice_model. Must be one of: ${validModels}`)
         }
 
         if (language !== undefined && !validateLanguage(language)) {
+            errors.push('Invalid language. Must be ja-JP or en-US')
+        }
+
+        if (errors.length > 0) {
             return NextResponse.json(
                 {
-                    error: 'Invalid language. Must be ja-JP or en-US',
+                    error: errors.join(' '),
                     success: false,
                 },
                 { status: 400 }
@@ -56,7 +49,7 @@ export async function PUT(request: NextRequest) {
         }
 
         // Prepare update object
-        const updateData: Record<string, unknown> = { user_email: userEmail }
+        const updateData: Record<string, unknown> = { user_id: userId }
         if (playback_speed !== undefined) updateData.playback_speed = playback_speed
         if (voice_model !== undefined) updateData.voice_model = voice_model
         if (language !== undefined) updateData.language = language
@@ -64,7 +57,7 @@ export async function PUT(request: NextRequest) {
         // UPSERT to user_settings table
         const { data, error } = await supabase
             .from('user_settings')
-            .upsert(updateData, { onConflict: 'user_email' })
+            .upsert(updateData, { onConflict: 'user_id' })
             .select()
             .single()
 
@@ -80,7 +73,7 @@ export async function PUT(request: NextRequest) {
             success: true,
             message: 'Settings updated successfully',
             data,
-        } as UpdateSettingsResponse & { data: unknown })
+        } as UpdateSettingsSuccessResponse)
     } catch (error) {
         console.error('Error in PUT /api/settings/update:', error)
         return NextResponse.json(

@@ -8,20 +8,20 @@ export async function GET() {
         // Verify authentication
         const session = await auth()
 
-        if (!session || !session.user?.email) {
+        if (!session || !session.user?.id) {
             return NextResponse.json(
                 { error: 'Unauthorized' },
                 { status: 401 }
             )
         }
 
-        const userEmail = session.user.email
+        const userId = session.user.id
 
         // Fetch user settings from Supabase
         const { data, error } = await supabase
             .from('user_settings')
             .select('playback_speed, voice_model, language, created_at, updated_at')
-            .eq('user_email', userEmail)
+            .eq('user_id', userId)
             .single()
 
         // If no settings exist, return defaults
