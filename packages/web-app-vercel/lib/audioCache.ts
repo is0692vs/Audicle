@@ -49,9 +49,9 @@ class AudioCache {
       }
     }
 
-    // キャッシュミス - 新規合成
+    // キャッシュミス - 新規合成（1倍速固定）
     logger.cache("MISS", `${text.substring(0, 30)}...`);
-    const blob = await synthesizeSpeech(text, voice);
+    const blob = await synthesizeSpeech(text, voice, 1.0);
     const url = URL.createObjectURL(blob);
 
     this.cache.set(key, {

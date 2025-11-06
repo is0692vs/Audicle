@@ -98,7 +98,7 @@ export function usePlayback({ chunks, articleUrl, voice, speed, onChunkChange }:
         // 1. IndexedDBからキャッシュをチェック
         let audioUrl: string;
         if (articleUrl) {
-          const cachedChunk = await getAudioChunk(articleUrl, index, voice, playbackRate);
+          const cachedChunk = await getAudioChunk(articleUrl, index, voice, 1.0);
 
           if (cachedChunk) {
             // キャッシュヒット: Blobから直接URLを生成
@@ -107,7 +107,7 @@ export function usePlayback({ chunks, articleUrl, voice, speed, onChunkChange }:
           } else {
             // キャッシュミス: API呼び出し
             logger.info(`🌐 キャッシュミス: API呼び出し`);
-            const audioBlob = await synthesizeSpeech(chunk.cleanedText, voice, playbackRate);
+            const audioBlob = await synthesizeSpeech(chunk.cleanedText, voice, 1.0);
             audioUrl = URL.createObjectURL(audioBlob);
           }
         } else {

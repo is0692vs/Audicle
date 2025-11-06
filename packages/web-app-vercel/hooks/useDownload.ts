@@ -39,8 +39,8 @@ export function useDownload({ articleUrl, chunks, voice, speed, onSlowConnection
         }
 
         try {
-            // 音声合成
-            const audioBlob = await synthesizeSpeech(chunk.cleanedText, voice, speed);
+            // 音声合成（1倍速固定）
+            const audioBlob = await synthesizeSpeech(chunk.cleanedText, voice, 1.0);
 
             // IndexedDBに直接保存
             await saveAudioChunk({
@@ -50,7 +50,7 @@ export function useDownload({ articleUrl, chunks, voice, speed, onSlowConnection
                 chunkIndex: index,
                 totalChunks: chunks.length,
                 voice,
-                speed,
+                speed: 1.0, // 1倍速固定
                 size: audioBlob.size,
             });
 
