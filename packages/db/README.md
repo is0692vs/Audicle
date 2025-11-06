@@ -1,6 +1,6 @@
 # Audicle Database Schema
 
-Supabaseを使用した共有データベース設計
+Supabase を使用した共有データベース設計
 
 ## 接続情報
 
@@ -11,11 +11,11 @@ Supabaseを使用した共有データベース設計
 
 後続タスクで段階的に追加:
 
-- タスク2: `user_settings`
-- タスク2.5: `playlists`, `bookmarks`, `playlist_items`
-- タスク5.2: `cache_metadata`
-- タスク5.4: `article_stats`
+- タスク 2: `user_settings`
+- タスク 2.5: `playlists`, `bookmarks`, `playlist_items`
+- タスク 5.2: `cache_metadata`
+- タスク 5.4: `article_stats`
 
 ## マイグレーション
 
-`migrations/` ディレクトリにSQLファイルを配置
+`migrations/` ディレクトリに SQL ファイルを配置
