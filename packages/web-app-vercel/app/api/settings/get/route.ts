@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 import { DEFAULT_SETTINGS, UserSettingsResponse } from '@/types/settings'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
     try {
         // Verify authentication
         const session = await auth()

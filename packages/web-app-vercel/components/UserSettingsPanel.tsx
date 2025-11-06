@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { UserSettings, VOICE_MODELS } from "@/types/settings";
+import { UserSettings, VOICE_MODELS, Language } from "@/types/settings";
 
 export default function UserSettingsPanel() {
   const [settings, setSettings] = useState<UserSettings | null>(null);
@@ -61,7 +61,7 @@ export default function UserSettingsPanel() {
       // 言語変更 (音声モデルは独立)
       setSettings({
         ...settings,
-        language: value,
+        language: value as Language,
       });
       setHasChanged(true);
     }
