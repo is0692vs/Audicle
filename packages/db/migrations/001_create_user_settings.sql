@@ -1,7 +1,7 @@
 -- Create user_settings table for storing user preferences
 CREATE TABLE IF NOT EXISTS user_settings (
   user_email VARCHAR(255) PRIMARY KEY,
-  playback_speed FLOAT DEFAULT 2.0,
+  playback_speed FLOAT DEFAULT 1.0,
   voice_model VARCHAR(100) DEFAULT 'ja-JP-Wavenet-A',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
