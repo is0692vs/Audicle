@@ -6,14 +6,14 @@ import ReaderView from "@/components/ReaderView";
 import { Chunk } from "@/types/api";
 import { extractContent } from "@/lib/api";
 import { usePlayback } from "@/hooks/usePlayback";
-import { articleStorage, type Article } from "@/lib/storage";
+import { articleStorage } from "@/lib/storage";
 import { logger } from "@/lib/logger";
 import { parseHTMLToParagraphs } from "@/lib/paragraphParser";
 
 function convertParagraphsToChunks(htmlContent: string): Chunk[] {
   // HTML構造を保持して段落を抽出
   const paragraphs = parseHTMLToParagraphs(htmlContent);
-  
+
   // Chunk形式に変換
   return paragraphs.map((para) => ({
     id: para.id,
@@ -46,7 +46,12 @@ export default function ReaderPageClient() {
     seekToChunk,
     playbackRate,
     setPlaybackRate,
-  } = usePlayback({ chunks });
+  } = usePlayback({
+    chunks,
+    articleUrl: url,
+    voice: undefined, // 将来的に設定可能に
+    speed: 1, // デフォルトの再生速度
+  });
 
   // 記事IDが指定されている場合は読み込み
   useEffect(() => {
@@ -202,6 +207,9 @@ export default function ReaderPageClient() {
         <ReaderView
           chunks={chunks}
           currentChunkId={currentChunkId}
+          articleUrl={url}
+          voice={undefined} // 将来的に設定可能に
+          speed={playbackRate}
           onChunkClick={seekToChunk}
         />
       </main>

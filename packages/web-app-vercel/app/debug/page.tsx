@@ -5,13 +5,32 @@ import { useEffect, useState } from "react";
 
 type SessionInfo = Record<string, unknown> | null;
 type EnvInfo = Record<string, unknown> | null;
+type BrowserInfo = {
+  userAgent: string;
+  platform: string;
+  language: string;
+  timeZone: string;
+  currentTime: string;
+} | null;
 
 export default function DebugPage() {
   const [sessionInfo, setSessionInfo] = useState<SessionInfo>(null);
   const [envInfo, setEnvInfo] = useState<EnvInfo>(null);
+  const [browserInfo, setBrowserInfo] = useState<BrowserInfo>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // ブラウザ情報を取得（クライアントサイドのみ）
+    if (typeof window !== "undefined") {
+      setBrowserInfo({
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        language: navigator.language,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        currentTime: new Date().toLocaleString("ja-JP"),
+      });
+    }
+
     // セッション情報を取得
     const fetchSessionInfo = async () => {
       try {
@@ -84,37 +103,40 @@ export default function DebugPage() {
           <h2 className="text-2xl font-bold mb-4 text-purple-600">
             ブラウザ情報
           </h2>
-          <div className="space-y-3">
-            <div className="bg-gray-100 p-3 rounded">
-              <p className="text-sm">
-                <strong>ユーザーエージェント:</strong>
-              </p>
-              <p className="text-xs font-mono mt-1 break-all">
-                {navigator.userAgent}
-              </p>
+          {loading || !browserInfo ? (
+            <p className="text-gray-600">読み込み中...</p>
+          ) : (
+            <div className="space-y-3">
+              <div className="bg-gray-100 p-3 rounded">
+                <p className="text-sm">
+                  <strong>ユーザーエージェント:</strong>
+                </p>
+                <p className="text-xs font-mono mt-1 break-all">
+                  {browserInfo.userAgent}
+                </p>
+              </div>
+              <div className="bg-gray-100 p-3 rounded">
+                <p className="text-sm">
+                  <strong>プラットフォーム:</strong> {browserInfo.platform}
+                </p>
+              </div>
+              <div className="bg-gray-100 p-3 rounded">
+                <p className="text-sm">
+                  <strong>言語:</strong> {browserInfo.language}
+                </p>
+              </div>
+              <div className="bg-gray-100 p-3 rounded">
+                <p className="text-sm">
+                  <strong>タイムゾーン:</strong> {browserInfo.timeZone}
+                </p>
+              </div>
+              <div className="bg-gray-100 p-3 rounded">
+                <p className="text-sm">
+                  <strong>現在時刻:</strong> {browserInfo.currentTime}
+                </p>
+              </div>
             </div>
-            <div className="bg-gray-100 p-3 rounded">
-              <p className="text-sm">
-                <strong>プラットフォーム:</strong> {navigator.platform}
-              </p>
-            </div>
-            <div className="bg-gray-100 p-3 rounded">
-              <p className="text-sm">
-                <strong>言語:</strong> {navigator.language}
-              </p>
-            </div>
-            <div className="bg-gray-100 p-3 rounded">
-              <p className="text-sm">
-                <strong>タイムゾーン:</strong>{" "}
-                {Intl.DateTimeFormat().resolvedOptions().timeZone}
-              </p>
-            </div>
-            <div className="bg-gray-100 p-3 rounded">
-              <p className="text-sm">
-                <strong>現在時刻:</strong> {new Date().toLocaleString("ja-JP")}
-              </p>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* ナビゲーション */}

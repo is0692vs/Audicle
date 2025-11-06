@@ -51,12 +51,20 @@ export default function Home() {
         <div className="max-w-4xl mx-auto p-4">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold">Audicle - 記事一覧</h1>
-            <button
-              onClick={() => handleSignOut()}
-              className="px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 rounded transition-colors border border-red-200 dark:border-red-800"
-            >
-              ログアウト
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => router.push("/settings")}
+                className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+              >
+                ⚙️ 設定
+              </button>
+              <button
+                onClick={() => handleSignOut()}
+                className="px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 rounded transition-colors border border-red-200 dark:border-red-800"
+              >
+                ログアウト
+              </button>
+            </div>
           </div>
           <button
             onClick={() => router.push("/reader")}

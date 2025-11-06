@@ -3,11 +3,16 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Chunk } from "@/types/api";
 import { audioCache } from "@/lib/audioCache";
+import { getAudioChunk } from "@/lib/indexedDB";
+import { synthesizeSpeech } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { needsPauseBefore, needsPauseAfter, getPauseDuration } from "@/lib/paragraphParser";
 
 interface UsePlaybackProps {
   chunks: Chunk[];
+  articleUrl?: string;
+  voice?: string;
+  speed?: number;
   onChunkChange?: (chunkId: string) => void;
 }
 
@@ -20,7 +25,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function usePlayback({ chunks, onChunkChange }: UsePlaybackProps) {
+export function usePlayback({ chunks, articleUrl, voice, speed, onChunkChange }: UsePlaybackProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState<number>(-1);
   const [isLoading, setIsLoading] = useState(false);
@@ -89,8 +94,31 @@ export function usePlayback({ chunks, onChunkChange }: UsePlaybackProps) {
           await sleep(getPauseDuration('heading'));
         }
 
-        // キャッシュから音声URLを取得（cleanedTextを使用）
-        const audioUrl = await audioCache.get(chunk.cleanedText);
+        // 1. IndexedDBからキャッシュをチェック
+        let audioUrl: string;
+        if (articleUrl) {
+          const cachedChunk = await getAudioChunk(articleUrl, index, voice, speed);
+
+          if (cachedChunk) {
+            // キャッシュヒット: base64からBlobURLを生成
+            logger.info(`💾 キャッシュヒット: チャンク ${index + 1}`);
+            const audioData = cachedChunk.audioData;
+            const binaryString = atob(audioData);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+              bytes[i] = binaryString.charCodeAt(i);
+            }
+            const blob = new Blob([bytes], { type: 'audio/mpeg' });
+            audioUrl = URL.createObjectURL(blob);
+          } else {
+            // キャッシュミス: 既存のAPI呼び出し
+            logger.info(`🌐 キャッシュミス: API呼び出し`);
+            audioUrl = await audioCache.get(chunk.cleanedText);
+          }
+        } else {
+          // articleURLがない場合は既存の動作
+          audioUrl = await audioCache.get(chunk.cleanedText);
+        }
 
         // 先読み処理（非同期で実行）
         prefetchAudio(index + 1);
@@ -138,7 +166,7 @@ export function usePlayback({ chunks, onChunkChange }: UsePlaybackProps) {
         setIsLoading(false);
       }
     },
-    [chunks, onChunkChange, prefetchAudio, playbackRate]
+    [chunks, articleUrl, voice, speed, onChunkChange, prefetchAudio, playbackRate]
   );
 
   // 再生開始
