@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
         // Fetch user settings from Supabase
         const { data, error } = await supabase
             .from('user_settings')
-            .select('playback_speed, voice_model, created_at, updated_at')
+            .select('playback_speed, voice_model, language, created_at, updated_at')
             .eq('user_email', userEmail)
             .single()
 
@@ -28,8 +28,8 @@ export async function GET(request: NextRequest) {
         if (error && error.code === 'PGRST116') {
             return NextResponse.json({
                 ...DEFAULT_SETTINGS,
-                created_at: null,
-                updated_at: null,
+                created_at: undefined,
+                updated_at: undefined,
             } as UserSettingsResponse)
         }
 

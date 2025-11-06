@@ -1,8 +1,9 @@
 -- Create user_settings table for storing user preferences
 CREATE TABLE IF NOT EXISTS user_settings (
   user_email VARCHAR(255) PRIMARY KEY,
-  playback_speed FLOAT DEFAULT 1.0,
-  voice_model VARCHAR(100) DEFAULT 'ja-JP-Wavenet-A',
+  playback_speed FLOAT DEFAULT 2.0,
+  voice_model VARCHAR(100) DEFAULT 'ja-JP-Standard-B',
+  language VARCHAR(10) DEFAULT 'ja-JP',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -28,6 +29,7 @@ CREATE TRIGGER update_user_settings_updated_at
 -- Enable RLS if needed (adjust based on your security requirements)
 ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
 
--- Example RLS policy: users can only see their own settings
--- CREATE POLICY "Users can view their own settings" ON user_settings
---   FOR SELECT USING (user_email = current_user_email());
+-- Users can manage their own settings
+CREATE POLICY "Users can manage their own settings" ON user_settings
+  FOR ALL USING (auth.email() = user_email)
+  WITH CHECK (auth.email() = user_email);

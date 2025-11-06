@@ -1,4 +1,8 @@
-import { UserSettings, VoiceModel } from '@/types/settings'
+import { UserSettings, VoiceModel, Language, VOICE_MODELS_BY_LANGUAGE } from '@/types/settings'
+
+const VALID_VOICE_MODELS = Object.values(VOICE_MODELS_BY_LANGUAGE).flat().map(item => item.value) as VoiceModel[];
+
+const VALID_LANGUAGES = ['ja-JP', 'en-US'] as const;
 
 /**
  * Validate playback speed
@@ -14,13 +18,15 @@ export function validatePlaybackSpeed(speed: unknown): boolean {
  * @param model - Voice model to validate
  */
 export function validateVoiceModel(model: unknown): model is VoiceModel {
-    const validModels: VoiceModel[] = [
-        'ja-JP-Wavenet-A',
-        'ja-JP-Wavenet-B',
-        'ja-JP-Wavenet-C',
-        'ja-JP-Wavenet-D',
-    ]
-    return validModels.includes(model as VoiceModel)
+    return VALID_VOICE_MODELS.includes(model as VoiceModel)
+}
+
+/**
+ * Validate language
+ * @param language - Language to validate
+ */
+export function validateLanguage(language: unknown): language is Language {
+    return VALID_LANGUAGES.includes(language as Language)
 }
 
 /**
@@ -33,6 +39,7 @@ export function validateUserSettings(data: unknown): data is UserSettings {
 
     return (
         validatePlaybackSpeed(settings.playback_speed) &&
-        validateVoiceModel(settings.voice_model)
+        validateVoiceModel(settings.voice_model) &&
+        validateLanguage(settings.language)
     )
 }

@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { UserSettings, VOICE_MODELS } from "@/types/settings";
+import {
+  UserSettings,
+  VOICE_MODELS_BY_LANGUAGE,
+  Language,
+} from "@/types/settings";
 
 export default function UserSettingsPanel() {
   const [settings, setSettings] = useState<UserSettings | null>(null);
@@ -28,6 +32,7 @@ export default function UserSettingsPanel() {
       setSettings({
         playback_speed: data.playback_speed,
         voice_model: data.voice_model,
+        language: data.language,
       });
       setHasChanged(false);
     } catch (error) {
@@ -55,6 +60,19 @@ export default function UserSettingsPanel() {
     }
   };
 
+  const handleLanguageChange = (value: Language) => {
+    if (settings) {
+      // 言語変更時に、その言語のデフォルト音声モデルに設定
+      const defaultVoiceModel = VOICE_MODELS_BY_LANGUAGE[value][0].value;
+      setSettings({
+        ...settings,
+        language: value,
+        voice_model: defaultVoiceModel,
+      });
+      setHasChanged(true);
+    }
+  };
+
   const handleSave = async () => {
     if (!settings) return;
 
@@ -66,6 +84,7 @@ export default function UserSettingsPanel() {
         body: JSON.stringify({
           playback_speed: settings.playback_speed,
           voice_model: settings.voice_model,
+          language: settings.language,
         }),
       });
 
@@ -133,6 +152,21 @@ export default function UserSettingsPanel() {
           </p>
         </div>
 
+        {/* Language Dropdown */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            言語
+          </label>
+          <select
+            value={settings.language}
+            onChange={(e) => handleLanguageChange(e.target.value as Language)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="ja-JP">日本語</option>
+            <option value="en-US">English</option>
+          </select>
+        </div>
+
         {/* Voice Model Dropdown */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -143,9 +177,9 @@ export default function UserSettingsPanel() {
             onChange={(e) => handleVoiceModelChange(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            {VOICE_MODELS.map((model) => (
-              <option key={model} value={model}>
-                {model}
+            {VOICE_MODELS_BY_LANGUAGE[settings.language].map((model) => (
+              <option key={model.value} value={model.value}>
+                {model.label}
               </option>
             ))}
           </select>
@@ -162,10 +196,7 @@ export default function UserSettingsPanel() {
           </button>
           {hasChanged && (
             <button
-              onClick={() => {
-                fetchSettings();
-                setHasChanged(false);
-              }}
+              onClick={fetchSettings}
               className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 rounded-lg transition-colors font-medium"
             >
               キャンセル

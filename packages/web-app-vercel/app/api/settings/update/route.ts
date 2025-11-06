@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
-import { validatePlaybackSpeed, validateVoiceModel } from '@/lib/settingsValidator'
-import { UpdateSettingsRequest, UpdateSettingsResponse } from '@/types/settings'
+import { validatePlaybackSpeed, validateVoiceModel, validateLanguage } from '@/lib/settingsValidator'
+import { UpdateSettingsRequest, UpdateSettingsResponse, VOICE_MODELS_BY_LANGUAGE } from '@/types/settings'
 
 export async function PUT(request: NextRequest) {
     try {
@@ -22,7 +22,7 @@ export async function PUT(request: NextRequest) {
         const body: UpdateSettingsRequest = await request.json()
 
         // Validate input
-        const { playback_speed, voice_model } = body
+        const { playback_speed, voice_model, language } = body
 
         if (playback_speed !== undefined && !validatePlaybackSpeed(playback_speed)) {
             return NextResponse.json(
@@ -35,9 +35,20 @@ export async function PUT(request: NextRequest) {
         }
 
         if (voice_model !== undefined && !validateVoiceModel(voice_model)) {
+            const allModels = Object.values(VOICE_MODELS_BY_LANGUAGE).flat().map(item => item.value);
             return NextResponse.json(
                 {
-                    error: 'Invalid voice_model. Must be one of: ja-JP-Wavenet-A, ja-JP-Wavenet-B, ja-JP-Wavenet-C, ja-JP-Wavenet-D',
+                    error: `Invalid voice_model. Must be one of: ${allModels.join(', ')}`,
+                    success: false,
+                },
+                { status: 400 }
+            )
+        }
+
+        if (language !== undefined && !validateLanguage(language)) {
+            return NextResponse.json(
+                {
+                    error: 'Invalid language. Must be ja-JP or en-US',
                     success: false,
                 },
                 { status: 400 }
@@ -48,6 +59,7 @@ export async function PUT(request: NextRequest) {
         const updateData: Record<string, unknown> = { user_email: userEmail }
         if (playback_speed !== undefined) updateData.playback_speed = playback_speed
         if (voice_model !== undefined) updateData.voice_model = voice_model
+        if (language !== undefined) updateData.language = language
 
         // UPSERT to user_settings table
         const { data, error } = await supabase
