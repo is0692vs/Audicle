@@ -1,0 +1,3 @@
+-- Audicle Database Schema
+-- Supabase shared database schema
+-- Migration files are stored in the migrations/ directory
