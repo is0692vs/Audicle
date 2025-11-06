@@ -31,6 +31,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             }
             return true;
         },
+        async jwt({ token, account, profile }) {
+            if (account) {
+                token.id = profile?.sub || account.providerAccountId;
+            }
+            return token;
+        },
+        async session({ session, token }) {
+            if (session.user) {
+                if (typeof token.id !== 'string') {
+                    throw new Error('User ID not found in token.');
+                }
+                session.user.id = token.id;
+            }
+            return session;
+        },
     },
     pages: {
         signIn: '/auth/signin',
