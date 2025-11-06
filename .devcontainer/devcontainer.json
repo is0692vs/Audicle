@@ -55,7 +55,7 @@
     }
   },
   "forwardPorts": [3000, 8000],
-  "postCreateCommand": "npm install -g @google/gemini-cli && npm install -g @github/copilot && cd packages/chrome-extension && npm install && cd ../api-server && pip install -r requirements.txt",
+  "postCreateCommand": "sudo npm install -g @google/gemini-cli && sudo npm install -g @github/copilot && curl -LsSf https://astral.sh/uv/install.sh | sh && curl -L https://github.com/gitkraken/gk-cli/releases/latest/download/gk-linux-amd64.tar.gz -o gk.tar.gz && tar -xzf gk.tar.gz && sudo mv gk /usr/local/bin/ && sudo npm install -g vercel && cd packages/api-server && pip install -r requirements.txt",
   "remoteUser": "vscode",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "remoteEnv": {
