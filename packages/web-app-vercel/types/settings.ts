@@ -22,17 +22,18 @@ export interface UpdateSettingsRequest {
     language?: Language
 }
 
-export interface UpdateSettingsResponse {
-    success: boolean
-    message?: string
-    error?: string
-}
-
-export interface UpdateSettingsSuccessResponse extends UpdateSettingsResponse {
+export interface UpdateSettingsSuccessResponse {
     success: true
     message: string
     data: UserSettingsResponse
 }
+
+export interface UpdateSettingsErrorResponse {
+    success: false
+    error: string
+}
+
+export type UpdateSettingsResponse = UpdateSettingsSuccessResponse | UpdateSettingsErrorResponse;
 
 export const DEFAULT_SETTINGS: UserSettings = {
     playback_speed: 1.0,
