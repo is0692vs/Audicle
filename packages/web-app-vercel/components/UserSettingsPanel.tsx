@@ -26,7 +26,8 @@ export default function UserSettingsPanel() {
       const response = await fetch("/api/settings/get");
 
       if (!response.ok) {
-        throw new Error("Failed to fetch settings");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch settings");
       }
 
       const data = await response.json();
