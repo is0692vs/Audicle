@@ -183,7 +183,8 @@ export default function ReaderView({
                 if (isHeading) {
                   // 見出しは太字で大きめ
                   const headingLevel = parseInt(chunk.type.charAt(1));
-                  const fontSize = headingFontSizeMap[headingLevel] || "text-lg";
+                  const fontSize =
+                    headingFontSizeMap[headingLevel] || "text-lg";
                   baseStyle = `${fontSize} font-bold leading-tight`;
                 } else if (isListItem) {
                   // リストアイテムは左にマージン

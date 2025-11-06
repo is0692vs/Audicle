@@ -9,6 +9,7 @@ import {
   type DownloadedArticle,
 } from "@/lib/indexedDB";
 import { logger } from "@/lib/logger";
+import { useConfirmDialog } from "@/components/ConfirmDialog";
 
 /**
  * バイト数を人間が読みやすい形式に変換
@@ -40,6 +41,7 @@ export default function StorageManager() {
   const [articles, setArticles] = useState<DownloadedArticle[]>([]);
   const [storageUsage, setStorageUsage] = useState({ used: 0, available: 0 });
   const [isLoading, setIsLoading] = useState(true);
+  const { showConfirm, confirmDialog } = useConfirmDialog();
 
   // データを読み込み
   const loadData = async () => {
@@ -72,7 +74,15 @@ export default function StorageManager() {
     const article = articles.find((a) => a.url === url);
     if (!article) return;
 
-    if (!confirm(`「${url}」の音声データを削除しますか?`)) return;
+    const confirmed = await showConfirm({
+      title: "音声データを削除",
+      message: `「${url}」の音声データを削除しますか?`,
+      confirmText: "削除",
+      cancelText: "キャンセル",
+      isDangerous: true,
+    });
+
+    if (!confirmed) return;
 
     try {
       await deleteArticle(url);
@@ -86,11 +96,15 @@ export default function StorageManager() {
 
   // 全て削除
   const handleClearAll = async () => {
-    if (
-      !confirm("全ての音声データを削除しますか? この操作は取り消せません。")
-    ) {
-      return;
-    }
+    const confirmed = await showConfirm({
+      title: "全ての音声データを削除",
+      message: "全ての音声データを削除しますか? この操作は取り消せません。",
+      confirmText: "全て削除",
+      cancelText: "キャンセル",
+      isDangerous: true,
+    });
+
+    if (!confirmed) return;
 
     try {
       await clearAll();
@@ -117,6 +131,7 @@ export default function StorageManager() {
 
   return (
     <div className="p-4 space-y-4">
+      {confirmDialog}
       {/* ストレージ使用量 */}
       <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
         <h3 className="text-lg font-semibold mb-3">ストレージ使用量</h3>

@@ -76,11 +76,7 @@ export function useConfirmDialog() {
     []
   );
 
-  const confirmDialog = dialog && (
-    <ConfirmDialog
-      {...dialog}
-    />
-  );
+  const confirmDialog = dialog && <ConfirmDialog {...dialog} />;
 
   return { showConfirm, confirmDialog };
 }

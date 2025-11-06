@@ -50,7 +50,6 @@ export default function ReaderPageClient() {
     chunks,
     articleUrl: url,
     voice: undefined, // 将来的に設定可能に
-    speed: 1, // デフォルトの再生速度
   });
 
   // 記事IDが指定されている場合は読み込み

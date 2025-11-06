@@ -39,6 +39,7 @@ export function usePlayback({ chunks, articleUrl, voice, speed, onChunkChange }:
   });
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const currentAudioUrlRef = useRef<string | null>(null);
 
   // 現在のチャンクID
   const currentChunkId =
@@ -97,7 +98,7 @@ export function usePlayback({ chunks, articleUrl, voice, speed, onChunkChange }:
         // 1. IndexedDBからキャッシュをチェック
         let audioUrl: string;
         if (articleUrl) {
-          const cachedChunk = await getAudioChunk(articleUrl, index, voice, speed);
+          const cachedChunk = await getAudioChunk(articleUrl, index, voice, playbackRate);
 
           if (cachedChunk) {
             // キャッシュヒット: Blobから直接URLを生成
@@ -118,11 +119,16 @@ export function usePlayback({ chunks, articleUrl, voice, speed, onChunkChange }:
 
         // Audio要素を作成して再生
         if (audioRef.current) {
+          // 前のURLを解放
+          if (currentAudioUrlRef.current?.startsWith('blob:')) {
+            URL.revokeObjectURL(currentAudioUrlRef.current);
+          }
           audioRef.current.pause();
         }
 
         const audio = new Audio(audioUrl);
         audioRef.current = audio;
+        currentAudioUrlRef.current = audioUrl;
         audio.playbackRate = playbackRate;
 
         audio.onended = async () => {
@@ -137,6 +143,10 @@ export function usePlayback({ chunks, articleUrl, voice, speed, onChunkChange }:
           if (index + 1 < chunks.length) {
             playFromIndex(index + 1);
           } else {
+            // 最後のチャンク終了時も URL を解放
+            if (currentAudioUrlRef.current?.startsWith('blob:')) {
+              URL.revokeObjectURL(currentAudioUrlRef.current);
+            }
             setIsPlaying(false);
             setCurrentIndex(-1);
           }
@@ -159,7 +169,7 @@ export function usePlayback({ chunks, articleUrl, voice, speed, onChunkChange }:
         setIsLoading(false);
       }
     },
-    [chunks, articleUrl, voice, speed, onChunkChange, prefetchAudio, playbackRate]
+    [chunks, articleUrl, voice, onChunkChange, prefetchAudio, playbackRate]
   );
 
   // 再生開始
@@ -179,6 +189,9 @@ export function usePlayback({ chunks, articleUrl, voice, speed, onChunkChange }:
   // 停止
   const stop = useCallback(() => {
     if (audioRef.current) {
+      if (currentAudioUrlRef.current?.startsWith('blob:')) {
+        URL.revokeObjectURL(currentAudioUrlRef.current);
+      }
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
@@ -202,6 +215,9 @@ export function usePlayback({ chunks, articleUrl, voice, speed, onChunkChange }:
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
+      }
+      if (currentAudioUrlRef.current?.startsWith('blob:')) {
+        URL.revokeObjectURL(currentAudioUrlRef.current);
       }
     };
   }, []);

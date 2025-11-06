@@ -112,6 +112,12 @@ export async function saveAudioChunk(entry: Omit<AudioCacheEntry, 'key'>): Promi
 
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([STORE_NAME], 'readwrite');
+
+        transaction.onerror = () => {
+            logger.error('Save transaction error', transaction.error);
+            reject(transaction.error);
+        };
+
         const store = transaction.objectStore(STORE_NAME);
         const request = store.put(cacheEntry);
 
@@ -141,6 +147,12 @@ export async function getAudioChunk(
 
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([STORE_NAME], 'readonly');
+
+        transaction.onerror = () => {
+            logger.error('Get transaction error', transaction.error);
+            reject(transaction.error);
+        };
+
         const store = transaction.objectStore(STORE_NAME);
         const request = store.get(key);
 
@@ -163,6 +175,12 @@ export async function getArticleChunks(articleUrl: string): Promise<AudioCacheEn
 
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([STORE_NAME], 'readonly');
+
+        transaction.onerror = () => {
+            logger.error('Get all transaction error', transaction.error);
+            reject(transaction.error);
+        };
+
         const store = transaction.objectStore(STORE_NAME);
         const index = store.index('articleUrl');
         const request = index.getAll(articleUrl);
@@ -186,6 +204,12 @@ export async function deleteArticle(articleUrl: string): Promise<void> {
 
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([STORE_NAME], 'readwrite');
+
+        transaction.onerror = () => {
+            logger.error('Delete transaction error', transaction.error);
+            reject(transaction.error);
+        };
+
         const store = transaction.objectStore(STORE_NAME);
         const index = store.index('articleUrl');
         const request = index.openCursor(IDBKeyRange.only(articleUrl));
@@ -218,6 +242,12 @@ export async function clearAll(): Promise<void> {
 
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([STORE_NAME], 'readwrite');
+
+        transaction.onerror = () => {
+            logger.error('Clear transaction error', transaction.error);
+            reject(transaction.error);
+        };
+
         const store = transaction.objectStore(STORE_NAME);
         const request = store.clear();
 
@@ -241,6 +271,12 @@ export async function getDownloadedArticles(): Promise<DownloadedArticle[]> {
 
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([STORE_NAME], 'readonly');
+
+        transaction.onerror = () => {
+            logger.error('Get downloaded articles transaction error', transaction.error);
+            reject(transaction.error);
+        };
+
         const store = transaction.objectStore(STORE_NAME);
         const request = store.getAll();
 
@@ -276,10 +312,6 @@ export async function getDownloadedArticles(): Promise<DownloadedArticle[]> {
         request.onerror = () => {
             logger.error('Get downloaded articles error', request.error);
             reject(request.error);
-        };
-
-        transaction.oncomplete = () => {
-            // db.close() は呼ばないでシングルトン接続をキープ
         };
     });
 }
