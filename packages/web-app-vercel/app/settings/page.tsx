@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import StorageManager from "@/components/StorageManager";
+import UserSettingsPanel from "@/components/UserSettingsPanel";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -24,7 +25,8 @@ export default function SettingsPage() {
       </header>
 
       {/* メインコンテンツ */}
-      <main className="max-w-4xl mx-auto">
+      <main className="max-w-4xl mx-auto space-y-8 p-4">
+        <UserSettingsPanel />
         <StorageManager />
       </main>
     </div>
