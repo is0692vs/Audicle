@@ -31,6 +31,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             }
             return true;
         },
+        async jwt({ token, account, profile }) {
+            if (account) {
+                token.id = profile?.sub || account.providerAccountId;
+            }
+            return token;
+        },
+        async session({ session, token }) {
+            if (session.user) {
+                session.user.id = token.id as string;
+            }
+            return session;
+        },
     },
     pages: {
         signIn: '/auth/signin',
