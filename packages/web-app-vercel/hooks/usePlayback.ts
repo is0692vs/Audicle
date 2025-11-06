@@ -3,11 +3,16 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Chunk } from "@/types/api";
 import { audioCache } from "@/lib/audioCache";
+import { getAudioChunk } from "@/lib/indexedDB";
+import { synthesizeSpeech } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { needsPauseBefore, needsPauseAfter, getPauseDuration } from "@/lib/paragraphParser";
 
 interface UsePlaybackProps {
   chunks: Chunk[];
+  articleUrl?: string;
+  voice?: string;
+  speed?: number;
   onChunkChange?: (chunkId: string) => void;
 }
 
@@ -20,7 +25,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function usePlayback({ chunks, onChunkChange }: UsePlaybackProps) {
+export function usePlayback({ chunks, articleUrl, voice, speed, onChunkChange }: UsePlaybackProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState<number>(-1);
   const [isLoading, setIsLoading] = useState(false);
@@ -34,6 +39,7 @@ export function usePlayback({ chunks, onChunkChange }: UsePlaybackProps) {
   });
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const currentAudioUrlRef = useRef<string | null>(null);
 
   // 現在のチャンクID
   const currentChunkId =
@@ -89,19 +95,40 @@ export function usePlayback({ chunks, onChunkChange }: UsePlaybackProps) {
           await sleep(getPauseDuration('heading'));
         }
 
-        // キャッシュから音声URLを取得（cleanedTextを使用）
-        const audioUrl = await audioCache.get(chunk.cleanedText);
+        // 1. IndexedDBからキャッシュをチェック
+        let audioUrl: string;
+        if (articleUrl) {
+          const cachedChunk = await getAudioChunk(articleUrl, index, voice, playbackRate);
+
+          if (cachedChunk) {
+            // キャッシュヒット: Blobから直接URLを生成
+            logger.info(`💾 キャッシュヒット: チャンク ${index + 1}`);
+            audioUrl = URL.createObjectURL(cachedChunk.audioData);
+          } else {
+            // キャッシュミス: API呼び出し
+            logger.info(`🌐 キャッシュミス: API呼び出し`);
+            audioUrl = await audioCache.get(chunk.cleanedText);
+          }
+        } else {
+          // articleURLがない場合は既存の動作
+          audioUrl = await audioCache.get(chunk.cleanedText);
+        }
 
         // 先読み処理（非同期で実行）
         prefetchAudio(index + 1);
 
         // Audio要素を作成して再生
         if (audioRef.current) {
+          // 前のURLを解放
+          if (currentAudioUrlRef.current?.startsWith('blob:')) {
+            URL.revokeObjectURL(currentAudioUrlRef.current);
+          }
           audioRef.current.pause();
         }
 
         const audio = new Audio(audioUrl);
         audioRef.current = audio;
+        currentAudioUrlRef.current = audioUrl;
         audio.playbackRate = playbackRate;
 
         audio.onended = async () => {
@@ -116,6 +143,10 @@ export function usePlayback({ chunks, onChunkChange }: UsePlaybackProps) {
           if (index + 1 < chunks.length) {
             playFromIndex(index + 1);
           } else {
+            // 最後のチャンク終了時も URL を解放
+            if (currentAudioUrlRef.current?.startsWith('blob:')) {
+              URL.revokeObjectURL(currentAudioUrlRef.current);
+            }
             setIsPlaying(false);
             setCurrentIndex(-1);
           }
@@ -138,7 +169,7 @@ export function usePlayback({ chunks, onChunkChange }: UsePlaybackProps) {
         setIsLoading(false);
       }
     },
-    [chunks, onChunkChange, prefetchAudio, playbackRate]
+    [chunks, articleUrl, voice, onChunkChange, prefetchAudio, playbackRate]
   );
 
   // 再生開始
@@ -158,6 +189,9 @@ export function usePlayback({ chunks, onChunkChange }: UsePlaybackProps) {
   // 停止
   const stop = useCallback(() => {
     if (audioRef.current) {
+      if (currentAudioUrlRef.current?.startsWith('blob:')) {
+        URL.revokeObjectURL(currentAudioUrlRef.current);
+      }
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
@@ -181,6 +215,9 @@ export function usePlayback({ chunks, onChunkChange }: UsePlaybackProps) {
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
+      }
+      if (currentAudioUrlRef.current?.startsWith('blob:')) {
+        URL.revokeObjectURL(currentAudioUrlRef.current);
       }
     };
   }, []);
