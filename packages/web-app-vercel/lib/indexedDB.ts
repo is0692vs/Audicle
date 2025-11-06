@@ -291,7 +291,7 @@ export async function getStorageUsage(): Promise<{ used: number; available: numb
 
     return {
         used,
-        available: 50 * 1024 * 1024 * 1024, // デフォルト50GB
+        available: Infinity, // デフォルト50GB
     };
 }
 
