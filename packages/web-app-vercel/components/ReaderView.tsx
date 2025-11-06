@@ -98,7 +98,9 @@ export default function ReaderView({
         {/* 推定残り時間 */}
         {downloadStatus === "downloading" && estimatedTime > 0 && (
           <p className="text-xs text-blue-600 dark:text-blue-400">
-            残り約 {Math.ceil(estimatedTime / 60)} 分
+            {estimatedTime < 60
+              ? `残り約 ${Math.round(estimatedTime)} 秒`
+              : `残り約 ${Math.round(estimatedTime / 60)} 分`}
           </p>
         )}
 
