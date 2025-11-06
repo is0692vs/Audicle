@@ -1,6 +1,6 @@
 -- Create user_settings table for storing user preferences
 CREATE TABLE IF NOT EXISTS user_settings (
-  user_id UUID PRIMARY KEY,  -- NextAuthのユーザーID（外部キー制約なし）
+  user_id TEXT PRIMARY KEY,  -- NextAuthのユーザーID（外部キー制約なし）
   playback_speed FLOAT DEFAULT 1.0,
   voice_model VARCHAR(100) DEFAULT 'ja-JP-Standard-B',
   language VARCHAR(10) DEFAULT 'ja-JP',
