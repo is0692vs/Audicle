@@ -166,19 +166,22 @@ export default function ReaderView({
                 const isListItem = chunk.type === "li";
                 const isBlockquote = chunk.type === "blockquote";
 
+                // 見出しレベルのフォントサイズマッピング
+                const headingFontSizeMap: Record<number, string> = {
+                  1: "text-3xl",
+                  2: "text-2xl",
+                  3: "text-xl",
+                  4: "text-lg",
+                  5: "text-base",
+                  6: "text-sm",
+                };
+
                 // 段落タイプに応じた基本スタイル
                 let baseStyle = "text-lg leading-relaxed";
                 if (isHeading) {
                   // 見出しは太字で大きめ
                   const headingLevel = parseInt(chunk.type.charAt(1));
-                  const fontSize =
-                    headingLevel === 1
-                      ? "text-3xl"
-                      : headingLevel === 2
-                      ? "text-2xl"
-                      : headingLevel === 3
-                      ? "text-xl"
-                      : "text-lg";
+                  const fontSize = headingFontSizeMap[headingLevel] || "text-lg";
                   baseStyle = `${fontSize} font-bold leading-tight`;
                 } else if (isListItem) {
                   // リストアイテムは左にマージン

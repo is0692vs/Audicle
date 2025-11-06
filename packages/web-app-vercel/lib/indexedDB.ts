@@ -15,9 +15,12 @@ const DB_NAME = 'audicle-cache';
 const STORE_NAME = 'audio-chunks';
 const DB_VERSION = 1;
 
+// IndexedDB接続をキャッシュ（シングルトンパターン）
+let dbPromise: Promise<IDBDatabase> | null = null;
+
 export interface AudioCacheEntry {
     key: string; // `${articleUrl}:${chunkIndex}:${voice}:${speed}`
-    audioData: string; // base64エンコードされた音声データ
+    audioData: Blob; // 音声データ（Blob形式）
     timestamp: number; // 保存日時
     articleUrl: string;
     chunkIndex: number;
@@ -38,19 +41,42 @@ export interface DownloadedArticle {
 }
 
 /**
- * IndexedDBを初期化
+ * キーを生成する
+ */
+function generateKey(
+    articleUrl: string,
+    chunkIndex: number,
+    voice?: string,
+    speed?: number
+): string {
+    return `${articleUrl}:${chunkIndex}:${voice || 'default'}:${speed || 1}`;
+}
+
+/**
+ * IndexedDBを初期化（接続をキャッシュして再利用）
  */
 function openDB(): Promise<IDBDatabase> {
-    return new Promise((resolve, reject) => {
+    if (dbPromise) {
+        return dbPromise;
+    }
+
+    dbPromise = new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, DB_VERSION);
 
         request.onerror = () => {
             logger.error('IndexedDB open error', request.error);
+            dbPromise = null; // Reset on error
             reject(request.error);
         };
 
         request.onsuccess = () => {
-            resolve(request.result);
+            const db = request.result;
+            // 接続が予期なく閉じられた場合はキャッシュをリセット
+            db.onclose = () => {
+                logger.warn('IndexedDB connection closed unexpectedly.');
+                dbPromise = null;
+            };
+            resolve(db);
         };
 
         request.onupgradeneeded = (event) => {
@@ -68,6 +94,8 @@ function openDB(): Promise<IDBDatabase> {
             }
         };
     });
+
+    return dbPromise;
 }
 
 /**
@@ -95,10 +123,6 @@ export async function saveAudioChunk(entry: Omit<AudioCacheEntry, 'key'>): Promi
         request.onerror = () => {
             logger.error('Save error', request.error);
             reject(request.error);
-        };
-
-        transaction.oncomplete = () => {
-            db.close();
         };
     });
 }
@@ -128,10 +152,6 @@ export async function getAudioChunk(
             logger.error('Get error', request.error);
             reject(request.error);
         };
-
-        transaction.oncomplete = () => {
-            db.close();
-        };
     });
 }
 
@@ -154,10 +174,6 @@ export async function getArticleChunks(articleUrl: string): Promise<AudioCacheEn
         request.onerror = () => {
             logger.error('Get all error', request.error);
             reject(request.error);
-        };
-
-        transaction.oncomplete = () => {
-            db.close();
         };
     });
 }
@@ -189,7 +205,6 @@ export async function deleteArticle(articleUrl: string): Promise<void> {
 
         transaction.oncomplete = () => {
             logger.info(`Deleted all chunks for ${articleUrl}`);
-            db.close();
             resolve();
         };
     });
@@ -214,10 +229,6 @@ export async function clearAll(): Promise<void> {
         request.onerror = () => {
             logger.error('Clear error', request.error);
             reject(request.error);
-        };
-
-        transaction.oncomplete = () => {
-            db.close();
         };
     });
 }
@@ -268,7 +279,7 @@ export async function getDownloadedArticles(): Promise<DownloadedArticle[]> {
         };
 
         transaction.oncomplete = () => {
-            db.close();
+            // db.close() は呼ばないでシングルトン接続をキープ
         };
     });
 }
@@ -293,18 +304,6 @@ export async function getStorageUsage(): Promise<{ used: number; available: numb
         used,
         available: Infinity, // デフォルト50GB
     };
-}
-
-/**
- * キャッシュキーを生成
- */
-function generateKey(
-    articleUrl: string,
-    chunkIndex: number,
-    voice?: string,
-    speed?: number
-): string {
-    return `${articleUrl}:${chunkIndex}:${voice || 'default'}:${speed || 1.0}`;
 }
 
 /**

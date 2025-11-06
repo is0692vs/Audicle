@@ -13,13 +13,15 @@ interface UseDownloadProps {
     chunks: Chunk[];
     voice?: string;
     speed?: number;
+    onSlowConnection?: () => Promise<boolean>; // 低速接続時のコールバック
 }
 
 const MAX_RETRIES = 3;
 const MAX_CONCURRENT = 3; // 最大3チャンク同時ダウンロード
 const RETRY_DELAY = 1000; // リトライ間隔（ミリ秒）
+const ESTIMATED_CHUNK_SIZE_BYTES = 50 * 1024; // 1チャンクあたりの推定サイズ（50KB）
 
-export function useDownload({ articleUrl, chunks, voice, speed }: UseDownloadProps) {
+export function useDownload({ articleUrl, chunks, voice, speed, onSlowConnection }: UseDownloadProps) {
     const [status, setStatus] = useState<DownloadStatus>('idle');
     const [progress, setProgress] = useState({ current: 0, total: 0 });
     const [error, setError] = useState<string>('');
@@ -40,22 +42,9 @@ export function useDownload({ articleUrl, chunks, voice, speed }: UseDownloadPro
             // 音声合成
             const audioBlob = await synthesizeSpeech(chunk.cleanedText, voice, speed);
 
-            // Blobをbase64に変換
-            const reader = new FileReader();
-            const audioData = await new Promise<string>((resolve, reject) => {
-                reader.onloadend = () => {
-                    const result = reader.result as string;
-                    // data:audio/mpeg;base64, を除去
-                    const base64 = result.split(',')[1];
-                    resolve(base64);
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(audioBlob);
-            });
-
-            // IndexedDBに保存
+            // IndexedDBに直接保存
             await saveAudioChunk({
-                audioData,
+                audioData: audioBlob,
                 timestamp: Date.now(),
                 articleUrl,
                 chunkIndex: index,
@@ -99,7 +88,7 @@ export function useDownload({ articleUrl, chunks, voice, speed }: UseDownloadPro
 
         await Promise.all(promises);
 
-        // 次のバッチ
+        // 次のバッチを処理
         if (chunksToDownload.length > MAX_CONCURRENT) {
             await downloadBatch(
                 chunksToDownload.slice(MAX_CONCURRENT),
@@ -131,8 +120,8 @@ export function useDownload({ articleUrl, chunks, voice, speed }: UseDownloadPro
             return;
         }
 
-        // ストレージ容量チェック（概算: 1チャンクあたり50KB）
-        const estimatedSize = chunks.length * 50 * 1024;
+        // ストレージ容量チェック
+        const estimatedSize = chunks.length * ESTIMATED_CHUNK_SIZE_BYTES;
         const hasCapacity = await checkStorageCapacity(estimatedSize);
 
         if (!hasCapacity) {
@@ -147,11 +136,12 @@ export function useDownload({ articleUrl, chunks, voice, speed }: UseDownloadPro
             if (connection && connection.effectiveType) {
                 const type = connection.effectiveType;
                 if (type === 'slow-2g' || type === '2g' || type === '3g') {
-                    const confirmed = window.confirm(
-                        '低速な接続が検出されました。Wi-Fi接続を推奨します。続行しますか?'
-                    );
-                    if (!confirmed) {
-                        return;
+                    if (onSlowConnection) {
+                        const confirmed = await onSlowConnection();
+                        if (!confirmed) {
+                            setStatus('cancelled');
+                            return;
+                        }
                     }
                 }
             }
@@ -193,7 +183,7 @@ export function useDownload({ articleUrl, chunks, voice, speed }: UseDownloadPro
                 logger.error('ダウンロードエラー', err);
             }
         }
-    }, [chunks, articleUrl, voice, speed, updateEstimatedTime]);
+    }, [chunks, articleUrl, voice, speed, updateEstimatedTime, onSlowConnection]);
 
     /**
      * ダウンロードキャンセル

@@ -100,18 +100,11 @@ export function usePlayback({ chunks, articleUrl, voice, speed, onChunkChange }:
           const cachedChunk = await getAudioChunk(articleUrl, index, voice, speed);
 
           if (cachedChunk) {
-            // キャッシュヒット: base64からBlobURLを生成
+            // キャッシュヒット: Blobから直接URLを生成
             logger.info(`💾 キャッシュヒット: チャンク ${index + 1}`);
-            const audioData = cachedChunk.audioData;
-            const binaryString = atob(audioData);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-              bytes[i] = binaryString.charCodeAt(i);
-            }
-            const blob = new Blob([bytes], { type: 'audio/mpeg' });
-            audioUrl = URL.createObjectURL(blob);
+            audioUrl = URL.createObjectURL(cachedChunk.audioData);
           } else {
-            // キャッシュミス: 既存のAPI呼び出し
+            // キャッシュミス: API呼び出し
             logger.info(`🌐 キャッシュミス: API呼び出し`);
             audioUrl = await audioCache.get(chunk.cleanedText);
           }

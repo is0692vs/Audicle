@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { articleStorage, type Article } from "@/lib/storage";
 import { logger } from "@/lib/logger";
 import { handleSignOut } from "@/app/auth/signin/actions";
+import { useConfirmDialog } from "@/components/ConfirmDialog";
 
 export default function Home() {
   const router = useRouter();
   const [articles, setArticles] = useState<Article[]>([]);
+  const { showConfirm, confirmDialog } = useConfirmDialog();
 
   // 記事一覧を読み込み
   useEffect(() => {
@@ -25,9 +27,19 @@ export default function Home() {
     return () => window.removeEventListener("storage", loadArticles);
   }, []);
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     const article = articles.find((a) => a.id === id);
-    if (article && confirm(`「${article.title}」を削除しますか?`)) {
+    if (!article) return;
+
+    const confirmed = await showConfirm({
+      title: "記事を削除",
+      message: `「${article.title}」を削除しますか?`,
+      confirmText: "削除",
+      cancelText: "キャンセル",
+      isDangerous: true,
+    });
+
+    if (confirmed) {
       articleStorage.remove(id);
       setArticles((prev) => prev.filter((a) => a.id !== id));
       logger.success("記事を削除", { id, title: article.title });
@@ -46,6 +58,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      {confirmDialog}
       {/* ヘッダー */}
       <header className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
         <div className="max-w-4xl mx-auto p-4">
