@@ -41,6 +41,7 @@ export default function StorageManager() {
   const [articles, setArticles] = useState<DownloadedArticle[]>([]);
   const [storageUsage, setStorageUsage] = useState({ used: 0, available: 0 });
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string>("");
   const { showConfirm, confirmDialog } = useConfirmDialog();
 
   // データを読み込み
@@ -90,7 +91,7 @@ export default function StorageManager() {
       await loadData();
     } catch (err) {
       logger.error("記事の削除に失敗", err);
-      alert("削除に失敗しました");
+      setError("削除に失敗しました");
     }
   };
 
@@ -112,7 +113,7 @@ export default function StorageManager() {
       await loadData();
     } catch (err) {
       logger.error("全削除に失敗", err);
-      alert("削除に失敗しました");
+      setError("削除に失敗しました");
     }
   };
 
@@ -132,6 +133,11 @@ export default function StorageManager() {
   return (
     <div className="p-4 space-y-4">
       {confirmDialog}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-3">
+          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+        </div>
+      )}
       {/* ストレージ使用量 */}
       <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
         <h3 className="text-lg font-semibold mb-3">ストレージ使用量</h3>
