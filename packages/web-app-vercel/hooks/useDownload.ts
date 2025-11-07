@@ -40,7 +40,7 @@ export function useDownload({ articleUrl, chunks, voiceModel, speed, onSlowConne
 
         try {
             // 音声合成（1倍速固定）
-            const audioBlob = await synthesizeSpeech(chunk.cleanedText, voiceModel, 1.0);
+            const audioBlob = await synthesizeSpeech(chunk.cleanedText, undefined, voiceModel);
 
             // IndexedDBに直接保存
             await saveAudioChunk({

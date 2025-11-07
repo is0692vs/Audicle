@@ -35,7 +35,7 @@ export default function ReaderView({
   } = useDownload({
     articleUrl,
     chunks,
-    voiceModel: voiceModel,
+    voiceModel,
     speed,
   });
 

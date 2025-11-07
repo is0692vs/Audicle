@@ -51,7 +51,7 @@ class AudioCache {
 
     // キャッシュミス - 新規合成
     logger.cache("MISS", `${text.substring(0, 30)}...`);
-    const blob = await synthesizeSpeech(text, undefined, undefined, voiceModel);
+    const blob = await synthesizeSpeech(text, undefined, voiceModel);
     const url = URL.createObjectURL(blob);
 
     this.cache.set(key, {

@@ -60,13 +60,11 @@ export default function ReaderPageClient() {
     const loadSettings = async () => {
       try {
         const response = await fetch("/api/settings/get");
-        if (response.ok) {
-          const data = await response.json();
-          setSettings(data);
-        } else {
-          logger.error(`設定の読み込みに失敗: ${response.status}`);
-          setSettings(DEFAULT_SETTINGS);
+        if (!response.ok) {
+          throw new Error(`設定の読み込みに失敗: ${response.status}`);
         }
+        const data = await response.json();
+        setSettings(data);
       } catch (err) {
         logger.error("設定の読み込みに失敗", err);
         setSettings(DEFAULT_SETTINGS);
