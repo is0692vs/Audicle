@@ -64,7 +64,15 @@ export default function ReaderPageClient() {
           throw new Error(`設定の読み込みに失敗: ${response.status}`);
         }
         const data = await response.json();
-        setSettings(data);
+        if (
+          data &&
+          typeof data.voice_model === "string" &&
+          typeof data.playback_speed === "number"
+        ) {
+          setSettings(data);
+        } else {
+          throw new Error("Invalid settings format from API");
+        }
       } catch (err) {
         logger.error("設定の読み込みに失敗", err);
         setSettings(DEFAULT_SETTINGS);
