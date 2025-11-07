@@ -204,12 +204,11 @@ export default function Home() {
           }}
           bookmarkId={selectedBookmarkId}
           articleUrl={
-            articles.find((a) => a.id === selectedBookmarkId)?.article_url ||
-            ""
+            articles.find((a) => a.id === selectedBookmarkId)?.article_url || ""
           }
           articleTitle={
-            articles.find((a) => a.id === selectedBookmarkId)
-              ?.article_title || ""
+            articles.find((a) => a.id === selectedBookmarkId)?.article_title ||
+            ""
           }
         />
       )}
