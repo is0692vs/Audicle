@@ -33,8 +33,8 @@ class AudioCache {
   }
 
   // 音声を取得（キャッシュがあればそれを、なければ合成）
-  async get(text: string, voice: string = DEFAULT_VOICE, playbackSpeed: number = 1.0): Promise<string> {
-    const key = this.getCacheKey(text, voice, playbackSpeed);
+  async get(text: string, voiceModel: string = DEFAULT_VOICE, playbackSpeed: number = 1.0): Promise<string> {
+    const key = this.getCacheKey(text, voiceModel, playbackSpeed);
 
     // キャッシュチェック
     const cached = this.cache.get(key);
@@ -51,7 +51,7 @@ class AudioCache {
 
     // キャッシュミス - 新規合成
     logger.cache("MISS", `${text.substring(0, 30)}...`);
-    const blob = await synthesizeSpeech(text, voice, 1.0, voice, playbackSpeed);
+    const blob = await synthesizeSpeech(text, undefined, undefined, voiceModel, playbackSpeed);
     const url = URL.createObjectURL(blob);
 
     this.cache.set(key, {
@@ -67,14 +67,14 @@ class AudioCache {
   // 複数の音声を先読み
   async prefetch(
     texts: string[],
-    voice: string = DEFAULT_VOICE,
+    voiceModel: string = DEFAULT_VOICE,
     playbackSpeed: number = 1.0
   ): Promise<void> {
     logger.info(`🔄 先読み開始: ${texts.length}件`);
 
     const promises = texts.map(async (text) => {
       try {
-        await this.get(text, voice, playbackSpeed);
+        await this.get(text, voiceModel, playbackSpeed);
       } catch (error) {
         logger.error(`先読みエラー: ${text.substring(0, 30)}...`, error);
       }

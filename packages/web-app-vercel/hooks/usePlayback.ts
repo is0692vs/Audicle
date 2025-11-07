@@ -11,8 +11,6 @@ import { needsPauseBefore, needsPauseAfter, getPauseDuration } from "@/lib/parag
 interface UsePlaybackProps {
   chunks: Chunk[];
   articleUrl?: string;
-  voice?: string;
-  speed?: number;
   voiceModel?: string;       // 音声モデル（例: 'ja-JP-Standard-B'）
   playbackSpeed?: number;    // 再生速度（例: 1.0, 1.5, 2.0）
   onChunkChange?: (chunkId: string) => void;
@@ -171,7 +169,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         setIsLoading(false);
       }
     },
-    [chunks, articleUrl, voice, voiceModel, playbackSpeed, onChunkChange, prefetchAudio, playbackRate]
+    [chunks, articleUrl, voiceModel, playbackSpeed, onChunkChange, prefetchAudio, playbackRate]
   );
 
   // 再生開始

@@ -51,7 +51,6 @@ export default function ReaderPageClient() {
   } = usePlayback({
     chunks,
     articleUrl: url,
-    voice: undefined,
     voiceModel: settings.voice_model,
     playbackSpeed: settings.playback_speed,
   });
@@ -64,6 +63,9 @@ export default function ReaderPageClient() {
         if (response.ok) {
           const data = await response.json();
           setSettings(data);
+        } else {
+          logger.error(`設定の読み込みに失敗: ${response.status}`);
+          setSettings(DEFAULT_SETTINGS);
         }
       } catch (err) {
         logger.error("設定の読み込みに失敗", err);
@@ -230,7 +232,7 @@ export default function ReaderPageClient() {
           currentChunkId={currentChunkId}
           articleUrl={url}
           voice={undefined}
-          speed={settings.playback_speed}
+          speed={playbackRate}
           onChunkClick={seekToChunk}
         />
       </main>
