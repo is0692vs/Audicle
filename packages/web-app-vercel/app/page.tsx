@@ -2,22 +2,37 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { articleStorage, type Article } from "@/lib/storage";
 import { logger } from "@/lib/logger";
 import { handleSignOut } from "@/app/auth/signin/actions";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
+import type { Bookmark, PlaylistWithItems } from "@/types/playlist";
 
 export default function Home() {
   const router = useRouter();
-  const [articles, setArticles] = useState<Article[]>([]);
+  const [articles, setArticles] = useState<Bookmark[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { showConfirm, confirmDialog } = useConfirmDialog();
 
-  // 記事一覧を読み込み
+  // 記事一覧を読み込み（デフォルトプレイリストから）
   useEffect(() => {
-    const loadArticles = () => {
-      const allArticles = articleStorage.getAll();
-      logger.info("記事一覧を読み込み", { count: allArticles.length });
-      setArticles(allArticles);
+    const loadArticles = async () => {
+      try {
+        const response = await fetch("/api/playlists/default");
+
+        if (!response.ok) {
+          throw new Error("プレイリストの取得に失敗しました");
+        }
+
+        const playlist: PlaylistWithItems = await response.json();
+        const bookmarks = playlist.items?.map((item) => item.bookmark) || [];
+
+        logger.info("記事一覧を読み込み", { count: bookmarks.length });
+        setArticles(bookmarks);
+      } catch (error) {
+        logger.error("記事一覧の読み込みに失敗", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     loadArticles();
@@ -33,21 +48,32 @@ export default function Home() {
 
     const confirmed = await showConfirm({
       title: "記事を削除",
-      message: `「${article.title}」を削除しますか?`,
+      message: `「${article.article_title}」を削除しますか?`,
       confirmText: "削除",
       cancelText: "キャンセル",
       isDangerous: true,
     });
 
     if (confirmed) {
-      articleStorage.remove(id);
-      setArticles((prev) => prev.filter((a) => a.id !== id));
-      logger.success("記事を削除", { id, title: article.title });
+      try {
+        const response = await fetch(`/api/bookmarks/${id}`, {
+          method: "DELETE",
+        });
+
+        if (!response.ok) {
+          throw new Error("削除に失敗しました");
+        }
+
+        setArticles((prev) => prev.filter((a) => a.id !== id));
+        logger.success("記事を削除", { id, title: article.article_title });
+      } catch (error) {
+        logger.error("記事の削除に失敗", error);
+      }
     }
   };
 
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString("ja-JP", {
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString("ja-JP", {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
@@ -65,6 +91,12 @@ export default function Home() {
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold">Audicle - 記事一覧</h1>
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => router.push("/playlists")}
+                className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+              >
+                📚 プレイリスト
+              </button>
               <button
                 onClick={() => router.push("/settings")}
                 className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
@@ -90,7 +122,11 @@ export default function Home() {
 
       {/* メインコンテンツ: 記事一覧 */}
       <main className="max-w-4xl mx-auto p-4">
-        {articles.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+            <p>読み込み中...</p>
+          </div>
+        ) : articles.length === 0 ? (
           <div className="text-center py-12 text-gray-500 dark:text-gray-400">
             <p>まだ記事がありません</p>
             <p className="text-sm mt-2">
@@ -107,17 +143,24 @@ export default function Home() {
                 <div className="flex items-start justify-between gap-4">
                   <div
                     className="flex-1 cursor-pointer"
-                    onClick={() => router.push(`/reader?id=${article.id}`)}
+                    onClick={() =>
+                      router.push(
+                        `/reader?url=${encodeURIComponent(article.article_url)}`
+                      )
+                    }
                   >
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                      {article.title}
+                      {article.article_title}
                     </h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                      {article.url}
+                      {article.article_url}
                     </p>
                     <div className="flex items-center gap-4 mt-2 text-xs text-gray-400 dark:text-gray-500">
-                      <span>{formatDate(article.createdAt)}</span>
-                      <span>{article.chunks.length} チャンク</span>
+                      <span>{formatDate(article.created_at)}</span>
+                      {article.last_read_position !== undefined &&
+                        article.last_read_position > 0 && (
+                          <span>読書位置: {article.last_read_position}</span>
+                        )}
                     </div>
                   </div>
                   <button

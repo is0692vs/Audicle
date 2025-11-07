@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ReaderView from "@/components/ReaderView";
 import { Chunk } from "@/types/api";
@@ -28,6 +28,7 @@ export default function ReaderPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const articleId = searchParams.get("id");
+  const urlFromQuery = searchParams.get("url");
 
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -54,6 +55,77 @@ export default function ReaderPageClient() {
     voiceModel: settings.voice_model,
     playbackSpeed: settings.playback_speed,
   });
+
+  // 記事を読み込んで保存する共通ロジック
+  const loadAndSaveArticle = useCallback(
+    async (articleUrl: string) => {
+      setIsLoading(true);
+      setError("");
+      try {
+        const response = await extractContent(articleUrl);
+        const chunksWithId = convertParagraphsToChunks(response.content);
+        setChunks(chunksWithId);
+        setTitle(response.title);
+
+        // Supabaseにブックマークを保存（デフォルトプレイリストに自動追加）
+        let bookmarkId: string | null = null;
+        try {
+          const bookmarkResponse = await fetch("/api/bookmarks", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              article_url: articleUrl,
+              article_title: response.title,
+              thumbnail_url: null,
+              last_read_position: 0,
+            }),
+          });
+
+          if (bookmarkResponse.ok) {
+            const bookmarkData = await bookmarkResponse.json();
+            bookmarkId = bookmarkData.id;
+            logger.success("ブックマークを保存", {
+              id: bookmarkId,
+              url: articleUrl,
+              title: response.title,
+            });
+          } else {
+            logger.error(
+              "ブックマークの保存に失敗",
+              await bookmarkResponse.text()
+            );
+          }
+        } catch (bookmarkError) {
+          logger.error("ブックマークの保存に失敗", bookmarkError);
+        }
+
+        // ローカルストレージに保存（サーバーIDを優先）
+        const newArticle = articleStorage.upsert({
+          id: bookmarkId || undefined, // サーバーIDがあれば使用
+          url: articleUrl,
+          title: response.title,
+          chunks: chunksWithId,
+        });
+
+        logger.success("記事を保存", {
+          id: newArticle.id,
+          title: newArticle.title,
+          chunkCount: chunksWithId.length,
+        });
+
+        // URLに記事IDを追加（サーバーIDを優先）
+        router.push(`/reader?id=${bookmarkId || newArticle.id}`);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "エラーが発生しました");
+        logger.error("記事の抽出に失敗", err);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [router]
+  );
 
   // ユーザー設定を読み込む
   useEffect(() => {
@@ -98,40 +170,31 @@ export default function ReaderPageClient() {
     }
   }, [articleId]);
 
+  // URLクエリパラメータが指定されている場合は記事を自動取得
+  useEffect(() => {
+    if (urlFromQuery) {
+      setUrl(urlFromQuery);
+      // 既にlocalStorageに同じURLの記事が存在するかチェック
+      const existingArticle = articleStorage
+        .getAll()
+        .find((a) => a.url === urlFromQuery);
+      if (existingArticle) {
+        // 既存の記事がある場合は、そのIDを使ってリダイレクト
+        logger.info("既存の記事を読み込み", {
+          id: existingArticle.id,
+          title: existingArticle.title,
+        });
+        router.push(`/reader?id=${existingArticle.id}`);
+      } else {
+        // 新しい記事の場合は取得
+        loadAndSaveArticle(urlFromQuery);
+      }
+    }
+  }, [urlFromQuery, router, loadAndSaveArticle]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const response = await extractContent(url);
-
-      // HTML構造を保持して段落単位でチャンクに分割
-      const chunksWithId = convertParagraphsToChunks(response.content);
-
-      setChunks(chunksWithId);
-      setTitle(response.title);
-
-      // 記事を保存
-      const newArticle = articleStorage.add({
-        url,
-        title: response.title,
-        chunks: chunksWithId,
-      });
-      logger.success("記事を保存", {
-        id: newArticle.id,
-        title: newArticle.title,
-        chunkCount: chunksWithId.length,
-      });
-
-      // URLに記事IDを追加
-      router.push(`/reader?id=${newArticle.id}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "エラーが発生しました");
-      logger.error("記事の抽出に失敗", err);
-    } finally {
-      setIsLoading(false);
-    }
+    loadAndSaveArticle(url);
   };
 
   return (
