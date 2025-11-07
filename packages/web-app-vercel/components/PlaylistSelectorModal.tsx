@@ -171,10 +171,18 @@ export function PlaylistSelectorModal({
 
       {/* モーダル */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div
+          className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="playlist-selector-modal-title"
+        >
           {/* ヘッダー */}
           <div className="border-b border-gray-200 dark:border-gray-800 p-6">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+            <h2
+              id="playlist-selector-modal-title"
+              className="text-xl font-bold text-gray-900 dark:text-gray-100"
+            >
               プレイリストに追加
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 truncate">
