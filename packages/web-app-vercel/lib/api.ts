@@ -56,16 +56,14 @@ export async function synthesizeSpeech(
   if (voiceModel) {
     request.voice_model = voiceModel;
   }
-  if (playbackSpeed) {
-    request.playback_speed = playbackSpeed;
-  }
+  // playbackSpeedはフロントエンドでの再生速度制御用なのでAPIには渡さない
 
   logger.apiRequest("POST", "/api/synthesize", {
     text: text.substring(0, 50) + "...",
     voice,
     speed,
     voiceModel,
-    playbackSpeed,
+    // playbackSpeedはフロントエンド制御用
   });
 
   const response = await fetch("/api/synthesize", {

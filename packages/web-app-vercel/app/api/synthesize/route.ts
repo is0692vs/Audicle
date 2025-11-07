@@ -186,7 +186,8 @@ export async function POST(request: NextRequest) {
         }
 
         const voiceToUse = voice_model || voice || 'ja-JP-Standard-B';
-        const speakingRate = playback_speed || speed || 1.0;
+        // Google TTS APIでは常に1.0倍で合成（再生速度はフロントエンド側で制御）
+        const speakingRate = 1.0;
 
         // テキストを分割
         const textChunks = splitText(text);
