@@ -56,7 +56,7 @@ export async function POST(request: Request) {
             )
         }
 
-        const playlistId = defaultPlaylistResult.id
+        const playlistId = defaultPlaylistResult.playlist!.id
 
         // プレイリストに追加（既に存在する場合は無視）
         // 注: positionはDB側のトリガーで自動採番される

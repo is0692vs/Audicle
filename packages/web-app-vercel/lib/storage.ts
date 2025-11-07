@@ -34,7 +34,7 @@ export const articleStorage = {
   },
 
   // 記事をupsert（URLをキーに既存を更新、なければ追加）
-  upsert: (article: Omit<Article, "id" | "createdAt">): Article => {
+  upsert: (article: Omit<Article, "id" | "createdAt"> & { id?: string }): Article => {
     const articles = articleStorage.getAll();
     const existingIndex = articles.findIndex((a) => a.url === article.url);
 
@@ -43,12 +43,21 @@ export const articleStorage = {
       articles[existingIndex] = {
         ...articles[existingIndex],
         ...article,
+        // idが指定されている場合は更新
+        ...(article.id && { id: article.id }),
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(articles));
       return articles[existingIndex];
     } else {
       // 新規追加
-      return articleStorage.add(article);
+      const newArticle: Article = {
+        ...article,
+        id: article.id || crypto.randomUUID(),
+        createdAt: Date.now(),
+      };
+      articles.unshift(newArticle); // 先頭に追加
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(articles));
+      return newArticle;
     }
   },
 

@@ -61,7 +61,7 @@ export default function PlaylistDetailPage() {
         },
         body: JSON.stringify({
           name: editName,
-          description: editDescription || undefined,
+          description: editDescription,
         }),
       });
 

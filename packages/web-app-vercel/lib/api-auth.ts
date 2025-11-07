@@ -1,10 +1,9 @@
 import { auth } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
-export interface AuthResult {
-    userEmail: string | null;
-    response: NextResponse | null;
-}
+export type AuthResult =
+    | { userEmail: string; response: null }
+    | { userEmail: null; response: NextResponse };
 
 /**
  * APIルートの認証チェックを一元管理

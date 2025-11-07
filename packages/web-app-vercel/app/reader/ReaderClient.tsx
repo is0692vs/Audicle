@@ -67,16 +67,10 @@ export default function ReaderPageClient() {
         setChunks(chunksWithId);
         setTitle(response.title);
 
-        // ローカルストレージに保存（upsertで重複を防止）
-        const newArticle = articleStorage.upsert({
-          url: articleUrl,
-          title: response.title,
-          chunks: chunksWithId,
-        });
-
         // Supabaseにブックマークを保存（デフォルトプレイリストに自動追加）
+        let bookmarkId: string | null = null;
         try {
-          await fetch("/api/bookmarks", {
+          const bookmarkResponse = await fetch("/api/bookmarks", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -88,13 +82,29 @@ export default function ReaderPageClient() {
               last_read_position: 0,
             }),
           });
-          logger.success("ブックマークを保存", {
-            url: articleUrl,
-            title: response.title,
-          });
+
+          if (bookmarkResponse.ok) {
+            const bookmarkData = await bookmarkResponse.json();
+            bookmarkId = bookmarkData.id;
+            logger.success("ブックマークを保存", {
+              id: bookmarkId,
+              url: articleUrl,
+              title: response.title,
+            });
+          } else {
+            logger.error("ブックマークの保存に失敗", await bookmarkResponse.text());
+          }
         } catch (bookmarkError) {
           logger.error("ブックマークの保存に失敗", bookmarkError);
         }
+
+        // ローカルストレージに保存（サーバーIDを優先）
+        const newArticle = articleStorage.upsert({
+          id: bookmarkId || undefined, // サーバーIDがあれば使用
+          url: articleUrl,
+          title: response.title,
+          chunks: chunksWithId,
+        });
 
         logger.success("記事を保存", {
           id: newArticle.id,
@@ -102,8 +112,8 @@ export default function ReaderPageClient() {
           chunkCount: chunksWithId.length,
         });
 
-        // URLに記事IDを追加
-        router.push(`/reader?id=${newArticle.id}`);
+        // URLに記事IDを追加（サーバーIDを優先）
+        router.push(`/reader?id=${bookmarkId || newArticle.id}`);
       } catch (err) {
         setError(err instanceof Error ? err.message : "エラーが発生しました");
         logger.error("記事の抽出に失敗", err);

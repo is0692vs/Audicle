@@ -33,7 +33,7 @@ CREATE TABLE playlist_items (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   playlist_id UUID NOT NULL REFERENCES playlists(id) ON DELETE CASCADE,
   bookmark_id UUID NOT NULL REFERENCES bookmarks(id) ON DELETE CASCADE,
-  position INTEGER NOT NULL DEFAULT 0,
+  position INTEGER NOT NULL,
   added_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(playlist_id, bookmark_id)
 );
@@ -65,12 +65,14 @@ CREATE TRIGGER update_bookmarks_updated_at
 CREATE OR REPLACE FUNCTION set_playlist_item_position()
 RETURNS TRIGGER AS $$
 BEGIN
+  -- 親プレイリストの行をロックして、このプレイリストへの挿入をシリアライズする
+  PERFORM 1 FROM playlists WHERE id = NEW.playlist_id FOR UPDATE;
+
   -- トランザクション内で安全に次のpositionを計算して設定
   NEW.position = (
     SELECT COALESCE(MAX(position), -1) + 1
     FROM playlist_items
     WHERE playlist_id = NEW.playlist_id
-    FOR UPDATE
   );
   RETURN NEW;
 END;
