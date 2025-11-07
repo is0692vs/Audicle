@@ -1,8 +1,9 @@
 "use client";
 
 import { Chunk } from "@/types/api";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { useDownload } from "@/hooks/useDownload";
+import { useAutoScroll } from "@/hooks/useAutoScroll";
 
 interface ReaderViewProps {
   chunks?: Chunk[];
@@ -21,7 +22,6 @@ export default function ReaderView({
   speed,
   onChunkClick,
 }: ReaderViewProps) {
-  const activeChunkRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // ダウンロード機能
@@ -40,30 +40,13 @@ export default function ReaderView({
   });
 
   // 自動スクロール: 再生中のチャンクが変わったら画面中央にスクロール
-  useEffect(() => {
-    if (currentChunkId && activeChunkRef.current && containerRef.current) {
-      const element = activeChunkRef.current;
-      const container = containerRef.current;
-
-      // 要素の位置を取得
-      const elementRect = element.getBoundingClientRect();
-      const containerRect = container.getBoundingClientRect();
-
-      // コンテナの中央に要素を配置するためのスクロール位置を計算
-      const scrollTop =
-        container.scrollTop +
-        elementRect.top -
-        containerRect.top -
-        containerRect.height / 2 +
-        elementRect.height / 2;
-
-      // スムーズにスクロール
-      container.scrollTo({
-        top: scrollTop,
-        behavior: "smooth",
-      });
-    }
-  }, [currentChunkId]);
+  // Chrome拡張版と同等の動作を提供
+  useAutoScroll({
+    currentChunkId,
+    containerRef,
+    enabled: true,
+    delay: 0,
+  });
 
   // 進行状況の表示
   const renderProgressBar = () => {
@@ -198,7 +181,6 @@ export default function ReaderView({
                 return (
                   <div
                     key={chunk.id}
-                    ref={isActive ? activeChunkRef : null}
                     data-audicle-id={chunk.id}
                     onClick={() => onChunkClick?.(chunk.id)}
                     className={`
