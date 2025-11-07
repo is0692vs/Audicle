@@ -50,7 +50,6 @@ export function useDownload({ articleUrl, chunks, voice, speed, onSlowConnection
                 chunkIndex: index,
                 totalChunks: chunks.length,
                 voice,
-                speed: 1.0, // 1倍速固定
                 size: audioBlob.size,
             });
 

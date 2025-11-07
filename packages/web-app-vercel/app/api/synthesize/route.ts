@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
 
         // リクエストボディをパース
         const body = await request.json();
-        const { text, voice, speed, voice_model, playback_speed } = body as SynthesizeRequest & { speed?: number };
+        const { text, voice, voice_model } = body as SynthesizeRequest;
 
         if (!text || typeof text !== 'string') {
             return NextResponse.json(

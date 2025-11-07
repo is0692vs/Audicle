@@ -43,8 +43,7 @@ export async function synthesizeSpeech(
   text: string,
   voice?: string,
   speed?: number,
-  voiceModel?: string,
-  playbackSpeed?: number
+  voiceModel?: string
 ): Promise<Blob> {
   const request: SynthesizeRequest & { speed?: number } = { text };
   if (voice) {

@@ -69,7 +69,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         .map((chunk) => chunk.cleanedText);
 
       if (textsToFetch.length > 0) {
-        await audioCache.prefetch(textsToFetch, voiceModel, playbackSpeed);
+        await audioCache.prefetch(textsToFetch, voiceModel);
       }
     },
     [chunks, voiceModel, playbackSpeed]
@@ -98,7 +98,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         // 1. IndexedDBからキャッシュをチェック
         let audioUrl: string;
         if (articleUrl) {
-          const cachedChunk = await getAudioChunk(articleUrl, index, voiceModel, playbackSpeed);
+          const cachedChunk = await getAudioChunk(articleUrl, index, voiceModel);
 
           if (cachedChunk) {
             // キャッシュヒット: Blobから直接URLを生成
@@ -107,11 +107,11 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
           } else {
             // キャッシュミス: API呼び出し
             logger.info(`🌐 キャッシュミス: API呼び出し`);
-            audioUrl = await audioCache.get(chunk.cleanedText, voiceModel, playbackSpeed);
+            audioUrl = await audioCache.get(chunk.cleanedText, voiceModel);
           }
         } else {
           // articleURLがない場合は既存の動作
-          audioUrl = await audioCache.get(chunk.cleanedText, voiceModel, playbackSpeed);
+          audioUrl = await audioCache.get(chunk.cleanedText, voiceModel);
         }
 
         // 先読み処理（非同期で実行）
