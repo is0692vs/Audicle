@@ -48,18 +48,16 @@ export function PlaylistSelectorModal({
 
       // 現在のブックマークが含まれるプレイリストを取得
       let selectedCount = 0;
-      if (currentPlaylistsResponse.ok) {
-        const currentPlaylists: Playlist[] =
-          await currentPlaylistsResponse.json();
-        const currentIds = new Set(currentPlaylists.map((p) => p.id));
-        setSelectedPlaylistIds(currentIds);
-        setInitialSelectedIds(currentIds);
-        selectedCount = currentIds.size;
-      } else {
-        // 取得に失敗した場合、選択は空として扱う
-        setSelectedPlaylistIds(new Set());
-        setInitialSelectedIds(new Set());
+      if (!currentPlaylistsResponse.ok) {
+        // 既存のプレイリストが取得できない場合、エラーとして処理を中断する
+        throw new Error("ブックマークが所属するプレイリストの取得に失敗しました。");
       }
+      const currentPlaylists: Playlist[] =
+        await currentPlaylistsResponse.json();
+      const currentIds = new Set(currentPlaylists.map((p) => p.id));
+      setSelectedPlaylistIds(currentIds);
+      setInitialSelectedIds(currentIds);
+      selectedCount = currentIds.size;
 
       logger.info("プレイリストを読み込み", {
         totalCount: playlistsData.length,
@@ -215,6 +213,7 @@ export function PlaylistSelectorModal({
                     <div
                       key={playlist.id}
                       className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
+                      onClick={() => !isSaving && handleTogglePlaylist(playlist.id)}
                     >
                       <input
                         id={checkboxId}
