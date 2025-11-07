@@ -58,9 +58,10 @@
 
 **ファイル**: `types/playlist.ts`
 
-```typescript
--Playlist - Bookmark - PlaylistItem - PlaylistWithItems;
-```
+export interface Playlist { /* ... */ }
+export interface Bookmark { /* ... */ }
+export interface PlaylistItem { /* ... */ }
+export interface PlaylistWithItems extends Playlist { /* ... */ }
 
 ## Phase 3: API 実装
 
