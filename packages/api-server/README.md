@@ -47,7 +47,7 @@ Webアプリケーション版およびChrome拡張機能版Audicleのバック�
    > **⚠️ 注意**: `credentials/service-account.json`は`.gitignore`によってリポジトリには含まれません。安全に管理してください。
 
 3. **Dockerコンテナのビルドと起動**
-   - `packages/api-server` ディレクトリにて、以下のコマンドを実行します。
+   - リポジトリのルートディレクトリから、以下のコマンドを実行します。
      ```bash
      docker-compose up --build -d
      ```
@@ -69,8 +69,8 @@ curl http://localhost:8000/
 **レスポンス例:**
 ```json
 {
-  "message": "Audicle API Server is running",
-  "version": "1.0.0"
+  "status": "ok",
+  "message": "Audicle API Server is running."
 }
 ```
 
@@ -113,6 +113,10 @@ curl -X POST http://localhost:8000/extract \
 ```
 > `voice`パラメータはオプションです。指定しない場合は、デフォルトの音声（`ja-JP-Wavenet-B`）が使用されます。
 
+**レスポンス:**
+
+MP3形式の音声ファイルが返されます。
+
 **実行例:**
 ```bash
 curl -X POST http://localhost:8000/synthesize \
@@ -124,7 +128,7 @@ curl -X POST http://localhost:8000/synthesize \
 
 ## ⚙️ 設定
 
-- **デフォルト音声**: `ja-JP-Neural2-B` (日本語, Neural2)
+- **デフォルト音声**: `ja-JP-Wavenet-B` (日本語, WaveNet)
 - **オーディオ形式**: MP3
 - **フォールバック**: 音声合成に失敗した場合、プロジェクト内の`fallback.mp3`が返されます。
 
