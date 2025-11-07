@@ -67,7 +67,7 @@ export async function GET(
 // PATCH: プレイリスト更新
 export async function PATCH(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await auth()
@@ -80,7 +80,7 @@ export async function PATCH(
         }
 
         const userEmail = session.user.email
-        const { id } = params
+        const { id } = await params
         const body = await request.json()
 
         const { name, description } = body
@@ -117,7 +117,7 @@ export async function PATCH(
 // DELETE: プレイリスト削除
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await auth()
@@ -130,7 +130,7 @@ export async function DELETE(
         }
 
         const userEmail = session.user.email
-        const { id } = params
+        const { id } = await params
 
         // デフォルトプレイリストは削除不可（1つのクエリでチェックと削除）
         const { error } = await supabase

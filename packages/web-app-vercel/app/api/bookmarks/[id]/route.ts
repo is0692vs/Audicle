@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 // DELETE: ブックマーク削除
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await auth()
@@ -18,7 +18,7 @@ export async function DELETE(
         }
 
         const userEmail = session.user.email
-        const { id } = params
+        const { id } = await params
 
         const { error } = await supabase
             .from('bookmarks')
@@ -47,7 +47,7 @@ export async function DELETE(
 // PATCH: 最後に読んだ位置の更新
 export async function PATCH(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await auth()
@@ -60,7 +60,7 @@ export async function PATCH(
         }
 
         const userEmail = session.user.email
-        const { id } = params
+        const { id } = await params
         const body = await request.json()
 
         const { last_read_position } = body
