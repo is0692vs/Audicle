@@ -109,7 +109,7 @@ export default function PlaylistDetailPage() {
             items: prev.items?.filter(
               (item) => item.bookmark.id !== bookmarkId
             ),
-            item_count: (prev.item_count || 1) - 1,
+            item_count: (prev.item_count ?? 0) - 1,
           };
         });
         logger.success("ブックマークを削除", { id: bookmarkId, title });
