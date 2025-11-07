@@ -2,7 +2,7 @@
 
 ## 概要
 
-Web App Vercel版（`packages/web-app-vercel/`）に、読み上げ中の段落へ自動的にスクロールする機能を実装しました。Chrome拡張版で既に実装されている機能と同等のユーザー体験を提供します。
+Web App Vercel 版（`packages/web-app-vercel/`）に、読み上げ中の段落へ自動的にスクロールする機能を実装しました。Chrome 拡張版で既に実装されている機能と同等のユーザー体験を提供します。
 
 ## 実装内容
 
@@ -14,7 +14,7 @@ Web App Vercel版（`packages/web-app-vercel/`）に、読み上げ中の段落�
 
 - **スムーズスクロール**: `behavior: 'smooth'`でチャンク切り替え時にスムーズにスクロール
 - **画面中央配置**: `block: 'center'`で読み上げ中の段落を画面中央付近に表示
-- **コンテナ対応**: 指定されたコンテナ内でのスクロール、またはwindowスクロールに対応
+- **コンテナ対応**: 指定されたコンテナ内でのスクロール、または window スクロールに対応
 - **要素検索**: `data-audicle-id`属性を使用した効率的なチャンク検索
 - **レガシーブラウザ対応**: `scrollIntoView(true)`によるフォールバック実装
 - **カッシュ版**: `useAutoScrollWithCache`で要素参照をキャッシュして性能向上
@@ -23,10 +23,10 @@ Web App Vercel版（`packages/web-app-vercel/`）に、読み上げ中の段落�
 
 ```typescript
 interface UseAutoScrollProps {
-  currentChunkId?: string;        // 現在再生中のチャンクID
+  currentChunkId?: string; // 現在再生中のチャンクID
   containerRef?: React.RefObject<HTMLElement>; // スクロール対象のコンテナ参照
-  enabled?: boolean;              // スクロール有効化フラグ（デフォルト: true）
-  delay?: number;                 // スクロール遅延（ミリ秒、デフォルト: 0）
+  enabled?: boolean; // スクロール有効化フラグ（デフォルト: true）
+  delay?: number; // スクロール遅延（ミリ秒、デフォルト: 0）
 }
 ```
 
@@ -50,10 +50,12 @@ useAutoScroll({
 #### 変更内容
 
 1. **フック統合**
+
    - `useAutoScroll`フックを新規導入
    - 既存の手動スクロール計算コード（`useEffect`）を置き換え
 
 2. **要素参照の簡潔化**
+
    - `activeChunkRef`の不要性を除去
    - `data-audicle-id`属性がチャンク検索の唯一の手段
 
@@ -64,6 +66,7 @@ useAutoScroll({
 #### ビフォーアフター
 
 **Before（手動計算）**:
+
 ```typescript
 useEffect(() => {
   if (currentChunkId && activeChunkRef.current && containerRef.current) {
@@ -71,14 +74,19 @@ useEffect(() => {
     const container = containerRef.current;
     const elementRect = element.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
-    const scrollTop = container.scrollTop + elementRect.top - containerRect.top 
-                    - containerRect.height / 2 + elementRect.height / 2;
+    const scrollTop =
+      container.scrollTop +
+      elementRect.top -
+      containerRect.top -
+      containerRect.height / 2 +
+      elementRect.height / 2;
     container.scrollTo({ top: scrollTop, behavior: "smooth" });
   }
 }, [currentChunkId]);
 ```
 
 **After（フック利用）**:
+
 ```typescript
 useAutoScroll({
   currentChunkId,
@@ -91,24 +99,29 @@ useAutoScroll({
 ## 完了条件チェック
 
 - [x] **読み上げ中の段落が常に画面中央付近に表示される**
+
   - `useAutoScroll`の`block: 'center'`により実装
 
 - [x] **チャンクが切り替わるたびにスムーズにスクロールする**
+
   - `behavior: 'smooth'`でスムーズなスクロール
 
 - [x] **ユーザーが手動でスクロールした場合も、次のチャンク再生時に自動スクロールが再開される**
+
   - 依存配列に`currentChunkId`のみを指定し、チャンク切り替えのたびに発火
 
 - [x] **モバイルデバイスでも正常に動作する**
+
   - `scrollIntoView`はすべてのブラウザで標準対応
   - モバイル特化的な処理は不要
 
-- [x] **Supabaseへの通信が発生していない**
+- [x] **Supabase への通信が発生していない**
+
   - 実装はクライアント側のみ
-  - API呼び出しなし
+  - API 呼び出しなし
   - データベースクエリなし
 
-- [x] **既存のDB構造に変更がない**
+- [x] **既存の DB 構造に変更がない**
   - テーブルスキーマの変更なし
   - 新規テーブル/カラムの追加なし
 
@@ -117,6 +130,7 @@ useAutoScroll({
 ### スクロール計算ロジック
 
 **コンテナ内スクロールの場合**:
+
 ```
 scrollTop = container.scrollTop + (element相対位置)
          = container.scrollTop + (elementTop - containerTop - containerHeight/2 + elementHeight/2)
@@ -148,53 +162,57 @@ const element = document.querySelector(
 ## 既存機能との連携
 
 ### ハイライト機能
+
 - `ReaderView.tsx`の`isActive`条件により、読み上げ中のチャンクに対して`bg-yellow-100`クラスが適用
 - スクロール機能は独立して動作し、ハイライト表示に影響なし
 
 ### 再生制御ロジック
+
 - `usePlayback`フックから`currentChunkId`が提供される
 - チャンク切り替え時に`currentChunkId`が変更 → `useAutoScroll`が発火 → スクロール実行
 - フロー: `usePlayback` → `currentChunkId`変更 → `useAutoScroll`反応 → スクロール
 
 ### クリック時のシーク機能
+
 - `onChunkClick`ハンドラで`seekToChunk`が呼ばれる
 - `seekToChunk`内で`playFromIndex`が実行される
 - `currentChunkId`が更新される → スクロールが自動実行される
 
 ## ファイル一覧
 
-| ファイル | 変更内容 |
-|---------|--------|
-| `packages/web-app-vercel/hooks/useAutoScroll.ts` | 新規作成 |
+| ファイル                                            | 変更内容   |
+| --------------------------------------------------- | ---------- |
+| `packages/web-app-vercel/hooks/useAutoScroll.ts`    | 新規作成   |
 | `packages/web-app-vercel/components/ReaderView.tsx` | フック統合 |
 
 ## 参照実装
 
 このフック実装は以下を参考にしています：
 
-1. **Chrome拡張版** (`packages/chrome-extension/content.js`)
+1. **Chrome 拡張版** (`packages/chrome-extension/content.js`)
+
    - `updateHighlight`関数の`scrollIntoView`実装
    - 自動スクロールのタイミング制御
 
-2. **web-app版** (`packages/web-app/hooks/usePlayback.ts`)
+2. **web-app 版** (`packages/web-app/hooks/usePlayback.ts`)
    - チャンク管理のパターン
    - 再生制御フロー
 
 ## パフォーマンス最適化
 
 1. **遅延オプション**: `delay`パラメータでスクロール開始のタイミングを調整可能
-2. **キャッシュ版**: `useAutoScrollWithCache`で要素参照をキャッシュ（LRU方式）
+2. **キャッシュ版**: `useAutoScrollWithCache`で要素参照をキャッシュ（LRU 方式）
 3. **効率的な検索**: `data-audicle-id`属性による直接検索（セレクタ最小化）
 
 ## ブラウザ互換性
 
-| ブラウザ | 対応状況 | 動作 |
-|--------|--------|------|
-| Chrome | ✅ | scrollIntoView + smooth |
-| Firefox | ✅ | scrollIntoView + smooth |
-| Safari | ✅ | scrollIntoView + smooth |
-| Edge | ✅ | scrollIntoView + smooth |
-| IE11 | ⚠️ | フォールバック（smooth未対応） |
+| ブラウザ | 対応状況 | 動作                            |
+| -------- | -------- | ------------------------------- |
+| Chrome   | ✅       | scrollIntoView + smooth         |
+| Firefox  | ✅       | scrollIntoView + smooth         |
+| Safari   | ✅       | scrollIntoView + smooth         |
+| Edge     | ✅       | scrollIntoView + smooth         |
+| IE11     | ⚠️       | フォールバック（smooth 未対応） |
 
 ## 今後の拡張可能性
 
@@ -208,21 +226,24 @@ const element = document.querySelector(
 テスト実施時は以下を確認してください：
 
 1. **基本動作**
+
    - チャンク再生時にスクロールが発生するか
    - スクロール先が画面中央付近か
 
 2. **エッジケース**
+
    - 最初のチャンクはスクロール不要
    - 最後のチャンク再生後のスクロール
    - 存在しないチャンク ID 指定時の処理
 
 3. **モバイル環境**
+
    - タッチデバイスでのスクロール動作
    - ビューポート高さが低い場合の処理
 
 4. **ネットワーク監視**
    - Developer Tools のネットワークタブで Supabase 通信がないことを確認
-   - オフラインモードでの動作（API呼び出しなし）
+   - オフラインモードでの動作（API 呼び出しなし）
 
 ## 完了状態
 
@@ -236,4 +257,4 @@ const element = document.querySelector(
 
 **実装日**: 2025-11-07
 **ブランチ**: `115-vercel読み上げ箇所スクロールフォロー`
-**関連PR**: [GiHub PR リンク]
+**関連 PR**: [GiHub PR リンク]
