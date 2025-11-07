@@ -20,10 +20,10 @@ Webアプリケーション版およびChrome拡張機能版Audicleのバック�
 
 ### 前提条件
 
-- Python 3.11+
-- Node.js
-- Docker および Docker Compose
-- Text-to-Speech APIが有効化されたGoogle Cloud Platform (GCP) アカウント
+- [Python 3.11+](https://www.python.org/)
+- [Node.js 18+](https://nodejs.org/)
+- [Docker](https://www.docker.com/) および [Docker Compose](https://docs.docker.com/compose/)
+- Text-to-Speech APIが有効化された[Google Cloud Platform (GCP)](https://cloud.google.com/) アカウント
 
 ### インストール手順
 
@@ -47,7 +47,7 @@ Webアプリケーション版およびChrome拡張機能版Audicleのバック�
    > **⚠️ 注意**: `credentials/service-account.json`は`.gitignore`によってリポジトリには含まれません。安全に管理してください。
 
 3. **Dockerコンテナのビルドと起動**
-   - リポジトリのルートディレクトリから、以下のコマンドを実行します。
+   - `packages/api-server`ディレクトリで、以下のコマンドを実行します。
      ```bash
      docker-compose up --build -d
      ```
