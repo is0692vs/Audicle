@@ -69,8 +69,8 @@ curl http://localhost:8000/
 **レスポンス例:**
 ```json
 {
-  "status": "ok",
-  "message": "Audicle API Server is running."
+  "message": "Audicle API Server is running",
+  "version": "1.0.0"
 }
 ```
 
