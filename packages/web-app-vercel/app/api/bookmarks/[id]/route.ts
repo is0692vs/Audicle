@@ -5,13 +5,13 @@ import { requireAuth } from '@/lib/api-auth'
 // GET: ブックマーク取得
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { userEmail, response } = await requireAuth()
         if (response) return response
 
-        const { id } = params
+        const { id } = await params
 
         const { data, error } = await supabase
             .from('bookmarks')
