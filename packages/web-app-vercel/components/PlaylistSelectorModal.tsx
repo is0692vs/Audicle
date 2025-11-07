@@ -34,8 +34,12 @@ export function PlaylistSelectorModal({
       setIsLoading(true);
       setError(null);
 
-      // ユーザーのプレイリスト一覧取得
-      const playlistsResponse = await fetch("/api/playlists");
+      // ユーザーのプレイリスト一覧取得と現在のブックマークが含まれるプレイリストを並列で取得
+      const [playlistsResponse, currentPlaylistsResponse] = await Promise.all([
+        fetch("/api/playlists"),
+        fetch(`/api/bookmarks/${bookmarkId}/playlists`),
+      ]);
+
       if (!playlistsResponse.ok) {
         throw new Error("プレイリストの取得に失敗しました");
       }
@@ -43,9 +47,6 @@ export function PlaylistSelectorModal({
       setPlaylists(playlistsData);
 
       // 現在のブックマークが含まれるプレイリストを取得
-      const currentPlaylistsResponse = await fetch(
-        `/api/bookmarks/${bookmarkId}/playlists`
-      );
       let selectedCount = 0;
       if (currentPlaylistsResponse.ok) {
         const currentPlaylists: Playlist[] =
@@ -223,7 +224,10 @@ export function PlaylistSelectorModal({
                         className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 cursor-pointer"
                         disabled={isSaving}
                       />
-                      <label htmlFor={checkboxId} className="flex-1 min-w-0 cursor-pointer">
+                      <label
+                        htmlFor={checkboxId}
+                        className="flex-1 min-w-0 cursor-pointer"
+                      >
                         <p className="font-medium text-gray-900 dark:text-gray-100 truncate">
                           {playlist.name}
                         </p>

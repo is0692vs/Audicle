@@ -24,6 +24,14 @@ export async function POST(request: Request) {
             )
         }
 
+        // addToPlaylistIds と removeFromPlaylistIds が配列であることを検証
+        if (!Array.isArray(addToPlaylistIds) || !Array.isArray(removeFromPlaylistIds)) {
+            return NextResponse.json(
+                { error: 'addToPlaylistIds and removeFromPlaylistIds must be arrays' },
+                { status: 400 }
+            )
+        }
+
         // ブックマークの所有者確認
         const { data: bookmark, error: bookmarkError } = await supabase
             .from('bookmarks')
