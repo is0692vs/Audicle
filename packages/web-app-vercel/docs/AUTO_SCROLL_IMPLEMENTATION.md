@@ -24,7 +24,7 @@ Web App Vercel 版（`packages/web-app-vercel/`）に、読み上げ中の段落
 ```typescript
 interface UseAutoScrollProps {
   currentChunkId?: string; // 現在再生中のチャンクID
-  containerRef?: React.RefObject<HTMLElement>; // スクロール対象のコンテナ参照
+  containerRef?: React.RefObject<HTMLDivElement | null>; // スクロール対象のコンテナ参照
   enabled?: boolean; // スクロール有効化フラグ（デフォルト: true）
   delay?: number; // スクロール遅延（ミリ秒、デフォルト: 0）
 }
@@ -52,40 +52,22 @@ useAutoScroll({
 1. **フック統合**
 
    - `useAutoScroll`フックを新規導入
-   - 既存の手動スクロール計算コード（`useEffect`）を置き換え
+   - Chrome拡張版と同等のスクロール動作を実現
 
 2. **要素参照の簡潔化**
 
-   - `activeChunkRef`の不要性を除去
-   - `data-audicle-id`属性がチャンク検索の唯一の手段
+   - `data-audicle-id`属性を使用したチャンク検索
+   - DOM クエリによる効率的な要素取得
 
-3. **レイアウト維持**
-   - ハイライト機能（`bg-yellow-100`）は引き続き機能
+3. **新機能の追加**
+   - 読み上げ中のテキストが画面中央に来る自動スクロール機能（新規）
+   - スムーズなスクロールアニメーション
+   - ハイライト機能（`bg-yellow-100`）は既存のまま維持
    - スケーリング（`scale-105`）も正常に動作
 
-#### ビフォーアフター
+#### 実装コード
 
-**Before（手動計算）**:
-
-```typescript
-useEffect(() => {
-  if (currentChunkId && activeChunkRef.current && containerRef.current) {
-    const element = activeChunkRef.current;
-    const container = containerRef.current;
-    const elementRect = element.getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
-    const scrollTop =
-      container.scrollTop +
-      elementRect.top -
-      containerRect.top -
-      containerRect.height / 2 +
-      elementRect.height / 2;
-    container.scrollTo({ top: scrollTop, behavior: "smooth" });
-  }
-}, [currentChunkId]);
-```
-
-**After（フック利用）**:
+**実装内容**:
 
 ```typescript
 useAutoScroll({
