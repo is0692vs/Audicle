@@ -78,6 +78,13 @@ export function PlaylistSelectorModal({
   useEffect(() => {
     if (isOpen && bookmarkId) {
       loadPlaylistsAndCurrentItems();
+    } else if (!isOpen) {
+      // モーダルが閉じられたときに状態をリセット
+      setPlaylists([]);
+      setSelectedPlaylistIds(new Set());
+      setInitialSelectedIds(new Set());
+      setIsLoading(true);
+      setError(null);
     }
   }, [isOpen, bookmarkId, loadPlaylistsAndCurrentItems]);
 
@@ -214,16 +221,15 @@ export function PlaylistSelectorModal({
                   return (
                     <div
                       key={playlist.id}
-                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
-                      onClick={() =>
-                        !isSaving && handleTogglePlaylist(playlist.id)
-                      }
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                     >
                       <input
                         id={checkboxId}
                         type="checkbox"
                         checked={selectedPlaylistIds.has(playlist.id)}
-                        onChange={() => handleTogglePlaylist(playlist.id)}
+                        onChange={() =>
+                          !isSaving && handleTogglePlaylist(playlist.id)
+                        }
                         className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 cursor-pointer"
                         disabled={isSaving}
                       />
