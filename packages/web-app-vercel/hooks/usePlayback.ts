@@ -52,6 +52,14 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
     localStorage.setItem("audicle-playback-rate", playbackRate.toString());
   }, [playbackRate]);
 
+  // playbackSpeedプロパティの変更をplaybackRateに反映
+  useEffect(() => {
+    if (playbackSpeed !== undefined) {
+      setPlaybackRate(playbackSpeed);
+      localStorage.setItem('audicle-playback-speed', playbackSpeed.toString());
+    }
+  }, [playbackSpeed]);
+
   // playbackRateを設定する関数
   const updatePlaybackRate = useCallback((rate: number) => {
     setPlaybackRate(rate);
@@ -72,7 +80,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         await audioCache.prefetch(textsToFetch, voiceModel);
       }
     },
-    [chunks, voiceModel, playbackSpeed]
+    [chunks, voiceModel]
   );
 
   // 特定のインデックスから再生
