@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ReaderView from "@/components/ReaderView";
+import PlaylistSelectorModal from "@/components/PlaylistSelectorModal";
 import { Chunk } from "@/types/api";
 import { extractContent } from "@/lib/api";
 import { usePlayback } from "@/hooks/usePlayback";
@@ -36,6 +37,8 @@ export default function ReaderPageClient() {
   const [title, setTitle] = useState("");
   const [error, setError] = useState("");
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
+  const [bookmarkId, setBookmarkId] = useState<string | null>(null);
+  const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
 
   // 再生制御フック
   const {
@@ -68,7 +71,7 @@ export default function ReaderPageClient() {
         setTitle(response.title);
 
         // Supabaseにブックマークを保存（デフォルトプレイリストに自動追加）
-        let bookmarkId: string | null = null;
+        let newBookmarkId: string | null = null;
         try {
           const bookmarkResponse = await fetch("/api/bookmarks", {
             method: "POST",
@@ -85,9 +88,10 @@ export default function ReaderPageClient() {
 
           if (bookmarkResponse.ok) {
             const bookmarkData = await bookmarkResponse.json();
-            bookmarkId = bookmarkData.id;
+            newBookmarkId = bookmarkData.id;
+            setBookmarkId(newBookmarkId);
             logger.success("ブックマークを保存", {
-              id: bookmarkId,
+              id: newBookmarkId,
               url: articleUrl,
               title: response.title,
             });
@@ -103,7 +107,7 @@ export default function ReaderPageClient() {
 
         // ローカルストレージに保存（サーバーIDを優先）
         const newArticle = articleStorage.upsert({
-          id: bookmarkId || undefined, // サーバーIDがあれば使用
+          id: newBookmarkId || undefined, // サーバーIDがあれば使用
           url: articleUrl,
           title: response.title,
           chunks: chunksWithId,
@@ -116,7 +120,7 @@ export default function ReaderPageClient() {
         });
 
         // URLに記事IDを追加（サーバーIDを優先）
-        router.push(`/reader?id=${bookmarkId || newArticle.id}`);
+        router.push(`/reader?id=${newBookmarkId || newArticle.id}`);
       } catch (err) {
         setError(err instanceof Error ? err.message : "エラーが発生しました");
         logger.error("記事の抽出に失敗", err);
@@ -163,6 +167,7 @@ export default function ReaderPageClient() {
         setTitle(article.title);
         setChunks(article.chunks);
         setUrl(article.url);
+        setBookmarkId(articleId);
       } else {
         logger.warn("記事が見つかりません", { id: articleId });
         setError("記事が見つかりませんでした");
@@ -289,6 +294,16 @@ export default function ReaderPageClient() {
                   {playbackRate.toFixed(1)}x
                 </span>
               </div>
+              {/* プレイリスト追加ボタン */}
+              {bookmarkId && (
+                <button
+                  onClick={() => setIsPlaylistModalOpen(true)}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors ml-auto"
+                  title="プレイリストに追加"
+                >
+                  📋 プレイリストに追加
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -305,6 +320,17 @@ export default function ReaderPageClient() {
           onChunkClick={seekToChunk}
         />
       </main>
+
+      {/* プレイリストセレクターモーダル */}
+      {bookmarkId && (
+        <PlaylistSelectorModal
+          isOpen={isPlaylistModalOpen}
+          onClose={() => setIsPlaylistModalOpen(false)}
+          bookmarkId={bookmarkId}
+          articleUrl={url}
+          articleTitle={title}
+        />
+      )}
     </div>
   );
 }

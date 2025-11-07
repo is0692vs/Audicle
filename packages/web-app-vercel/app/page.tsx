@@ -5,12 +5,17 @@ import { useRouter } from "next/navigation";
 import { logger } from "@/lib/logger";
 import { handleSignOut } from "@/app/auth/signin/actions";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
+import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
 import type { Bookmark, PlaylistWithItems } from "@/types/playlist";
 
 export default function Home() {
   const router = useRouter();
   const [articles, setArticles] = useState<Bookmark[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedBookmarkId, setSelectedBookmarkId] = useState<string | null>(
+    null
+  );
+  const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const { showConfirm, confirmDialog } = useConfirmDialog();
 
   // 記事一覧を読み込み（デフォルトプレイリストから）
@@ -163,19 +168,51 @@ export default function Home() {
                         )}
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleDelete(article.id)}
-                    className="px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 rounded transition-colors"
-                    title="削除"
-                  >
-                    削除
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setSelectedBookmarkId(article.id);
+                        setIsPlaylistModalOpen(true);
+                      }}
+                      className="px-3 py-1 text-sm text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950 rounded transition-colors"
+                      title="プレイリストに追加"
+                    >
+                      📋
+                    </button>
+                    <button
+                      onClick={() => handleDelete(article.id)}
+                      className="px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 rounded transition-colors"
+                      title="削除"
+                    >
+                      削除
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         )}
       </main>
+
+      {/* プレイリストセレクターモーダル */}
+      {selectedBookmarkId && (
+        <PlaylistSelectorModal
+          isOpen={isPlaylistModalOpen}
+          onClose={() => {
+            setIsPlaylistModalOpen(false);
+            setSelectedBookmarkId(null);
+          }}
+          bookmarkId={selectedBookmarkId}
+          articleUrl={
+            articles.find((a) => a.id === selectedBookmarkId)?.article_url ||
+            ""
+          }
+          articleTitle={
+            articles.find((a) => a.id === selectedBookmarkId)
+              ?.article_title || ""
+          }
+        />
+      )}
     </div>
   );
 }
