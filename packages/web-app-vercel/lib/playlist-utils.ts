@@ -2,8 +2,8 @@ import { supabase } from './supabase'
 import type { PlaylistWithItems } from '@/types/playlist'
 
 export interface DefaultPlaylistResult {
-  playlist?: PlaylistWithItems
-  error?: string
+    playlist?: PlaylistWithItems
+    error?: string
 }
 
 /**
@@ -12,10 +12,10 @@ export interface DefaultPlaylistResult {
  * @returns デフォルトプレイリストオブジェクトまたはエラー
  */
 export async function getOrCreateDefaultPlaylist(userEmail: string): Promise<DefaultPlaylistResult> {
-  // デフォルトプレイリストを取得
-  const { data: defaultPlaylist, error: playlistError } = await supabase
-    .from('playlists')
-    .select(`
+    // デフォルトプレイリストを取得
+    const { data: defaultPlaylist, error: playlistError } = await supabase
+        .from('playlists')
+        .select(`
       *,
       playlist_items(
         id,
@@ -26,47 +26,47 @@ export async function getOrCreateDefaultPlaylist(userEmail: string): Promise<Def
         bookmark:bookmarks(*)
       )
     `)
-    .eq('owner_email', userEmail)
-    .eq('is_default', true)
-    .order('position', { foreignTable: 'playlist_items', ascending: true })
-    .single()
+        .eq('owner_email', userEmail)
+        .eq('is_default', true)
+        .order('position', { foreignTable: 'playlist_items', ascending: true })
+        .single()
 
-  if (defaultPlaylist) {
-    // playlist_itemsをitemsにリネーム
-    const { playlist_items: items = [], ...playlistData } = defaultPlaylist
-    return { playlist: { ...playlistData, items, item_count: items.length } }
-  }
-
-  if (playlistError && playlistError.code === 'PGRST116') {
-    // デフォルトプレイリストが存在しない場合は作成
-    const { data: newPlaylist, error: createError } = await supabase
-      .from('playlists')
-      .upsert(
-        {
-          owner_email: userEmail,
-          name: '読み込んだ記事',
-          description: '読み込んだ記事が自動的に追加されます',
-          visibility: 'private',
-          is_default: true,
-          allow_fork: true,
-        },
-        {
-          onConflict: 'idx_playlists_default_per_user',
-          ignoreDuplicates: false,
-        }
-      )
-      .select()
-      .single()
-
-    if (createError) {
-      console.error('Supabase error (create playlist):', createError)
-      return { error: 'Failed to create default playlist' }
+    if (defaultPlaylist) {
+        // playlist_itemsをitemsにリネーム
+        const { playlist_items: items = [], ...playlistData } = defaultPlaylist
+        return { playlist: { ...playlistData, items, item_count: items.length } }
     }
 
-    // 新しく作成したプレイリストの詳細情報を取得
-    const { data: fullPlaylist, error: fetchError } = await supabase
-      .from('playlists')
-      .select(`
+    if (playlistError && playlistError.code === 'PGRST116') {
+        // デフォルトプレイリストが存在しない場合は作成
+        const { data: newPlaylist, error: createError } = await supabase
+            .from('playlists')
+            .upsert(
+                {
+                    owner_email: userEmail,
+                    name: '読み込んだ記事',
+                    description: '読み込んだ記事が自動的に追加されます',
+                    visibility: 'private',
+                    is_default: true,
+                    allow_fork: true,
+                },
+                {
+                    onConflict: 'idx_playlists_default_per_user',
+                    ignoreDuplicates: false,
+                }
+            )
+            .select()
+            .single()
+
+        if (createError) {
+            console.error('Supabase error (create playlist):', createError)
+            return { error: 'Failed to create default playlist' }
+        }
+
+        // 新しく作成したプレイリストの詳細情報を取得
+        const { data: fullPlaylist, error: fetchError } = await supabase
+            .from('playlists')
+            .select(`
         *,
         playlist_items(
           id,
@@ -77,20 +77,20 @@ export async function getOrCreateDefaultPlaylist(userEmail: string): Promise<Def
           bookmark:bookmarks(*)
         )
       `)
-      .eq('id', newPlaylist.id)
-      .order('position', { foreignTable: 'playlist_items', ascending: true })
-      .single()
+            .eq('id', newPlaylist.id)
+            .order('position', { foreignTable: 'playlist_items', ascending: true })
+            .single()
 
-    if (fetchError) {
-      console.error('Supabase error (fetch new playlist):', fetchError)
-      return { error: 'Failed to fetch created playlist' }
+        if (fetchError) {
+            console.error('Supabase error (fetch new playlist):', fetchError)
+            return { error: 'Failed to fetch created playlist' }
+        }
+
+        // playlist_itemsをitemsにリネーム
+        const { playlist_items: items = [], ...playlistData } = fullPlaylist
+        return { playlist: { ...playlistData, items, item_count: items.length } }
     }
 
-    // playlist_itemsをitemsにリネーム
-    const { playlist_items: items = [], ...playlistData } = fullPlaylist
-    return { playlist: { ...playlistData, items, item_count: items.length } }
-  }
-
-  console.error('Supabase error (playlist):', playlistError)
-  return { error: 'Failed to find default playlist' }
+    console.error('Supabase error (playlist):', playlistError)
+    return { error: 'Failed to find default playlist' }
 }

@@ -92,7 +92,10 @@ export default function ReaderPageClient() {
               title: response.title,
             });
           } else {
-            logger.error("ブックマークの保存に失敗", await bookmarkResponse.text());
+            logger.error(
+              "ブックマークの保存に失敗",
+              await bookmarkResponse.text()
+            );
           }
         } catch (bookmarkError) {
           logger.error("ブックマークの保存に失敗", bookmarkError);
