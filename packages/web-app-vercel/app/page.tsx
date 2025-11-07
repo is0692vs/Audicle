@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { logger } from "@/lib/logger";
-import { handleSignOut } from "@/app/auth/signin/actions";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
 import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
 import AppLayout from "@/components/AppLayout";

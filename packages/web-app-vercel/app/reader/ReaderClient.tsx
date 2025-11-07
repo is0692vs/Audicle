@@ -34,7 +34,6 @@ export default function ReaderPageClient() {
   const urlFromQuery = searchParams.get("url");
 
   const [url, setUrl] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [chunks, setChunks] = useState<Chunk[]>([]);
   const [title, setTitle] = useState("");
   const [error, setError] = useState("");
@@ -64,8 +63,6 @@ export default function ReaderPageClient() {
   // 記事を読み込んで保存する共通ロジック
   const loadAndSaveArticle = useCallback(
     async (articleUrl: string) => {
-      setIsLoading(true);
-      setError("");
       try {
         const response = await extractContent(articleUrl);
         const chunksWithId = convertParagraphsToChunks(response.content);
@@ -126,8 +123,6 @@ export default function ReaderPageClient() {
       } catch (err) {
         setError(err instanceof Error ? err.message : "エラーが発生しました");
         logger.error("記事の抽出に失敗", err);
-      } finally {
-        setIsLoading(false);
       }
     },
     [router]
@@ -198,11 +193,6 @@ export default function ReaderPageClient() {
       }
     }
   }, [urlFromQuery, router, loadAndSaveArticle]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    loadAndSaveArticle(url);
-  };
 
   return (
     <AppLayout>

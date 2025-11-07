@@ -1,12 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import StorageManager from "@/components/StorageManager";
 import UserSettingsPanel from "@/components/UserSettingsPanel";
 import AppLayout from "@/components/AppLayout";
 
 export default function SettingsPage() {
-  const router = useRouter();
 
   return (
     <AppLayout>
