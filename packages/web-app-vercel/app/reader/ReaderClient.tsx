@@ -60,7 +60,7 @@ export default function ReaderPageClient() {
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const response = await fetch('/api/settings/get');
+        const response = await fetch("/api/settings/get");
         if (response.ok) {
           const data = await response.json();
           setSettings(data);
