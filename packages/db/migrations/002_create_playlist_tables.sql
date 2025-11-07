@@ -7,12 +7,12 @@ CREATE TABLE playlists (
   owner_email VARCHAR(255) NOT NULL,
   name VARCHAR(255) NOT NULL,
   description TEXT,
-  visibility VARCHAR(20) DEFAULT 'private',
+  visibility VARCHAR(20) DEFAULT 'private' CHECK (visibility IN ('private', 'shared', 'collaborative')),
   share_url VARCHAR(50) UNIQUE,
   is_default BOOLEAN DEFAULT false,
   allow_fork BOOLEAN DEFAULT true,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- 2. ブックマークテーブル
@@ -23,8 +23,8 @@ CREATE TABLE bookmarks (
   article_title TEXT NOT NULL,
   thumbnail_url TEXT,
   last_read_position INTEGER,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(owner_email, article_url)
 );
 
@@ -34,7 +34,7 @@ CREATE TABLE playlist_items (
   playlist_id UUID NOT NULL REFERENCES playlists(id) ON DELETE CASCADE,
   bookmark_id UUID NOT NULL REFERENCES bookmarks(id) ON DELETE CASCADE,
   position INTEGER NOT NULL DEFAULT 0,
-  added_at TIMESTAMP DEFAULT NOW(),
+  added_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(playlist_id, bookmark_id)
 );
 

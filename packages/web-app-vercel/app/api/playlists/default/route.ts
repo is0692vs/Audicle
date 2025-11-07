@@ -32,6 +32,7 @@ export async function GET() {
       `)
             .eq('owner_email', userEmail)
             .eq('is_default', true)
+            .order('position', { foreignTable: 'playlist_items', ascending: true })
             .single()
 
         let playlist = fetchedPlaylist
@@ -71,14 +72,14 @@ export async function GET() {
             )
         }
 
-        // playlist_itemsをitemsにリネーム
-        const items = playlist?.playlist_items || []
+        // playlist_itemsをitemsにリネームし、不要なプロパティを削除
+        const { playlist_items, ...restOfPlaylist } = playlist || {}
+        const items = playlist_items || []
 
         return NextResponse.json({
-            ...playlist,
+            ...restOfPlaylist,
             items,
             item_count: items.length,
-            playlist_items: undefined,
         })
     } catch (error) {
         console.error('Error in GET /api/playlists/default:', error)

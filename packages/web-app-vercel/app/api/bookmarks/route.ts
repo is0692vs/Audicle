@@ -70,13 +70,16 @@ export async function POST(request: Request) {
             )
         }
 
-        // 既存のアイテム数を取得してpositionを決定
-        const { count } = await supabase
+        // 既存のアイテムの最大positionを取得して次のpositionを決定
+        const { data: maxPositionItem } = await supabase
             .from('playlist_items')
-            .select('*', { count: 'exact', head: true })
+            .select('position')
             .eq('playlist_id', defaultPlaylist.id)
+            .order('position', { ascending: false })
+            .limit(1)
+            .single()
 
-        const position = count || 0
+        const position = (maxPositionItem?.position ?? -1) + 1
 
         // プレイリストに追加（既に存在する場合は無視）
         const { error: itemError } = await supabase
