@@ -203,9 +203,6 @@ export default function Home() {
             setSelectedBookmarkId(null);
           }}
           bookmarkId={selectedBookmarkId}
-          articleUrl={
-            articles.find((a) => a.id === selectedBookmarkId)?.article_url || ""
-          }
           articleTitle={
             articles.find((a) => a.id === selectedBookmarkId)?.article_title ||
             ""

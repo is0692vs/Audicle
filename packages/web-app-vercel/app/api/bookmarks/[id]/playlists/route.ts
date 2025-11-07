@@ -48,10 +48,10 @@ export async function GET(
         }
 
         // playlist_itemsを削除してクリーンアップ
-        const cleanedPlaylists = playlists.map((p: any) => {
+        const cleanedPlaylists = playlists?.map((p) => {
             const { playlist_items, ...rest } = p
             return rest as Playlist
-        })
+        }) || []
 
         return NextResponse.json(cleanedPlaylists)
     } catch (error) {

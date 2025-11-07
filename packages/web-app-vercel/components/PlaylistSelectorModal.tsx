@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { logger } from "@/lib/logger";
 import type { Playlist } from "@/types/playlist";
 
@@ -8,15 +8,13 @@ interface PlaylistSelectorModalProps {
   isOpen: boolean;
   onClose: () => void;
   bookmarkId: string;
-  articleUrl: string;
   articleTitle: string;
 }
 
-export default function PlaylistSelectorModal({
+export function PlaylistSelectorModal({
   isOpen,
   onClose,
   bookmarkId,
-  articleUrl,
   articleTitle,
 }: PlaylistSelectorModalProps) {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
@@ -28,13 +26,7 @@ export default function PlaylistSelectorModal({
   const [error, setError] = useState<string | null>(null);
 
   // モーダルが開いたときにプレイリスト一覧と現在の関連プレイリストを読み込み
-  useEffect(() => {
-    if (isOpen && bookmarkId) {
-      loadPlaylistsAndCurrentItems();
-    }
-  }, [isOpen, bookmarkId]);
-
-  const loadPlaylistsAndCurrentItems = async () => {
+  const loadPlaylistsAndCurrentItems = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -70,7 +62,13 @@ export default function PlaylistSelectorModal({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [bookmarkId]);
+
+  useEffect(() => {
+    if (isOpen && bookmarkId) {
+      loadPlaylistsAndCurrentItems();
+    }
+  }, [isOpen, bookmarkId, loadPlaylistsAndCurrentItems]);
 
   const handleTogglePlaylist = (playlistId: string) => {
     const newSelected = new Set(selectedPlaylistIds);
