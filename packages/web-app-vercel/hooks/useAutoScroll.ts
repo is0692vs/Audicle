@@ -22,7 +22,7 @@ interface UseAutoScrollProps {
      * スクロール対象となるコンテナ要素の参照
      * 指定しない場合はwindowをスクロール対象とする
      */
-    containerRef?: React.RefObject<HTMLElement>;
+    containerRef?: React.RefObject<HTMLDivElement | null>;
 
     /**
      * スクロール有効化フラグ
