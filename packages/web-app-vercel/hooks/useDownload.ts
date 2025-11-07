@@ -183,7 +183,7 @@ export function useDownload({ articleUrl, chunks, voiceModel, speed, onSlowConne
                 logger.error('ダウンロードエラー', err);
             }
         }
-    }, [chunks, articleUrl, voiceModel, updateEstimatedTime, onSlowConnection, downloadBatch]);
+    }, [chunks, updateEstimatedTime, onSlowConnection, downloadBatch]);
 
     /**
      * ダウンロードキャンセル
