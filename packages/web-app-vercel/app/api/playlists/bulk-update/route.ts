@@ -39,6 +39,32 @@ export async function POST(request: Request) {
             )
         }
 
+        // プレイリストIDの所有者確認
+        const allPlaylistIds = [...new Set([...addToPlaylistIds, ...removeFromPlaylistIds])];
+
+        if (allPlaylistIds.length > 0) {
+            const { count, error: playlistError } = await supabase
+                .from('playlists')
+                .select('id', { count: 'exact' })
+                .in('id', allPlaylistIds)
+                .eq('owner_email', userEmail);
+
+            if (playlistError) {
+                console.error('Supabase playlist check error:', playlistError);
+                return NextResponse.json(
+                    { error: 'Failed to verify playlists' },
+                    { status: 500 }
+                );
+            }
+
+            if (count !== allPlaylistIds.length) {
+                return NextResponse.json(
+                    { error: 'One or more playlist IDs are invalid or not owned by the user' },
+                    { status: 403 } // Forbidden
+                );
+            }
+        }
+
         // 削除操作: 指定されたプレイリストからブックマークを削除
         if (removeFromPlaylistIds.length > 0) {
             const { error: deleteError } = await supabase

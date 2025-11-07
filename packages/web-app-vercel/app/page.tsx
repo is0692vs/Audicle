@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { logger } from "@/lib/logger";
 import { handleSignOut } from "@/app/auth/signin/actions";
@@ -16,7 +16,10 @@ export default function Home() {
     null
   );
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
-  const { showConfirm, confirmDialog } = useConfirmDialog();
+  const selectedArticle = useMemo(
+    () => articles.find((a) => a.id === selectedBookmarkId),
+    [articles, selectedBookmarkId]
+  );
 
   // 記事一覧を読み込み（デフォルトプレイリストから）
   useEffect(() => {
@@ -195,23 +198,18 @@ export default function Home() {
       </main>
 
       {/* プレイリストセレクターモーダル */}
-      {selectedBookmarkId &&
-        (() => {
-          const selectedArticle = articles.find(
-            (a) => a.id === selectedBookmarkId
-          );
-          return (
-            <PlaylistSelectorModal
-              isOpen={isPlaylistModalOpen}
-              onClose={() => {
-                setIsPlaylistModalOpen(false);
-                setSelectedBookmarkId(null);
-              }}
-              bookmarkId={selectedBookmarkId}
-              articleTitle={selectedArticle?.article_title || ""}
-            />
-          );
-        })()}
+      {selectedBookmarkId && selectedArticle && (
+        <PlaylistSelectorModal
+          isOpen={isPlaylistModalOpen}
+          onClose={() => {
+            setIsPlaylistModalOpen(false);
+            setSelectedBookmarkId(null);
+          }}
+          bookmarkId={selectedBookmarkId}
+          articleTitle={selectedArticle.article_title}
+          articleUrl={selectedArticle.article_url}
+        />
+      )}
     </div>
   );
 }
