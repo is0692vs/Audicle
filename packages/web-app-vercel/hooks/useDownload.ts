@@ -49,7 +49,7 @@ export function useDownload({ articleUrl, chunks, voice, speed, onSlowConnection
                 articleUrl,
                 chunkIndex: index,
                 totalChunks: chunks.length,
-                voice,
+                voiceModel: voice,
                 size: audioBlob.size,
             });
 

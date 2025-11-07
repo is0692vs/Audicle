@@ -60,7 +60,6 @@ export async function synthesizeSpeech(
   logger.apiRequest("POST", "/api/synthesize", {
     text: text.substring(0, 50) + "...",
     voice,
-    speed,
     voiceModel,
     // playbackSpeedはフロントエンド制御用
   });
