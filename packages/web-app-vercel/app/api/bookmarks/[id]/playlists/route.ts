@@ -32,10 +32,7 @@ export async function GET(
         // ブックマークが含まれるプレイリスト一覧を取得
         const { data: playlists, error } = await supabase
             .from('playlists')
-            .select(`
-        *,
-        playlist_items!inner(bookmark_id)
-      `)
+            .select('*, playlist_items!inner(bookmark_id)')
             .eq('owner_email', userEmail)
             .eq('playlist_items.bookmark_id', bookmarkId)
             .order('created_at', { ascending: true })
