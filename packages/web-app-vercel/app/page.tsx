@@ -20,6 +20,7 @@ export default function Home() {
     () => articles.find((a) => a.id === selectedBookmarkId),
     [articles, selectedBookmarkId]
   );
+  const { showConfirm, confirmDialog } = useConfirmDialog();
 
   // 記事一覧を読み込み（デフォルトプレイリストから）
   useEffect(() => {
@@ -207,7 +208,6 @@ export default function Home() {
           }}
           bookmarkId={selectedBookmarkId}
           articleTitle={selectedArticle.article_title}
-          articleUrl={selectedArticle.article_url}
         />
       )}
     </div>

@@ -9,7 +9,6 @@ interface PlaylistSelectorModalProps {
   onClose: () => void;
   bookmarkId: string;
   articleTitle: string;
-  articleUrl: string;
 }
 
 export function PlaylistSelectorModal({
@@ -17,7 +16,6 @@ export function PlaylistSelectorModal({
   onClose,
   bookmarkId,
   articleTitle,
-  articleUrl,
 }: PlaylistSelectorModalProps) {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [selectedPlaylistIds, setSelectedPlaylistIds] = useState<Set<string>>(

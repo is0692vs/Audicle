@@ -50,7 +50,7 @@ export async function GET(
 
         // playlist_itemsを削除してクリーンアップ
         const cleanedPlaylists = playlists?.map((p) => {
-            const { playlist_items, ...rest } = p
+            const { playlist_items: _playlist_items, ...rest } = p
             return rest as Playlist
         }) || []
 

@@ -327,7 +327,6 @@ export default function ReaderPageClient() {
           isOpen={isPlaylistModalOpen}
           onClose={() => setIsPlaylistModalOpen(false)}
           bookmarkId={bookmarkId}
-          articleUrl={url}
           articleTitle={title}
         />
       )}
