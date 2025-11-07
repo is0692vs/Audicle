@@ -67,11 +67,9 @@ function scrollElementIntoView(
                 left: 0,
             });
 
-            if (process.env.NODE_ENV === 'development') {
-                console.log(
-                    `[useAutoScroll] コンテナ内スクロール: chunkId=${chunkId}, scrollTop=${Math.round(scrollTop)}`
-                );
-            }
+            console.log(
+                `[useAutoScroll] コンテナ内スクロール: chunkId=${chunkId}, scrollTop=${Math.round(scrollTop)}`
+            );
         } else {
             // windowをスクロール対象とする場合
             // scrollIntoViewを使用（Chrome拡張版と同等）
@@ -81,26 +79,20 @@ function scrollElementIntoView(
                 inline: "nearest",
             });
 
-            if (process.env.NODE_ENV === 'development') {
-                console.log(
-                    `[useAutoScroll] ウィンドウスクロール: chunkId=${chunkId}`
-                );
-            }
+            console.log(
+                `[useAutoScroll] ウィンドウスクロール: chunkId=${chunkId}`
+            );
         }
     } catch (error) {
-        if (process.env.NODE_ENV === 'development') {
-            console.warn(`[useAutoScroll] スクロール失敗:`, error);
-        }
+        console.warn(`[useAutoScroll] スクロール失敗:`, error);
         // フォールバック: 古いブラウザ対応
         try {
             element.scrollIntoView(true);
         } catch (fallbackError) {
-            if (process.env.NODE_ENV === 'development') {
-                console.error(
-                    `[useAutoScroll] フォールバックスクロール失敗:`,
-                    fallbackError
-                );
-            }
+            console.error(
+                `[useAutoScroll] フォールバックスクロール失敗:`,
+                fallbackError
+            );
         }
     }
 }
@@ -109,7 +101,7 @@ export function useAutoScroll({
     currentChunkId,
     containerRef,
     enabled = true,
-    delay = 0,
+    delay = 100,
 }: UseAutoScrollProps) {
     useEffect(() => {
         if (!enabled || !currentChunkId) {
@@ -124,11 +116,9 @@ export function useAutoScroll({
             );
 
             if (!element) {
-                if (process.env.NODE_ENV === 'development') {
-                    console.warn(
-                        `[useAutoScroll] チャンクが見つかりません: ${currentChunkId}`
-                    );
-                }
+                console.warn(
+                    `[useAutoScroll] チャンクが見つかりません: ${currentChunkId}`
+                );
                 return;
             }
 
@@ -147,7 +137,7 @@ export function useAutoScrollWithCache({
     currentChunkId,
     containerRef,
     enabled = true,
-    delay = 0,
+    delay = 100,
     cacheSize = 10,
 }: UseAutoScrollProps & { cacheSize?: number }) {
     const elementRefCache = useRef<Map<string, Element | null>>(new Map());
@@ -185,11 +175,9 @@ export function useAutoScrollWithCache({
             }
 
             if (!element) {
-                if (process.env.NODE_ENV === 'development') {
-                    console.warn(
-                        `[useAutoScrollWithCache] チャンクが見つかりません: ${currentChunkId}`
-                    );
-                }
+                console.warn(
+                    `[useAutoScrollWithCache] チャンクが見つかりません: ${currentChunkId}`
+                );
                 return;
             }
 
