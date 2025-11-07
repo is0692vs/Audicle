@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Chunk } from "@/types/api";
 import { audioCache } from "@/lib/audioCache";
 import { getAudioChunk } from "@/lib/indexedDB";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { synthesizeSpeech } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { needsPauseBefore, needsPauseAfter, getPauseDuration } from "@/lib/paragraphParser";
@@ -176,7 +177,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         setIsLoading(false);
       }
     },
-    [chunks, articleUrl, voiceModel, playbackSpeed, onChunkChange, prefetchAudio, playbackRate]
+    [chunks, articleUrl, voiceModel, onChunkChange, prefetchAudio, playbackRate]
   );
 
   // 再生開始

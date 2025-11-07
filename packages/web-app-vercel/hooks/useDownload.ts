@@ -131,6 +131,7 @@ export function useDownload({ articleUrl, chunks, voiceModel, speed, onSlowConne
 
         // モバイルデータ通信チェック
         if ('connection' in navigator) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const connection = (navigator as any).connection;
             if (connection && connection.effectiveType) {
                 const type = connection.effectiveType;
@@ -182,7 +183,7 @@ export function useDownload({ articleUrl, chunks, voiceModel, speed, onSlowConne
                 logger.error('ダウンロードエラー', err);
             }
         }
-    }, [chunks, articleUrl, voiceModel, speed, updateEstimatedTime, onSlowConnection]);
+    }, [chunks, updateEstimatedTime, onSlowConnection, downloadBatch]);
 
     /**
      * ダウンロードキャンセル

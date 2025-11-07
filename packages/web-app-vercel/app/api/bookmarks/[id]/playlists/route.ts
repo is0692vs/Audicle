@@ -47,6 +47,7 @@ export async function GET(
 
         // playlist_itemsを削除してクリーンアップ
         const cleanedPlaylists = playlists?.map((p) => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { playlist_items: _playlist_items, ...rest } = p
             return rest as Playlist
         }) || []

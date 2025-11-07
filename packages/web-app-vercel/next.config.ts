@@ -1,11 +1,11 @@
 import type { NextConfig } from "next";
-// @ts-ignore
+// @ts-expect-error next-pwa does not provide TypeScript definitions
 import withPWA from "next-pwa";
 
 const nextConfig: NextConfig = {
   // Node.js APIを使用するため、serverExternalPackagesに追加
   serverExternalPackages: ['@mozilla/readability', 'linkedom', '@google-cloud/text-to-speech'],
-  
+
   // API Routesの明示的な設定
   experimental: {
     // turbopackでのAPI Routes処理を改善
@@ -23,7 +23,7 @@ export default withPWA({
   // PWAがAPI Routesをキャッシュしないように設定
   runtimeCaching: [
     {
-      urlPattern: /^https?.*(?!\/api\/).*/ ,
+      urlPattern: /^https?.*(?!\/api\/).*/,
       handler: 'CacheFirst',
       options: {
         cacheName: 'staticCache',
