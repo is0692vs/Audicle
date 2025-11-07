@@ -47,7 +47,7 @@ Webアプリケーション版およびChrome拡張機能版Audicleのバック�
    > **⚠️ 注意**: `credentials/service-account.json`は`.gitignore`によってリポジトリには含まれません。安全に管理してください。
 
 3. **Dockerコンテナのビルドと起動**
-   - リポジトリのルートディレクトリから、以下のコマンドを実行します。
+   - `packages/api-server` ディレクトリにて、以下のコマンドを実行します。
      ```bash
      docker-compose up --build -d
      ```
