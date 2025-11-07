@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 
 /**
  * 読み上げ中の段落へ自動スクロールするカスタムフック
@@ -143,7 +143,7 @@ export function useAutoScrollWithCache({
     const elementRefCache = useRef<Map<string, Element | null>>(new Map());
 
     // キャッシュサイズを制限する処理
-    const setCachedElement = (id: string, element: Element | null) => {
+    const setCachedElement = useCallback((id: string, element: Element | null) => {
         if (elementRefCache.current.size >= cacheSize && !elementRefCache.current.has(id)) {
             // 最も古いエントリを削除（LRU的な動作）
             const firstKey = elementRefCache.current.keys().next().value as string;
@@ -152,7 +152,7 @@ export function useAutoScrollWithCache({
             }
         }
         elementRefCache.current.set(id, element);
-    };
+    }, [cacheSize]);
 
     useEffect(() => {
         if (!enabled || !currentChunkId) {
@@ -185,5 +185,5 @@ export function useAutoScrollWithCache({
         }, delay);
 
         return () => clearTimeout(timer);
-    }, [currentChunkId, containerRef, enabled, delay, cacheSize]);
+    }, [currentChunkId, containerRef, enabled, delay, cacheSize, setCachedElement]);
 }

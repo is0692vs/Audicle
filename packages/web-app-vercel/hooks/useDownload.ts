@@ -33,7 +33,7 @@ export function useDownload({ articleUrl, chunks, voiceModel, speed, onSlowConne
     /**
      * 単一チャンクをダウンロード（リトライ付き）
      */
-    const downloadChunk = async (chunk: Chunk, index: number, retryCount = 0): Promise<void> => {
+    const downloadChunk = useCallback(async (chunk: Chunk, index: number, retryCount = 0): Promise<void> => {
         if (cancelledRef.current) {
             throw new Error('Cancelled');
         }
@@ -68,12 +68,12 @@ export function useDownload({ articleUrl, chunks, voiceModel, speed, onSlowConne
 
             throw new Error(`チャンク ${index + 1} のダウンロードに失敗しました: ${err}`);
         }
-    };
+    }, [articleUrl, voiceModel, chunks]);
 
     /**
      * バッチでチャンクをダウンロード
      */
-    const downloadBatch = async (
+    const downloadBatch = useCallback(async (
         chunksToDownload: Chunk[],
         startIndex: number
     ): Promise<void> => {
@@ -94,7 +94,7 @@ export function useDownload({ articleUrl, chunks, voiceModel, speed, onSlowConne
                 startIndex + MAX_CONCURRENT
             );
         }
-    };
+    }, [downloadChunk]);
 
     /**
      * 推定残り時間を更新
@@ -131,6 +131,7 @@ export function useDownload({ articleUrl, chunks, voiceModel, speed, onSlowConne
 
         // モバイルデータ通信チェック
         if ('connection' in navigator) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const connection = (navigator as any).connection;
             if (connection && connection.effectiveType) {
                 const type = connection.effectiveType;
@@ -182,7 +183,7 @@ export function useDownload({ articleUrl, chunks, voiceModel, speed, onSlowConne
                 logger.error('ダウンロードエラー', err);
             }
         }
-    }, [chunks, articleUrl, voiceModel, speed, updateEstimatedTime, onSlowConnection]);
+    }, [chunks, updateEstimatedTime, onSlowConnection, downloadBatch]);
 
     /**
      * ダウンロードキャンセル

@@ -3,6 +3,8 @@
 
 /sample/
 
+v0/*
+
 
 gen-lang-client-*.json
 packages/google-tts-server/credentials/*.json
