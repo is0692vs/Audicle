@@ -2,7 +2,7 @@
 
 ## 実装日
 
-2025-11-07
+2024-11-07
 
 ## 概要
 
@@ -22,7 +22,7 @@
    - share_url (VARCHAR(50), UNIQUE)
    - is_default (BOOLEAN, DEFAULT false)
    - allow_fork (BOOLEAN, DEFAULT true)
-   - created_at, updated_at (TIMESTAMP)
+   - created_at, updated_at (TIMESTAMPTZ, DEFAULT NOW())
 
 2. **bookmarks** - ブックマーク管理
 
@@ -32,7 +32,7 @@
    - article_title (TEXT)
    - thumbnail_url (TEXT)
    - last_read_position (INTEGER)
-   - created_at, updated_at (TIMESTAMP)
+   - created_at, updated_at (TIMESTAMPTZ, DEFAULT NOW())
    - UNIQUE(owner_email, article_url)
 
 3. **playlist_items** - プレイリスト-ブックマーク関連
@@ -40,19 +40,25 @@
    - playlist_id (UUID, REFERENCES playlists)
    - bookmark_id (UUID, REFERENCES bookmarks)
    - position (INTEGER)
-   - added_at (TIMESTAMP)
+   - added_at (TIMESTAMPTZ, DEFAULT NOW())
+   - position はトリガーで自動採番
    - UNIQUE(playlist_id, bookmark_id)
 
 ### インデックス
 
 - idx_playlists_owner
-- idx_playlists_default
+- idx_playlists_owner_is_default (デフォルトプレイリスト 1 件制約用)
+- idx_playlists_default_per_user (部分ユニークインデックス)
 - idx_bookmarks_owner
 - idx_playlist_items_playlist
 
 ### トリガー
 
 - updated_at 自動更新 (playlists, bookmarks)
+   - `update_updated_at_column` トリガー関数で NOW() を設定
+- プレイリストアイテム追加時の position 採番
+   - `set_playlist_item_position` が親プレイリスト行を `FOR UPDATE` でロック
+   - 同一トランザクション内で MAX(position)+1 を計算して競合を防止
 
 ## Phase 2: 型定義
 
@@ -72,8 +78,8 @@
 3. **GET /api/playlists/[id]** - プレイリスト詳細取得（ブックマーク含む）
 4. **PATCH /api/playlists/[id]** - プレイリスト更新
 5. **DELETE /api/playlists/[id]** - プレイリスト削除（デフォルトは削除不可）
-6. **GET /api/playlists/default** - デフォルトプレイリスト取得（自動作成）
-7. **POST /api/bookmarks** - ブックマーク追加（デフォルトプレイリストに自動関連付け）
+6. **GET /api/playlists/default** - デフォルトプレイリスト取得（存在しない場合は自動作成）
+7. **POST /api/bookmarks** - ブックマーク追加（レスポンスで返った ID をクライアント保存、デフォルトプレイリストに自動関連付け）
 8. **DELETE /api/bookmarks/[id]** - ブックマーク削除
 9. **PATCH /api/bookmarks/[id]** - 最後に読んだ位置の更新
 
@@ -95,8 +101,11 @@
 
 2. **app/reader/ReaderClient.tsx** - 記事読み込み
    - 記事読み込み時に自動的にブックマーク追加
-   - `/api/bookmarks`へ POST
+   - `/api/bookmarks`へ POST、サーバー発行 ID を `articleStorage` に保存
    - ローカルストレージとの後方互換性を維持
+3. **lib/playlist-utils.ts** - デフォルトプレイリスト取得ユーティリティ
+   - Supabase の `select` でプレイリストと子アイテムを 1 クエリで取得
+   - 存在しない場合は upsert + 再取得で完全なオブジェクトを返却
 
 ### 新規作成したページ
 
@@ -109,7 +118,7 @@
 2. **app/playlists/[id]/page.tsx** - プレイリスト詳細
    - プレイリスト情報表示・編集
    - ブックマーク一覧表示
-   - ブックマーク削除
+   - ブックマーク削除と位置更新
 
 ## Phase 5: デフォルトプレイリスト
 
@@ -137,6 +146,7 @@
 - visibility='private'のみ使用
 - 基本的な CRUD 操作
 - デバイス間同期の基盤
+- プレイリストアイテムの位置採番トリガー
 
 ## 今回実装しなかったこと（将来用に DB カラムは用意済み）
 
