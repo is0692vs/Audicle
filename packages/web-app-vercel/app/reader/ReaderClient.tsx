@@ -112,12 +112,36 @@ export default function ReaderPageClient() {
       setChunks(chunksWithId);
       setTitle(response.title);
 
-      // 記事を保存
+      // ローカルストレージにも保存（後方互換性のため）
       const newArticle = articleStorage.add({
         url,
         title: response.title,
         chunks: chunksWithId,
       });
+
+      // Supabaseにブックマークを保存（デフォルトプレイリストに自動追加）
+      try {
+        await fetch('/api/bookmarks', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            article_url: url,
+            article_title: response.title,
+            thumbnail_url: null,
+            last_read_position: 0,
+          }),
+        });
+        logger.success("ブックマークを保存", {
+          url,
+          title: response.title,
+        });
+      } catch (bookmarkError) {
+        logger.error("ブックマークの保存に失敗", bookmarkError);
+        // ブックマーク保存に失敗してもローカルには保存されているので続行
+      }
+
       logger.success("記事を保存", {
         id: newArticle.id,
         title: newArticle.title,
