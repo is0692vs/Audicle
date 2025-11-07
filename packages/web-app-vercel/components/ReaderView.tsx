@@ -8,7 +8,7 @@ interface ReaderViewProps {
   chunks?: Chunk[];
   currentChunkId?: string;
   articleUrl?: string;
-  voice?: string;
+  voiceModel?: string;
   speed?: number;
   onChunkClick?: (chunkId: string) => void;
 }
@@ -17,7 +17,7 @@ export default function ReaderView({
   chunks = [],
   currentChunkId,
   articleUrl = "",
-  voice,
+  voiceModel,
   speed,
   onChunkClick,
 }: ReaderViewProps) {
@@ -35,7 +35,7 @@ export default function ReaderView({
   } = useDownload({
     articleUrl,
     chunks,
-    voice,
+    voiceModel,
     speed,
   });
 

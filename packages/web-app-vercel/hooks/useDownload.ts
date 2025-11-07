@@ -11,7 +11,7 @@ export type DownloadStatus = 'idle' | 'downloading' | 'completed' | 'error' | 'c
 interface UseDownloadProps {
     articleUrl: string;
     chunks: Chunk[];
-    voice?: string;
+    voiceModel?: string;
     speed?: number;
     onSlowConnection?: () => Promise<boolean>; // 低速接続時のコールバック
 }
@@ -21,7 +21,7 @@ const MAX_CONCURRENT = 3; // 最大3チャンク同時ダウンロード
 const RETRY_DELAY = 1000; // リトライ間隔（ミリ秒）
 const ESTIMATED_CHUNK_SIZE_BYTES = 50 * 1024; // 1チャンクあたりの推定サイズ（50KB）
 
-export function useDownload({ articleUrl, chunks, voice, speed, onSlowConnection }: UseDownloadProps) {
+export function useDownload({ articleUrl, chunks, voiceModel, speed, onSlowConnection }: UseDownloadProps) {
     const [status, setStatus] = useState<DownloadStatus>('idle');
     const [progress, setProgress] = useState({ current: 0, total: 0 });
     const [error, setError] = useState<string>('');
@@ -40,7 +40,7 @@ export function useDownload({ articleUrl, chunks, voice, speed, onSlowConnection
 
         try {
             // 音声合成（1倍速固定）
-            const audioBlob = await synthesizeSpeech(chunk.cleanedText, voice, 1.0);
+            const audioBlob = await synthesizeSpeech(chunk.cleanedText, undefined, voiceModel);
 
             // IndexedDBに直接保存
             await saveAudioChunk({
@@ -49,8 +49,7 @@ export function useDownload({ articleUrl, chunks, voice, speed, onSlowConnection
                 articleUrl,
                 chunkIndex: index,
                 totalChunks: chunks.length,
-                voice,
-                speed: 1.0, // 1倍速固定
+                voiceModel: voiceModel,
                 size: audioBlob.size,
             });
 
@@ -183,7 +182,7 @@ export function useDownload({ articleUrl, chunks, voice, speed, onSlowConnection
                 logger.error('ダウンロードエラー', err);
             }
         }
-    }, [chunks, articleUrl, voice, speed, updateEstimatedTime, onSlowConnection]);
+    }, [chunks, articleUrl, voiceModel, speed, updateEstimatedTime, onSlowConnection]);
 
     /**
      * ダウンロードキャンセル

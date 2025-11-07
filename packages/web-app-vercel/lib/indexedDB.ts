@@ -6,7 +6,7 @@
  * データベース構造:
  * - DB名: audicle-cache
  * - Store名: audio-chunks
- * - キー: `${articleUrl}:${chunkIndex}:${voice}:${speed}`
+ * - キー: `${articleUrl}:${chunkIndex}:${voiceModel}`
  */
 
 import { logger } from './logger';
@@ -19,14 +19,13 @@ const DB_VERSION = 1;
 let dbPromise: Promise<IDBDatabase> | null = null;
 
 export interface AudioCacheEntry {
-    key: string; // `${articleUrl}:${chunkIndex}:${voice}:${speed}`
+    key: string; // `${articleUrl}:${chunkIndex}:${voiceModel}`
     audioData: Blob; // 音声データ（Blob形式）
     timestamp: number; // 保存日時
     articleUrl: string;
     chunkIndex: number;
     totalChunks: number;
-    voice?: string;
-    speed?: number;
+    voiceModel?: string;
     size: number; // データサイズ（バイト）
 }
 
@@ -36,8 +35,7 @@ export interface DownloadedArticle {
     downloadedChunks: number;
     totalSize: number;
     timestamp: number;
-    voice?: string;
-    speed?: number;
+    voiceModel?: string;
 }
 
 /**
@@ -46,10 +44,9 @@ export interface DownloadedArticle {
 function generateKey(
     articleUrl: string,
     chunkIndex: number,
-    voice?: string,
-    speed?: number
+    voiceModel?: string
 ): string {
-    return `${articleUrl}:${chunkIndex}:${voice || 'default'}:${speed || 1}`;
+    return `${articleUrl}:${chunkIndex}:${voiceModel || 'default'}`;
 }
 
 /**
@@ -103,7 +100,7 @@ function openDB(): Promise<IDBDatabase> {
  */
 export async function saveAudioChunk(entry: Omit<AudioCacheEntry, 'key'>): Promise<void> {
     const db = await openDB();
-    const key = generateKey(entry.articleUrl, entry.chunkIndex, entry.voice, entry.speed);
+    const key = generateKey(entry.articleUrl, entry.chunkIndex, entry.voiceModel);
 
     const cacheEntry: AudioCacheEntry = {
         ...entry,
@@ -139,11 +136,10 @@ export async function saveAudioChunk(entry: Omit<AudioCacheEntry, 'key'>): Promi
 export async function getAudioChunk(
     articleUrl: string,
     chunkIndex: number,
-    voice?: string,
-    speed?: number
+    voiceModel?: string
 ): Promise<AudioCacheEntry | null> {
     const db = await openDB();
-    const key = generateKey(articleUrl, chunkIndex, voice, speed);
+    const key = generateKey(articleUrl, chunkIndex, voiceModel);
 
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([STORE_NAME], 'readonly');
@@ -300,8 +296,7 @@ export async function getDownloadedArticles(): Promise<DownloadedArticle[]> {
                         downloadedChunks: 1,
                         totalSize: entry.size,
                         timestamp: entry.timestamp,
-                        voice: entry.voice,
-                        speed: entry.speed,
+                        voiceModel: entry.voiceModel,
                     });
                 }
             });

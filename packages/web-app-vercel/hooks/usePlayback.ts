@@ -11,8 +11,8 @@ import { needsPauseBefore, needsPauseAfter, getPauseDuration } from "@/lib/parag
 interface UsePlaybackProps {
   chunks: Chunk[];
   articleUrl?: string;
-  voice?: string;
-  speed?: number;
+  voiceModel?: string;       // 音声モデル（例: 'ja-JP-Standard-B'）
+  playbackSpeed?: number;    // 再生速度（例: 1.0, 1.5, 2.0）
   onChunkChange?: (chunkId: string) => void;
 }
 
@@ -25,7 +25,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function usePlayback({ chunks, articleUrl, voice, speed, onChunkChange }: UsePlaybackProps) {
+export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onChunkChange }: UsePlaybackProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState<number>(-1);
   const [isLoading, setIsLoading] = useState(false);
@@ -52,6 +52,13 @@ export function usePlayback({ chunks, articleUrl, voice, speed, onChunkChange }:
     localStorage.setItem("audicle-playback-rate", playbackRate.toString());
   }, [playbackRate]);
 
+  // playbackSpeedプロパティの変更をplaybackRateに反映
+  useEffect(() => {
+    if (playbackSpeed !== undefined) {
+      setPlaybackRate(playbackSpeed);
+    }
+  }, [playbackSpeed]);
+
   // playbackRateを設定する関数
   const updatePlaybackRate = useCallback((rate: number) => {
     setPlaybackRate(rate);
@@ -69,10 +76,10 @@ export function usePlayback({ chunks, articleUrl, voice, speed, onChunkChange }:
         .map((chunk) => chunk.cleanedText);
 
       if (textsToFetch.length > 0) {
-        await audioCache.prefetch(textsToFetch);
+        await audioCache.prefetch(textsToFetch, voiceModel);
       }
     },
-    [chunks]
+    [chunks, voiceModel]
   );
 
   // 特定のインデックスから再生
@@ -98,7 +105,7 @@ export function usePlayback({ chunks, articleUrl, voice, speed, onChunkChange }:
         // 1. IndexedDBからキャッシュをチェック
         let audioUrl: string;
         if (articleUrl) {
-          const cachedChunk = await getAudioChunk(articleUrl, index, voice, 1.0);
+          const cachedChunk = await getAudioChunk(articleUrl, index, voiceModel);
 
           if (cachedChunk) {
             // キャッシュヒット: Blobから直接URLを生成
@@ -107,11 +114,11 @@ export function usePlayback({ chunks, articleUrl, voice, speed, onChunkChange }:
           } else {
             // キャッシュミス: API呼び出し
             logger.info(`🌐 キャッシュミス: API呼び出し`);
-            audioUrl = await audioCache.get(chunk.cleanedText, voice);
+            audioUrl = await audioCache.get(chunk.cleanedText, voiceModel);
           }
         } else {
           // articleURLがない場合は既存の動作
-          audioUrl = await audioCache.get(chunk.cleanedText);
+          audioUrl = await audioCache.get(chunk.cleanedText, voiceModel);
         }
 
         // 先読み処理（非同期で実行）
@@ -169,7 +176,7 @@ export function usePlayback({ chunks, articleUrl, voice, speed, onChunkChange }:
         setIsLoading(false);
       }
     },
-    [chunks, articleUrl, voice, onChunkChange, prefetchAudio, playbackRate]
+    [chunks, articleUrl, voiceModel, playbackSpeed, onChunkChange, prefetchAudio, playbackRate]
   );
 
   // 再生開始

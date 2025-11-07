@@ -42,20 +42,22 @@ export async function extractContent(url: string): Promise<ExtractResponse> {
 export async function synthesizeSpeech(
   text: string,
   voice?: string,
-  speed?: number
+  voiceModel?: string
 ): Promise<Blob> {
-  const request: SynthesizeRequest & { speed?: number } = { text };
+  const request: SynthesizeRequest = { text };
   if (voice) {
     request.voice = voice;
   }
-  if (speed) {
-    request.speed = speed;
+  if (voiceModel) {
+    request.voice_model = voiceModel;
   }
+  // playbackSpeedはフロントエンドでの再生速度制御用なのでAPIには渡さない
 
   logger.apiRequest("POST", "/api/synthesize", {
     text: text.substring(0, 50) + "...",
     voice,
-    speed,
+    voiceModel,
+    // playbackSpeedはフロントエンド制御用
   });
 
   const response = await fetch("/api/synthesize", {
