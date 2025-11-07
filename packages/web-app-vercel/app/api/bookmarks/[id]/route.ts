@@ -5,13 +5,13 @@ import { requireAuth } from '@/lib/api-auth'
 // DELETE: ブックマーク削除
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { userEmail, response } = await requireAuth()
         if (response) return response
 
-        const { id } = params
+        const { id } = await params
 
         // 削除対象の存在確認と権限チェックを兼ねる
         const { error } = await supabase
@@ -48,13 +48,13 @@ export async function DELETE(
 // PATCH: 最後に読んだ位置の更新
 export async function PATCH(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { userEmail, response } = await requireAuth()
         if (response) return response
 
-        const { id } = params
+        const { id } = await params
         const body = await request.json()
 
         const { last_read_position } = body
