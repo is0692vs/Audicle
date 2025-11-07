@@ -137,8 +137,10 @@ export function useAutoScrollWithCache({
     const setCachedElement = (id: string, element: Element | null) => {
         if (elementRefCache.current.size >= cacheSize && !elementRefCache.current.has(id)) {
             // 最も古いエントリを削除（LRU的な動作）
-            const firstKey = elementRefCache.current.keys().next().value;
-            elementRefCache.current.delete(firstKey);
+            const firstKey = elementRefCache.current.keys().next().value as string;
+            if (firstKey) {
+                elementRefCache.current.delete(firstKey);
+            }
         }
         elementRefCache.current.set(id, element);
     };
