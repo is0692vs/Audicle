@@ -5,12 +5,12 @@ import { requireAuth } from '@/lib/api-auth'
 // GET: プレイリスト詳細取得（ブックマーク含む）
 export async function GET(
     request: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: { id: string } }
 ) {
     try {
         const { userEmail, response } = await requireAuth()
         if (response) return response
-        const { id } = await params
+        const { id } = params
 
         // プレイリスト情報とアイテムを1つのクエリで取得
         const { data: playlist, error: playlistError } = await supabase
@@ -59,12 +59,12 @@ export async function GET(
 // PATCH: プレイリスト更新
 export async function PATCH(
     request: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: { id: string } }
 ) {
     try {
         const { userEmail, response } = await requireAuth()
         if (response) return response
-        const { id } = await params
+        const { id } = params
         const body = await request.json()
 
         const { name, description } = body
@@ -108,12 +108,12 @@ export async function PATCH(
 // DELETE: プレイリスト削除
 export async function DELETE(
     request: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: { id: string } }
 ) {
     try {
         const { userEmail, response } = await requireAuth()
         if (response) return response
-        const { id } = await params
+        const { id } = params
 
         // デフォルトプレイリストかどうかを確認
         const { data: playlistToDelete, error: fetchError } = await supabase
@@ -147,12 +147,6 @@ export async function DELETE(
 
         if (error) {
             console.error('Supabase error:', error)
-            if (error.code === 'PGRST116') {
-                return NextResponse.json(
-                    { error: 'Cannot delete default playlist' },
-                    { status: 400 }
-                )
-            }
             return NextResponse.json(
                 { error: 'Failed to delete playlist' },
                 { status: 500 }

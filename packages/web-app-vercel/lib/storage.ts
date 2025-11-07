@@ -37,7 +37,7 @@ export const articleStorage = {
   upsert: (article: Omit<Article, "id" | "createdAt">): Article => {
     const articles = articleStorage.getAll();
     const existingIndex = articles.findIndex((a) => a.url === article.url);
-    
+
     if (existingIndex >= 0) {
       // 既存の記事を更新
       articles[existingIndex] = {

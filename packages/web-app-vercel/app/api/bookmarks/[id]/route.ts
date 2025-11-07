@@ -5,13 +5,13 @@ import { requireAuth } from '@/lib/api-auth'
 // DELETE: ブックマーク削除
 export async function DELETE(
     request: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: { id: string } }
 ) {
     try {
         const { userEmail, response } = await requireAuth()
         if (response) return response
 
-        const { id } = await params
+        const { id } = params
 
         const { error } = await supabase
             .from('bookmarks')
@@ -40,13 +40,13 @@ export async function DELETE(
 // PATCH: 最後に読んだ位置の更新
 export async function PATCH(
     request: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: { id: string } }
 ) {
     try {
         const { userEmail, response } = await requireAuth()
         if (response) return response
 
-        const { id } = await params
+        const { id } = params
         const body = await request.json()
 
         const { last_read_position } = body

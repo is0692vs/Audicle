@@ -70,6 +70,7 @@ BEGIN
     SELECT COALESCE(MAX(position), -1) + 1
     FROM playlist_items
     WHERE playlist_id = NEW.playlist_id
+    FOR UPDATE
   );
   RETURN NEW;
 END;
