@@ -1,21 +1,13 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
+import { requireAuth } from '@/lib/api-auth'
 import type { Playlist } from '@/types/playlist'
 
 // GET: ユーザーのプレイリスト一覧取得
 export async function GET() {
     try {
-        const session = await auth()
-
-        if (!session || !session.user?.email) {
-            return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401 }
-            )
-        }
-
-        const userEmail = session.user.email
+        const { userEmail, response } = await requireAuth()
+        if (response) return response
 
         const { data, error } = await supabase
             .from('playlists')
@@ -52,16 +44,8 @@ export async function GET() {
 // POST: プレイリスト作成
 export async function POST(request: Request) {
     try {
-        const session = await auth()
-
-        if (!session || !session.user?.email) {
-            return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401 }
-            )
-        }
-
-        const userEmail = session.user.email
+        const { userEmail, response } = await requireAuth()
+        if (response) return response
         const body = await request.json()
 
         const { name, description } = body

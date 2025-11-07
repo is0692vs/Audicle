@@ -58,10 +58,10 @@
 
 **ファイル**: `types/playlist.ts`
 
-export interface Playlist { /* ... */ }
-export interface Bookmark { /* ... */ }
-export interface PlaylistItem { /* ... */ }
-export interface PlaylistWithItems extends Playlist { /* ... */ }
+- Playlist
+- Bookmark
+- PlaylistItem
+- PlaylistWithItems
 
 ## Phase 3: API 実装
 

@@ -1,21 +1,13 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
+import { requireAuth } from '@/lib/api-auth'
 import type { Bookmark } from '@/types/playlist'
 
 // POST: ブックマーク追加（デフォルトプレイリストに自動関連付け）
 export async function POST(request: Request) {
     try {
-        const session = await auth()
-
-        if (!session || !session.user?.email) {
-            return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401 }
-            )
-        }
-
-        const userEmail = session.user.email
+        const { userEmail, response } = await requireAuth()
+        if (response) return response
         const body = await request.json()
 
         const { article_url, article_title, thumbnail_url, last_read_position } = body
@@ -70,28 +62,14 @@ export async function POST(request: Request) {
             )
         }
 
-        // 既存のアイテムの最大positionを取得して次のpositionを決定
-        const { data: positionData, error: positionError } = await supabase
-            .rpc('get_next_playlist_position', { p_playlist_id: defaultPlaylist.id })
-
-        if (positionError) {
-            console.error('Supabase error (position):', positionError)
-            return NextResponse.json(
-                { error: 'Failed to get next position' },
-                { status: 500 }
-            )
-        }
-
-        const position = positionData
-
         // プレイリストに追加（既に存在する場合は無視）
+        // 注: positionはDB側のトリガーで自動採番される
         const { error: itemError } = await supabase
             .from('playlist_items')
             .upsert(
                 {
                     playlist_id: defaultPlaylist.id,
                     bookmark_id: bookmark.id,
-                    position,
                 },
                 {
                     onConflict: 'playlist_id,bookmark_id',
@@ -101,8 +79,7 @@ export async function POST(request: Request) {
 
         if (itemError) {
             console.error('Supabase error (playlist_items):', itemError)
-            // プレイリストアイテムの追加に失敗してもブックマークは作成されているので、
-            // エラーを返すが成功扱いにする
+            // プレイリストアイテムの追加には失敗したが、ブックマーク自体は作成されているため処理は続行する
         }
 
         return NextResponse.json(bookmark as Bookmark, { status: 201 })

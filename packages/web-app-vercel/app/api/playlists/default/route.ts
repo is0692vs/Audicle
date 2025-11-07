@@ -1,20 +1,12 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
+import { requireAuth } from '@/lib/api-auth'
 
 // GET: デフォルトプレイリスト取得（なければ自動作成）
 export async function GET() {
     try {
-        const session = await auth()
-
-        if (!session || !session.user?.email) {
-            return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401 }
-            )
-        }
-
-        const userEmail = session.user.email
+        const { userEmail, response } = await requireAuth()
+        if (response) return response
 
         // デフォルトプレイリストを検索
         const { data: fetchedPlaylist, error: fetchError } = await supabase
@@ -51,7 +43,7 @@ export async function GET() {
                         allow_fork: true,
                     },
                     {
-                        onConflict: 'owner_email',
+                        onConflict: 'idx_playlists_default_per_user',
                         ignoreDuplicates: false,
                     }
                 )

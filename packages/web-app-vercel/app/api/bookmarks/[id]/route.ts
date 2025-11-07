@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
+import { requireAuth } from '@/lib/api-auth'
 
 // DELETE: ブックマーク削除
 export async function DELETE(
@@ -8,16 +8,9 @@ export async function DELETE(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const session = await auth()
+        const { userEmail, response } = await requireAuth()
+        if (response) return response
 
-        if (!session || !session.user?.email) {
-            return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401 }
-            )
-        }
-
-        const userEmail = session.user.email
         const { id } = await params
 
         const { error } = await supabase
@@ -50,16 +43,9 @@ export async function PATCH(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const session = await auth()
+        const { userEmail, response } = await requireAuth()
+        if (response) return response
 
-        if (!session || !session.user?.email) {
-            return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401 }
-            )
-        }
-
-        const userEmail = session.user.email
         const { id } = await params
         const body = await request.json()
 

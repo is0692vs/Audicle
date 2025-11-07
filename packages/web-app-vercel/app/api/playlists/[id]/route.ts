@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
+import { requireAuth } from '@/lib/api-auth'
 
 // GET: プレイリスト詳細取得（ブックマーク含む）
 export async function GET(
@@ -8,16 +8,8 @@ export async function GET(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const session = await auth()
-
-        if (!session || !session.user?.email) {
-            return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401 }
-            )
-        }
-
-        const userEmail = session.user.email
+        const { userEmail, response } = await requireAuth()
+        if (response) return response
         const { id } = await params
 
         // プレイリスト情報とアイテムを1つのクエリで取得
@@ -70,20 +62,19 @@ export async function PATCH(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const session = await auth()
-
-        if (!session || !session.user?.email) {
-            return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401 }
-            )
-        }
-
-        const userEmail = session.user.email
+        const { userEmail, response } = await requireAuth()
+        if (response) return response
         const { id } = await params
         const body = await request.json()
 
         const { name, description } = body
+
+        if (!name) {
+            return NextResponse.json(
+                { error: 'Name is required' },
+                { status: 400 }
+            )
+        }
 
         const { data, error } = await supabase
             .from('playlists')
@@ -120,25 +111,39 @@ export async function DELETE(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const session = await auth()
+        const { userEmail, response } = await requireAuth()
+        if (response) return response
+        const { id } = await params
 
-        if (!session || !session.user?.email) {
+        // デフォルトプレイリストかどうかを確認
+        const { data: playlistToDelete, error: fetchError } = await supabase
+            .from('playlists')
+            .select('is_default')
+            .eq('id', id)
+            .eq('owner_email', userEmail)
+            .single()
+
+        if (fetchError || !playlistToDelete) {
+            console.error('Supabase error:', fetchError)
             return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401 }
+                { error: 'Playlist not found' },
+                { status: 404 }
             )
         }
 
-        const userEmail = session.user.email
-        const { id } = await params
+        if (playlistToDelete.is_default) {
+            return NextResponse.json(
+                { error: 'Cannot delete default playlist' },
+                { status: 400 }
+            )
+        }
 
-        // デフォルトプレイリストは削除不可（1つのクエリでチェックと削除）
+        // デフォルト以外のプレイリストを削除
         const { error } = await supabase
             .from('playlists')
             .delete()
             .eq('id', id)
             .eq('owner_email', userEmail)
-            .neq('is_default', true)
 
         if (error) {
             console.error('Supabase error:', error)

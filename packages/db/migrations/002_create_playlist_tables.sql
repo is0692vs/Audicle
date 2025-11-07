@@ -40,7 +40,7 @@ CREATE TABLE playlist_items (
 
 -- 4. インデックス
 CREATE INDEX idx_playlists_owner ON playlists(owner_email);
-CREATE INDEX idx_playlists_default ON playlists(is_default);
+CREATE INDEX idx_playlists_owner_is_default ON playlists(owner_email, is_default);
 CREATE INDEX idx_bookmarks_owner ON bookmarks(owner_email);
 CREATE INDEX idx_playlist_items_playlist ON playlist_items(playlist_id);
 
@@ -61,20 +61,24 @@ CREATE TRIGGER update_bookmarks_updated_at
   BEFORE UPDATE ON bookmarks
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- 6. プレイリストアイテム追加時のposition自動割り当て関数
-CREATE OR REPLACE FUNCTION get_next_playlist_position(p_playlist_id UUID)
-RETURNS INTEGER AS $$
-DECLARE
-  next_pos INTEGER;
+-- 6. プレイリストアイテム追加時のposition自動採番トリガー
+CREATE OR REPLACE FUNCTION set_playlist_item_position()
+RETURNS TRIGGER AS $$
 BEGIN
-  -- 現在の最大positionを取得して+1
-  SELECT COALESCE(MAX(position), -1) + 1 INTO next_pos
-  FROM playlist_items
-  WHERE playlist_id = p_playlist_id;
-  
-  RETURN next_pos;
+  -- トランザクション内で安全に次のpositionを計算して設定
+  NEW.position = (
+    SELECT COALESCE(MAX(position), -1) + 1
+    FROM playlist_items
+    WHERE playlist_id = NEW.playlist_id
+  );
+  RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_set_playlist_item_position
+  BEFORE INSERT ON playlist_items
+  FOR EACH ROW
+  EXECUTE FUNCTION set_playlist_item_position();
 
 -- 7. デフォルトプレイリスト作成時のユニーク制約
 CREATE UNIQUE INDEX idx_playlists_default_per_user 

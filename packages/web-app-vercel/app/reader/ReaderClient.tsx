@@ -56,6 +56,61 @@ export default function ReaderPageClient() {
     playbackSpeed: settings.playback_speed,
   });
 
+  // 記事を読み込んで保存する共通ロジック
+  const loadAndSaveArticle = async (articleUrl: string) => {
+    setIsLoading(true);
+    setError("");
+    try {
+      const response = await extractContent(articleUrl);
+      const chunksWithId = convertParagraphsToChunks(response.content);
+      setChunks(chunksWithId);
+      setTitle(response.title);
+
+      // ローカルストレージに保存（upsertで重複を防止）
+      const newArticle = articleStorage.upsert({
+        url: articleUrl,
+        title: response.title,
+        chunks: chunksWithId,
+      });
+
+      // Supabaseにブックマークを保存（デフォルトプレイリストに自動追加）
+      try {
+        await fetch("/api/bookmarks", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            article_url: articleUrl,
+            article_title: response.title,
+            thumbnail_url: null,
+            last_read_position: 0,
+          }),
+        });
+        logger.success("ブックマークを保存", {
+          url: articleUrl,
+          title: response.title,
+        });
+      } catch (bookmarkError) {
+        logger.error("ブックマークの保存に失敗", bookmarkError);
+      }
+
+      logger.success("記事を保存", {
+        id: newArticle.id,
+        title: newArticle.title,
+        chunkCount: chunksWithId.length,
+      });
+
+      // URLに記事IDを追加
+      router.push(`/reader?id=${newArticle.id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "エラーが発生しました");
+      logger.error("記事の抽出に失敗", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // ユーザー設定を読み込む
   useEffect(() => {
     const loadSettings = async () => {
@@ -103,122 +158,13 @@ export default function ReaderPageClient() {
   useEffect(() => {
     if (urlFromQuery) {
       setUrl(urlFromQuery);
-      // 自動的に記事取得を開始
-      const loadArticleFromUrl = async () => {
-        setIsLoading(true);
-        setError("");
-        try {
-          const response = await extractContent(urlFromQuery);
-          const chunksWithId = convertParagraphsToChunks(response.content);
-          setChunks(chunksWithId);
-          setTitle(response.title);
-
-          // ローカルストレージにも保存（後方互換性のため）
-          const newArticle = articleStorage.add({
-            url: urlFromQuery,
-            title: response.title,
-            chunks: chunksWithId,
-          });
-
-          // Supabaseにブックマークを保存（デフォルトプレイリストに自動追加）
-          try {
-            await fetch("/api/bookmarks", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                article_url: urlFromQuery,
-                article_title: response.title,
-                thumbnail_url: null,
-                last_read_position: 0,
-              }),
-            });
-            logger.success("ブックマークを保存", {
-              url: urlFromQuery,
-              title: response.title,
-            });
-          } catch (bookmarkError) {
-            logger.error("ブックマークの保存に失敗", bookmarkError);
-          }
-
-          logger.success("記事を保存", {
-            id: newArticle.id,
-            title: newArticle.title,
-            chunkCount: chunksWithId.length,
-          });
-
-          // URLに記事IDを追加
-          router.push(`/reader?id=${newArticle.id}`);
-        } catch (err) {
-          setError(err instanceof Error ? err.message : "エラーが発生しました");
-          logger.error("記事の抽出に失敗", err);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      loadArticleFromUrl();
+      loadAndSaveArticle(urlFromQuery);
     }
   }, [urlFromQuery, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const response = await extractContent(url);
-
-      // HTML構造を保持して段落単位でチャンクに分割
-      const chunksWithId = convertParagraphsToChunks(response.content);
-
-      setChunks(chunksWithId);
-      setTitle(response.title);
-
-      // ローカルストレージにも保存（後方互換性のため）
-      const newArticle = articleStorage.add({
-        url,
-        title: response.title,
-        chunks: chunksWithId,
-      });
-
-      // Supabaseにブックマークを保存（デフォルトプレイリストに自動追加）
-      try {
-        await fetch("/api/bookmarks", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            article_url: url,
-            article_title: response.title,
-            thumbnail_url: null,
-            last_read_position: 0,
-          }),
-        });
-        logger.success("ブックマークを保存", {
-          url,
-          title: response.title,
-        });
-      } catch (bookmarkError) {
-        logger.error("ブックマークの保存に失敗", bookmarkError);
-        // ブックマーク保存に失敗してもローカルには保存されているので続行
-      }
-
-      logger.success("記事を保存", {
-        id: newArticle.id,
-        title: newArticle.title,
-        chunkCount: chunksWithId.length,
-      });
-
-      // URLに記事IDを追加
-      router.push(`/reader?id=${newArticle.id}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "エラーが発生しました");
-      logger.error("記事の抽出に失敗", err);
-    } finally {
-      setIsLoading(false);
-    }
+    loadAndSaveArticle(url);
   };
 
   return (
