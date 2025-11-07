@@ -124,7 +124,7 @@ curl -X POST http://localhost:8000/synthesize \
 
 ## ⚙️ 設定
 
-- **デフォルト音声**: `ja-JP-Wavenet-B` (日本語, WaveNet)
+- **デフォルト音声**: `ja-JP-Neural2-B` (日本語, Neural2)
 - **オーディオ形式**: MP3
 - **フォールバック**: 音声合成に失敗した場合、プロジェクト内の`fallback.mp3`が返されます。
 
