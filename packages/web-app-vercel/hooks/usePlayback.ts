@@ -56,7 +56,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
   useEffect(() => {
     if (playbackSpeed !== undefined) {
       setPlaybackRate(playbackSpeed);
-      localStorage.setItem('audicle-playback-speed', playbackSpeed.toString());
+      localStorage.setItem('audicle-playback-rate', playbackSpeed.toString());
     }
   }, [playbackSpeed]);
 

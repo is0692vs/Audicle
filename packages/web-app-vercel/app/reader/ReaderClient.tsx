@@ -231,7 +231,7 @@ export default function ReaderPageClient() {
           chunks={chunks}
           currentChunkId={currentChunkId}
           articleUrl={url}
-          voice={undefined}
+          voiceModel={settings.voice_model}
           speed={playbackRate}
           onChunkClick={seekToChunk}
         />
