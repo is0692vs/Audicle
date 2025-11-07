@@ -6,6 +6,11 @@ import { logger } from "@/lib/logger";
 import { handleSignOut } from "@/app/auth/signin/actions";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
 import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
+import AppLayout from "@/components/AppLayout";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Clock, BookOpen, ExternalLink } from "lucide-react";
 import type { Bookmark, PlaylistWithItems } from "@/types/playlist";
 
 export default function Home() {
@@ -16,6 +21,7 @@ export default function Home() {
     null
   );
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
+  const [urlInput, setUrlInput] = useState("");
   const selectedArticle = useMemo(
     () => articles.find((a) => a.id === selectedBookmarkId),
     [articles, selectedBookmarkId]
@@ -91,112 +97,139 @@ export default function Home() {
     });
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      {confirmDialog}
-      {/* ヘッダー */}
-      <header className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-        <div className="max-w-4xl mx-auto p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold">Audicle - 記事一覧</h1>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => router.push("/playlists")}
-                className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
-              >
-                📚 プレイリスト
-              </button>
-              <button
-                onClick={() => router.push("/settings")}
-                className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
-              >
-                ⚙️ 設定
-              </button>
-              <button
-                onClick={() => handleSignOut()}
-                className="px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 rounded transition-colors border border-red-200 dark:border-red-800"
-              >
-                ログアウト
-              </button>
-            </div>
-          </div>
-          <button
-            onClick={() => router.push("/reader")}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            + 新しい記事を読む
-          </button>
-        </div>
-      </header>
+  const handleLoadArticle = () => {
+    if (urlInput.trim()) {
+      router.push(`/reader?url=${encodeURIComponent(urlInput)}`);
+    }
+  };
 
-      {/* メインコンテンツ: 記事一覧 */}
-      <main className="max-w-4xl mx-auto p-4">
+  return (
+    <AppLayout>
+      {confirmDialog}
+      <div className="p-4 sm:p-6 lg:p-8">
+        <div className="mb-6 lg:mb-8">
+          <h2 className="text-2xl lg:text-3xl font-bold mb-2">記事一覧</h2>
+          <p className="text-sm lg:text-base text-zinc-400">
+            URLを入力して記事を読み込んでください
+          </p>
+        </div>
+
+        <Card className="bg-zinc-900 border-zinc-800 mb-6 lg:mb-8">
+          <CardContent className="p-4 lg:p-6">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Input
+                placeholder="記事のURLを入力してください"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleLoadArticle();
+                  }
+                }}
+                className="flex-1 bg-zinc-950 border-zinc-700 text-white placeholder:text-zinc-500"
+              />
+              <Button
+                className="bg-violet-600 hover:bg-violet-700 sm:w-auto w-full"
+                onClick={handleLoadArticle}
+              >
+                読込
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {isLoading ? (
-          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+          <div className="text-center py-12 text-zinc-400">
             <p>読み込み中...</p>
           </div>
         ) : articles.length === 0 ? (
-          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+          <div className="text-center py-12 text-zinc-400">
             <p>まだ記事がありません</p>
             <p className="text-sm mt-2">
-              「+ 新しい記事を読む」から記事を追加してください
+              上部のフォームから記事を追加してください
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid gap-4">
             {articles.map((article) => (
-              <div
+              <Card
                 key={article.id}
-                className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4 hover:shadow-md transition-shadow"
+                className="bg-zinc-900 border-zinc-800 hover:bg-zinc-800 transition-colors cursor-pointer group"
+                onClick={() =>
+                  router.push(
+                    `/reader?url=${encodeURIComponent(article.article_url)}`
+                  )
+                }
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div
-                    className="flex-1 cursor-pointer"
-                    onClick={() =>
-                      router.push(
-                        `/reader?url=${encodeURIComponent(article.article_url)}`
-                      )
-                    }
-                  >
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                      {article.article_title}
-                    </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                      {article.article_url}
-                    </p>
-                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-400 dark:text-gray-500">
-                      <span>{formatDate(article.created_at)}</span>
-                      {article.last_read_position !== undefined &&
-                        article.last_read_position > 0 && (
-                          <span>読書位置: {article.last_read_position}</span>
-                        )}
+                <CardContent className="p-4 lg:p-6">
+                  <div className="flex gap-4 lg:gap-6">
+                    <div className="hidden sm:block shrink-0">
+                      <div className="w-16 h-16 lg:w-24 lg:h-24 bg-linear-to-br from-violet-600 to-purple-600 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <BookOpen className="h-6 w-6 lg:h-10 lg:w-10 text-white" />
+                      </div>
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-base lg:text-lg mb-2 line-clamp-2 group-hover:text-violet-400 transition-colors">
+                        {article.article_title}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-3 lg:gap-4 text-xs text-zinc-500">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {formatDate(article.created_at)}
+                        </span>
+                        {article.last_read_position !== undefined &&
+                          article.last_read_position > 0 && (
+                            <span>読書位置: {article.last_read_position}</span>
+                          )}
+                        <a
+                          href={article.article_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 hover:text-violet-400 transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          <span className="hidden sm:inline">元記事を開く</span>
+                          <span className="sm:hidden">元記事</span>
+                        </a>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedBookmarkId(article.id);
+                          setIsPlaylistModalOpen(true);
+                        }}
+                        className="text-purple-400 hover:text-purple-300 hover:bg-purple-950"
+                        title="プレイリストに追加"
+                      >
+                        📋
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(article.id);
+                        }}
+                        className="text-red-400 hover:text-red-300 hover:bg-red-950"
+                        title="削除"
+                      >
+                        削除
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => {
-                        setSelectedBookmarkId(article.id);
-                        setIsPlaylistModalOpen(true);
-                      }}
-                      className="px-3 py-1 text-sm text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950 rounded transition-colors"
-                      title="プレイリストに追加"
-                    >
-                      📋
-                    </button>
-                    <button
-                      onClick={() => handleDelete(article.id)}
-                      className="px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 rounded transition-colors"
-                      title="削除"
-                    >
-                      削除
-                    </button>
-                  </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         )}
-      </main>
+      </div>
 
       {/* プレイリストセレクターモーダル */}
       {selectedBookmarkId && selectedArticle && (
@@ -210,6 +243,6 @@ export default function Home() {
           articleTitle={selectedArticle.article_title}
         />
       )}
-    </div>
+    </AppLayout>
   );
 }

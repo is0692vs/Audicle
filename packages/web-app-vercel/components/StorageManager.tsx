@@ -10,6 +10,8 @@ import {
 } from "@/lib/indexedDB";
 import { logger } from "@/lib/logger";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 /**
  * バイト数を人間が読みやすい形式に変換
@@ -119,9 +121,13 @@ export default function StorageManager() {
 
   if (isLoading) {
     return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
-        読み込み中...
-      </div>
+      <Card className="bg-zinc-900 border-zinc-800">
+        <CardContent className="p-6">
+          <div className="animate-pulse text-center text-zinc-400">
+            読み込み中...
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -131,101 +137,112 @@ export default function StorageManager() {
       : 0;
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-4">
       {confirmDialog}
       {error && (
-        <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-3">
-          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-        </div>
+        <Card className="bg-red-950/50 border-red-800">
+          <CardContent className="p-3">
+            <p className="text-sm text-red-400">{error}</p>
+          </CardContent>
+        </Card>
       )}
+
       {/* ストレージ使用量 */}
-      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
-        <h3 className="text-lg font-semibold mb-3">ストレージ使用量</h3>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600 dark:text-gray-400">
-              {formatBytes(storageUsage.used)} /{" "}
-              {formatBytes(storageUsage.available)}
-            </span>
-            <span className="text-gray-600 dark:text-gray-400">
-              {usagePercentage.toFixed(1)}%
-            </span>
+      <Card className="bg-zinc-900 border-zinc-800">
+        <CardContent className="p-4 lg:p-6">
+          <h3 className="text-lg font-semibold mb-3">ストレージ使用量</h3>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-zinc-400">
+                {formatBytes(storageUsage.used)} /{" "}
+                {formatBytes(storageUsage.available)}
+              </span>
+              <span className="text-zinc-400">
+                {usagePercentage.toFixed(1)}%
+              </span>
+            </div>
+            <div className="w-full bg-zinc-700 rounded-full h-2">
+              <div
+                className={`h-2 rounded-full transition-all ${
+                  usagePercentage > 80
+                    ? "bg-red-600"
+                    : usagePercentage > 50
+                    ? "bg-yellow-600"
+                    : "bg-green-600"
+                }`}
+                style={{ width: `${Math.min(usagePercentage, 100)}%` }}
+              />
+            </div>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-            <div
-              className={`h-2 rounded-full transition-all ${
-                usagePercentage > 80
-                  ? "bg-red-600"
-                  : usagePercentage > 50
-                  ? "bg-yellow-600"
-                  : "bg-green-600"
-              }`}
-              style={{ width: `${Math.min(usagePercentage, 100)}%` }}
-            />
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* ダウンロード済み記事一覧 */}
-      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold">ダウンロード済み記事</h3>
-          {articles.length > 0 && (
-            <button
-              onClick={handleClearAll}
-              className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-            >
-              全て削除
-            </button>
-          )}
-        </div>
-
-        {articles.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-            ダウンロード済みの記事がありません
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {articles.map((article) => (
-              <div
-                key={article.url}
-                className="border border-gray-200 dark:border-gray-700 rounded-lg p-3"
+      <Card className="bg-zinc-900 border-zinc-800">
+        <CardContent className="p-4 lg:p-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-semibold">ダウンロード済み記事</h3>
+            {articles.length > 0 && (
+              <Button
+                onClick={handleClearAll}
+                variant="destructive"
+                size="sm"
+                className="bg-red-600 hover:bg-red-700"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                      {article.url}
-                    </p>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      <span>
-                        {article.downloadedChunks} / {article.totalChunks}{" "}
-                        チャンク
-                      </span>
-                      <span>{formatBytes(article.totalSize)}</span>
-                      <span>{formatDate(article.timestamp)}</span>
-                    </div>
-                    {article.downloadedChunks === article.totalChunks ? (
-                      <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded">
-                        ✓ 完全
-                      </span>
-                    ) : (
-                      <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 rounded">
-                        ⚠ 部分的
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => handleDeleteArticle(article.url)}
-                    className="px-2 py-1 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 rounded transition-colors"
-                  >
-                    削除
-                  </button>
-                </div>
-              </div>
-            ))}
+                全て削除
+              </Button>
+            )}
           </div>
-        )}
-      </div>
+
+          {articles.length === 0 ? (
+            <p className="text-sm text-zinc-400 text-center py-4">
+              ダウンロード済みの記事がありません
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {articles.map((article) => (
+                <div
+                  key={article.url}
+                  className="border border-zinc-700 rounded-lg p-3 bg-zinc-950"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">
+                        {article.url}
+                      </p>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-zinc-400">
+                        <span>
+                          {article.downloadedChunks} / {article.totalChunks}{" "}
+                          チャンク
+                        </span>
+                        <span>{formatBytes(article.totalSize)}</span>
+                        <span>{formatDate(article.timestamp)}</span>
+                      </div>
+                      {article.downloadedChunks === article.totalChunks ? (
+                        <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-green-900 text-green-300 rounded">
+                          ✓ 完全
+                        </span>
+                      ) : (
+                        <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-yellow-900 text-yellow-300 rounded">
+                          ⚠ 部分的
+                        </span>
+                      )}
+                    </div>
+                    <Button
+                      onClick={() => handleDeleteArticle(article.url)}
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-400 hover:text-red-300 hover:bg-red-950"
+                    >
+                      削除
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

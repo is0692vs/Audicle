@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import {
   UserSettings,
   VOICE_MODELS,
@@ -108,12 +111,14 @@ export default function UserSettingsPanel() {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-        </div>
-      </div>
+      <Card className="bg-zinc-900 border-zinc-800">
+        <CardContent className="p-6">
+          <div className="animate-pulse space-y-4">
+            <div className="h-6 bg-zinc-700 rounded w-1/4"></div>
+            <div className="h-4 bg-zinc-700 rounded"></div>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -122,88 +127,81 @@ export default function UserSettingsPanel() {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
-      <h2 className="text-xl font-bold mb-6">再生設定</h2>
+    <Card className="bg-zinc-900 border-zinc-800">
+      <CardContent className="p-4 lg:p-6">
+        <h3 className="font-bold mb-4">再生設定</h3>
 
-      <div className="space-y-6">
-        {/* Playback Speed Slider */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            再生速度
-          </label>
-          <div className="flex items-center gap-4">
-            <input
-              type="range"
-              min="0.5"
-              max="3.0"
-              step="0.1"
-              value={settings.playback_speed}
-              onChange={(e) =>
-                handlePlaybackSpeedChange(parseFloat(e.target.value))
-              }
-              className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+        <div className="space-y-6">
+          {/* Playback Speed Slider */}
+          <div>
+            <label className="text-sm text-zinc-400 mb-3 block">
+              再生速度: {settings.playback_speed.toFixed(1)}x
+            </label>
+            <Slider
+              value={[settings.playback_speed]}
+              onValueChange={(value) => handlePlaybackSpeedChange(value[0])}
+              min={0.5}
+              max={3.0}
+              step={0.1}
+              className="w-full"
             />
-            <span className="w-12 text-right font-semibold text-gray-900 dark:text-gray-100">
-              {settings.playback_speed.toFixed(1)}x
-            </span>
+            <p className="text-xs text-zinc-500 mt-2">
+              0.5x～3.0x（デフォルト: 1.0x）
+            </p>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            0.5x～3.0x（デフォルト: 1.0x）
-          </p>
-        </div>
 
-        {/* Language Dropdown */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            言語
-          </label>
-          <select
-            value={settings.language}
-            onChange={(e) => handleLanguageChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="ja-JP">日本語</option>
-            <option value="en-US">English</option>
-          </select>
-        </div>
-
-        {/* Voice Model Dropdown */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            音声モデル
-          </label>
-          <select
-            value={settings.voice_model}
-            onChange={(e) => handleVoiceModelChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            {VOICE_MODELS.map((model) => (
-              <option key={model.value} value={model.value}>
-                {model.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-3 pt-4">
-          <button
-            onClick={handleSave}
-            disabled={!hasChanged || saving}
-            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-lg transition-colors font-medium"
-          >
-            {saving ? "保存中..." : "保存"}
-          </button>
-          {hasChanged && (
-            <button
-              onClick={fetchSettings}
-              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 rounded-lg transition-colors font-medium"
+          {/* Language Dropdown */}
+          <div>
+            <label className="text-sm text-zinc-400 mb-2 block">言語</label>
+            <select
+              value={settings.language}
+              onChange={(e) => handleLanguageChange(e.target.value)}
+              className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm lg:text-base"
             >
-              キャンセル
-            </button>
-          )}
+              <option value="ja-JP">日本語</option>
+              <option value="en-US">English</option>
+            </select>
+          </div>
+
+          {/* Voice Model Dropdown */}
+          <div>
+            <label className="text-sm text-zinc-400 mb-2 block">
+              音声モデル
+            </label>
+            <select
+              value={settings.voice_model}
+              onChange={(e) => handleVoiceModelChange(e.target.value)}
+              className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm lg:text-base"
+            >
+              {VOICE_MODELS.map((model) => (
+                <option key={model.value} value={model.value}>
+                  {model.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4">
+            <Button
+              onClick={handleSave}
+              disabled={!hasChanged || saving}
+              className="bg-violet-600 hover:bg-violet-700 disabled:bg-zinc-600"
+            >
+              {saving ? "保存中..." : "保存"}
+            </Button>
+            {hasChanged && (
+              <Button
+                onClick={fetchSettings}
+                variant="ghost"
+                className="text-zinc-400 hover:text-white"
+              >
+                キャンセル
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

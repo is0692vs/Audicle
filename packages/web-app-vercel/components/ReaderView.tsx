@@ -180,7 +180,7 @@ export default function ReaderView({
   return (
     <div
       ref={containerRef}
-      className="h-full overflow-y-auto bg-gradient-to-br from-slate-100 via-white to-slate-100 px-4 py-8 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950"
+      className="h-full overflow-y-auto bg-linear-to-br from-slate-100 via-white to-slate-100 px-4 py-8 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950"
     >
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
         {chunks.length === 0 ? (
@@ -267,8 +267,8 @@ export default function ReaderView({
             {renderDownloadPanel()}
 
             <section className="relative overflow-hidden rounded-3xl border border-slate-200/70 bg-white/90 shadow-lg shadow-slate-200/40 backdrop-blur dark:border-slate-800/60 dark:bg-slate-900/70 dark:shadow-black/20">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-100/80 via-transparent to-transparent dark:from-slate-900/60" />
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-100/80 via-transparent to-transparent dark:from-slate-900/60" />
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-linear-to-b from-slate-100/80 via-transparent to-transparent dark:from-slate-900/60" />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-slate-100/80 via-transparent to-transparent dark:from-slate-900/60" />
               <div className="relative max-h-[60vh] overflow-y-auto px-6 py-8 sm:max-h-[65vh]">
                 <div className="space-y-4">
                   {chunks.map((chunk) => {

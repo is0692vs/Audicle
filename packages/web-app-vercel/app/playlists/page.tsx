@@ -4,6 +4,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { logger } from "@/lib/logger";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
+import AppLayout from "@/components/AppLayout";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { List, Plus } from "lucide-react";
 import type { PlaylistWithItems } from "@/types/playlist";
 
 export default function PlaylistsPage() {
@@ -104,52 +109,40 @@ export default function PlaylistsPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString("ja-JP", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <AppLayout>
       {confirmDialog}
-      {/* ヘッダー */}
-      <header className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-        <div className="max-w-4xl mx-auto p-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push("/")}
-                className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-              >
-                ← 戻る
-              </button>
-              <h1 className="text-2xl font-bold">プレイリスト</h1>
-            </div>
-            <button
-              onClick={() => setShowCreateForm(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              + 新規作成
-            </button>
+      <div className="p-4 sm:p-6 lg:p-8">
+        <div className="mb-6 lg:mb-8 flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl lg:text-3xl font-bold mb-2">
+              プレイリスト
+            </h2>
+            <p className="text-sm lg:text-base text-zinc-400">
+              記事をプレイリストで整理
+            </p>
           </div>
+          <Button
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            className="bg-violet-600 hover:bg-violet-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            新規作成
+          </Button>
+        </div>
 
-          {/* 作成フォーム */}
-          {showCreateForm && (
-            <form
-              onSubmit={handleCreatePlaylist}
-              className="mb-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg"
-            >
-              <h3 className="text-lg font-semibold mb-3">新しいプレイリスト</h3>
-              <div className="space-y-3">
-                <input
+        {/* 作成フォーム */}
+        {showCreateForm && (
+          <Card className="bg-zinc-900 border-zinc-800 mb-6">
+            <CardContent className="p-4 lg:p-6">
+              <h3 className="text-lg font-semibold mb-4">新しいプレイリスト</h3>
+              <form onSubmit={handleCreatePlaylist} className="space-y-3">
+                <Input
                   type="text"
                   value={newPlaylistName}
                   onChange={(e) => setNewPlaylistName(e.target.value)}
                   placeholder="プレイリスト名"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-foreground"
+                  className="bg-zinc-950 border-zinc-700 text-white placeholder:text-zinc-500"
                   required
                   autoFocus
                 />
@@ -157,97 +150,106 @@ export default function PlaylistsPage() {
                   value={newPlaylistDescription}
                   onChange={(e) => setNewPlaylistDescription(e.target.value)}
                   placeholder="説明（省略可）"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-foreground"
+                  className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-md text-white placeholder:text-zinc-500"
                   rows={3}
                 />
                 <div className="flex gap-2">
-                  <button
+                  <Button
                     type="submit"
                     disabled={isCreating}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+                    className="bg-violet-600 hover:bg-violet-700"
                   >
                     {isCreating ? "作成中..." : "作成"}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={() => {
                       setShowCreateForm(false);
                       setNewPlaylistName("");
                       setNewPlaylistDescription("");
                     }}
-                    className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    variant="ghost"
+                    className="text-zinc-400 hover:text-white"
                   >
                     キャンセル
-                  </button>
+                  </Button>
                 </div>
-              </div>
-            </form>
-          )}
-        </div>
-      </header>
+              </form>
+            </CardContent>
+          </Card>
+        )}
 
-      {/* メインコンテンツ */}
-      <main className="max-w-4xl mx-auto p-4">
         {isLoading ? (
-          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+          <div className="text-center py-12 text-zinc-400">
             <p>読み込み中...</p>
           </div>
         ) : playlists.length === 0 ? (
-          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+          <div className="text-center py-12 text-zinc-400">
             <p>プレイリストがありません</p>
             <p className="text-sm mt-2">
-              「+ 新規作成」からプレイリストを作成してください
+              「新規作成」からプレイリストを作成してください
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {playlists.map((playlist) => (
-              <div
+              <Card
                 key={playlist.id}
-                className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4 hover:shadow-md transition-shadow"
+                className="bg-zinc-900 border-zinc-800 hover:bg-zinc-800 transition-colors cursor-pointer"
+                onClick={() => router.push(`/playlists/${playlist.id}`)}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div
-                    className="flex-1 cursor-pointer"
-                    onClick={() => router.push(`/playlists/${playlist.id}`)}
-                  >
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                        {playlist.name}
-                      </h3>
-                      {playlist.is_default && (
-                        <span className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
-                          デフォルト
-                        </span>
-                      )}
-                    </div>
-                    {playlist.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        {playlist.description}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-400 dark:text-gray-500">
-                      <span>{playlist.item_count || 0} 件</span>
-                      <span>{formatDate(playlist.created_at)}</span>
-                    </div>
+                <CardContent className="p-4 lg:p-6">
+                  <div className="aspect-square bg-linear-to-br from-violet-600 to-purple-600 rounded-lg mb-4 flex items-center justify-center">
+                    <List className="h-12 w-12 lg:h-16 lg:w-16 text-white" />
                   </div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-bold text-base lg:text-lg">
+                      {playlist.name}
+                    </h3>
+                    {playlist.is_default && (
+                      <span className="px-2 py-0.5 text-xs bg-blue-900/50 text-blue-300 rounded">
+                        デフォルト
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-zinc-400">
+                    {playlist.item_count || 0} 件の記事
+                  </p>
+                  {playlist.description && (
+                    <p className="text-xs text-zinc-500 mt-2 line-clamp-2">
+                      {playlist.description}
+                    </p>
+                  )}
                   {!playlist.is_default && (
-                    <button
-                      onClick={() =>
-                        handleDeletePlaylist(playlist.id, playlist.name)
-                      }
-                      className="px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 rounded transition-colors"
-                      title="削除"
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeletePlaylist(playlist.id, playlist.name);
+                      }}
+                      className="mt-3 w-full text-red-400 hover:text-red-300 hover:bg-red-950"
                     >
                       削除
-                    </button>
+                    </Button>
                   )}
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
+
+            {/* 新規作成カード */}
+            <Card
+              className="bg-zinc-900 border-zinc-800 border-dashed hover:bg-zinc-800 transition-colors cursor-pointer"
+              onClick={() => setShowCreateForm(true)}
+            >
+              <CardContent className="p-4 lg:p-6 h-full flex flex-col items-center justify-center text-center min-h-[200px]">
+                <Plus className="h-10 w-10 lg:h-12 lg:w-12 text-zinc-600 mb-2" />
+                <p className="text-zinc-400 text-sm lg:text-base">新規作成</p>
+              </CardContent>
+            </Card>
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   );
 }
