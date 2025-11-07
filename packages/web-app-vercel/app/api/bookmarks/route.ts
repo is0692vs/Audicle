@@ -71,15 +71,18 @@ export async function POST(request: Request) {
         }
 
         // 既存のアイテムの最大positionを取得して次のpositionを決定
-        const { data: maxPositionItem } = await supabase
-            .from('playlist_items')
-            .select('position')
-            .eq('playlist_id', defaultPlaylist.id)
-            .order('position', { ascending: false })
-            .limit(1)
-            .single()
+        const { data: positionData, error: positionError } = await supabase
+            .rpc('get_next_playlist_position', { p_playlist_id: defaultPlaylist.id })
 
-        const position = (maxPositionItem?.position ?? -1) + 1
+        if (positionError) {
+            console.error('Supabase error (position):', positionError)
+            return NextResponse.json(
+                { error: 'Failed to get next position' },
+                { status: 500 }
+            )
+        }
+
+        const position = positionData
 
         // プレイリストに追加（既に存在する場合は無視）
         const { error: itemError } = await supabase

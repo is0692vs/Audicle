@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 // GET: プレイリスト詳細取得（ブックマーク含む）
 export async function GET(
     request: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: { id: string } }
 ) {
     try {
         const session = await auth()
@@ -18,14 +18,25 @@ export async function GET(
         }
 
         const userEmail = session.user.email
-        const { id } = await params
+        const { id } = params
 
-        // プレイリスト情報取得
+        // プレイリスト情報とアイテムを1つのクエリで取得
         const { data: playlist, error: playlistError } = await supabase
             .from('playlists')
-            .select('*')
+            .select(`
+        *,
+        playlist_items(
+          id,
+          playlist_id,
+          bookmark_id,
+          position,
+          added_at,
+          bookmark:bookmarks(*)
+        )
+      `)
             .eq('id', id)
             .eq('owner_email', userEmail)
+            .order('position', { foreignTable: 'playlist_items', ascending: true })
             .single()
 
         if (playlistError) {
@@ -36,32 +47,13 @@ export async function GET(
             )
         }
 
-        // ブックマーク一覧取得
-        const { data: items, error: itemsError } = await supabase
-            .from('playlist_items')
-            .select(`
-        id,
-        playlist_id,
-        bookmark_id,
-        position,
-        added_at,
-        bookmark:bookmarks(*)
-      `)
-            .eq('playlist_id', id)
-            .order('position', { ascending: true })
-
-        if (itemsError) {
-            console.error('Supabase error:', itemsError)
-            return NextResponse.json(
-                { error: 'Failed to fetch playlist items' },
-                { status: 500 }
-            )
-        }
+        // playlist_itemsをitemsにリネーム
+        const { playlist_items: items = [], ...playlistData } = playlist
 
         return NextResponse.json({
-            ...playlist,
+            ...playlistData,
             items,
-            item_count: items?.length || 0,
+            item_count: items.length ?? 0,
         })
     } catch (error) {
         console.error('Error in GET /api/playlists/[id]:', error)
@@ -75,7 +67,7 @@ export async function GET(
 // PATCH: プレイリスト更新
 export async function PATCH(
     request: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: { id: string } }
 ) {
     try {
         const session = await auth()
@@ -88,7 +80,7 @@ export async function PATCH(
         }
 
         const userEmail = session.user.email
-        const { id } = await params
+        const { id } = params
         const body = await request.json()
 
         const { name, description } = body
@@ -125,7 +117,7 @@ export async function PATCH(
 // DELETE: プレイリスト削除
 export async function DELETE(
     request: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: { id: string } }
 ) {
     try {
         const session = await auth()
@@ -138,31 +130,24 @@ export async function DELETE(
         }
 
         const userEmail = session.user.email
-        const { id } = await params
+        const { id } = params
 
-        // デフォルトプレイリストは削除不可
-        const { data: playlist } = await supabase
-            .from('playlists')
-            .select('is_default')
-            .eq('id', id)
-            .eq('owner_email', userEmail)
-            .single()
-
-        if (playlist?.is_default) {
-            return NextResponse.json(
-                { error: 'Cannot delete default playlist' },
-                { status: 400 }
-            )
-        }
-
+        // デフォルトプレイリストは削除不可（1つのクエリでチェックと削除）
         const { error } = await supabase
             .from('playlists')
             .delete()
             .eq('id', id)
             .eq('owner_email', userEmail)
+            .neq('is_default', true)
 
         if (error) {
             console.error('Supabase error:', error)
+            if (error.code === 'PGRST116') {
+                return NextResponse.json(
+                    { error: 'Cannot delete default playlist' },
+                    { status: 400 }
+                )
+            }
             return NextResponse.json(
                 { error: 'Failed to delete playlist' },
                 { status: 500 }

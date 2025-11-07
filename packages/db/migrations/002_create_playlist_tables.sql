@@ -60,3 +60,23 @@ CREATE TRIGGER update_playlists_updated_at
 CREATE TRIGGER update_bookmarks_updated_at 
   BEFORE UPDATE ON bookmarks
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- 6. プレイリストアイテム追加時のposition自動割り当て関数
+CREATE OR REPLACE FUNCTION get_next_playlist_position(p_playlist_id UUID)
+RETURNS INTEGER AS $$
+DECLARE
+  next_pos INTEGER;
+BEGIN
+  -- 現在の最大positionを取得して+1
+  SELECT COALESCE(MAX(position), -1) + 1 INTO next_pos
+  FROM playlist_items
+  WHERE playlist_id = p_playlist_id;
+  
+  RETURN next_pos;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 7. デフォルトプレイリスト作成時のユニーク制約
+CREATE UNIQUE INDEX idx_playlists_default_per_user 
+  ON playlists(owner_email) 
+  WHERE is_default = true;

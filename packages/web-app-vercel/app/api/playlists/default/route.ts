@@ -41,14 +41,20 @@ export async function GET() {
         if (fetchError && fetchError.code === 'PGRST116') {
             const { data: newPlaylist, error: createError } = await supabase
                 .from('playlists')
-                .insert({
-                    owner_email: userEmail,
-                    name: '読み込んだ記事',
-                    description: '読み込んだ記事が自動的に追加されます',
-                    visibility: 'private',
-                    is_default: true,
-                    allow_fork: true,
-                })
+                .upsert(
+                    {
+                        owner_email: userEmail,
+                        name: '読み込んだ記事',
+                        description: '読み込んだ記事が自動的に追加されます',
+                        visibility: 'private',
+                        is_default: true,
+                        allow_fork: true,
+                    },
+                    {
+                        onConflict: 'owner_email',
+                        ignoreDuplicates: false,
+                    }
+                )
                 .select()
                 .single()
 
@@ -73,11 +79,10 @@ export async function GET() {
         }
 
         // playlist_itemsをitemsにリネームし、不要なプロパティを削除
-        const { playlist_items, ...restOfPlaylist } = playlist || {}
-        const items = playlist_items || []
+        const { playlist_items: items = [], ...playlistData } = playlist || {}
 
         return NextResponse.json({
-            ...restOfPlaylist,
+            ...playlistData,
             items,
             item_count: items.length,
         })
