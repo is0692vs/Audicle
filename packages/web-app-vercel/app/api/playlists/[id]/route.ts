@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 // GET: プレイリスト詳細取得（ブックマーク含む）
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await auth()
@@ -18,7 +18,7 @@ export async function GET(
         }
 
         const userEmail = session.user.email
-        const { id } = params
+        const { id } = await params
 
         // プレイリスト情報とアイテムを1つのクエリで取得
         const { data: playlist, error: playlistError } = await supabase
