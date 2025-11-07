@@ -37,6 +37,7 @@ export async function getOrCreateDefaultPlaylist(userEmail: string): Promise<Def
         return { playlist: { ...playlistData, items, item_count: items.length } }
     }
 
+    // プレイリストが存在しない場合は作成（PGRST116 = not found）
     if (playlistError && playlistError.code === 'PGRST116') {
         // デフォルトプレイリストが存在しない場合は作成
         const { data: newPlaylist, error: createError } = await supabase
