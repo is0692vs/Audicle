@@ -67,9 +67,11 @@ function scrollElementIntoView(
                 left: 0,
             });
 
-            console.log(
-                `[useAutoScroll] コンテナ内スクロール: chunkId=${chunkId}, scrollTop=${Math.round(scrollTop)}`
-            );
+            if (process.env.NODE_ENV === 'development') {
+                console.log(
+                    `[useAutoScroll] コンテナ内スクロール: chunkId=${chunkId}, scrollTop=${Math.round(scrollTop)}`
+                );
+            }
         } else {
             // windowをスクロール対象とする場合
             // scrollIntoViewを使用（Chrome拡張版と同等）
@@ -79,20 +81,26 @@ function scrollElementIntoView(
                 inline: "nearest",
             });
 
-            console.log(
-                `[useAutoScroll] ウィンドウスクロール: chunkId=${chunkId}`
-            );
+            if (process.env.NODE_ENV === 'development') {
+                console.log(
+                    `[useAutoScroll] ウィンドウスクロール: chunkId=${chunkId}`
+                );
+            }
         }
     } catch (error) {
-        console.warn(`[useAutoScroll] スクロール失敗:`, error);
+        if (process.env.NODE_ENV === 'development') {
+            console.warn(`[useAutoScroll] スクロール失敗:`, error);
+        }
         // フォールバック: 古いブラウザ対応
         try {
             element.scrollIntoView(true);
         } catch (fallbackError) {
-            console.error(
-                `[useAutoScroll] フォールバックスクロール失敗:`,
-                fallbackError
-            );
+            if (process.env.NODE_ENV === 'development') {
+                console.error(
+                    `[useAutoScroll] フォールバックスクロール失敗:`,
+                    fallbackError
+                );
+            }
         }
     }
 }
@@ -116,9 +124,11 @@ export function useAutoScroll({
             );
 
             if (!element) {
-                console.warn(
-                    `[useAutoScroll] チャンクが見つかりません: ${currentChunkId}`
-                );
+                if (process.env.NODE_ENV === 'development') {
+                    console.warn(
+                        `[useAutoScroll] チャンクが見つかりません: ${currentChunkId}`
+                    );
+                }
                 return;
             }
 
@@ -175,56 +185,15 @@ export function useAutoScrollWithCache({
             }
 
             if (!element) {
-                console.warn(
-                    `[useAutoScrollWithCache] チャンクが見つかりません: ${currentChunkId}`
-                );
+                if (process.env.NODE_ENV === 'development') {
+                    console.warn(
+                        `[useAutoScrollWithCache] チャンクが見つかりません: ${currentChunkId}`
+                    );
+                }
                 return;
             }
 
-            try {
-                if (containerRef?.current) {
-                    const container = containerRef.current;
-                    const elementRect = element.getBoundingClientRect();
-                    const containerRect = container.getBoundingClientRect();
-
-                    const scrollTop =
-                        container.scrollTop +
-                        elementRect.top -
-                        containerRect.top -
-                        containerRect.height / 2 +
-                        elementRect.height / 2;
-
-                    container.scrollTo({
-                        top: scrollTop,
-                        behavior: "smooth",
-                        left: 0,
-                    });
-
-                    console.log(
-                        `[useAutoScrollWithCache] コンテナ内スクロール: chunkId=${currentChunkId}, scrollTop=${Math.round(scrollTop)}`
-                    );
-                } else {
-                    element.scrollIntoView({
-                        behavior: "smooth",
-                        block: "center",
-                        inline: "nearest",
-                    });
-
-                    console.log(
-                        `[useAutoScrollWithCache] ウィンドウスクロール: chunkId=${currentChunkId}`
-                    );
-                }
-            } catch (error) {
-                console.warn(`[useAutoScrollWithCache] スクロール失敗:`, error);
-                try {
-                    element.scrollIntoView(true);
-                } catch (fallbackError) {
-                    console.error(
-                        `[useAutoScrollWithCache] フォールバックスクロール失敗:`,
-                        fallbackError
-                    );
-                }
-            }
+            scrollElementIntoView(element, containerRef, currentChunkId);
         }, delay);
 
         return () => clearTimeout(timer);

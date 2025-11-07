@@ -18,6 +18,7 @@ Web App Vercel 版（`packages/web-app-vercel/`）に、読み上げ中の段落
 - **要素検索**: `data-audicle-id`属性を使用した効率的なチャンク検索
 - **レガシーブラウザ対応**: `scrollIntoView(true)`によるフォールバック実装
 - **キャッシュ版**: `useAutoScrollWithCache`で要素参照をキャッシュして性能向上
+- **キャッシュ版**: `useAutoScrollWithCache`で要素参照をキャッシュして性能向上
 
 #### インターフェース
 
