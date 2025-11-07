@@ -57,59 +57,62 @@ export default function ReaderPageClient() {
   });
 
   // 記事を読み込んで保存する共通ロジック
-  const loadAndSaveArticle = useCallback(async (articleUrl: string) => {
-    setIsLoading(true);
-    setError("");
-    try {
-      const response = await extractContent(articleUrl);
-      const chunksWithId = convertParagraphsToChunks(response.content);
-      setChunks(chunksWithId);
-      setTitle(response.title);
-
-      // ローカルストレージに保存（upsertで重複を防止）
-      const newArticle = articleStorage.upsert({
-        url: articleUrl,
-        title: response.title,
-        chunks: chunksWithId,
-      });
-
-      // Supabaseにブックマークを保存（デフォルトプレイリストに自動追加）
+  const loadAndSaveArticle = useCallback(
+    async (articleUrl: string) => {
+      setIsLoading(true);
+      setError("");
       try {
-        await fetch("/api/bookmarks", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            article_url: articleUrl,
-            article_title: response.title,
-            thumbnail_url: null,
-            last_read_position: 0,
-          }),
-        });
-        logger.success("ブックマークを保存", {
+        const response = await extractContent(articleUrl);
+        const chunksWithId = convertParagraphsToChunks(response.content);
+        setChunks(chunksWithId);
+        setTitle(response.title);
+
+        // ローカルストレージに保存（upsertで重複を防止）
+        const newArticle = articleStorage.upsert({
           url: articleUrl,
           title: response.title,
+          chunks: chunksWithId,
         });
-      } catch (bookmarkError) {
-        logger.error("ブックマークの保存に失敗", bookmarkError);
+
+        // Supabaseにブックマークを保存（デフォルトプレイリストに自動追加）
+        try {
+          await fetch("/api/bookmarks", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              article_url: articleUrl,
+              article_title: response.title,
+              thumbnail_url: null,
+              last_read_position: 0,
+            }),
+          });
+          logger.success("ブックマークを保存", {
+            url: articleUrl,
+            title: response.title,
+          });
+        } catch (bookmarkError) {
+          logger.error("ブックマークの保存に失敗", bookmarkError);
+        }
+
+        logger.success("記事を保存", {
+          id: newArticle.id,
+          title: newArticle.title,
+          chunkCount: chunksWithId.length,
+        });
+
+        // URLに記事IDを追加
+        router.push(`/reader?id=${newArticle.id}`);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "エラーが発生しました");
+        logger.error("記事の抽出に失敗", err);
+      } finally {
+        setIsLoading(false);
       }
-
-      logger.success("記事を保存", {
-        id: newArticle.id,
-        title: newArticle.title,
-        chunkCount: chunksWithId.length,
-      });
-
-      // URLに記事IDを追加
-      router.push(`/reader?id=${newArticle.id}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "エラーが発生しました");
-      logger.error("記事の抽出に失敗", err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [router]);
+    },
+    [router]
+  );
 
   // ユーザー設定を読み込む
   useEffect(() => {
@@ -158,7 +161,21 @@ export default function ReaderPageClient() {
   useEffect(() => {
     if (urlFromQuery) {
       setUrl(urlFromQuery);
-      loadAndSaveArticle(urlFromQuery);
+      // 既にlocalStorageに同じURLの記事が存在するかチェック
+      const existingArticle = articleStorage
+        .getAll()
+        .find((a) => a.url === urlFromQuery);
+      if (existingArticle) {
+        // 既存の記事がある場合は、そのIDを使ってリダイレクト
+        logger.info("既存の記事を読み込み", {
+          id: existingArticle.id,
+          title: existingArticle.title,
+        });
+        router.push(`/reader?id=${existingArticle.id}`);
+      } else {
+        // 新しい記事の場合は取得
+        loadAndSaveArticle(urlFromQuery);
+      }
     }
   }, [urlFromQuery, router, loadAndSaveArticle]);
 

@@ -36,6 +36,10 @@ export default function Home() {
     };
 
     loadArticles();
+
+    // storageイベントをリッスン (他のタブでの変更を検知)
+    window.addEventListener("storage", loadArticles);
+    return () => window.removeEventListener("storage", loadArticles);
   }, []);
 
   const handleDelete = async (id: string) => {

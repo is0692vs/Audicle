@@ -46,7 +46,7 @@ export async function POST(request: Request) {
             )
         }
 
-        // デフォルトプレイリストを取得
+        // デフォルトプレイリストを取得（なければ作成）
         const { data: defaultPlaylist, error: playlistError } = await supabase
             .from('playlists')
             .select('id')
@@ -54,7 +54,39 @@ export async function POST(request: Request) {
             .eq('is_default', true)
             .single()
 
-        if (playlistError) {
+        let playlistId = defaultPlaylist?.id
+
+        if (playlistError && playlistError.code === 'PGRST116') {
+            // デフォルトプレイリストが存在しない場合は作成
+            const { data: newPlaylist, error: createError } = await supabase
+                .from('playlists')
+                .upsert(
+                    {
+                        owner_email: userEmail,
+                        name: '読み込んだ記事',
+                        description: '読み込んだ記事が自動的に追加されます',
+                        visibility: 'private',
+                        is_default: true,
+                        allow_fork: true,
+                    },
+                    {
+                        onConflict: 'idx_playlists_default_per_user',
+                        ignoreDuplicates: false,
+                    }
+                )
+                .select('id')
+                .single()
+
+            if (createError) {
+                console.error('Supabase error (create playlist):', createError)
+                return NextResponse.json(
+                    { error: 'Failed to create default playlist' },
+                    { status: 500 }
+                )
+            }
+
+            playlistId = newPlaylist.id
+        } else if (playlistError) {
             console.error('Supabase error (playlist):', playlistError)
             return NextResponse.json(
                 { error: 'Failed to find default playlist' },
@@ -68,7 +100,7 @@ export async function POST(request: Request) {
             .from('playlist_items')
             .upsert(
                 {
-                    playlist_id: defaultPlaylist.id,
+                    playlist_id: playlistId,
                     bookmark_id: bookmark.id,
                 },
                 {

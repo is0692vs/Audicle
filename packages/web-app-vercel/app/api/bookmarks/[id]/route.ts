@@ -5,21 +5,29 @@ import { requireAuth } from '@/lib/api-auth'
 // DELETE: ブックマーク削除
 export async function DELETE(
     request: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: { id: string } }
 ) {
     try {
         const { userEmail, response } = await requireAuth()
         if (response) return response
 
-        const { id } = await params
+        const { id } = params
 
+        // 削除対象の存在確認と権限チェックを兼ねる
         const { error } = await supabase
             .from('bookmarks')
             .delete()
             .eq('id', id)
             .eq('owner_email', userEmail)
+            .single() // 1行も削除されなかった場合にエラーを発生させる
 
         if (error) {
+            if (error.code === 'PGRST116') { // 0 rows affected
+                return NextResponse.json(
+                    { error: 'Bookmark not found or permission denied' },
+                    { status: 404 }
+                )
+            }
             console.error('Supabase error:', error)
             return NextResponse.json(
                 { error: 'Failed to delete bookmark' },
@@ -40,13 +48,13 @@ export async function DELETE(
 // PATCH: 最後に読んだ位置の更新
 export async function PATCH(
     request: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: { id: string } }
 ) {
     try {
         const { userEmail, response } = await requireAuth()
         if (response) return response
 
-        const { id } = await params
+        const { id } = params
         const body = await request.json()
 
         const { last_read_position } = body

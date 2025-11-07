@@ -44,7 +44,7 @@ export async function GET() {
                     },
                     {
                         onConflict: 'idx_playlists_default_per_user',
-                        ignoreDuplicates: false,
+                        ignoreDuplicates: true,
                     }
                 )
                 .select()
@@ -58,9 +58,41 @@ export async function GET() {
                 )
             }
 
-            playlist = {
-                ...newPlaylist,
-                playlist_items: [],
+            // upsertでignoreDuplicates: trueの場合、既存の行があるとnullが返る可能性がある
+            if (!newPlaylist) {
+                // 他のリクエストが既に作成した可能性があるので、再取得
+                const { data: retryPlaylist, error: retryError } = await supabase
+                    .from('playlists')
+                    .select(`
+            *,
+            playlist_items(
+              id,
+              playlist_id,
+              bookmark_id,
+              position,
+              added_at,
+              bookmark:bookmarks(*)
+            )
+          `)
+                    .eq('owner_email', userEmail)
+                    .eq('is_default', true)
+                    .order('position', { foreignTable: 'playlist_items', ascending: true })
+                    .single()
+
+                if (retryError) {
+                    console.error('Supabase error (retry):', retryError)
+                    return NextResponse.json(
+                        { error: 'Failed to fetch default playlist after creation' },
+                        { status: 500 }
+                    )
+                }
+
+                playlist = retryPlaylist
+            } else {
+                playlist = {
+                    ...newPlaylist,
+                    playlist_items: [],
+                }
             }
         } else if (fetchError) {
             console.error('Supabase error (fetch):', fetchError)
