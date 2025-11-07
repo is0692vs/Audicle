@@ -254,7 +254,9 @@ export default function ReaderPageClient() {
                     max="3.0"
                     step="0.1"
                     value={playbackRate}
-                    onChange={(e) => setPlaybackRate(parseFloat(e.target.value))}
+                    onChange={(e) =>
+                      setPlaybackRate(parseFloat(e.target.value))
+                    }
                     className="w-32"
                   />
                   <span className="text-sm text-zinc-300 w-12">
