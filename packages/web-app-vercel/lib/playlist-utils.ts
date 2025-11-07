@@ -42,7 +42,7 @@ export async function getOrCreateDefaultPlaylist(userEmail: string): Promise<Def
         // デフォルトプレイリストが存在しない場合は作成
         const { data: newPlaylist, error: createError } = await supabase
             .from('playlists')
-            .upsert(
+            .insert(
                 {
                     owner_email: userEmail,
                     name: '読み込んだ記事',
@@ -51,10 +51,6 @@ export async function getOrCreateDefaultPlaylist(userEmail: string): Promise<Def
                     is_default: true,
                     allow_fork: true,
                 },
-                {
-                    onConflict: 'idx_playlists_default_per_user',
-                    ignoreDuplicates: false,
-                }
             )
             .select()
             .single()
