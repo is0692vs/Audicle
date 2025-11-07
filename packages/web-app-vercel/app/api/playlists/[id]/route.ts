@@ -45,7 +45,7 @@ export async function GET(
         return NextResponse.json({
             ...playlistData,
             items,
-            item_count: items.length ?? 0,
+            item_count: items.length,
         })
     } catch (error) {
         console.error('Error in GET /api/playlists/[id]:', error)
@@ -88,6 +88,12 @@ export async function PATCH(
             .single()
 
         if (error) {
+            if (error.code === 'PGRST116') {
+                return NextResponse.json(
+                    { error: 'Playlist not found or permission denied' },
+                    { status: 404 }
+                )
+            }
             console.error('Supabase error:', error)
             return NextResponse.json(
                 { error: 'Failed to update playlist' },

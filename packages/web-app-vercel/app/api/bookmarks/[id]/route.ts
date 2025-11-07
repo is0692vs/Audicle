@@ -75,6 +75,12 @@ export async function PATCH(
             .single()
 
         if (error) {
+            if (error.code === 'PGRST116') {
+                return NextResponse.json(
+                    { error: 'Bookmark not found or permission denied' },
+                    { status: 404 }
+                )
+            }
             console.error('Supabase error:', error)
             return NextResponse.json(
                 { error: 'Failed to update bookmark' },

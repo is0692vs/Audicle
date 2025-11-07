@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { requireAuth } from '@/lib/api-auth'
+import { getOrCreateDefaultPlaylist } from '@/lib/playlist-utils'
 import type { Bookmark } from '@/types/playlist'
 
 // POST: ブックマーク追加（デフォルトプレイリストに自動関連付け）
@@ -47,52 +48,15 @@ export async function POST(request: Request) {
         }
 
         // デフォルトプレイリストを取得（なければ作成）
-        const { data: defaultPlaylist, error: playlistError } = await supabase
-            .from('playlists')
-            .select('id')
-            .eq('owner_email', userEmail)
-            .eq('is_default', true)
-            .single()
-
-        let playlistId = defaultPlaylist?.id
-
-        if (playlistError && playlistError.code === 'PGRST116') {
-            // デフォルトプレイリストが存在しない場合は作成
-            const { data: newPlaylist, error: createError } = await supabase
-                .from('playlists')
-                .upsert(
-                    {
-                        owner_email: userEmail,
-                        name: '読み込んだ記事',
-                        description: '読み込んだ記事が自動的に追加されます',
-                        visibility: 'private',
-                        is_default: true,
-                        allow_fork: true,
-                    },
-                    {
-                        onConflict: 'idx_playlists_default_per_user',
-                        ignoreDuplicates: false,
-                    }
-                )
-                .select('id')
-                .single()
-
-            if (createError) {
-                console.error('Supabase error (create playlist):', createError)
-                return NextResponse.json(
-                    { error: 'Failed to create default playlist' },
-                    { status: 500 }
-                )
-            }
-
-            playlistId = newPlaylist.id
-        } else if (playlistError) {
-            console.error('Supabase error (playlist):', playlistError)
+        const defaultPlaylistResult = await getOrCreateDefaultPlaylist(userEmail!)
+        if (defaultPlaylistResult.error) {
             return NextResponse.json(
-                { error: 'Failed to find default playlist' },
+                { error: defaultPlaylistResult.error },
                 { status: 500 }
             )
         }
+
+        const playlistId = defaultPlaylistResult.id
 
         // プレイリストに追加（既に存在する場合は無視）
         // 注: positionはDB側のトリガーで自動採番される
