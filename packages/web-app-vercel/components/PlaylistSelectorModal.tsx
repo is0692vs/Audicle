@@ -80,6 +80,20 @@ export function PlaylistSelectorModal({
     }
   }, [isOpen, bookmarkId, loadPlaylistsAndCurrentItems]);
 
+  // Handle Escape key to close modal for accessibility
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" || event.key === "Esc") {
+        event.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
   const handleTogglePlaylist = (playlistId: string) => {
     const newSelected = new Set(selectedPlaylistIds);
     if (newSelected.has(playlistId)) {
