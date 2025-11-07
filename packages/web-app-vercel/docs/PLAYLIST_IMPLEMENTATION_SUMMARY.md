@@ -55,10 +55,10 @@
 ### トリガー
 
 - updated_at 自動更新 (playlists, bookmarks)
-   - `update_updated_at_column` トリガー関数で NOW() を設定
+  - `update_updated_at_column` トリガー関数で NOW() を設定
 - プレイリストアイテム追加時の position 採番
-   - `set_playlist_item_position` が親プレイリスト行を `FOR UPDATE` でロック
-   - 同一トランザクション内で MAX(position)+1 を計算して競合を防止
+  - `set_playlist_item_position` が親プレイリスト行を `FOR UPDATE` でロック
+  - 同一トランザクション内で MAX(position)+1 を計算して競合を防止
 
 ## Phase 2: 型定義
 
