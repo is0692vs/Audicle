@@ -5,7 +5,6 @@ import UserSettingsPanel from "@/components/UserSettingsPanel";
 import AppLayout from "@/components/AppLayout";
 
 export default function SettingsPage() {
-
   return (
     <AppLayout>
       <div className="p-4 sm:p-6 lg:p-8">
