@@ -5,12 +5,12 @@ import { requireAuth } from '@/lib/api-auth'
 // GET: プレイリスト詳細取得（ブックマーク含む）
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { userEmail, response } = await requireAuth()
         if (response) return response
-        const { id } = params
+        const { id } = await params
 
         // プレイリスト情報とアイテムを1つのクエリで取得
         const { data: playlist, error: playlistError } = await supabase
@@ -59,12 +59,12 @@ export async function GET(
 // PATCH: プレイリスト更新
 export async function PATCH(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { userEmail, response } = await requireAuth()
         if (response) return response
-        const { id } = params
+        const { id } = await params
         const body = await request.json()
 
         const { name, description } = body
@@ -108,12 +108,12 @@ export async function PATCH(
 // DELETE: プレイリスト削除
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { userEmail, response } = await requireAuth()
         if (response) return response
-        const { id } = params
+        const { id } = await params
 
         // デフォルトプレイリストかどうかを確認
         const { data: playlistToDelete, error: fetchError } = await supabase

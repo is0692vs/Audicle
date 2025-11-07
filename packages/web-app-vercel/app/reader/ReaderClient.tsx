@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ReaderView from "@/components/ReaderView";
 import { Chunk } from "@/types/api";
@@ -57,7 +57,7 @@ export default function ReaderPageClient() {
   });
 
   // 記事を読み込んで保存する共通ロジック
-  const loadAndSaveArticle = async (articleUrl: string) => {
+  const loadAndSaveArticle = useCallback(async (articleUrl: string) => {
     setIsLoading(true);
     setError("");
     try {
@@ -109,7 +109,7 @@ export default function ReaderPageClient() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [router]);
 
   // ユーザー設定を読み込む
   useEffect(() => {
@@ -160,7 +160,7 @@ export default function ReaderPageClient() {
       setUrl(urlFromQuery);
       loadAndSaveArticle(urlFromQuery);
     }
-  }, [urlFromQuery, router]);
+  }, [urlFromQuery, router, loadAndSaveArticle]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
