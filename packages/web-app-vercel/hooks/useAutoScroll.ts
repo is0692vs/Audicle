@@ -38,14 +38,71 @@ interface UseAutoScrollProps {
     delay?: number;
 }
 
+/**
+ * 共通のスクロール実行関数
+ * useAutoScrollとuseAutoScrollWithCacheで重複するロジックを共通化
+ */
+function scrollElementIntoView(
+    element: Element,
+    containerRef?: React.RefObject<HTMLDivElement | null>,
+    chunkId?: string
+): void {
+    try {
+        if (containerRef?.current) {
+            const container = containerRef.current;
+            const elementRect = element.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+
+            // コンテナの中央に要素を配置するためのスクロール位置を計算
+            const scrollTop =
+                container.scrollTop +
+                elementRect.top -
+                containerRect.top -
+                containerRect.height / 2 +
+                elementRect.height / 2;
+
+            container.scrollTo({
+                top: scrollTop,
+                behavior: "smooth",
+                left: 0,
+            });
+
+            console.log(
+                `[useAutoScroll] コンテナ内スクロール: chunkId=${chunkId}, scrollTop=${Math.round(scrollTop)}`
+            );
+        } else {
+            // windowをスクロール対象とする場合
+            // scrollIntoViewを使用（Chrome拡張版と同等）
+            element.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+                inline: "nearest",
+            });
+
+            console.log(
+                `[useAutoScroll] ウィンドウスクロール: chunkId=${chunkId}`
+            );
+        }
+    } catch (error) {
+        console.warn(`[useAutoScroll] スクロール失敗:`, error);
+        // フォールバック: 古いブラウザ対応
+        try {
+            element.scrollIntoView(true);
+        } catch (fallbackError) {
+            console.error(
+                `[useAutoScroll] フォールバックスクロール失敗:`,
+                fallbackError
+            );
+        }
+    }
+}
+
 export function useAutoScroll({
     currentChunkId,
     containerRef,
     enabled = true,
     delay = 0,
 }: UseAutoScrollProps) {
-    const elementRefCache = useRef<Map<string, Element | null>>(new Map());
-
     useEffect(() => {
         if (!enabled || !currentChunkId) {
             return;
@@ -65,55 +122,7 @@ export function useAutoScroll({
                 return;
             }
 
-            try {
-                // containerRefが指定されている場合
-                if (containerRef?.current) {
-                    const container = containerRef.current;
-                    const elementRect = element.getBoundingClientRect();
-                    const containerRect = container.getBoundingClientRect();
-
-                    // コンテナの中央に要素を配置するためのスクロール位置を計算
-                    const scrollTop =
-                        container.scrollTop +
-                        elementRect.top -
-                        containerRect.top -
-                        containerRect.height / 2 +
-                        elementRect.height / 2;
-
-                    container.scrollTo({
-                        top: scrollTop,
-                        behavior: "smooth",
-                        left: 0,
-                    });
-
-                    console.log(
-                        `[useAutoScroll] コンテナ内スクロール: chunkId=${currentChunkId}, scrollTop=${Math.round(scrollTop)}`
-                    );
-                } else {
-                    // windowをスクロール対象とする場合
-                    // scrollIntoViewを使用（Chrome拡張版と同等）
-                    element.scrollIntoView({
-                        behavior: "smooth",
-                        block: "center",
-                        inline: "nearest",
-                    });
-
-                    console.log(
-                        `[useAutoScroll] ウィンドウスクロール: chunkId=${currentChunkId}`
-                    );
-                }
-            } catch (error) {
-                console.warn(`[useAutoScroll] スクロール失敗:`, error);
-                // フォールバック: 古いブラウザ対応
-                try {
-                    element.scrollIntoView(true);
-                } catch (fallbackError) {
-                    console.error(
-                        `[useAutoScroll] フォールバックスクロール失敗:`,
-                        fallbackError
-                    );
-                }
-            }
+            scrollElementIntoView(element, containerRef, currentChunkId);
         }, delay);
 
         return () => clearTimeout(timer);
@@ -122,7 +131,7 @@ export function useAutoScroll({
 
 /**
  * 別の実装方法: useRefを使用した参照キャッシュ版
- * （必要に応じてこちらを使用）
+ * （現在は使用されていないが、性能最適化が必要な場合に使用可能）
  */
 export function useAutoScrollWithCache({
     currentChunkId,
@@ -192,7 +201,7 @@ export function useAutoScrollWithCache({
                     });
 
                     console.log(
-                        `[useAutoScrollWithCache] コンテナ内スクロール: chunkId=${currentChunkId}`
+                        `[useAutoScrollWithCache] コンテナ内スクロール: chunkId=${currentChunkId}, scrollTop=${Math.round(scrollTop)}`
                     );
                 } else {
                     element.scrollIntoView({

@@ -17,7 +17,7 @@ Web App Vercel 版（`packages/web-app-vercel/`）に、読み上げ中の段落
 - **コンテナ対応**: 指定されたコンテナ内でのスクロール、または window スクロールに対応
 - **要素検索**: `data-audicle-id`属性を使用した効率的なチャンク検索
 - **レガシーブラウザ対応**: `scrollIntoView(true)`によるフォールバック実装
-- **カッシュ版**: `useAutoScrollWithCache`で要素参照をキャッシュして性能向上
+- **キャッシュ版**: `useAutoScrollWithCache`で要素参照をキャッシュして性能向上
 
 #### インターフェース
 
@@ -239,4 +239,4 @@ const element = document.querySelector(
 
 **実装日**: 2025-11-07
 **ブランチ**: `115-vercel読み上げ箇所スクロールフォロー`
-**関連 PR**: [GiHub PR リンク]
+**関連 PR**: #116
