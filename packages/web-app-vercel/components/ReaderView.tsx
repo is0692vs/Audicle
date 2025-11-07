@@ -31,17 +31,16 @@ export default function ReaderView({
     [chunks]
   );
 
-  const articleTitle =
-    primaryHeading ??
-    (() => {
-      if (!articleUrl) return "記事ビュー";
-      try {
-        const url = new URL(articleUrl);
-        return url.hostname;
-      } catch {
-        return "記事ビュー";
-      }
-    })();
+  const articleTitle = useMemo(() => {
+    if (primaryHeading) return primaryHeading;
+    if (!articleUrl) return "記事ビュー";
+    try {
+      const url = new URL(articleUrl);
+      return url.hostname;
+    } catch {
+      return "記事ビュー";
+    }
+  }, [primaryHeading, articleUrl]);
 
   const formattedSpeed = useMemo(() => {
     if (!speed) return "1x";
