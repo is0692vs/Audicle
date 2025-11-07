@@ -43,7 +43,7 @@ export default function ReaderView({
   // Chrome拡張版と同等の動作を提供
   useAutoScroll({
     currentChunkId,
-    containerRef,
+    // containerRef, // 一時的にコメントアウトしてwindowスクロールを使用
     enabled: true,
     delay: 0,
   });
