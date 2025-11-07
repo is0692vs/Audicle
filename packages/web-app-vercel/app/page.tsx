@@ -18,15 +18,15 @@ export default function Home() {
   useEffect(() => {
     const loadArticles = async () => {
       try {
-        const response = await fetch('/api/playlists/default');
-        
+        const response = await fetch("/api/playlists/default");
+
         if (!response.ok) {
-          throw new Error('プレイリストの取得に失敗しました');
+          throw new Error("プレイリストの取得に失敗しました");
         }
 
         const playlist: PlaylistWithItems = await response.json();
-        const bookmarks = playlist.items?.map(item => item.bookmark) || [];
-        
+        const bookmarks = playlist.items?.map((item) => item.bookmark) || [];
+
         logger.info("記事一覧を読み込み", { count: bookmarks.length });
         setArticles(bookmarks);
       } catch (error) {
@@ -54,11 +54,11 @@ export default function Home() {
     if (confirmed) {
       try {
         const response = await fetch(`/api/bookmarks/${id}`, {
-          method: 'DELETE',
+          method: "DELETE",
         });
 
         if (!response.ok) {
-          throw new Error('削除に失敗しました');
+          throw new Error("削除に失敗しました");
         }
 
         setArticles((prev) => prev.filter((a) => a.id !== id));
@@ -140,7 +140,11 @@ export default function Home() {
                 <div className="flex items-start justify-between gap-4">
                   <div
                     className="flex-1 cursor-pointer"
-                    onClick={() => router.push(`/reader?url=${encodeURIComponent(article.article_url)}`)}
+                    onClick={() =>
+                      router.push(
+                        `/reader?url=${encodeURIComponent(article.article_url)}`
+                      )
+                    }
                   >
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                       {article.article_title}
@@ -150,9 +154,10 @@ export default function Home() {
                     </p>
                     <div className="flex items-center gap-4 mt-2 text-xs text-gray-400 dark:text-gray-500">
                       <span>{formatDate(article.created_at)}</span>
-                      {article.last_read_position !== undefined && article.last_read_position > 0 && (
-                        <span>読書位置: {article.last_read_position}</span>
-                      )}
+                      {article.last_read_position !== undefined &&
+                        article.last_read_position > 0 && (
+                          <span>読書位置: {article.last_read_position}</span>
+                        )}
                     </div>
                   </div>
                   <button

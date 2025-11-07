@@ -10,7 +10,7 @@ export default function PlaylistDetailPage() {
   const router = useRouter();
   const params = useParams();
   const playlistId = params.id as string;
-  
+
   const [playlist, setPlaylist] = useState<PlaylistWithItems | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -28,7 +28,10 @@ export default function PlaylistDetailPage() {
       }
 
       const data: PlaylistWithItems = await response.json();
-      logger.info("プレイリスト詳細を読み込み", { id: data.id, name: data.name });
+      logger.info("プレイリスト詳細を読み込み", {
+        id: data.id,
+        name: data.name,
+      });
       setPlaylist(data);
       setEditName(data.name);
       setEditDescription(data.description || "");
@@ -48,7 +51,7 @@ export default function PlaylistDetailPage() {
 
   const handleSave = async () => {
     if (!playlist) return;
-    
+
     setIsSaving(true);
     try {
       const response = await fetch(`/api/playlists/${playlist.id}`, {
@@ -67,7 +70,10 @@ export default function PlaylistDetailPage() {
       }
 
       const updated = await response.json();
-      logger.success("プレイリストを更新", { id: updated.id, name: updated.name });
+      logger.success("プレイリストを更新", {
+        id: updated.id,
+        name: updated.name,
+      });
       setPlaylist({ ...playlist, ...updated });
       setIsEditing(false);
     } catch (error) {
@@ -100,7 +106,9 @@ export default function PlaylistDetailPage() {
           if (!prev) return prev;
           return {
             ...prev,
-            items: prev.items?.filter((item) => item.bookmark.id !== bookmarkId),
+            items: prev.items?.filter(
+              (item) => item.bookmark.id !== bookmarkId
+            ),
             item_count: (prev.item_count || 1) - 1,
           };
         });
@@ -205,7 +213,9 @@ export default function PlaylistDetailPage() {
                 )}
               </div>
               {playlist.description && (
-                <p className="text-gray-600 dark:text-gray-400">{playlist.description}</p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {playlist.description}
+                </p>
               )}
               <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
                 {playlist.item_count || 0} 件の記事
@@ -232,7 +242,11 @@ export default function PlaylistDetailPage() {
                   <div
                     className="flex-1 cursor-pointer"
                     onClick={() =>
-                      router.push(`/reader?url=${encodeURIComponent(item.bookmark.article_url)}`)
+                      router.push(
+                        `/reader?url=${encodeURIComponent(
+                          item.bookmark.article_url
+                        )}`
+                      )
                     }
                   >
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
@@ -245,13 +259,18 @@ export default function PlaylistDetailPage() {
                       <span>{formatDate(item.added_at)}</span>
                       {item.bookmark.last_read_position !== undefined &&
                         item.bookmark.last_read_position > 0 && (
-                          <span>読書位置: {item.bookmark.last_read_position}</span>
+                          <span>
+                            読書位置: {item.bookmark.last_read_position}
+                          </span>
                         )}
                     </div>
                   </div>
                   <button
                     onClick={() =>
-                      handleDeleteBookmark(item.bookmark.id, item.bookmark.article_title)
+                      handleDeleteBookmark(
+                        item.bookmark.id,
+                        item.bookmark.article_title
+                      )
                     }
                     className="px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 rounded transition-colors"
                     title="削除"

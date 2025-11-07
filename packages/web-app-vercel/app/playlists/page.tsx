@@ -59,8 +59,11 @@ export default function PlaylistsPage() {
       }
 
       const newPlaylist = await response.json();
-      logger.success("プレイリストを作成", { id: newPlaylist.id, name: newPlaylist.name });
-      
+      logger.success("プレイリストを作成", {
+        id: newPlaylist.id,
+        name: newPlaylist.name,
+      });
+
       setPlaylists((prev) => [newPlaylist, ...prev]);
       setShowCreateForm(false);
       setNewPlaylistName("");
@@ -135,7 +138,10 @@ export default function PlaylistsPage() {
 
           {/* 作成フォーム */}
           {showCreateForm && (
-            <form onSubmit={handleCreatePlaylist} className="mb-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+            <form
+              onSubmit={handleCreatePlaylist}
+              className="mb-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg"
+            >
               <h3 className="text-lg font-semibold mb-3">新しいプレイリスト</h3>
               <div className="space-y-3">
                 <input
@@ -189,7 +195,9 @@ export default function PlaylistsPage() {
         ) : playlists.length === 0 ? (
           <div className="text-center py-12 text-gray-500 dark:text-gray-400">
             <p>プレイリストがありません</p>
-            <p className="text-sm mt-2">「+ 新規作成」からプレイリストを作成してください</p>
+            <p className="text-sm mt-2">
+              「+ 新規作成」からプレイリストを作成してください
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -225,7 +233,9 @@ export default function PlaylistsPage() {
                   </div>
                   {!playlist.is_default && (
                     <button
-                      onClick={() => handleDeletePlaylist(playlist.id, playlist.name)}
+                      onClick={() =>
+                        handleDeletePlaylist(playlist.id, playlist.name)
+                      }
                       className="px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 rounded transition-colors"
                       title="削除"
                     >

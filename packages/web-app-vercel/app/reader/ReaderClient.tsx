@@ -121,10 +121,10 @@ export default function ReaderPageClient() {
 
       // Supabaseにブックマークを保存（デフォルトプレイリストに自動追加）
       try {
-        await fetch('/api/bookmarks', {
-          method: 'POST',
+        await fetch("/api/bookmarks", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             article_url: url,
