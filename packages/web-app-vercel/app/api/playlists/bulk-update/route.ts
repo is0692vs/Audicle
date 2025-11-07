@@ -58,27 +58,10 @@ export async function POST(request: Request) {
 
         // 追加操作: 指定されたプレイリストにブックマークを追加
         if (addToPlaylistIds.length > 0) {
-            // プレイリストの最後のposition値を取得して次のposition値を計算
-            const playlistItems = addToPlaylistIds.map(async (playlistId) => {
-                // このプレイリストの最大positionを取得
-                const { data: lastItem } = await supabase
-                    .from('playlist_items')
-                    .select('position')
-                    .eq('playlist_id', playlistId)
-                    .order('position', { ascending: false })
-                    .limit(1)
-                    .single()
-
-                const nextPosition = (lastItem?.position || 0) + 1
-
-                return {
-                    playlist_id: playlistId,
-                    bookmark_id: bookmarkId,
-                    position: nextPosition,
-                }
-            })
-
-            const resolvedItems = await Promise.all(playlistItems)
+            const resolvedItems = addToPlaylistIds.map((playlistId) => ({
+                playlist_id: playlistId,
+                bookmark_id: bookmarkId,
+            }));
 
             // upsertで追加（既に存在する場合はスキップ）
             const { error: insertError } = await supabase

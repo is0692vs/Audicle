@@ -8,6 +8,7 @@ interface PlaylistSelectorModalProps {
   isOpen: boolean;
   onClose: () => void;
   bookmarkId: string;
+  articleUrl: string;
   articleTitle: string;
 }
 
@@ -15,10 +16,14 @@ export function PlaylistSelectorModal({
   isOpen,
   onClose,
   bookmarkId,
+  articleUrl,
   articleTitle,
 }: PlaylistSelectorModalProps) {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [selectedPlaylistIds, setSelectedPlaylistIds] = useState<Set<string>>(
+    new Set()
+  );
+  const [initialSelectedIds, setInitialSelectedIds] = useState<Set<string>>(
     new Set()
   );
   const [isLoading, setIsLoading] = useState(true);
@@ -43,16 +48,23 @@ export function PlaylistSelectorModal({
       const currentPlaylistsResponse = await fetch(
         `/api/bookmarks/${bookmarkId}/playlists`
       );
+      let selectedCount = 0;
       if (currentPlaylistsResponse.ok) {
         const currentPlaylists: Playlist[] =
           await currentPlaylistsResponse.json();
         const currentIds = new Set(currentPlaylists.map((p) => p.id));
         setSelectedPlaylistIds(currentIds);
+        setInitialSelectedIds(currentIds);
+        selectedCount = currentIds.size;
+      } else {
+        // 取得に失敗した場合、選択は空として扱う
+        setSelectedPlaylistIds(new Set());
+        setInitialSelectedIds(new Set());
       }
 
       logger.info("プレイリストを読み込み", {
         totalCount: playlistsData.length,
-        selectedCount: selectedPlaylistIds.size,
+        selectedCount: selectedCount,
       });
     } catch (err) {
       const errorMessage =
@@ -62,7 +74,7 @@ export function PlaylistSelectorModal({
     } finally {
       setIsLoading(false);
     }
-  }, [bookmarkId, selectedPlaylistIds.size]);
+  }, [bookmarkId]);
 
   useEffect(() => {
     if (isOpen && bookmarkId) {
@@ -86,15 +98,7 @@ export function PlaylistSelectorModal({
       setError(null);
 
       // 既存の関連プレイリストと新しい選択を比較
-      const currentPlaylistsResponse = await fetch(
-        `/api/bookmarks/${bookmarkId}/playlists`
-      );
-      let currentPlaylistIds = new Set<string>();
-      if (currentPlaylistsResponse.ok) {
-        const currentPlaylists: Playlist[] =
-          await currentPlaylistsResponse.json();
-        currentPlaylistIds = new Set(currentPlaylists.map((p) => p.id));
-      }
+      const currentPlaylistIds = initialSelectedIds;
 
       // 追加するプレイリスト（新しく選択されたもの）
       const addToPlaylistIds = Array.from(selectedPlaylistIds).filter(

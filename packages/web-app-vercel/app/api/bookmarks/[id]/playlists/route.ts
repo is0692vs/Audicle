@@ -6,13 +6,13 @@ import type { Playlist } from '@/types/playlist'
 // GET: ブックマークが含まれるプレイリスト一覧取得
 export async function GET(
     request: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: { id: string } }
 ) {
     try {
         const { userEmail, response } = await requireAuth()
         if (response) return response
 
-        const { id: bookmarkId } = await params
+        const { id: bookmarkId } = params
 
         // ブックマークの所有者確認
         const { data: bookmark, error: bookmarkError } = await supabase
@@ -38,6 +38,7 @@ export async function GET(
       `)
             .eq('owner_email', userEmail)
             .eq('playlist_items.bookmark_id', bookmarkId)
+            .order('created_at', { ascending: true })
 
         if (error) {
             console.error('Supabase error:', error)
