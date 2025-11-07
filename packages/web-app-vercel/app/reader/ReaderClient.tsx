@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ReaderView from "@/components/ReaderView";
-import PlaylistSelectorModal from "@/components/PlaylistSelectorModal";
+import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
 import { Chunk } from "@/types/api";
 import { extractContent } from "@/lib/api";
 import { usePlayback } from "@/hooks/usePlayback";

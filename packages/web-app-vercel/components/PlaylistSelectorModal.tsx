@@ -62,7 +62,7 @@ export function PlaylistSelectorModal({
     } finally {
       setIsLoading(false);
     }
-  }, [bookmarkId]);
+  }, [bookmarkId, selectedPlaylistIds.size]);
 
   useEffect(() => {
     if (isOpen && bookmarkId) {
