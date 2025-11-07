@@ -195,21 +195,23 @@ export default function Home() {
       </main>
 
       {/* プレイリストセレクターモーダル */}
-      {selectedBookmarkId && (() => {
-        const selectedArticle = articles.find((a) => a.id === selectedBookmarkId);
-        return (
-          <PlaylistSelectorModal
-            isOpen={isPlaylistModalOpen}
-            onClose={() => {
-              setIsPlaylistModalOpen(false);
-              setSelectedBookmarkId(null);
-            }}
-            bookmarkId={selectedBookmarkId}
-            articleUrl={selectedArticle?.article_url || ""}
-            articleTitle={selectedArticle?.article_title || ""}
-          />
-        );
-      })()}
+      {selectedBookmarkId &&
+        (() => {
+          const selectedArticle = articles.find(
+            (a) => a.id === selectedBookmarkId
+          );
+          return (
+            <PlaylistSelectorModal
+              isOpen={isPlaylistModalOpen}
+              onClose={() => {
+                setIsPlaylistModalOpen(false);
+                setSelectedBookmarkId(null);
+              }}
+              bookmarkId={selectedBookmarkId}
+              articleTitle={selectedArticle?.article_title || ""}
+            />
+          );
+        })()}
     </div>
   );
 }

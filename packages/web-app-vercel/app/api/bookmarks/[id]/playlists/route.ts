@@ -6,13 +6,13 @@ import type { Playlist } from '@/types/playlist'
 // GET: ブックマークが含まれるプレイリスト一覧取得
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { userEmail, response } = await requireAuth()
         if (response) return response
 
-        const { id: bookmarkId } = params
+        const { id: bookmarkId } = await params
 
         // ブックマークの所有者確認
         const { data: bookmark, error: bookmarkError } = await supabase
@@ -50,7 +50,7 @@ export async function GET(
 
         // playlist_itemsを削除してクリーンアップ
         const cleanedPlaylists = playlists?.map((p) => {
-            const { playlist_items: _, ...rest } = p
+            const { playlist_items, ...rest } = p
             return rest as Playlist
         }) || []
 
