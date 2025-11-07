@@ -27,7 +27,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function usePlayback({ chunks, articleUrl, voice, speed, voiceModel, playbackSpeed, onChunkChange }: UsePlaybackProps) {
+export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onChunkChange }: UsePlaybackProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState<number>(-1);
   const [isLoading, setIsLoading] = useState(false);
