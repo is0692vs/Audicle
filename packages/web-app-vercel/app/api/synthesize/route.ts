@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
 
         // リクエストボディをパース
         const body = await request.json();
-        const { text, voice, speed } = body as SynthesizeRequest & { speed?: number };
+        const { text, voice, speed, voice_model, playback_speed } = body as SynthesizeRequest & { speed?: number };
 
         if (!text || typeof text !== 'string') {
             return NextResponse.json(
@@ -185,8 +185,8 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const voiceToUse = voice || 'ja-JP-Neural2-B';
-        const speakingRate = speed || 1.0;
+        const voiceToUse = voice_model || voice || 'ja-JP-Standard-B';
+        const speakingRate = playback_speed || speed || 1.0;
 
         // テキストを分割
         const textChunks = splitText(text);

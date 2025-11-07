@@ -9,6 +9,7 @@ import { usePlayback } from "@/hooks/usePlayback";
 import { articleStorage } from "@/lib/storage";
 import { logger } from "@/lib/logger";
 import { parseHTMLToParagraphs } from "@/lib/paragraphParser";
+import { UserSettings, DEFAULT_SETTINGS } from "@/types/settings";
 
 function convertParagraphsToChunks(htmlContent: string): Chunk[] {
   // HTML構造を保持して段落を抽出
@@ -33,6 +34,7 @@ export default function ReaderPageClient() {
   const [chunks, setChunks] = useState<Chunk[]>([]);
   const [title, setTitle] = useState("");
   const [error, setError] = useState("");
+  const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
 
   // 再生制御フック
   const {
@@ -49,8 +51,28 @@ export default function ReaderPageClient() {
   } = usePlayback({
     chunks,
     articleUrl: url,
-    voice: undefined, // 将来的に設定可能に
+    voice: undefined,
+    voiceModel: settings.voice_model,
+    playbackSpeed: settings.playback_speed,
   });
+
+  // ユーザー設定を読み込む
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const response = await fetch('/api/settings/get');
+        if (response.ok) {
+          const data = await response.json();
+          setSettings(data);
+        }
+      } catch (err) {
+        logger.error("設定の読み込みに失敗", err);
+        setSettings(DEFAULT_SETTINGS);
+      }
+    };
+
+    loadSettings();
+  }, []);
 
   // 記事IDが指定されている場合は読み込み
   useEffect(() => {
@@ -207,8 +229,8 @@ export default function ReaderPageClient() {
           chunks={chunks}
           currentChunkId={currentChunkId}
           articleUrl={url}
-          voice={undefined} // 将来的に設定可能に
-          speed={playbackRate}
+          voice={undefined}
+          speed={settings.playback_speed}
           onChunkClick={seekToChunk}
         />
       </main>

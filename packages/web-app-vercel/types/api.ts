@@ -15,6 +15,8 @@ export interface ExtractResponse {
 export interface SynthesizeRequest {
   text: string;
   voice?: string;
+  voice_model?: string;      // オプショナル（未指定時はDB設定使用）
+  playback_speed?: number;   // オプショナル（未指定時はDB設定使用）
 }
 
 export interface SynthesizeResponse {

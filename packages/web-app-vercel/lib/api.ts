@@ -42,7 +42,9 @@ export async function extractContent(url: string): Promise<ExtractResponse> {
 export async function synthesizeSpeech(
   text: string,
   voice?: string,
-  speed?: number
+  speed?: number,
+  voiceModel?: string,
+  playbackSpeed?: number
 ): Promise<Blob> {
   const request: SynthesizeRequest & { speed?: number } = { text };
   if (voice) {
@@ -51,11 +53,19 @@ export async function synthesizeSpeech(
   if (speed) {
     request.speed = speed;
   }
+  if (voiceModel) {
+    request.voice_model = voiceModel;
+  }
+  if (playbackSpeed) {
+    request.playback_speed = playbackSpeed;
+  }
 
   logger.apiRequest("POST", "/api/synthesize", {
     text: text.substring(0, 50) + "...",
     voice,
     speed,
+    voiceModel,
+    playbackSpeed,
   });
 
   const response = await fetch("/api/synthesize", {
