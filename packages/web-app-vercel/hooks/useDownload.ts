@@ -68,7 +68,7 @@ export function useDownload({ articleUrl, chunks, voiceModel, speed, onSlowConne
 
             throw new Error(`チャンク ${index + 1} のダウンロードに失敗しました: ${err}`);
         }
-    }, [articleUrl, voiceModel]);
+    }, [articleUrl, voiceModel, chunks]);
 
     /**
      * バッチでチャンクをダウンロード
