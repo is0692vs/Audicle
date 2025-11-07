@@ -2,6 +2,48 @@ import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { requireAuth } from '@/lib/api-auth'
 
+// GET: ブックマーク取得
+export async function GET(
+    request: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { userEmail, response } = await requireAuth()
+        if (response) return response
+
+        const { id } = await params
+
+        const { data, error } = await supabase
+            .from('bookmarks')
+            .select('*')
+            .eq('id', id)
+            .eq('owner_email', userEmail)
+            .single()
+
+        if (error) {
+            if (error.code === 'PGRST116') { // 0 rows found
+                return NextResponse.json(
+                    { error: 'Bookmark not found or permission denied' },
+                    { status: 404 }
+                )
+            }
+            console.error('Supabase error:', error)
+            return NextResponse.json(
+                { error: 'Failed to fetch bookmark' },
+                { status: 500 }
+            )
+        }
+
+        return NextResponse.json(data)
+    } catch (error) {
+        console.error('Error in GET /api/bookmarks/[id]:', error)
+        return NextResponse.json(
+            { error: 'Internal server error' },
+            { status: 500 }
+        )
+    }
+}
+
 // DELETE: ブックマーク削除
 export async function DELETE(
     request: Request,

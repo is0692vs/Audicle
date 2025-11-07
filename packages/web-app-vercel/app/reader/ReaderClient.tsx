@@ -36,6 +36,7 @@ export default function ReaderPageClient() {
   const [title, setTitle] = useState("");
   const [error, setError] = useState("");
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
+  const [restoredPosition, setRestoredPosition] = useState<number>(-1); // 復元済みの読書位置
 
   // 再生制御フック
   const {
@@ -43,6 +44,7 @@ export default function ReaderPageClient() {
     isLoading: isPlaybackLoading,
     error: playbackError,
     currentChunkId,
+    currentIndex,
     play,
     pause,
     stop,
@@ -154,7 +156,7 @@ export default function ReaderPageClient() {
     loadSettings();
   }, []);
 
-  // 記事IDが指定されている場合は読み込み
+  // 記事IDが指定されている場合は読み込み（位置復元付き）
   useEffect(() => {
     if (articleId) {
       const article = articleStorage.getById(articleId);
@@ -163,12 +165,50 @@ export default function ReaderPageClient() {
         setTitle(article.title);
         setChunks(article.chunks);
         setUrl(article.url);
+
+        // Supabaseから最後の読書位置を取得
+        fetch(`/api/bookmarks/${articleId}`)
+          .then((res) => {
+            if (res.ok) return res.json();
+            throw new Error(`Failed to fetch bookmark: ${res.status}`);
+          })
+          .then((bookmark) => {
+            if (
+              bookmark?.last_read_position !== undefined &&
+              bookmark.last_read_position >= 0 &&
+              article.chunks[bookmark.last_read_position]
+            ) {
+              logger.info("読書位置を復元", {
+                position: bookmark.last_read_position,
+              });
+              setRestoredPosition(bookmark.last_read_position);
+            }
+          })
+          .catch((err) => {
+            logger.error("読書位置の取得に失敗", err);
+          });
       } else {
         logger.warn("記事が見つかりません", { id: articleId });
         setError("記事が見つかりませんでした");
       }
     }
   }, [articleId]);
+
+  // ページアンマウント/ナビゲーション時に読書位置を保存
+  useEffect(() => {
+    return () => {
+      if (articleId && currentIndex >= 0) {
+        // 非同期で位置を保存（クリーンアップハンドラなので戻り値なし）
+        fetch(`/api/bookmarks/${articleId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ last_read_position: currentIndex }),
+        }).catch((err) => {
+          logger.error("読書位置の保存に失敗", err);
+        });
+      }
+    };
+  }, [articleId, currentIndex]);
 
   // URLクエリパラメータが指定されている場合は記事を自動取得
   useEffect(() => {
@@ -196,6 +236,18 @@ export default function ReaderPageClient() {
     e.preventDefault();
     loadAndSaveArticle(url);
   };
+
+  // 再生ボタンのハンドラー：復元位置から再生開始
+  const handlePlay = useCallback(() => {
+    if (restoredPosition >= 0 && currentIndex < 0) {
+      // 初回再生で復元位置がある場合は、その位置から再生
+      seekToChunk(chunks[restoredPosition].id);
+      setRestoredPosition(-1); // 復元済みにする
+    } else {
+      // 通常の再生
+      play();
+    }
+  }, [restoredPosition, currentIndex, chunks, seekToChunk, play]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -250,7 +302,7 @@ export default function ReaderPageClient() {
             <div className="mt-4 flex items-center gap-4">
               <div className="flex gap-2">
                 <button
-                  onClick={isPlaying ? pause : play}
+                  onClick={isPlaying ? pause : handlePlay}
                   disabled={isPlaybackLoading}
                   className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                 >
