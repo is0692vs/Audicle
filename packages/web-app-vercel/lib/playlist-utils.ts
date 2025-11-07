@@ -63,32 +63,14 @@ export async function getOrCreateDefaultPlaylist(userEmail: string): Promise<Def
             return { error: 'Failed to create default playlist' }
         }
 
-        // 新しく作成したプレイリストの詳細情報を取得
-        const { data: fullPlaylist, error: fetchError } = await supabase
-            .from('playlists')
-            .select(`
-        *,
-        playlist_items(
-          id,
-          playlist_id,
-          bookmark_id,
-          position,
-          added_at,
-          bookmark:bookmarks(*)
-        )
-      `)
-            .eq('id', newPlaylist.id)
-            .order('position', { foreignTable: 'playlist_items', ascending: true })
-            .single()
-
-        if (fetchError) {
-            console.error('Supabase error (fetch new playlist):', fetchError)
-            return { error: 'Failed to fetch created playlist' }
+        // 新規作成されたプレイリストにはアイテムがないため、再フェッチせずに手動でオブジェクトを構築します。
+        return {
+            playlist: {
+                ...newPlaylist,
+                items: [],
+                item_count: 0,
+            },
         }
-
-        // playlist_itemsをitemsにリネーム
-        const { playlist_items: items = [], ...playlistData } = fullPlaylist
-        return { playlist: { ...playlistData, items, item_count: items.length } }
     }
 
     console.error('Supabase error (playlist):', playlistError)
