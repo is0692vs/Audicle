@@ -46,7 +46,7 @@
 ### インデックス
 
 - idx_playlists_owner
-- idx_playlists_default
+- idx_playlists_default_per_user
 - idx_bookmarks_owner
 - idx_playlist_items_playlist
 
