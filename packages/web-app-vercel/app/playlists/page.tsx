@@ -145,7 +145,7 @@ export default function PlaylistsPage() {
       <Sidebar />
 
       <main className="lg:ml-64 flex flex-col">
-        <div className="flex-1 overflow-y-auto bg-gradient-to-b from-zinc-900 to-black">
+        <div className="flex-1 overflow-y-auto bg-linear-to-b from-zinc-900 to-black">
           <div className="p-4 sm:p-6 lg:p-8">
             {confirmDialog}
 
@@ -247,7 +247,7 @@ export default function PlaylistsPage() {
                     onClick={() => router.push(`/playlists/${playlist.id}`)}
                   >
                     <CardContent className="p-4 lg:p-6">
-                      <div className="aspect-square bg-gradient-to-br from-violet-600 to-purple-600 rounded-lg mb-4 flex items-center justify-center group-hover:scale-105 transition-transform">
+                      <div className="aspect-square bg-linear-to-br from-violet-600 to-purple-600 rounded-lg mb-4 flex items-center justify-center group-hover:scale-105 transition-transform">
                         <List className="size-12 lg:size-16 text-white" />
                       </div>
                       <div className="flex items-center gap-2 mb-1">
