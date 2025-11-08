@@ -127,14 +127,14 @@ export default function Home() {
           <div className="p-4 sm:p-6 lg:p-8">
             {confirmDialog}
 
-            {selectedArticle && (
+            {selectedArticle && selectedBookmarkId && (
               <PlaylistSelectorModal
                 isOpen={isPlaylistModalOpen}
                 onClose={() => {
                   setIsPlaylistModalOpen(false);
                   setSelectedBookmarkId(null);
                 }}
-                bookmarkId={selectedBookmarkId!}
+                bookmarkId={selectedBookmarkId}
                 articleTitle={selectedArticle.article_title}
               />
             )}
