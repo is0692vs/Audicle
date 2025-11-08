@@ -14,7 +14,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Menu, X, Home as HomeIcon, List, Settings, Trash2 } from "lucide-react";
+import {
+  Plus,
+  Menu,
+  X,
+  Home as HomeIcon,
+  List,
+  Settings,
+  Trash2,
+} from "lucide-react";
 import type { Bookmark, PlaylistWithItems } from "@/types/playlist";
 
 type ArticleSortBy = "newest" | "oldest" | "title";
