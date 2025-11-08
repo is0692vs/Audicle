@@ -48,8 +48,6 @@ export default function ReaderView({
     return `${fixed}x`;
   }, [speed]);
 
-  const totalSections = chunks.length;
-
   // ダウンロード機能
   const {
     status: downloadStatus,
@@ -198,7 +196,7 @@ export default function ReaderView({
           </div>
         ) : (
           <>
-            <header className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
+            <header className="rounded-lg border border-zinc-800 bg-zinc-900 p-4 sm:p-6">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
@@ -221,23 +219,9 @@ export default function ReaderView({
                     </a>
                   )}
                 </div>
-                <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-zinc-400">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-zinc-800 px-3 py-1">
-                    🗣️{" "}
-                    <span className="truncate">
-                      {voiceModel ?? "デフォルト音声"}
-                    </span>
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-zinc-800 px-3 py-1">
-                    🎧 {formattedSpeed}
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-zinc-800 px-3 py-1">
-                    📑 {totalSections} セクション
-                  </span>
-                </div>
               </div>
 
-              <div className="mt-5 flex flex-wrap items-center gap-3">
+              <div className="mt-4 sm:mt-5 flex flex-wrap items-center gap-3">
                 {downloadStatus === "completed" ? (
                   <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-4 py-2 text-sm font-semibold text-emerald-400">
                     <span aria-hidden>✅</span>

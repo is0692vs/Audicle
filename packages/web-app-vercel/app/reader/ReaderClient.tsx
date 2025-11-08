@@ -253,19 +253,26 @@ export default function ReaderPageClient() {
 
           {/* 再生コントロール */}
           {chunks.length > 0 && (
-            <div className="mt-4 flex items-center gap-4">
-              <div className="flex gap-2">
+            <div className="mt-4 flex flex-col gap-3">
+              <div className="flex items-center gap-2 flex-wrap">
                 <button
                   onClick={isPlaying ? pause : play}
                   disabled={isPlaybackLoading}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 min-w-[44px]"
+                  title={
+                    isPlaybackLoading
+                      ? "処理中..."
+                      : isPlaying
+                      ? "一時停止"
+                      : "再生"
+                  }
                 >
                   {isPlaying ? (
-                    <Pause className="size-4" />
+                    <Pause className="size-5" />
                   ) : (
-                    <Play className="size-4" />
+                    <Play className="size-5" />
                   )}
-                  <span>
+                  <span className="hidden sm:inline">
                     {isPlaybackLoading
                       ? "処理中..."
                       : isPlaying
@@ -276,38 +283,41 @@ export default function ReaderPageClient() {
                 <button
                   onClick={stop}
                   disabled={!isPlaying && !isPlaybackLoading}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 min-w-[44px]"
+                  title="停止"
                 >
-                  <Square className="size-4" />
-                  <span>停止</span>
+                  <Square className="size-5" />
+                  <span className="hidden sm:inline">停止</span>
                 </button>
-              </div>
-              <div className="flex items-center gap-2">
-                <label
-                  htmlFor="playback-rate"
-                  className="text-sm text-gray-600 dark:text-gray-400"
-                >
-                  再生速度:
-                </label>
-                <input
-                  id="playback-rate"
-                  type="range"
-                  min="0.8"
-                  max="3.0"
-                  step="0.1"
-                  value={playbackRate}
-                  onChange={(e) => setPlaybackRate(parseFloat(e.target.value))}
-                  className="w-32"
-                />
-                <span className="text-sm text-gray-600 dark:text-gray-400 w-12">
-                  {playbackRate.toFixed(1)}x
-                </span>
+                <div className="flex items-center gap-2 ml-auto">
+                  <label
+                    htmlFor="playback-rate"
+                    className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap"
+                  >
+                    速度:
+                  </label>
+                  <input
+                    id="playback-rate"
+                    type="range"
+                    min="0.8"
+                    max="3.0"
+                    step="0.1"
+                    value={playbackRate}
+                    onChange={(e) =>
+                      setPlaybackRate(parseFloat(e.target.value))
+                    }
+                    className="w-24 sm:w-32"
+                  />
+                  <span className="text-sm text-gray-600 dark:text-gray-400 w-12">
+                    {playbackRate.toFixed(1)}x
+                  </span>
+                </div>
               </div>
               {/* プレイリスト追加ボタン */}
               {bookmarkId && (
                 <button
                   onClick={() => setIsPlaylistModalOpen(true)}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors ml-auto"
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
                   title="プレイリストに追加"
                 >
                   📋 プレイリストに追加
