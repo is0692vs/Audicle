@@ -16,6 +16,8 @@ export interface Bookmark {
     owner_email: string;
     article_url: string;
     article_title: string;
+    description?: string;
+    source?: string;
     thumbnail_url?: string;
     last_read_position?: number;
     created_at: string;

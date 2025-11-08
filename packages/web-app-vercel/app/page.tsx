@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Menu, X, Home, List, Settings, Trash2 } from "lucide-react";
+import { Plus, Menu, X, Home as HomeIcon, List, Settings, Trash2 } from "lucide-react";
 import type { Bookmark, PlaylistWithItems } from "@/types/playlist";
 
 type ArticleSortBy = "newest" | "oldest" | "title";
@@ -148,7 +148,7 @@ export default function Home() {
             }}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-zinc-800 text-white"
           >
-            <Home className="h-5 w-5" />
+            <HomeIcon className="h-5 w-5" />
             <span className="font-medium">ホーム</span>
           </button>
 
@@ -248,7 +248,7 @@ export default function Home() {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <h3 className="text-lg lg:text-xl font-semibold text-white mb-2 line-clamp-2">
-                          {article.title}
+                          {article.article_title}
                         </h3>
                         <p className="text-sm text-zinc-400 mb-3 line-clamp-3">
                           {article.description}
