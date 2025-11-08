@@ -122,7 +122,19 @@ export default function PlaylistsPage() {
 
       {/* Page Header */}
       <div className="mb-6 lg:mb-8">
-        <h2 className="text-2xl lg:text-3xl font-bold mb-2">プレイリスト</h2>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push("/")}
+              className="text-zinc-400 hover:text-white"
+            >
+              ← 戻る
+            </Button>
+            <h2 className="text-2xl lg:text-3xl font-bold">プレイリスト</h2>
+          </div>
+        </div>
         <p className="text-sm lg:text-base text-zinc-400">
           記事をプレイリストで整理
         </p>

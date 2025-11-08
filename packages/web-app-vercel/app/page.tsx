@@ -102,12 +102,21 @@ export default function Home() {
       <div className="mb-6 lg:mb-8">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-2xl lg:text-3xl font-bold">記事一覧</h2>
-          <button
-            onClick={() => handleSignOut()}
-            className="px-3 py-1.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-950/30 rounded transition-colors"
-          >
-            ログアウト
-          </button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => router.push("/reader")}
+              className="bg-violet-600 hover:bg-violet-700 text-white"
+            >
+              <Plus className="size-4 mr-2" />
+              新しい記事を読む
+            </Button>
+            <button
+              onClick={() => handleSignOut()}
+              className="px-3 py-1.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-950/30 rounded transition-colors"
+            >
+              ログアウト
+            </button>
+          </div>
         </div>
         <p className="text-sm lg:text-base text-zinc-400">
           読み込んだ記事の一覧です
