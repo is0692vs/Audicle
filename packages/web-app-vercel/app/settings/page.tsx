@@ -1,13 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import StorageManager from "@/components/StorageManager";
 import UserSettingsPanel from "@/components/UserSettingsPanel";
 import Sidebar from "@/components/Sidebar";
 
 export default function SettingsPage() {
-  const router = useRouter();
-
   return (
     <div className="h-screen bg-black text-white overflow-hidden">
       <Sidebar />

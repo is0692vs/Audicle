@@ -138,7 +138,7 @@ export default function Home() {
                   setIsPlaylistModalOpen(false);
                   setSelectedBookmarkId(null);
                 }}
-                bookmarkId={selectedBookmarkId}
+                bookmarkId={selectedBookmarkId!}
                 articleTitle={selectedArticle.article_title}
               />
             )}
