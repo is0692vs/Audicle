@@ -17,6 +17,7 @@ export default function PlaylistDetailPage() {
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const { showConfirm, confirmDialog } = useConfirmDialog();
   const sortedItems = useMemo(() => {
     if (!playlist?.items) return [];
     return [...playlist.items].sort(
