@@ -4,7 +4,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
-
+import { extractDomain } from "@/lib/utils";
 import type { Bookmark } from "@/types/playlist";
 
 interface ArticleCardProps {
@@ -12,15 +12,7 @@ interface ArticleCardProps {
   onArticleClick: (article: Bookmark) => void;
   onPlaylistAdd: (articleId: string) => void;
   onDelete: (articleId: string) => void;
-}
-
-function extractDomain(url: string): string {
-  try {
-    const urlObj = new URL(url);
-    return urlObj.hostname;
-  } catch {
-    return url;
-  }
+  addedAt?: string;
 }
 
 export function ArticleCard({
@@ -28,6 +20,7 @@ export function ArticleCard({
   onArticleClick,
   onPlaylistAdd,
   onDelete,
+  addedAt,
 }: ArticleCardProps) {
   return (
     <Card
@@ -45,9 +38,12 @@ export function ArticleCard({
             </p>
             <div className="flex items-center gap-4 text-xs text-zinc-500">
               <span>
-                {new Date(article.created_at).toLocaleDateString("ja-JP", {
-                  timeZone: "UTC",
-                })}
+                {new Date(addedAt || article.created_at).toLocaleDateString(
+                  "ja-JP",
+                  {
+                    timeZone: "UTC",
+                  }
+                )}
               </span>
             </div>
           </div>

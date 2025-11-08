@@ -228,10 +228,8 @@ export default function PlaylistDetailPage() {
             {sortedItems.map((item) => (
               <ArticleCard
                 key={item.id}
-                article={{
-                  ...item.bookmark,
-                  created_at: item.added_at,
-                }}
+                article={item.bookmark}
+                addedAt={item.added_at}
                 onArticleClick={(article) =>
                   router.push(
                     `/reader?url=${encodeURIComponent(article.article_url)}`
