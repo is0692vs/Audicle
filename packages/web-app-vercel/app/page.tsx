@@ -118,10 +118,6 @@ export default function Home() {
     router.push(`/reader?url=${encodeURIComponent(article.article_url)}`);
   };
 
-  const handleDeleteArticle = async (id: string) => {
-    await handleDelete(id);
-  };
-
   return (
     <div className="h-screen bg-black text-white overflow-hidden">
       <Sidebar />
@@ -242,7 +238,7 @@ export default function Home() {
                             variant="ghost"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleDeleteArticle(article.id);
+                              handleDelete(article.id);
                             }}
                             className="text-red-400 hover:text-red-300 hover:bg-red-950/30"
                           >

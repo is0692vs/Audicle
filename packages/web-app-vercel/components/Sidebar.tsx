@@ -6,11 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Home, List, Settings, Plus } from "lucide-react";
 
-interface SidebarProps {
-  onClose?: () => void;
-}
-
-export default function Sidebar({ onClose }: SidebarProps) {
+export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -22,7 +18,6 @@ export default function Sidebar({ onClose }: SidebarProps) {
   ];
 
   const handleLinkClick = () => {
-    if (onClose) onClose();
     setSidebarOpen(false);
   };
 
