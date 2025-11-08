@@ -192,7 +192,7 @@ export default function PlaylistsPage() {
               onClick={() => router.push(`/playlists/${playlist.id}`)}
             >
               <CardContent className="p-4 lg:p-6">
-                <div className="aspect-square bg-linear-to-br from-violet-600 to-purple-600 rounded-lg mb-4 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="aspect-square bg-gradient-to-br from-violet-600 to-purple-600 rounded-lg mb-4 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <List className="size-12 lg:size-16 text-white" />
                 </div>
                 <div className="flex items-center gap-2 mb-1">
