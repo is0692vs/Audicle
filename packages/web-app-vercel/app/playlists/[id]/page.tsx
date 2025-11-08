@@ -131,8 +131,8 @@ export default function PlaylistDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
-        <p className="text-gray-500 dark:text-gray-400">読み込み中...</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-zinc-400">読み込み中...</p>
       </div>
     );
   }
@@ -142,93 +142,90 @@ export default function PlaylistDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen p-4 sm:p-6 lg:p-8">
       {confirmDialog}
+      
       {/* ヘッダー */}
-      <header className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-        <div className="max-w-4xl mx-auto p-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push("/playlists")}
-                className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-              >
-                ← プレイリスト一覧
-              </button>
-            </div>
-            {!playlist.is_default && !isEditing && (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
-              >
-                編集
-              </button>
-            )}
-          </div>
-
-          {isEditing ? (
-            <div className="space-y-3">
-              <input
-                type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-foreground"
-                required
-              />
-              <textarea
-                value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-foreground"
-                rows={3}
-                placeholder="説明（省略可）"
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
-                >
-                  {isSaving ? "保存中..." : "保存"}
-                </button>
-                <button
-                  onClick={() => {
-                    setIsEditing(false);
-                    setEditName(playlist.name);
-                    setEditDescription(playlist.description || "");
-                  }}
-                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  キャンセル
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="flex items-center gap-2 mb-2">
-                <h1 className="text-2xl font-bold">{playlist.name}</h1>
-                {playlist.is_default && (
-                  <span className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
-                    デフォルト
-                  </span>
-                )}
-              </div>
-              {playlist.description && (
-                <p className="text-gray-600 dark:text-gray-400">
-                  {playlist.description}
-                </p>
-              )}
-              <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-                {playlist.item_count || 0} 件の記事
-              </p>
-            </>
+      <div className="max-w-4xl mx-auto mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={() => router.push("/playlists")}
+            className="text-zinc-400 hover:text-violet-400 transition-colors"
+          >
+            ← プレイリスト一覧
+          </button>
+          {!playlist.is_default && !isEditing && (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="px-4 py-2 text-sm text-zinc-400 hover:bg-zinc-800 rounded transition-colors"
+            >
+              編集
+            </button>
           )}
         </div>
-      </header>
+
+        {isEditing ? (
+          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 space-y-3">
+            <input
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              className="w-full px-4 py-2 border border-zinc-700 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-violet-600 focus:border-transparent"
+              required
+            />
+            <textarea
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              className="w-full px-4 py-2 border border-zinc-700 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-violet-600 focus:border-transparent"
+              rows={3}
+              placeholder="説明（省略可）"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:bg-zinc-700 transition-colors"
+              >
+                {isSaving ? "保存中..." : "保存"}
+              </button>
+              <button
+                onClick={() => {
+                  setIsEditing(false);
+                  setEditName(playlist.name);
+                  setEditDescription(playlist.description || "");
+                }}
+                className="px-4 py-2 text-zinc-400 hover:bg-zinc-800 rounded-lg transition-colors"
+              >
+                キャンセル
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
+            <div className="flex items-center gap-2 mb-2">
+              <h1 className="text-2xl font-bold">{playlist.name}</h1>
+              {playlist.is_default && (
+                <span className="px-2 py-1 text-xs bg-violet-900 text-violet-300 rounded">
+                  デフォルト
+                </span>
+              )}
+            </div>
+            {playlist.description && (
+              <p className="text-zinc-400">
+                {playlist.description}
+              </p>
+            )}
+            <p className="text-sm text-zinc-500 mt-2">
+              {playlist.item_count || 0} 件の記事
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* メインコンテンツ */}
-      <main className="max-w-4xl mx-auto p-4">
+      <main className="max-w-4xl mx-auto">
         {!playlist.items || playlist.items.length === 0 ? (
-          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+          <div className="text-center py-12 text-zinc-400">
             <p>まだ記事がありません</p>
           </div>
         ) : (
@@ -236,7 +233,7 @@ export default function PlaylistDetailPage() {
             {playlist.items.map((item) => (
               <div
                 key={item.id}
-                className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4 hover:shadow-md transition-shadow"
+                className="group bg-zinc-900 border border-zinc-800 rounded-lg p-4 hover:border-violet-500/30 transition-all"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div
@@ -249,13 +246,13 @@ export default function PlaylistDetailPage() {
                       )
                     }
                   >
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                    <h3 className="text-lg font-semibold group-hover:text-violet-400 transition-colors">
                       {item.bookmark.article_title}
                     </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    <p className="text-sm text-zinc-500 mt-1">
                       {item.bookmark.article_url}
                     </p>
-                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-400 dark:text-gray-500">
+                    <div className="flex items-center gap-4 mt-2 text-xs text-zinc-500">
                       <span>{formatDate(item.added_at)}</span>
                       {item.bookmark.last_read_position !== undefined &&
                         item.bookmark.last_read_position > 0 && (
@@ -272,7 +269,7 @@ export default function PlaylistDetailPage() {
                         item.bookmark.article_title
                       )
                     }
-                    className="px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 rounded transition-colors"
+                    className="px-3 py-1 text-sm text-red-400 hover:bg-red-950 rounded transition-colors"
                     title="削除"
                   >
                     削除
