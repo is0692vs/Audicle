@@ -11,6 +11,7 @@ import { articleStorage } from "@/lib/storage";
 import { logger } from "@/lib/logger";
 import { parseHTMLToParagraphs } from "@/lib/paragraphParser";
 import { UserSettings, DEFAULT_SETTINGS } from "@/types/settings";
+import { Play, Pause, Square } from "lucide-react";
 
 function convertParagraphsToChunks(htmlContent: string): Chunk[] {
   // HTML構造を保持して段落を抽出
@@ -257,20 +258,28 @@ export default function ReaderPageClient() {
                 <button
                   onClick={isPlaying ? pause : play}
                   disabled={isPlaybackLoading}
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                 >
-                  {isPlaybackLoading
-                    ? "処理中..."
-                    : isPlaying
-                    ? "一時停止"
-                    : "再生"}
+                  {isPlaying ? (
+                    <Pause className="size-4" />
+                  ) : (
+                    <Play className="size-4" />
+                  )}
+                  <span>
+                    {isPlaybackLoading
+                      ? "処理中..."
+                      : isPlaying
+                      ? "一時停止"
+                      : "再生"}
+                  </span>
                 </button>
                 <button
                   onClick={stop}
                   disabled={!isPlaying && !isPlaybackLoading}
-                  className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                 >
-                  停止
+                  <Square className="size-4" />
+                  <span>停止</span>
                 </button>
               </div>
               <div className="flex items-center gap-2">

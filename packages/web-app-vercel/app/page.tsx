@@ -119,7 +119,7 @@ export default function Home() {
   };
 
   return (
-    <div className="h-screen bg-black text-white overflow-hidden">
+    <div className="h-screen bg-black text-white overflow-auto">
       <Sidebar />
 
       <main className="lg:ml-64 flex flex-col">
@@ -203,7 +203,7 @@ export default function Home() {
                     onClick={() => handleArticleClick(article)}
                   >
                     <CardContent className="p-4 sm:p-6">
-                      <div className="flex items-start justify-between gap-4">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                         <div className="flex-1 min-w-0">
                           <h3 className="text-lg lg:text-xl font-semibold text-white mb-2 line-clamp-2">
                             {article.article_title}
