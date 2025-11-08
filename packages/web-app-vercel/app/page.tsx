@@ -15,7 +15,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Clock, BookOpen, ExternalLink, Plus, Menu, X, Home, List, Settings } from "lucide-react";
+import {
+  Clock,
+  BookOpen,
+  ExternalLink,
+  Plus,
+  Menu,
+  X,
+  Home,
+  List,
+  Settings,
+} from "lucide-react";
 import type { Bookmark, PlaylistWithItems } from "@/types/playlist";
 
 type ArticleSortBy = "newest" | "oldest" | "title";
@@ -126,7 +136,10 @@ export default function Home() {
   return (
     <div className="h-screen flex bg-black text-white overflow-hidden">
       {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/80 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div
+          className="fixed inset-0 bg-black/80 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
       )}
 
       <aside
@@ -141,7 +154,12 @@ export default function Home() {
             </h1>
             <p className="text-xs text-zinc-400 mt-1">Web記事読み上げアプリ</p>
           </div>
-          <Button size="icon" variant="ghost" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          >
             <X className="h-5 w-5" />
           </Button>
         </div>
@@ -182,7 +200,10 @@ export default function Home() {
         </nav>
 
         <div className="p-4 border-t border-zinc-800">
-          <Button className="w-full bg-violet-600 hover:bg-violet-700 text-white" onClick={() => router.push("/reader")}>
+          <Button
+            className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+            onClick={() => router.push("/reader")}
+          >
             <Plus className="h-4 w-4 mr-2" />
             新しい記事を読む
           </Button>
@@ -191,7 +212,11 @@ export default function Home() {
 
       <main className="flex-1 flex flex-col overflow-hidden">
         <div className="lg:hidden flex items-center justify-between p-4 border-b border-zinc-800 bg-black">
-          <Button size="icon" variant="ghost" onClick={() => setSidebarOpen(true)}>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setSidebarOpen(true)}
+          >
             <Menu className="h-5 w-5" />
           </Button>
           <h2 className="text-lg font-bold">Audicle</h2>
@@ -255,7 +280,11 @@ export default function Home() {
                         <div className="flex items-center gap-4 text-xs text-zinc-500">
                           <span>{article.source}</span>
                           <span>•</span>
-                          <span>{new Date(article.created_at).toLocaleDateString("ja-JP")}</span>
+                          <span>
+                            {new Date(article.created_at).toLocaleDateString(
+                              "ja-JP"
+                            )}
+                          </span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -280,7 +309,9 @@ export default function Home() {
             {sortedArticles.length === 0 && (
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">📚</div>
-                <h3 className="text-xl font-semibold text-white mb-2">記事がありません</h3>
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  記事がありません
+                </h3>
                 <p className="text-zinc-400 mb-6">
                   新しい記事を読み込んでみましょう
                 </p>

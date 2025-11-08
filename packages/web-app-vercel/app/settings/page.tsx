@@ -14,7 +14,10 @@ export default function SettingsPage() {
   return (
     <div className="h-screen flex bg-black text-white overflow-hidden">
       {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/80 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div
+          className="fixed inset-0 bg-black/80 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
       )}
 
       <aside
@@ -29,7 +32,12 @@ export default function SettingsPage() {
             </h1>
             <p className="text-xs text-zinc-400 mt-1">Web記事読み上げアプリ</p>
           </div>
-          <Button size="icon" variant="ghost" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          >
             <X className="h-5 w-5" />
           </Button>
         </div>
@@ -70,7 +78,10 @@ export default function SettingsPage() {
         </nav>
 
         <div className="p-4 border-t border-zinc-800">
-          <Button className="w-full bg-violet-600 hover:bg-violet-700 text-white" onClick={() => router.push("/reader")}>
+          <Button
+            className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+            onClick={() => router.push("/reader")}
+          >
             <Plus className="h-4 w-4 mr-2" />
             新しい記事を読む
           </Button>
@@ -79,7 +90,11 @@ export default function SettingsPage() {
 
       <main className="flex-1 flex flex-col overflow-hidden">
         <div className="lg:hidden flex items-center justify-between p-4 border-b border-zinc-800 bg-black">
-          <Button size="icon" variant="ghost" onClick={() => setSidebarOpen(true)}>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setSidebarOpen(true)}
+          >
             <Menu className="h-5 w-5" />
           </Button>
           <h2 className="text-lg font-bold">Audicle</h2>

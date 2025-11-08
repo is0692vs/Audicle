@@ -143,7 +143,10 @@ export default function PlaylistsPage() {
   return (
     <div className="h-screen flex bg-black text-white overflow-hidden">
       {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/80 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div
+          className="fixed inset-0 bg-black/80 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
       )}
 
       <aside
@@ -158,7 +161,12 @@ export default function PlaylistsPage() {
             </h1>
             <p className="text-xs text-zinc-400 mt-1">Web記事読み上げアプリ</p>
           </div>
-          <Button size="icon" variant="ghost" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          >
             <X className="h-5 w-5" />
           </Button>
         </div>
@@ -199,7 +207,10 @@ export default function PlaylistsPage() {
         </nav>
 
         <div className="p-4 border-t border-zinc-800">
-          <Button className="w-full bg-violet-600 hover:bg-violet-700 text-white" onClick={() => router.push("/reader")}>
+          <Button
+            className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+            onClick={() => router.push("/reader")}
+          >
             <Plus className="h-4 w-4 mr-2" />
             新しい記事を読む
           </Button>
@@ -208,7 +219,11 @@ export default function PlaylistsPage() {
 
       <main className="flex-1 flex flex-col overflow-hidden">
         <div className="lg:hidden flex items-center justify-between p-4 border-b border-zinc-800 bg-black">
-          <Button size="icon" variant="ghost" onClick={() => setSidebarOpen(true)}>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setSidebarOpen(true)}
+          >
             <Menu className="h-5 w-5" />
           </Button>
           <h2 className="text-lg font-bold">Audicle</h2>
@@ -223,10 +238,14 @@ export default function PlaylistsPage() {
             <div className="mb-6 lg:mb-8">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-4">
-                  <h2 className="text-2xl lg:text-3xl font-bold">プレイリスト</h2>
+                  <h2 className="text-2xl lg:text-3xl font-bold">
+                    プレイリスト
+                  </h2>
                   <Select
                     value={sortBy}
-                    onValueChange={(value) => setSortBy(value as PlaylistSortBy)}
+                    onValueChange={(value) =>
+                      setSortBy(value as PlaylistSortBy)
+                    }
                   >
                     <SelectTrigger className="w-[140px]">
                       <SelectValue placeholder="ソート" />
@@ -250,7 +269,9 @@ export default function PlaylistsPage() {
               <Card className="bg-zinc-900 border-zinc-800 mb-6">
                 <CardContent className="p-4 lg:p-6">
                   <form onSubmit={handleCreatePlaylist}>
-                    <h3 className="text-lg font-bold mb-4">新しいプレイリスト</h3>
+                    <h3 className="text-lg font-bold mb-4">
+                      新しいプレイリスト
+                    </h3>
                     <div className="space-y-3">
                       <Input
                         type="text"
@@ -263,7 +284,9 @@ export default function PlaylistsPage() {
                       />
                       <textarea
                         value={newPlaylistDescription}
-                        onChange={(e) => setNewPlaylistDescription(e.target.value)}
+                        onChange={(e) =>
+                          setNewPlaylistDescription(e.target.value)
+                        }
                         placeholder="説明（省略可）"
                         className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-white placeholder:text-zinc-500 text-sm lg:text-base"
                         rows={3}
@@ -356,7 +379,9 @@ export default function PlaylistsPage() {
                 >
                   <CardContent className="p-4 lg:p-6 h-full flex flex-col items-center justify-center text-center min-h-[250px]">
                     <Plus className="size-10 lg:size-12 text-zinc-600 mb-2" />
-                    <p className="text-zinc-400 text-sm lg:text-base">新規作成</p>
+                    <p className="text-zinc-400 text-sm lg:text-base">
+                      新規作成
+                    </p>
                   </CardContent>
                 </Card>
               </div>
