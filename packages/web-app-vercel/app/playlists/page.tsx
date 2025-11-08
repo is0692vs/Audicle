@@ -145,7 +145,7 @@ export default function PlaylistsPage() {
       <Sidebar />
 
       <main className="lg:ml-64 flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto bg-linear-to-b from-zinc-900 to-black">
+        <div className="flex-1 overflow-y-auto bg-gradient-to-b from-zinc-900 to-black">
           <div className="p-4 sm:p-6 lg:p-8">
             {confirmDialog}
 
