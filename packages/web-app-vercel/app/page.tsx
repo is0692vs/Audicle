@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { logger } from "@/lib/logger";
 import { handleSignOut } from "@/app/auth/signin/actions";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
-import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,17 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Clock,
-  BookOpen,
-  ExternalLink,
-  Plus,
-  Menu,
-  X,
-  Home,
-  List,
-  Settings,
-} from "lucide-react";
+import { Plus, Menu, X, Home, List, Settings, Trash2 } from "lucide-react";
 import type { Bookmark, PlaylistWithItems } from "@/types/playlist";
 
 type ArticleSortBy = "newest" | "oldest" | "title";
@@ -33,17 +22,8 @@ type ArticleSortBy = "newest" | "oldest" | "title";
 export default function Home() {
   const router = useRouter();
   const [articles, setArticles] = useState<Bookmark[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [sortBy, setSortBy] = useState<ArticleSortBy>("newest");
-  const [selectedBookmarkId, setSelectedBookmarkId] = useState<string | null>(
-    null
-  );
-  const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const selectedArticle = useMemo(
-    () => articles.find((a) => a.id === selectedBookmarkId),
-    [articles, selectedBookmarkId]
-  );
   const sortedArticles = useMemo(() => {
     return [...articles].sort((a, b) => {
       switch (sortBy) {
@@ -81,8 +61,6 @@ export default function Home() {
         setArticles(bookmarks);
       } catch (error) {
         logger.error("記事一覧の読み込みに失敗", error);
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -123,14 +101,12 @@ export default function Home() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString("ja-JP", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  const handleArticleClick = (article: Bookmark) => {
+    router.push(`/reader?url=${encodeURIComponent(article.article_url)}`);
+  };
+
+  const handleDeleteArticle = async (id: string) => {
+    await handleDelete(id);
   };
 
   return (
