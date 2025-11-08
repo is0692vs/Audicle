@@ -64,7 +64,7 @@ export default function UserSettingsPanel() {
 
   const handleLanguageChange = (value: string) => {
     if (settings) {
-      // 言語変更 (音声モデルは独立)
+      // 言語変更 (音声モデルは独立する)
       setSettings({
         ...settings,
         language: value as Language,
