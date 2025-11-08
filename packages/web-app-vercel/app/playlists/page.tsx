@@ -141,7 +141,7 @@ export default function PlaylistsPage() {
   };
 
   return (
-    <div className="h-screen bg-black text-white flex">
+    <div className="h-screen bg-black text-white flex flex-col lg:flex-row">
       <Sidebar />
 
       <main className="flex-1 overflow-y-auto bg-gradient-to-b from-zinc-900 to-black">
