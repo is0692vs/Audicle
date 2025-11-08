@@ -91,7 +91,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
         <div className="p-4 border-t border-zinc-800">
           <Button
             className="w-full bg-violet-600 hover:bg-violet-700 text-white"
-            onClick={() => window.location.href = "/reader"}
+            onClick={() => (window.location.href = "/reader")}
           >
             <Plus className="h-4 w-4 mr-2" />
             新しい記事を読む
