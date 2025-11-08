@@ -123,7 +123,9 @@ export default function PlaylistsPage() {
       {/* Page Header */}
       <div className="mb-6 lg:mb-8">
         <h2 className="text-2xl lg:text-3xl font-bold mb-2">プレイリスト</h2>
-        <p className="text-sm lg:text-base text-zinc-400">記事をプレイリストで整理</p>
+        <p className="text-sm lg:text-base text-zinc-400">
+          記事をプレイリストで整理
+        </p>
       </div>
 
       {/* Create Form */}
@@ -203,7 +205,9 @@ export default function PlaylistsPage() {
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-zinc-400">{playlist.item_count || 0} 件の記事</p>
+                <p className="text-sm text-zinc-400">
+                  {playlist.item_count || 0} 件の記事
+                </p>
                 {playlist.description && (
                   <p className="text-xs text-zinc-500 mt-2 line-clamp-2">
                     {playlist.description}

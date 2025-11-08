@@ -12,7 +12,9 @@ export default function SettingsPage() {
       {/* Page Header */}
       <div className="mb-6 lg:mb-8">
         <h2 className="text-2xl lg:text-3xl font-bold mb-2">設定</h2>
-        <p className="text-sm lg:text-base text-zinc-400">再生設定をカスタマイズ</p>
+        <p className="text-sm lg:text-base text-zinc-400">
+          再生設定をカスタマイズ
+        </p>
       </div>
 
       {/* Content */}

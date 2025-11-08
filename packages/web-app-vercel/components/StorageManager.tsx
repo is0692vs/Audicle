@@ -118,11 +118,7 @@ export default function StorageManager() {
   };
 
   if (isLoading) {
-    return (
-      <div className="p-4 text-center text-zinc-400">
-        読み込み中...
-      </div>
-    );
+    return <div className="p-4 text-center text-zinc-400">読み込み中...</div>;
   }
 
   const usagePercentage =
@@ -147,9 +143,7 @@ export default function StorageManager() {
               {formatBytes(storageUsage.used)} /{" "}
               {formatBytes(storageUsage.available)}
             </span>
-            <span className="text-zinc-400">
-              {usagePercentage.toFixed(1)}%
-            </span>
+            <span className="text-zinc-400">{usagePercentage.toFixed(1)}%</span>
           </div>
           <div className="w-full bg-zinc-800 rounded-full h-2">
             <div

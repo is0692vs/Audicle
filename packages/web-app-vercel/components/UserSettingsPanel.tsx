@@ -128,9 +128,7 @@ export default function UserSettingsPanel() {
       <div className="space-y-6">
         {/* Playback Speed Slider */}
         <div>
-          <label className="block text-sm font-medium mb-2">
-            再生速度
-          </label>
+          <label className="block text-sm font-medium mb-2">再生速度</label>
           <div className="flex items-center gap-4">
             <input
               type="range"
@@ -154,9 +152,7 @@ export default function UserSettingsPanel() {
 
         {/* Language Dropdown */}
         <div>
-          <label className="block text-sm font-medium mb-2">
-            言語
-          </label>
+          <label className="block text-sm font-medium mb-2">言語</label>
           <select
             value={settings.language}
             onChange={(e) => handleLanguageChange(e.target.value)}
@@ -169,9 +165,7 @@ export default function UserSettingsPanel() {
 
         {/* Voice Model Dropdown */}
         <div>
-          <label className="block text-sm font-medium mb-2">
-            音声モデル
-          </label>
+          <label className="block text-sm font-medium mb-2">音声モデル</label>
           <select
             value={settings.voice_model}
             onChange={(e) => handleVoiceModelChange(e.target.value)}

@@ -147,9 +147,7 @@ export default function ReaderView({
         )}
 
         {downloadError && (
-          <p className="mt-3 text-sm text-red-400">
-            {downloadError}
-          </p>
+          <p className="mt-3 text-sm text-red-400">{downloadError}</p>
         )}
 
         {downloadStatus === "downloading" && (
@@ -286,18 +284,13 @@ export default function ReaderView({
                       6: "text-sm",
                     };
 
-                    let typography =
-                      "text-lg leading-relaxed text-zinc-300";
+                    let typography = "text-lg leading-relaxed text-zinc-300";
                     if (isHeading) {
                       const level = parseInt(chunk.type.charAt(1), 10);
                       const fontSize = headingFontSizeMap[level] ?? "text-xl";
-                      typography = cn(
-                        fontSize,
-                        "font-semibold"
-                      );
+                      typography = cn(fontSize, "font-semibold");
                     } else if (isListItem) {
-                      typography =
-                        "text-lg leading-relaxed text-zinc-300 ml-6";
+                      typography = "text-lg leading-relaxed text-zinc-300 ml-6";
                     } else if (isBlockquote) {
                       typography =
                         "text-lg leading-relaxed text-zinc-300 border-l-4 border-zinc-700 pl-4 italic";
@@ -319,9 +312,7 @@ export default function ReaderView({
                           className={cn(
                             "whitespace-pre-wrap",
                             typography,
-                            isActive && !isHeading
-                              ? "font-medium"
-                              : undefined
+                            isActive && !isHeading ? "font-medium" : undefined
                           )}
                         >
                           {chunk.text}

@@ -97,7 +97,7 @@ export default function Home() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       {confirmDialog}
-      
+
       {/* Page Header */}
       <div className="mb-6 lg:mb-8">
         <div className="flex items-center justify-between mb-2">
@@ -109,7 +109,9 @@ export default function Home() {
             ログアウト
           </button>
         </div>
-        <p className="text-sm lg:text-base text-zinc-400">読み込んだ記事の一覧です</p>
+        <p className="text-sm lg:text-base text-zinc-400">
+          読み込んだ記事の一覧です
+        </p>
       </div>
 
       {/* Content */}
@@ -146,7 +148,9 @@ export default function Home() {
                       className="cursor-pointer"
                       onClick={() =>
                         router.push(
-                          `/reader?url=${encodeURIComponent(article.article_url)}`
+                          `/reader?url=${encodeURIComponent(
+                            article.article_url
+                          )}`
                         )
                       }
                     >

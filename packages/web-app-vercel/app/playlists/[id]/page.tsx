@@ -144,7 +144,7 @@ export default function PlaylistDetailPage() {
   return (
     <div className="min-h-screen p-4 sm:p-6 lg:p-8">
       {confirmDialog}
-      
+
       {/* ヘッダー */}
       <div className="max-w-4xl mx-auto mb-6">
         <div className="flex items-center justify-between mb-4">
@@ -211,9 +211,7 @@ export default function PlaylistDetailPage() {
               )}
             </div>
             {playlist.description && (
-              <p className="text-zinc-400">
-                {playlist.description}
-              </p>
+              <p className="text-zinc-400">{playlist.description}</p>
             )}
             <p className="text-sm text-zinc-500 mt-2">
               {playlist.item_count || 0} 件の記事
