@@ -24,6 +24,7 @@ import {
   Settings,
   Trash2,
 } from "lucide-react";
+import Sidebar from "@/components/Sidebar";
 import type { Bookmark, PlaylistWithItems } from "@/types/playlist";
 
 type ArticleSortBy = "newest" | "oldest" | "title";
@@ -31,8 +32,8 @@ type ArticleSortBy = "newest" | "oldest" | "title";
 export default function Home() {
   const router = useRouter();
   const [articles, setArticles] = useState<Bookmark[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [sortBy, setSortBy] = useState<ArticleSortBy>("newest");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const sortedArticles = useMemo(() => {
     return [...articles].sort((a, b) => {
       switch (sortBy) {
@@ -56,6 +57,7 @@ export default function Home() {
   // 記事一覧を読み込み（デフォルトプレイリストから）
   useEffect(() => {
     const loadArticles = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch("/api/playlists/default");
 
@@ -70,6 +72,8 @@ export default function Home() {
         setArticles(bookmarks);
       } catch (error) {
         logger.error("記事一覧の読み込みに失敗", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -119,89 +123,10 @@ export default function Home() {
   };
 
   return (
-    <div className="h-screen flex bg-black text-white overflow-hidden">
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/80 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+    <div className="h-screen bg-black text-white overflow-hidden">
+      <Sidebar />
 
-      <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-black border-r border-zinc-800 flex flex-col transform transition-transform duration-300 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        }`}
-      >
-        <div className="p-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold bg-linear-to-r from-violet-400 to-purple-600 bg-clip-text text-transparent">
-              Audicle
-            </h1>
-            <p className="text-xs text-zinc-400 mt-1">Web記事読み上げアプリ</p>
-          </div>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-
-        <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
-          <Link
-            href="/"
-            onClick={() => setSidebarOpen(false)}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-zinc-800 text-white"
-          >
-            <HomeIcon className="h-5 w-5" />
-            <span className="font-medium">ホーム</span>
-          </Link>
-
-          <Link
-            href="/playlists"
-            onClick={() => setSidebarOpen(false)}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
-          >
-            <List className="h-5 w-5" />
-            <span className="font-medium">プレイリスト</span>
-          </Link>
-
-          <Link
-            href="/settings"
-            onClick={() => setSidebarOpen(false)}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
-          >
-            <Settings className="h-5 w-5" />
-            <span className="font-medium">設定</span>
-          </Link>
-        </nav>
-
-        <div className="p-4 border-t border-zinc-800">
-          <Button
-            className="w-full bg-violet-600 hover:bg-violet-700 text-white"
-            onClick={() => router.push("/reader")}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            新しい記事を読む
-          </Button>
-        </div>
-      </aside>
-
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <div className="lg:hidden flex items-center justify-between p-4 border-b border-zinc-800 bg-black">
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-          <h2 className="text-lg font-bold">Audicle</h2>
-          <div className="w-9" />
-        </div>
-
+      <main className="lg:ml-64 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto bg-linear-to-b from-zinc-900 to-black">
           <div className="p-4 sm:p-6 lg:p-8">
             {confirmDialog}
@@ -239,51 +164,12 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Articles Grid */}
-            <div className="grid gap-4 sm:gap-6 lg:gap-8">
-              {sortedArticles.map((article) => (
-                <Card
-                  key={article.id}
-                  className="bg-zinc-900/50 border-zinc-800 hover:bg-zinc-800/50 transition-colors cursor-pointer"
-                  onClick={() => handleArticleClick(article)}
-                >
-                  <CardContent className="p-4 sm:p-6">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg lg:text-xl font-semibold text-white mb-2 line-clamp-2">
-                          {article.article_title}
-                        </h3>
-                        <p className="text-sm text-zinc-400 mb-3 line-clamp-1">
-                          {article.article_url}
-                        </p>
-                        <div className="flex items-center gap-4 text-xs text-zinc-500">
-                          <span>
-                            {new Date(article.created_at).toLocaleDateString(
-                              "ja-JP"
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteArticle(article.id);
-                          }}
-                          className="text-red-400 hover:text-red-300 hover:bg-red-950/30"
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {sortedArticles.length === 0 && (
+            {/* Content */}
+            {isLoading ? (
+              <div className="text-center py-12 text-zinc-500">
+                <p className="text-lg">読み込み中...</p>
+              </div>
+            ) : articles.length === 0 ? (
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">📚</div>
                 <h3 className="text-xl font-semibold text-white mb-2">
@@ -299,6 +185,49 @@ export default function Home() {
                   <Plus className="size-4 mr-2" />
                   新しい記事を読む
                 </Button>
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:gap-6 lg:gap-8">
+                {sortedArticles.map((article) => (
+                  <Card
+                    key={article.id}
+                    className="bg-zinc-900/50 border-zinc-800 hover:bg-zinc-800/50 transition-colors cursor-pointer"
+                    onClick={() => handleArticleClick(article)}
+                  >
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg lg:text-xl font-semibold text-white mb-2 line-clamp-2">
+                            {article.article_title}
+                          </h3>
+                          <p className="text-sm text-zinc-400 mb-3 line-clamp-1">
+                            {article.article_url}
+                          </p>
+                          <div className="flex items-center gap-4 text-xs text-zinc-500">
+                            <span>
+                              {new Date(article.created_at).toLocaleDateString(
+                                "ja-JP"
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteArticle(article.id);
+                            }}
+                            className="text-red-400 hover:text-red-300 hover:bg-red-950/30"
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             )}
           </div>
