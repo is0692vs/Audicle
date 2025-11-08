@@ -7,6 +7,7 @@ import { useConfirmDialog } from "@/components/ConfirmDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { List, Plus } from "lucide-react";
 import type { PlaylistWithItems } from "@/types/playlist";
 
@@ -14,11 +15,29 @@ export default function PlaylistsPage() {
   const router = useRouter();
   const [playlists, setPlaylists] = useState<PlaylistWithItems[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "name" | "count">("newest");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [newPlaylistDescription, setNewPlaylistDescription] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const { showConfirm, confirmDialog } = useConfirmDialog();
+
+  const sortedPlaylists = useMemo(() => {
+    return [...playlists].sort((a, b) => {
+      switch (sortBy) {
+        case "newest":
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        case "oldest":
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case "name":
+          return a.name.localeCompare(b.name);
+        case "count":
+          return (b.item_count || 0) - (a.item_count || 0);
+        default:
+          return 0;
+      }
+    });
+  }, [playlists, sortBy]);
 
   useEffect(() => {
     loadPlaylists();
@@ -133,6 +152,17 @@ export default function PlaylistsPage() {
               ← 戻る
             </Button>
             <h2 className="text-2xl lg:text-3xl font-bold">プレイリスト</h2>
+            <Select value={sortBy} onValueChange={(value: "newest" | "oldest" | "name" | "count") => setSortBy(value)}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="ソート" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">新しい順</SelectItem>
+                <SelectItem value="oldest">古い順</SelectItem>
+                <SelectItem value="name">名前順</SelectItem>
+                <SelectItem value="count">記事数順</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <p className="text-sm lg:text-base text-zinc-400">
@@ -197,7 +227,7 @@ export default function PlaylistsPage() {
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {playlists.map((playlist) => (
+          {sortedPlaylists.map((playlist) => (
             <Card
               key={playlist.id}
               className="bg-zinc-900 border-zinc-800 hover:bg-zinc-800 transition-colors cursor-pointer group"
