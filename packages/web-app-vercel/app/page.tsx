@@ -137,7 +137,7 @@ export default function Home() {
                 <div className="flex gap-4 lg:gap-6">
                   {/* Icon */}
                   <div className="hidden sm:block flex-shrink-0">
-                    <div className="size-16 lg:size-24 bg-linear-to-br from-violet-600 to-purple-600 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <div className="size-16 lg:size-24 bg-gradient-to-br from-violet-600 to-purple-600 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
                       <BookOpen className="size-6 lg:size-10 text-white" />
                     </div>
                   </div>
