@@ -118,11 +118,7 @@ export default function StorageManager() {
   };
 
   if (isLoading) {
-    return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
-        読み込み中...
-      </div>
-    );
+    return <div className="p-4 text-center text-zinc-400">読み込み中...</div>;
   }
 
   const usagePercentage =
@@ -131,27 +127,25 @@ export default function StorageManager() {
       : 0;
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-4">
       {confirmDialog}
       {error && (
-        <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-3">
-          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+        <div className="bg-red-950 border border-red-800 rounded-lg p-3">
+          <p className="text-sm text-red-400">{error}</p>
         </div>
       )}
       {/* ストレージ使用量 */}
-      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
         <h3 className="text-lg font-semibold mb-3">ストレージ使用量</h3>
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600 dark:text-gray-400">
+            <span className="text-zinc-400">
               {formatBytes(storageUsage.used)} /{" "}
               {formatBytes(storageUsage.available)}
             </span>
-            <span className="text-gray-600 dark:text-gray-400">
-              {usagePercentage.toFixed(1)}%
-            </span>
+            <span className="text-zinc-400">{usagePercentage.toFixed(1)}%</span>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div className="w-full bg-zinc-800 rounded-full h-2">
             <div
               className={`h-2 rounded-full transition-all ${
                 usagePercentage > 80
@@ -167,7 +161,7 @@ export default function StorageManager() {
       </div>
 
       {/* ダウンロード済み記事一覧 */}
-      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold">ダウンロード済み記事</h3>
           {articles.length > 0 && (
@@ -181,7 +175,7 @@ export default function StorageManager() {
         </div>
 
         {articles.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+          <p className="text-sm text-zinc-400 text-center py-4">
             ダウンロード済みの記事がありません
           </p>
         ) : (
@@ -189,14 +183,14 @@ export default function StorageManager() {
             {articles.map((article) => (
               <div
                 key={article.url}
-                className="border border-gray-200 dark:border-gray-700 rounded-lg p-3"
+                className="border border-zinc-700 rounded-lg p-3"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                    <p className="text-sm font-medium truncate">
                       {article.url}
                     </p>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center gap-3 mt-1 text-xs text-zinc-400">
                       <span>
                         {article.downloadedChunks} / {article.totalChunks}{" "}
                         チャンク
@@ -205,18 +199,18 @@ export default function StorageManager() {
                       <span>{formatDate(article.timestamp)}</span>
                     </div>
                     {article.downloadedChunks === article.totalChunks ? (
-                      <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded">
+                      <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-green-900 text-green-300 rounded">
                         ✓ 完全
                       </span>
                     ) : (
-                      <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 rounded">
+                      <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-yellow-900 text-yellow-300 rounded">
                         ⚠ 部分的
                       </span>
                     )}
                   </div>
                   <button
                     onClick={() => handleDeleteArticle(article.url)}
-                    className="px-2 py-1 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 rounded transition-colors"
+                    className="px-2 py-1 text-xs text-red-400 hover:bg-red-950 rounded transition-colors"
                   >
                     削除
                   </button>

@@ -1,8 +1,6 @@
-export function cn(...inputs: (string | undefined | null | false)[]): string {
-    return inputs
-        .filter((x): x is string => typeof x === 'string')
-        .join(' ')
-        .split(/\s+/)
-        .filter(Boolean)
-        .join(' ')
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+    return twMerge(clsx(inputs))
 }
