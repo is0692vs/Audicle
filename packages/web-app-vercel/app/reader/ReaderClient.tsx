@@ -260,7 +260,11 @@ export default function ReaderPageClient() {
                   disabled={isPlaybackLoading}
                   className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                 >
-                  {isPlaying ? <Pause className="size-4" /> : <Play className="size-4" />}
+                  {isPlaying ? (
+                    <Pause className="size-4" />
+                  ) : (
+                    <Play className="size-4" />
+                  )}
                   <span className="hidden sm:inline">
                     {isPlaybackLoading
                       ? "処理中..."
