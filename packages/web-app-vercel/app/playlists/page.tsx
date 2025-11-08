@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { logger } from "@/lib/logger";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { List, Plus, Menu, X, Home, Settings } from "lucide-react";
+import { List, Plus } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import type { PlaylistWithItems } from "@/types/playlist";
 

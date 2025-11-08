@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { logger } from "@/lib/logger";
 import { handleSignOut } from "@/app/auth/signin/actions";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
+import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,15 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Plus,
-  Menu,
-  X,
-  Home as HomeIcon,
-  List,
-  Settings,
-  Trash2,
-} from "lucide-react";
+import { Trash2, Plus } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import type { Bookmark, PlaylistWithItems } from "@/types/playlist";
 
@@ -34,6 +26,10 @@ export default function Home() {
   const [articles, setArticles] = useState<Bookmark[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [sortBy, setSortBy] = useState<ArticleSortBy>("newest");
+  const [selectedBookmarkId, setSelectedBookmarkId] = useState<string | null>(
+    null
+  );
+  const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const sortedArticles = useMemo(() => {
     return [...articles].sort((a, b) => {
       switch (sortBy) {
@@ -52,6 +48,10 @@ export default function Home() {
       }
     });
   }, [articles, sortBy]);
+  const selectedArticle = useMemo(
+    () => articles.find((a) => a.id === selectedBookmarkId),
+    [articles, selectedBookmarkId]
+  );
   const { showConfirm, confirmDialog } = useConfirmDialog();
 
   // 記事一覧を読み込み（デフォルトプレイリストから）
@@ -131,6 +131,18 @@ export default function Home() {
           <div className="p-4 sm:p-6 lg:p-8">
             {confirmDialog}
 
+            {selectedArticle && (
+              <PlaylistSelectorModal
+                isOpen={isPlaylistModalOpen}
+                onClose={() => {
+                  setIsPlaylistModalOpen(false);
+                  setSelectedBookmarkId(null);
+                }}
+                bookmarkId={selectedBookmarkId}
+                articleTitle={selectedArticle.article_title}
+              />
+            )}
+
             {/* Page Header */}
             <div className="mb-6 lg:mb-8">
               <div className="flex items-center justify-between mb-2">
@@ -206,12 +218,25 @@ export default function Home() {
                           <div className="flex items-center gap-4 text-xs text-zinc-500">
                             <span>
                               {new Date(article.created_at).toLocaleDateString(
-                                "ja-JP"
+                                "en-US",
+                                { timeZone: "UTC" }
                               )}
                             </span>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedBookmarkId(article.id);
+                              setIsPlaylistModalOpen(true);
+                            }}
+                            className="text-violet-400 hover:text-violet-300 hover:bg-violet-950/30"
+                          >
+                            <Plus className="size-4" />
+                          </Button>
                           <Button
                             size="sm"
                             variant="ghost"
