@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { List, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import type { PlaylistWithItems } from "@/types/playlist";
 

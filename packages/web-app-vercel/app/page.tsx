@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { logger } from "@/lib/logger";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
 import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
-import { Card, CardContent } from "@/components/ui/card";
+import { ArticleCard } from "@/components/ArticleCard";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import type { Bookmark, PlaylistWithItems } from "@/types/playlist";
 
@@ -123,7 +123,7 @@ export default function Home() {
     <div className="h-screen bg-black text-white flex flex-col lg:flex-row">
       <Sidebar />
 
-      <main className="flex-1 overflow-y-auto bg-gradient-to-b from-zinc-900 to-black">
+      <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gradient-to-b from-zinc-900 to-black">
         <div className="p-4 sm:p-6 lg:p-8">
           {confirmDialog}
 
@@ -187,59 +187,18 @@ export default function Home() {
               </Button>
             </div>
           ) : (
-            <div className="grid gap-4 sm:gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8">
               {sortedArticles.map((article) => (
-                <Card
+                <ArticleCard
                   key={article.id}
-                  className="bg-zinc-900/50 border-zinc-800 hover:bg-zinc-800/50 transition-colors cursor-pointer"
-                  onClick={() => handleArticleClick(article)}
-                >
-                  <CardContent className="p-4 sm:p-6">
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg lg:text-xl font-semibold text-white mb-2 line-clamp-2">
-                          {article.article_title}
-                        </h3>
-                        <p className="text-sm text-zinc-400 mb-3 line-clamp-1">
-                          {article.article_url}
-                        </p>
-                        <div className="flex items-center gap-4 text-xs text-zinc-500">
-                          <span>
-                            {new Date(article.created_at).toLocaleDateString(
-                              "ja-JP",
-                              { timeZone: "UTC" }
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedBookmarkId(article.id);
-                            setIsPlaylistModalOpen(true);
-                          }}
-                          className="text-violet-400 hover:text-violet-300 hover:bg-violet-950/30"
-                        >
-                          <Plus className="size-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(article.id);
-                          }}
-                          className="text-red-400 hover:text-red-300 hover:bg-red-950/30"
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                  article={article}
+                  onArticleClick={handleArticleClick}
+                  onPlaylistAdd={(id) => {
+                    setSelectedBookmarkId(id);
+                    setIsPlaylistModalOpen(true);
+                  }}
+                  onDelete={handleDelete}
+                />
               ))}
             </div>
           )}

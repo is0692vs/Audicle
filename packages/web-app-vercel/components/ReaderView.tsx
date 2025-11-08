@@ -42,12 +42,6 @@ export default function ReaderView({
     }
   }, [primaryHeading, articleUrl]);
 
-  const formattedSpeed = useMemo(() => {
-    if (!speed) return "1x";
-    const fixed = speed.toFixed(2).replace(/\.0+$/, "");
-    return `${fixed}x`;
-  }, [speed]);
-
   // ダウンロード機能
   const {
     status: downloadStatus,

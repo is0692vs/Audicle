@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { logger } from "@/lib/logger";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
+import { ArticleCard } from "@/components/ArticleCard";
 import type { PlaylistWithItems } from "@/types/playlist";
 
 export default function PlaylistDetailPage() {
@@ -125,16 +126,6 @@ export default function PlaylistDetailPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString("ja-JP", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -227,59 +218,30 @@ export default function PlaylistDetailPage() {
       </div>
 
       {/* メインコンテンツ */}
-      <main className="max-w-4xl mx-auto">
+      <main className="max-w-4xl mx-auto overflow-x-hidden">
         {!playlist.items || playlist.items.length === 0 ? (
           <div className="text-center py-12 text-zinc-400">
             <p>まだ記事がありません</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8">
             {sortedItems.map((item) => (
-              <div
+              <ArticleCard
                 key={item.id}
-                className="group bg-zinc-900 border border-zinc-800 rounded-lg p-4 hover:border-violet-500/30 transition-all"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div
-                    className="flex-1 cursor-pointer"
-                    onClick={() =>
-                      router.push(
-                        `/reader?url=${encodeURIComponent(
-                          item.bookmark.article_url
-                        )}`
-                      )
-                    }
-                  >
-                    <h3 className="text-lg font-semibold group-hover:text-violet-400 transition-colors">
-                      {item.bookmark.article_title}
-                    </h3>
-                    <p className="text-sm text-zinc-500 mt-1">
-                      {item.bookmark.article_url}
-                    </p>
-                    <div className="flex items-center gap-4 mt-2 text-xs text-zinc-500">
-                      <span>{formatDate(item.added_at)}</span>
-                      {item.bookmark.last_read_position !== undefined &&
-                        item.bookmark.last_read_position > 0 && (
-                          <span>
-                            読書位置: {item.bookmark.last_read_position}
-                          </span>
-                        )}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() =>
-                      handleDeleteBookmark(
-                        item.bookmark.id,
-                        item.bookmark.article_title
-                      )
-                    }
-                    className="px-3 py-1 text-sm text-red-400 hover:bg-red-950 rounded transition-colors"
-                    title="削除"
-                  >
-                    削除
-                  </button>
-                </div>
-              </div>
+                article={{
+                  ...item.bookmark,
+                  created_at: item.added_at,
+                }}
+                onArticleClick={(article) =>
+                  router.push(
+                    `/reader?url=${encodeURIComponent(article.article_url)}`
+                  )
+                }
+                onPlaylistAdd={() => {}}
+                onDelete={(id) =>
+                  handleDeleteBookmark(id, item.bookmark.article_title)
+                }
+              />
             ))}
           </div>
         )}
