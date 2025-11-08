@@ -141,11 +141,11 @@ export default function PlaylistsPage() {
   };
 
   return (
-    <div className="h-screen bg-black text-white flex">
+    <div className="h-screen bg-black text-white flex flex-col lg:flex-row">
       <Sidebar />
 
-      <main className="lg:ml-64 flex-1 overflow-y-auto bg-gradient-to-b from-zinc-900 to-black">
-        <div className="px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 lg:pb-8">
+      <main className="flex-1 overflow-y-auto bg-gradient-to-b from-zinc-900 to-black">
+        <div className="p-4 sm:p-6 lg:p-8">
           {confirmDialog}
 
           {/* Page Header */}
