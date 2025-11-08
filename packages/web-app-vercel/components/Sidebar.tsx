@@ -4,12 +4,24 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Home, List, Settings, Plus } from "lucide-react";
+import {
+  Menu,
+  X,
+  Home,
+  List,
+  Settings,
+  Plus,
+  LogOut,
+  User,
+} from "lucide-react";
+import { handleSignOut } from "@/app/auth/signin/actions";
+import { useSession } from "next-auth/react";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { data: session } = useSession();
 
   const navItems = [
     { href: "/", label: "ホーム", icon: Home },
@@ -45,7 +57,7 @@ export default function Sidebar() {
       </div>
 
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-black border-r border-zinc-800 flex flex-col transform transition-transform duration-300 ${
+        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-black border-r border-zinc-800 flex flex-col transform transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
@@ -84,13 +96,41 @@ export default function Sidebar() {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-zinc-800">
+        <div className="p-4 space-y-3 border-t border-zinc-800">
+          {/* User info */}
+          {session?.user && (
+            <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-zinc-900">
+              <User className="h-4 w-4 text-zinc-400" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">
+                  {session.user.name || session.user.email}
+                </p>
+                {session.user.name && session.user.email && (
+                  <p className="text-xs text-zinc-500 truncate">
+                    {session.user.email}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* New article button */}
           <Button
             className="w-full bg-violet-600 hover:bg-violet-700 text-white"
             onClick={() => router.push("/reader")}
           >
             <Plus className="h-4 w-4 mr-2" />
             新しい記事を読む
+          </Button>
+
+          {/* Logout button */}
+          <Button
+            variant="ghost"
+            className="w-full text-red-400 hover:text-red-300 hover:bg-red-950/30"
+            onClick={() => handleSignOut()}
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            ログアウト
           </Button>
         </div>
       </aside>

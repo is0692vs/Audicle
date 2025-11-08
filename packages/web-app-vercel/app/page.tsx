@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { logger } from "@/lib/logger";
-import { handleSignOut } from "@/app/auth/signin/actions";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
 import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
 import { Card, CardContent } from "@/components/ui/card";
@@ -157,14 +156,6 @@ export default function Home() {
                       <SelectItem value="title">タイトル順</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleSignOut()}
-                    className="px-3 py-1.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-950/30 rounded transition-colors"
-                  >
-                    ログアウト
-                  </button>
                 </div>
               </div>
               <p className="text-sm lg:text-base text-zinc-400">

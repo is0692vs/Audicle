@@ -240,6 +240,19 @@ export default function PlaylistsPage() {
               </div>
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Create New Card - 先頭に配置 */}
+                <Card
+                  className="bg-zinc-900 border-zinc-800 border-dashed hover:bg-zinc-800 transition-colors cursor-pointer"
+                  onClick={() => setShowCreateForm(true)}
+                >
+                  <CardContent className="p-4 lg:p-6 h-full flex flex-col items-center justify-center text-center min-h-[250px]">
+                    <Plus className="size-10 lg:size-12 text-zinc-600 mb-2" />
+                    <p className="text-zinc-400 text-sm lg:text-base">
+                      新規作成
+                    </p>
+                  </CardContent>
+                </Card>
+
                 {sortedPlaylists.map((playlist) => (
                   <Card
                     key={playlist.id}
@@ -247,9 +260,6 @@ export default function PlaylistsPage() {
                     onClick={() => router.push(`/playlists/${playlist.id}`)}
                   >
                     <CardContent className="p-4 lg:p-6">
-                      <div className="aspect-square bg-gradient-to-br from-violet-600 to-purple-600 rounded-lg mb-4 flex items-center justify-center group-hover:scale-105 transition-transform">
-                        <List className="size-12 lg:size-16 text-white" />
-                      </div>
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-bold text-base lg:text-lg truncate flex-1">
                           {playlist.name}
@@ -286,19 +296,6 @@ export default function PlaylistsPage() {
                     </CardContent>
                   </Card>
                 ))}
-
-                {/* Create New Card */}
-                <Card
-                  className="bg-zinc-900 border-zinc-800 border-dashed hover:bg-zinc-800 transition-colors cursor-pointer"
-                  onClick={() => setShowCreateForm(true)}
-                >
-                  <CardContent className="p-4 lg:p-6 h-full flex flex-col items-center justify-center text-center min-h-[250px]">
-                    <Plus className="size-10 lg:size-12 text-zinc-600 mb-2" />
-                    <p className="text-zinc-400 text-sm lg:text-base">
-                      新規作成
-                    </p>
-                  </CardContent>
-                </Card>
               </div>
             )}
           </div>
