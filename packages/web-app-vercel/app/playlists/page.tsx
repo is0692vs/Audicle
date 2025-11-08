@@ -141,164 +141,154 @@ export default function PlaylistsPage() {
   };
 
   return (
-    <div className="h-screen bg-black text-white overflow-auto">
+    <div className="h-screen bg-black text-white flex">
       <Sidebar />
 
-      <main className="lg:ml-64 flex flex-col">
-        <div className="flex-1 overflow-y-auto bg-gradient-to-b from-zinc-900 to-black">
-          <div className="px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 lg:pb-8">
-            {confirmDialog}
+      <main className="lg:ml-64 flex-1 overflow-y-auto bg-gradient-to-b from-zinc-900 to-black">
+        <div className="px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 lg:pb-8">
+          {confirmDialog}
 
-            {/* Page Header */}
-            <div className="mb-6 lg:mb-8">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-2xl lg:text-3xl font-bold">
-                    プレイリスト
-                  </h2>
-                  <Select
-                    value={sortBy}
-                    onValueChange={(value) =>
-                      setSortBy(value as PlaylistSortBy)
-                    }
-                  >
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue placeholder="ソート" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="newest">新しい順</SelectItem>
-                      <SelectItem value="oldest">古い順</SelectItem>
-                      <SelectItem value="name">名前順</SelectItem>
-                      <SelectItem value="count">記事数順</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+          {/* Page Header */}
+          <div className="mb-6 lg:mb-8">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-4">
+                <h2 className="text-2xl lg:text-3xl font-bold">プレイリスト</h2>
+                <Select
+                  value={sortBy}
+                  onValueChange={(value) => setSortBy(value as PlaylistSortBy)}
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="ソート" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">新しい順</SelectItem>
+                    <SelectItem value="oldest">古い順</SelectItem>
+                    <SelectItem value="name">名前順</SelectItem>
+                    <SelectItem value="count">記事数順</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <p className="text-sm lg:text-base text-zinc-400">
-                記事をプレイリストで整理
-              </p>
             </div>
+            <p className="text-sm lg:text-base text-zinc-400">
+              記事をプレイリストで整理
+            </p>
+          </div>
 
-            {/* Create Form */}
-            {showCreateForm && (
-              <Card className="bg-zinc-900 border-zinc-800 mb-6">
-                <CardContent className="p-4 lg:p-6">
-                  <form onSubmit={handleCreatePlaylist}>
-                    <h3 className="text-lg font-bold mb-4">
-                      新しいプレイリスト
-                    </h3>
-                    <div className="space-y-3">
-                      <Input
-                        type="text"
-                        value={newPlaylistName}
-                        onChange={(e) => setNewPlaylistName(e.target.value)}
-                        placeholder="プレイリスト名"
-                        className="bg-zinc-950 border-zinc-700 text-white placeholder:text-zinc-500"
-                        required
-                        autoFocus
-                      />
-                      <textarea
-                        value={newPlaylistDescription}
-                        onChange={(e) =>
-                          setNewPlaylistDescription(e.target.value)
-                        }
-                        placeholder="説明（省略可）"
-                        className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-white placeholder:text-zinc-500 text-sm lg:text-base"
-                        rows={3}
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          type="submit"
-                          disabled={isCreating}
-                          className="bg-violet-600 hover:bg-violet-700"
-                        >
-                          {isCreating ? "作成中..." : "作成"}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          onClick={() => {
-                            setShowCreateForm(false);
-                            setNewPlaylistName("");
-                            setNewPlaylistDescription("");
-                          }}
-                          className="text-zinc-400 hover:text-white"
-                        >
-                          キャンセル
-                        </Button>
-                      </div>
+          {/* Create Form */}
+          {showCreateForm && (
+            <Card className="bg-zinc-900 border-zinc-800 mb-6">
+              <CardContent className="p-4 lg:p-6">
+                <form onSubmit={handleCreatePlaylist}>
+                  <h3 className="text-lg font-bold mb-4">新しいプレイリスト</h3>
+                  <div className="space-y-3">
+                    <Input
+                      type="text"
+                      value={newPlaylistName}
+                      onChange={(e) => setNewPlaylistName(e.target.value)}
+                      placeholder="プレイリスト名"
+                      className="bg-zinc-950 border-zinc-700 text-white placeholder:text-zinc-500"
+                      required
+                      autoFocus
+                    />
+                    <textarea
+                      value={newPlaylistDescription}
+                      onChange={(e) =>
+                        setNewPlaylistDescription(e.target.value)
+                      }
+                      placeholder="説明（省略可）"
+                      className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-white placeholder:text-zinc-500 text-sm lg:text-base"
+                      rows={3}
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        type="submit"
+                        disabled={isCreating}
+                        className="bg-violet-600 hover:bg-violet-700"
+                      >
+                        {isCreating ? "作成中..." : "作成"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => {
+                          setShowCreateForm(false);
+                          setNewPlaylistName("");
+                          setNewPlaylistDescription("");
+                        }}
+                        className="text-zinc-400 hover:text-white"
+                      >
+                        キャンセル
+                      </Button>
                     </div>
-                  </form>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Content */}
+          {isLoading ? (
+            <div className="text-center py-12 text-zinc-500">
+              <p className="text-lg">読み込み中...</p>
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Create New Card - 先頭に配置 */}
+              <Card
+                className="bg-zinc-900 border-zinc-800 border-dashed hover:bg-zinc-800 transition-colors cursor-pointer"
+                onClick={() => setShowCreateForm(true)}
+              >
+                <CardContent className="p-4 lg:p-6 h-full flex flex-col items-center justify-center text-center min-h-[250px]">
+                  <Plus className="size-10 lg:size-12 text-zinc-600 mb-2" />
+                  <p className="text-zinc-400 text-sm lg:text-base">新規作成</p>
                 </CardContent>
               </Card>
-            )}
 
-            {/* Content */}
-            {isLoading ? (
-              <div className="text-center py-12 text-zinc-500">
-                <p className="text-lg">読み込み中...</p>
-              </div>
-            ) : (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Create New Card - 先頭に配置 */}
+              {sortedPlaylists.map((playlist) => (
                 <Card
-                  className="bg-zinc-900 border-zinc-800 border-dashed hover:bg-zinc-800 transition-colors cursor-pointer"
-                  onClick={() => setShowCreateForm(true)}
+                  key={playlist.id}
+                  className="bg-zinc-900 border-zinc-800 hover:bg-zinc-800 transition-colors cursor-pointer group"
+                  onClick={() => router.push(`/playlists/${playlist.id}`)}
                 >
-                  <CardContent className="p-4 lg:p-6 h-full flex flex-col items-center justify-center text-center min-h-[250px]">
-                    <Plus className="size-10 lg:size-12 text-zinc-600 mb-2" />
-                    <p className="text-zinc-400 text-sm lg:text-base">
-                      新規作成
+                  <CardContent className="p-4 lg:p-6">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-bold text-base lg:text-lg truncate flex-1">
+                        {playlist.name}
+                      </h3>
+                      {playlist.is_default && (
+                        <span className="px-2 py-0.5 text-xs bg-blue-600/20 text-blue-400 rounded shrink-0">
+                          デフォルト
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-zinc-400">
+                      {playlist.item_count || 0} 件の記事
                     </p>
+                    {playlist.description && (
+                      <p className="text-xs text-zinc-500 mt-2 line-clamp-2">
+                        {playlist.description}
+                      </p>
+                    )}
+
+                    {/* Delete Button */}
+                    {!playlist.is_default && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeletePlaylist(playlist.id, playlist.name);
+                        }}
+                        className="mt-3 w-full text-xs text-red-400 hover:text-red-300 hover:bg-red-950/30"
+                      >
+                        削除
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
-
-                {sortedPlaylists.map((playlist) => (
-                  <Card
-                    key={playlist.id}
-                    className="bg-zinc-900 border-zinc-800 hover:bg-zinc-800 transition-colors cursor-pointer group"
-                    onClick={() => router.push(`/playlists/${playlist.id}`)}
-                  >
-                    <CardContent className="p-4 lg:p-6">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-bold text-base lg:text-lg truncate flex-1">
-                          {playlist.name}
-                        </h3>
-                        {playlist.is_default && (
-                          <span className="px-2 py-0.5 text-xs bg-blue-600/20 text-blue-400 rounded shrink-0">
-                            デフォルト
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm text-zinc-400">
-                        {playlist.item_count || 0} 件の記事
-                      </p>
-                      {playlist.description && (
-                        <p className="text-xs text-zinc-500 mt-2 line-clamp-2">
-                          {playlist.description}
-                        </p>
-                      )}
-
-                      {/* Delete Button */}
-                      {!playlist.is_default && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeletePlaylist(playlist.id, playlist.name);
-                          }}
-                          className="mt-3 w-full text-xs text-red-400 hover:text-red-300 hover:bg-red-950/30"
-                        >
-                          削除
-                        </Button>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>

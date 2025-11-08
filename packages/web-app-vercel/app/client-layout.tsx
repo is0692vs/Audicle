@@ -1,3 +1,4 @@
+// packages/web-app-vercel/app/client-layout.tsx
 "use client";
 
 import { SessionProvider } from "next-auth/react";
