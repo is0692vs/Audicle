@@ -51,7 +51,7 @@ export default function Sidebar() {
       >
         <div className="p-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-bold bg-linear-to-r from-violet-400 to-purple-600 bg-clip-text text-transparent">
               Audicle
             </h1>
             <p className="text-xs text-zinc-400 mt-1">Web記事読み上げアプリ</p>

@@ -265,7 +265,7 @@ export default function ReaderPageClient() {
                   ) : (
                     <Play className="size-4" />
                   )}
-                  <span className="hidden sm:inline">
+                  <span>
                     {isPlaybackLoading
                       ? "処理中..."
                       : isPlaying
@@ -279,7 +279,7 @@ export default function ReaderPageClient() {
                   className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                 >
                   <Square className="size-4" />
-                  <span className="hidden sm:inline">停止</span>
+                  <span>停止</span>
                 </button>
               </div>
               <div className="flex items-center gap-2">
