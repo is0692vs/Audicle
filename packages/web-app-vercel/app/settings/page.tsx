@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import StorageManager from "@/components/StorageManager";
 import UserSettingsPanel from "@/components/UserSettingsPanel";
 import { Button } from "@/components/ui/button";
@@ -43,38 +44,32 @@ export default function SettingsPage() {
         </div>
 
         <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
-          <button
-            onClick={() => {
-              router.push("/");
-              setSidebarOpen(false);
-            }}
+          <Link
+            href="/"
+            onClick={() => setSidebarOpen(false)}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
           >
             <Home className="h-5 w-5" />
             <span className="font-medium">ホーム</span>
-          </button>
+          </Link>
 
-          <button
-            onClick={() => {
-              router.push("/playlists");
-              setSidebarOpen(false);
-            }}
+          <Link
+            href="/playlists"
+            onClick={() => setSidebarOpen(false)}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
           >
             <List className="h-5 w-5" />
             <span className="font-medium">プレイリスト</span>
-          </button>
+          </Link>
 
-          <button
-            onClick={() => {
-              router.push("/settings");
-              setSidebarOpen(false);
-            }}
+          <Link
+            href="/settings"
+            onClick={() => setSidebarOpen(false)}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-zinc-800 text-white"
           >
             <Settings className="h-5 w-5" />
             <span className="font-medium">設定</span>
-          </button>
+          </Link>
         </nav>
 
         <div className="p-4 border-t border-zinc-800">
