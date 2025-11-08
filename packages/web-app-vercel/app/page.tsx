@@ -218,7 +218,7 @@ export default function Home() {
                           <div className="flex items-center gap-4 text-xs text-zinc-500">
                             <span>
                               {new Date(article.created_at).toLocaleDateString(
-                                "en-US",
+                                "ja-JP",
                                 { timeZone: "UTC" }
                               )}
                             </span>
