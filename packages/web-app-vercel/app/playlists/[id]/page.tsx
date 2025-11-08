@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { logger } from "@/lib/logger";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
@@ -17,7 +17,12 @@ export default function PlaylistDetailPage() {
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const { showConfirm, confirmDialog } = useConfirmDialog();
+  const sortedItems = useMemo(() => {
+    if (!playlist?.items) return [];
+    return [...playlist.items].sort(
+      (a, b) => (a.position ?? 0) - (b.position ?? 0)
+    );
+  }, [playlist?.items]);
 
   const loadPlaylist = useCallback(async () => {
     try {
@@ -228,9 +233,7 @@ export default function PlaylistDetailPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {playlist.items
-              .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
-              .map((item) => (
+            {sortedItems.map((item) => (
               <div
                 key={item.id}
                 className="group bg-zinc-900 border border-zinc-800 rounded-lg p-4 hover:border-violet-500/30 transition-all"

@@ -7,15 +7,23 @@ import { useConfirmDialog } from "@/components/ConfirmDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { List, Plus } from "lucide-react";
 import type { PlaylistWithItems } from "@/types/playlist";
+
+type PlaylistSortBy = "newest" | "oldest" | "name" | "count";
 
 export default function PlaylistsPage() {
   const router = useRouter();
   const [playlists, setPlaylists] = useState<PlaylistWithItems[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "name" | "count">("newest");
+  const [sortBy, setSortBy] = useState<PlaylistSortBy>("newest");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [newPlaylistDescription, setNewPlaylistDescription] = useState("");
@@ -26,9 +34,13 @@ export default function PlaylistsPage() {
     return [...playlists].sort((a, b) => {
       switch (sortBy) {
         case "newest":
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
         case "oldest":
-          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          return (
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          );
         case "name":
           return a.name.localeCompare(b.name);
         case "count":
@@ -144,7 +156,10 @@ export default function PlaylistsPage() {
               ← 戻る
             </Button>
             <h2 className="text-2xl lg:text-3xl font-bold">プレイリスト</h2>
-            <Select value={sortBy} onValueChange={(value: "newest" | "oldest" | "name" | "count") => setSortBy(value)}>
+            <Select
+              value={sortBy}
+              onValueChange={(value) => setSortBy(value as PlaylistSortBy)}
+            >
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="ソート" />
               </SelectTrigger>

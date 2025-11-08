@@ -8,15 +8,23 @@ import { useConfirmDialog } from "@/components/ConfirmDialog";
 import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Clock, BookOpen, ExternalLink, Plus } from "lucide-react";
 import type { Bookmark, PlaylistWithItems } from "@/types/playlist";
+
+type ArticleSortBy = "newest" | "oldest" | "title";
 
 export default function Home() {
   const router = useRouter();
   const [articles, setArticles] = useState<Bookmark[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "title">("newest");
+  const [sortBy, setSortBy] = useState<ArticleSortBy>("newest");
   const [selectedBookmarkId, setSelectedBookmarkId] = useState<string | null>(
     null
   );
@@ -29,9 +37,13 @@ export default function Home() {
     return [...articles].sort((a, b) => {
       switch (sortBy) {
         case "newest":
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
         case "oldest":
-          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          return (
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          );
         case "title":
           return a.article_title.localeCompare(b.article_title);
         default:
@@ -119,7 +131,10 @@ export default function Home() {
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-4">
             <h2 className="text-2xl lg:text-3xl font-bold">記事一覧</h2>
-            <Select value={sortBy} onValueChange={(value: "newest" | "oldest" | "title") => setSortBy(value)}>
+            <Select
+              value={sortBy}
+              onValueChange={(value) => setSortBy(value as ArticleSortBy)}
+            >
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="ソート" />
               </SelectTrigger>
