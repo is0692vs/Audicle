@@ -1,3 +1,5 @@
+// packages/web-app-vercel/app/page.tsx
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -118,12 +120,11 @@ export default function Home() {
   };
 
   return (
-    <div className="h-screen bg-black text-white overflow-auto">
+    <div className="h-screen bg-black text-white flex">
       <Sidebar />
 
-      <main className="lg:ml-64 flex flex-col">
-        <div className="flex-1 overflow-y-auto bg-gradient-to-b from-zinc-900 to-black">
-          <div className="p-4 sm:p-6 lg:p-8">
+      <main className="lg:ml-64 flex-1 overflow-y-auto bg-gradient-to-b from-zinc-900 to-black">
+        <div className="p-4 sm:p-6 lg:p-8">
             {confirmDialog}
 
             {selectedArticle && selectedBookmarkId && (
