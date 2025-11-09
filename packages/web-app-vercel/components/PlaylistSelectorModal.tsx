@@ -1,8 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { logger } from "@/lib/logger";
-import type { Playlist } from "@/types/playlist";
+import { usePlaylists } from "@/lib/hooks/usePlaylists";
+import {
+  useBookmarkPlaylists,
+  useUpdateBookmarkPlaylistsMutation,
+} from "@/lib/hooks/usePlaylistSelection";
 
 interface PlaylistSelectorModalProps {
   isOpen: boolean;
@@ -17,76 +21,58 @@ export function PlaylistSelectorModal({
   bookmarkId,
   articleTitle,
 }: PlaylistSelectorModalProps) {
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const { data: allPlaylists = [], isLoading: isLoadingPlaylists } =
+    usePlaylists();
+  const {
+    data: currentPlaylists = [],
+    isLoading: isLoadingCurrent,
+    error: currentError,
+  } = useBookmarkPlaylists(bookmarkId);
+  const updateMutation = useUpdateBookmarkPlaylistsMutation();
+
   const [selectedPlaylistIds, setSelectedPlaylistIds] = useState<Set<string>>(
     new Set()
   );
   const [initialSelectedIds, setInitialSelectedIds] = useState<Set<string>>(
     new Set()
   );
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // モーダルが開いたときにプレイリスト一覧と現在の関連プレイリストを読み込み
-  const loadPlaylistsAndCurrentItems = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      // ユーザーのプレイリスト一覧取得と現在のブックマークが含まれるプレイリストを並列で取得
-      const [playlistsResponse, currentPlaylistsResponse] = await Promise.all([
-        fetch("/api/playlists"),
-        fetch(`/api/bookmarks/${bookmarkId}/playlists`),
-      ]);
-
-      if (!playlistsResponse.ok) {
-        throw new Error("プレイリストの取得に失敗しました");
-      }
-      const playlistsData: Playlist[] = await playlistsResponse.json();
-      setPlaylists(playlistsData);
-
-      // 現在のブックマークが含まれるプレイリストを取得
-      let selectedCount = 0;
-      if (!currentPlaylistsResponse.ok) {
-        // 既存のプレイリストが取得できない場合、エラーとして処理を中断する
-        throw new Error(
-          "ブックマークが所属するプレイリストの取得に失敗しました。"
-        );
-      }
-      const currentPlaylists: Playlist[] =
-        await currentPlaylistsResponse.json();
+  // モーダルが開いたときに選択状態を同期
+  useEffect(() => {
+    if (isOpen) {
       const currentIds = new Set(currentPlaylists.map((p) => p.id));
       setSelectedPlaylistIds(currentIds);
       setInitialSelectedIds(currentIds);
-      selectedCount = currentIds.size;
-
       logger.info("プレイリストを読み込み", {
-        totalCount: playlistsData.length,
-        selectedCount: selectedCount,
+        totalCount: allPlaylists.length,
+        selectedCount: currentIds.size,
       });
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "エラーが発生しました";
-      setError(errorMessage);
-      logger.error("プレイリストの読み込みに失敗", err);
-    } finally {
-      setIsLoading(false);
     }
-  }, [bookmarkId]);
+  }, [isOpen, currentPlaylists, allPlaylists.length]);
 
+  // エラー状態を管理
   useEffect(() => {
-    if (isOpen && bookmarkId) {
-      loadPlaylistsAndCurrentItems();
-    } else if (!isOpen) {
-      // モーダルが閉じられたときに状態をリセット
-      setPlaylists([]);
-      setSelectedPlaylistIds(new Set());
-      setInitialSelectedIds(new Set());
-      setIsLoading(true);
+    if (currentError) {
+      const errorMessage =
+        currentError instanceof Error
+          ? currentError.message
+          : "エラーが発生しました";
+      setError(errorMessage);
+      logger.error("プレイリストの読み込みに失敗", currentError);
+    } else {
       setError(null);
     }
-  }, [isOpen, bookmarkId, loadPlaylistsAndCurrentItems]);
+  }, [currentError]);
+
+  // モーダルが閉じられたときに状態をリセット
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedPlaylistIds(new Set());
+      setInitialSelectedIds(new Set());
+      setError(null);
+    }
+  }, [isOpen]);
 
   // Handle Escape key to close modal for accessibility
   useEffect(() => {
@@ -102,6 +88,7 @@ export function PlaylistSelectorModal({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen, onClose]);
+
   const handleTogglePlaylist = (playlistId: string) => {
     const newSelected = new Set(selectedPlaylistIds);
     if (newSelected.has(playlistId)) {
@@ -114,39 +101,21 @@ export function PlaylistSelectorModal({
 
   const handleSave = async () => {
     try {
-      setIsSaving(true);
       setError(null);
 
-      // 既存の関連プレイリストと新しい選択を比較
-      const currentPlaylistIds = initialSelectedIds;
-
-      // 追加するプレイリスト（新しく選択されたもの）
       const addToPlaylistIds = Array.from(selectedPlaylistIds).filter(
-        (id) => !currentPlaylistIds.has(id)
+        (id) => !initialSelectedIds.has(id)
       );
-
-      // 削除するプレイリスト（チェックが外されたもの）
-      const removeFromPlaylistIds = Array.from(currentPlaylistIds).filter(
+      const removeFromPlaylistIds = Array.from(initialSelectedIds).filter(
         (id) => !selectedPlaylistIds.has(id)
       );
 
-      // バルク更新API呼び出し
       if (addToPlaylistIds.length > 0 || removeFromPlaylistIds.length > 0) {
-        const response = await fetch("/api/playlists/bulk-update", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            bookmarkId,
-            addToPlaylistIds,
-            removeFromPlaylistIds,
-          }),
+        await updateMutation.mutateAsync({
+          bookmarkId,
+          addToPlaylistIds,
+          removeFromPlaylistIds,
         });
-
-        if (!response.ok) {
-          throw new Error("プレイリストの更新に失敗しました");
-        }
       }
 
       logger.success("プレイリストを更新", {
@@ -161,10 +130,11 @@ export function PlaylistSelectorModal({
         err instanceof Error ? err.message : "エラーが発生しました";
       setError(errorMessage);
       logger.error("プレイリストの更新に失敗", err);
-    } finally {
-      setIsSaving(false);
     }
   };
+
+  const isLoading = isLoadingPlaylists || isLoadingCurrent;
+  const isSaving = updateMutation.isPending;
 
   if (!isOpen) return null;
 
@@ -210,13 +180,13 @@ export function PlaylistSelectorModal({
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border border-blue-300 border-t-blue-600" />
               </div>
-            ) : playlists.length === 0 ? (
+            ) : allPlaylists.length === 0 ? (
               <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 <p>プレイリストがありません</p>
               </div>
             ) : (
               <div className="space-y-2">
-                {playlists.map((playlist) => {
+                {allPlaylists.map((playlist) => {
                   const checkboxId = `playlist-checkbox-${playlist.id}`;
                   return (
                     <div

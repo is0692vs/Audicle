@@ -1,9 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { logger } from "@/lib/logger";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
+import {
+  usePlaylistDetail,
+  useUpdatePlaylistMutation,
+} from "@/lib/hooks/usePlaylists";
+import { useDeleteBookmarkMutation } from "@/lib/hooks/useBookmarks";
 import { ArticleCard } from "@/components/ArticleCard";
 import type { PlaylistWithItems } from "@/types/playlist";
 
@@ -12,13 +17,15 @@ export default function PlaylistDetailPage() {
   const params = useParams();
   const playlistId = params.id as string;
 
-  const [playlist, setPlaylist] = useState<PlaylistWithItems | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: playlist, isLoading, error } = usePlaylistDetail(playlistId);
+  const updatePlaylistMutation = useUpdatePlaylistMutation();
+  const deleteBookmarkMutation = useDeleteBookmarkMutation();
+
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
   const { showConfirm, confirmDialog } = useConfirmDialog();
+
   const sortedItems = useMemo(() => {
     if (!playlist?.items) return [];
     return [...playlist.items].sort(
@@ -26,67 +33,30 @@ export default function PlaylistDetailPage() {
     );
   }, [playlist?.items]);
 
-  const loadPlaylist = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/playlists/${playlistId}`);
-
-      if (!response.ok) {
-        throw new Error("プレイリストの取得に失敗しました");
-      }
-
-      const data: PlaylistWithItems = await response.json();
-      logger.info("プレイリスト詳細を読み込み", {
-        id: data.id,
-        name: data.name,
-      });
-      setPlaylist(data);
-      setEditName(data.name);
-      setEditDescription(data.description || "");
-    } catch (error) {
-      logger.error("プレイリスト詳細の読み込みに失敗", error);
-      router.push("/playlists");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [playlistId, router]);
-
+  // playlistが読み込まれたら編集フィールドを初期化
   useEffect(() => {
-    if (playlistId) {
-      loadPlaylist();
+    if (playlist && !isEditing) {
+      setEditName(playlist.name);
+      setEditDescription(playlist.description || "");
     }
-  }, [playlistId, loadPlaylist]);
+  }, [playlist, isEditing]);
 
   const handleSave = async () => {
     if (!playlist) return;
 
-    setIsSaving(true);
     try {
-      const response = await fetch(`/api/playlists/${playlist.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: editName,
-          description: editDescription,
-        }),
+      await updatePlaylistMutation.mutateAsync({
+        playlistId: playlist.id,
+        name: editName,
+        description: editDescription,
       });
-
-      if (!response.ok) {
-        throw new Error("プレイリストの更新に失敗しました");
-      }
-
-      const updated = await response.json();
       logger.success("プレイリストを更新", {
-        id: updated.id,
-        name: updated.name,
+        id: playlist.id,
+        name: editName,
       });
-      setPlaylist({ ...playlist, ...updated });
       setIsEditing(false);
     } catch (error) {
       logger.error("プレイリストの更新に失敗", error);
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -101,24 +71,7 @@ export default function PlaylistDetailPage() {
 
     if (confirmed) {
       try {
-        const response = await fetch(`/api/bookmarks/${bookmarkId}`, {
-          method: "DELETE",
-        });
-
-        if (!response.ok) {
-          throw new Error("削除に失敗しました");
-        }
-
-        setPlaylist((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            items: prev.items?.filter(
-              (item) => item.bookmark.id !== bookmarkId
-            ),
-            item_count: (prev.item_count ?? 0) - 1,
-          };
-        });
+        await deleteBookmarkMutation.mutateAsync(bookmarkId);
         logger.success("ブックマークを削除", { id: bookmarkId, title });
       } catch (error) {
         logger.error("ブックマークの削除に失敗", error);
@@ -134,8 +87,25 @@ export default function PlaylistDetailPage() {
     );
   }
 
-  if (!playlist) {
-    return null;
+  if (error || !playlist) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">⚠️</div>
+          <p className="text-zinc-400 mb-6">
+            {error instanceof Error
+              ? error.message
+              : "プレイリストの読み込みに失敗しました"}
+          </p>
+          <button
+            onClick={() => router.push("/playlists")}
+            className="text-violet-400 hover:text-violet-300"
+          >
+            ← プレイリスト一覧に戻る
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -180,10 +150,10 @@ export default function PlaylistDetailPage() {
             <div className="flex gap-2">
               <button
                 onClick={handleSave}
-                disabled={isSaving}
+                disabled={updatePlaylistMutation.isPending}
                 className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:bg-zinc-700 transition-colors"
               >
-                {isSaving ? "保存中..." : "保存"}
+                {updatePlaylistMutation.isPending ? "保存中..." : "保存"}
               </button>
               <button
                 onClick={() => {

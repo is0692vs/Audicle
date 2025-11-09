@@ -2,10 +2,15 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { logger } from "@/lib/logger";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
+import {
+  useBookmarks,
+  useDeleteBookmarkMutation,
+} from "@/lib/hooks/useBookmarks";
 import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
 import { ArticleCard } from "@/components/ArticleCard";
 import { Button } from "@/components/ui/button";
@@ -16,21 +21,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, RotateCcw } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
-import type { Bookmark, PlaylistWithItems } from "@/types/playlist";
+import type { Bookmark } from "@/types/playlist";
 
 type ArticleSortBy = "newest" | "oldest" | "title";
 
 export default function Home() {
   const router = useRouter();
-  const [articles, setArticles] = useState<Bookmark[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data: articles = [], isLoading, error } = useBookmarks();
+  const deleteBookmarkMutation = useDeleteBookmarkMutation();
+
   const [sortBy, setSortBy] = useState<ArticleSortBy>("newest");
   const [selectedBookmarkId, setSelectedBookmarkId] = useState<string | null>(
     null
   );
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
+
   const sortedArticles = useMemo(() => {
     return [...articles].sort((a, b) => {
       switch (sortBy) {
@@ -49,41 +57,17 @@ export default function Home() {
       }
     });
   }, [articles, sortBy]);
+
   const selectedArticle = useMemo(
     () => articles.find((a) => a.id === selectedBookmarkId),
     [articles, selectedBookmarkId]
   );
+
   const { showConfirm, confirmDialog } = useConfirmDialog();
 
-  // 記事一覧を読み込み（デフォルトプレイリストから）
-  useEffect(() => {
-    const loadArticles = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch("/api/playlists/default");
-
-        if (!response.ok) {
-          throw new Error("プレイリストの取得に失敗しました");
-        }
-
-        const playlist: PlaylistWithItems = await response.json();
-        const bookmarks = playlist.items?.map((item) => item.bookmark) || [];
-
-        logger.info("記事一覧を読み込み", { count: bookmarks.length });
-        setArticles(bookmarks);
-      } catch (error) {
-        logger.error("記事一覧の読み込みに失敗", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadArticles();
-
-    // storageイベントをリッスン (他のタブでの変更を検知)
-    window.addEventListener("storage", loadArticles);
-    return () => window.removeEventListener("storage", loadArticles);
-  }, []);
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+  };
 
   const handleDelete = async (id: string) => {
     const article = articles.find((a) => a.id === id);
@@ -99,15 +83,7 @@ export default function Home() {
 
     if (confirmed) {
       try {
-        const response = await fetch(`/api/bookmarks/${id}`, {
-          method: "DELETE",
-        });
-
-        if (!response.ok) {
-          throw new Error("削除に失敗しました");
-        }
-
-        setArticles((prev) => prev.filter((a) => a.id !== id));
+        await deleteBookmarkMutation.mutateAsync(id);
         logger.success("記事を削除", { id, title: article.article_title });
       } catch (error) {
         logger.error("記事の削除に失敗", error);
@@ -158,6 +134,15 @@ export default function Home() {
                   </SelectContent>
                 </Select>
               </div>
+              <Button
+                onClick={handleRefresh}
+                variant="ghost"
+                size="icon"
+                title="手動更新"
+                className="text-zinc-400 hover:text-white hover:bg-zinc-800"
+              >
+                <RotateCcw className="h-5 w-5" />
+              </Button>
             </div>
             <p className="text-sm lg:text-base text-zinc-400">
               読み込んだ記事の一覧です
@@ -168,6 +153,25 @@ export default function Home() {
           {isLoading ? (
             <div className="text-center py-12 text-zinc-500">
               <p className="text-lg">読み込み中...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">⚠️</div>
+              <h3 className="text-xl font-semibold text-white mb-2">
+                エラーが発生しました
+              </h3>
+              <p className="text-zinc-400 mb-6">
+                {error instanceof Error
+                  ? error.message
+                  : "記事の読み込みに失敗しました"}
+              </p>
+              <Button
+                onClick={handleRefresh}
+                className="bg-violet-600 hover:bg-violet-700 text-white"
+              >
+                <RotateCcw className="size-4 mr-2" />
+                再試行
+              </Button>
             </div>
           ) : articles.length === 0 ? (
             <div className="text-center py-12">
