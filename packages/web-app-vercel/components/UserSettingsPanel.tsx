@@ -1,99 +1,59 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import {
-  UserSettings,
-  VOICE_MODELS,
-  Language,
-  VoiceModel,
-} from "@/types/settings";
+  useUserSettings,
+  useUpdateUserSettingsMutation,
+} from "@/lib/hooks/useUserSettings";
+import { VOICE_MODELS, Language, VoiceModel } from "@/types/settings";
 
 export default function UserSettingsPanel() {
-  const [settings, setSettings] = useState<UserSettings | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const { data: originalSettings, isLoading, error } = useUserSettings();
+  const updateSettingsMutation = useUpdateUserSettingsMutation();
+
+  const [settings, setSettings] = useState(
+    originalSettings || {
+      playback_speed: 1.0,
+      voice_model: "google-standard" as VoiceModel,
+      language: "ja-JP" as Language,
+    }
+  );
   const [hasChanged, setHasChanged] = useState(false);
 
-  // Fetch settings on mount
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  const fetchSettings = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch("/api/settings/get");
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to fetch settings");
-      }
-
-      const data = await response.json();
-      setSettings({
-        playback_speed: data.playback_speed,
-        voice_model: data.voice_model,
-        language: data.language,
-      });
-      setHasChanged(false);
-    } catch (error) {
-      console.error("Error fetching settings:", error);
-      toast.error("設定の読み込みに失敗しました");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // originalSettings が変わったら settings を更新（初回読み込みなど）
+  if (
+    originalSettings &&
+    JSON.stringify(settings) !== JSON.stringify(originalSettings) &&
+    !hasChanged
+  ) {
+    setSettings(originalSettings);
+  }
 
   const handlePlaybackSpeedChange = (value: number) => {
-    if (settings) {
-      setSettings({ ...settings, playback_speed: value });
-      setHasChanged(true);
-    }
+    setSettings({ ...settings, playback_speed: value });
+    setHasChanged(true);
   };
 
   const handleVoiceModelChange = (value: string) => {
-    if (settings) {
-      setSettings({
-        ...settings,
-        voice_model: value as VoiceModel,
-      });
-      setHasChanged(true);
-    }
+    setSettings({
+      ...settings,
+      voice_model: value as VoiceModel,
+    });
+    setHasChanged(true);
   };
 
   const handleLanguageChange = (value: string) => {
-    if (settings) {
-      // 言語変更 (音声モデルは独立)
-      setSettings({
-        ...settings,
-        language: value as Language,
-      });
-      setHasChanged(true);
-    }
+    setSettings({
+      ...settings,
+      language: value as Language,
+    });
+    setHasChanged(true);
   };
 
   const handleSave = async () => {
-    if (!settings) return;
-
     try {
-      setSaving(true);
-      const response = await fetch("/api/settings/update", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          playback_speed: settings.playback_speed,
-          voice_model: settings.voice_model,
-          language: settings.language,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to save settings");
-      }
-
+      await updateSettingsMutation.mutateAsync(settings);
       setHasChanged(false);
       toast.success("設定を保存しました");
     } catch (error) {
@@ -101,12 +61,17 @@ export default function UserSettingsPanel() {
       toast.error(
         error instanceof Error ? error.message : "設定の保存に失敗しました"
       );
-    } finally {
-      setSaving(false);
     }
   };
 
-  if (loading) {
+  const handleCancel = () => {
+    if (originalSettings) {
+      setSettings(originalSettings);
+      setHasChanged(false);
+    }
+  };
+
+  if (isLoading) {
     return (
       <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
         <div className="animate-pulse space-y-4">
@@ -117,8 +82,16 @@ export default function UserSettingsPanel() {
     );
   }
 
-  if (!settings) {
-    return null;
+  if (error) {
+    return (
+      <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
+        <p className="text-red-400">
+          {error instanceof Error
+            ? error.message
+            : "設定の読み込みに失敗しました"}
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -183,14 +156,14 @@ export default function UserSettingsPanel() {
         <div className="flex gap-3 pt-4">
           <button
             onClick={handleSave}
-            disabled={!hasChanged || saving}
+            disabled={!hasChanged || updateSettingsMutation.isPending}
             className="px-4 py-2 bg-violet-600 hover:bg-violet-700 disabled:bg-zinc-700 disabled:text-zinc-500 text-white rounded-lg transition-colors font-medium"
           >
-            {saving ? "保存中..." : "保存"}
+            {updateSettingsMutation.isPending ? "保存中..." : "保存"}
           </button>
           {hasChanged && (
             <button
-              onClick={fetchSettings}
+              onClick={handleCancel}
               className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors font-medium"
             >
               キャンセル

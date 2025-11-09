@@ -1,9 +1,13 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { logger } from "@/lib/logger";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
+import {
+  usePlaylists,
+  useCreatePlaylistMutation,
+  useDeletePlaylistMutation,
+} from "@/lib/hooks/usePlaylists";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,19 +20,20 @@ import {
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
-import type { PlaylistWithItems } from "@/types/playlist";
+import { logger } from "@/lib/logger";
 
 type PlaylistSortBy = "newest" | "oldest" | "name" | "count";
 
 export default function PlaylistsPage() {
   const router = useRouter();
-  const [playlists, setPlaylists] = useState<PlaylistWithItems[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: playlists = [], isLoading, error } = usePlaylists();
+  const createPlaylistMutation = useCreatePlaylistMutation();
+  const deletePlaylistMutation = useDeletePlaylistMutation();
+
   const [sortBy, setSortBy] = useState<PlaylistSortBy>("newest");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [newPlaylistDescription, setNewPlaylistDescription] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
   const { showConfirm, confirmDialog } = useConfirmDialog();
 
   const sortedPlaylists = useMemo(() => {
@@ -52,62 +57,20 @@ export default function PlaylistsPage() {
     });
   }, [playlists, sortBy]);
 
-  useEffect(() => {
-    loadPlaylists();
-  }, []);
-
-  const loadPlaylists = async () => {
-    try {
-      const response = await fetch("/api/playlists");
-
-      if (!response.ok) {
-        throw new Error("プレイリストの取得に失敗しました");
-      }
-
-      const data: PlaylistWithItems[] = await response.json();
-      logger.info("プレイリスト一覧を読み込み", { count: data.length });
-      setPlaylists(data);
-    } catch (error) {
-      logger.error("プレイリスト一覧の読み込みに失敗", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleCreatePlaylist = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsCreating(true);
 
     try {
-      const response = await fetch("/api/playlists", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: newPlaylistName,
-          description: newPlaylistDescription || undefined,
-        }),
+      await createPlaylistMutation.mutateAsync({
+        name: newPlaylistName,
+        description: newPlaylistDescription || undefined,
       });
-
-      if (!response.ok) {
-        throw new Error("プレイリストの作成に失敗しました");
-      }
-
-      const newPlaylist = await response.json();
-      logger.success("プレイリストを作成", {
-        id: newPlaylist.id,
-        name: newPlaylist.name,
-      });
-
-      setPlaylists((prev) => [newPlaylist, ...prev]);
+      logger.success("プレイリストを作成", { name: newPlaylistName });
       setShowCreateForm(false);
       setNewPlaylistName("");
       setNewPlaylistDescription("");
     } catch (error) {
       logger.error("プレイリストの作成に失敗", error);
-    } finally {
-      setIsCreating(false);
     }
   };
 
@@ -122,16 +85,7 @@ export default function PlaylistsPage() {
 
     if (confirmed) {
       try {
-        const response = await fetch(`/api/playlists/${id}`, {
-          method: "DELETE",
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || "削除に失敗しました");
-        }
-
-        setPlaylists((prev) => prev.filter((p) => p.id !== id));
+        await deletePlaylistMutation.mutateAsync(id);
         logger.success("プレイリストを削除", { id, name });
       } catch (error) {
         logger.error("プレイリストの削除に失敗", error);
@@ -202,10 +156,12 @@ export default function PlaylistsPage() {
                     <div className="flex gap-2">
                       <Button
                         type="submit"
-                        disabled={isCreating}
+                        disabled={createPlaylistMutation.isPending}
                         className="bg-violet-600 hover:bg-violet-700"
                       >
-                        {isCreating ? "作成中..." : "作成"}
+                        {createPlaylistMutation.isPending
+                          ? "作成中..."
+                          : "作成"}
                       </Button>
                       <Button
                         type="button"
@@ -230,6 +186,18 @@ export default function PlaylistsPage() {
           {isLoading ? (
             <div className="text-center py-12 text-zinc-500">
               <p className="text-lg">読み込み中...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">⚠️</div>
+              <h3 className="text-xl font-semibold text-white mb-2">
+                エラーが発生しました
+              </h3>
+              <p className="text-zinc-400">
+                {error instanceof Error
+                  ? error.message
+                  : "プレイリストの読み込みに失敗しました"}
+              </p>
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
