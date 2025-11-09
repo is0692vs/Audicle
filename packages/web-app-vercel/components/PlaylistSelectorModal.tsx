@@ -40,7 +40,7 @@ export function PlaylistSelectorModal({
 
   // モーダルが開いたときに選択状態を同期
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !isLoadingCurrent) {
       const currentIds = new Set(currentPlaylists.map((p) => p.id));
       setSelectedPlaylistIds(currentIds);
       setInitialSelectedIds(currentIds);
@@ -49,7 +49,7 @@ export function PlaylistSelectorModal({
         selectedCount: currentIds.size,
       });
     }
-  }, [isOpen, currentPlaylists, allPlaylists.length]);
+  }, [isOpen, isLoadingCurrent]);
 
   // エラー状態を管理
   useEffect(() => {
