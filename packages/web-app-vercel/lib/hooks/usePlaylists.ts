@@ -1,12 +1,16 @@
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import type { PlaylistWithItems } from "@/types/playlist";
 
 /**
  * プレイリスト一覧を取得
  */
 export function usePlaylists() {
+    const { data: session } = useSession();
+    const userEmail = session?.user?.email;
+
     return useQuery({
-        queryKey: ["playlists"],
+        queryKey: ["playlists", userEmail],
         queryFn: async () => {
             const response = await fetch("/api/playlists");
             if (!response.ok) {
@@ -14,11 +18,7 @@ export function usePlaylists() {
             }
             return response.json() as Promise<PlaylistWithItems[]>;
         },
-        staleTime: Infinity,
-        gcTime: Infinity,
-        refetchOnWindowFocus: false,
-        refetchOnMount: false,
-        refetchOnReconnect: false,
+        enabled: !!userEmail,
     });
 }
 
@@ -26,8 +26,11 @@ export function usePlaylists() {
  * プレイリスト詳細を取得
  */
 export function usePlaylistDetail(playlistId: string) {
+    const { data: session } = useSession();
+    const userEmail = session?.user?.email;
+
     return useQuery({
-        queryKey: ["playlists", playlistId],
+        queryKey: ["playlists", userEmail, playlistId],
         queryFn: async () => {
             const response = await fetch(`/api/playlists/${playlistId}`);
             if (!response.ok) {
@@ -35,12 +38,7 @@ export function usePlaylistDetail(playlistId: string) {
             }
             return response.json() as Promise<PlaylistWithItems>;
         },
-        staleTime: Infinity,
-        gcTime: Infinity,
-        refetchOnWindowFocus: false,
-        refetchOnMount: false,
-        refetchOnReconnect: false,
-        enabled: !!playlistId,
+        enabled: !!playlistId && !!userEmail,
     });
 }
 
@@ -48,6 +46,8 @@ export function usePlaylistDetail(playlistId: string) {
  * プレイリスト作成ミューテーション
  */
 export function useCreatePlaylistMutation() {
+    const { data: session } = useSession();
+    const userEmail = session?.user?.email;
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -63,7 +63,7 @@ export function useCreatePlaylistMutation() {
             return response.json();
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["playlists"] });
+            queryClient.invalidateQueries({ queryKey: ["playlists", userEmail] });
         },
     });
 }
@@ -72,6 +72,8 @@ export function useCreatePlaylistMutation() {
  * プレイリスト削除ミューテーション
  */
 export function useDeletePlaylistMutation() {
+    const { data: session } = useSession();
+    const userEmail = session?.user?.email;
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -86,7 +88,7 @@ export function useDeletePlaylistMutation() {
             return response.json();
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["playlists"] });
+            queryClient.invalidateQueries({ queryKey: ["playlists", userEmail] });
         },
     });
 }
@@ -95,6 +97,8 @@ export function useDeletePlaylistMutation() {
  * プレイリスト更新ミューテーション
  */
 export function useUpdatePlaylistMutation() {
+    const { data: session } = useSession();
+    const userEmail = session?.user?.email;
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -117,9 +121,9 @@ export function useUpdatePlaylistMutation() {
             return response.json();
         },
         onSuccess: (_, variables) => {
-            queryClient.invalidateQueries({ queryKey: ["playlists"] });
+            queryClient.invalidateQueries({ queryKey: ["playlists", userEmail] });
             queryClient.invalidateQueries({
-                queryKey: ["playlists", variables.playlistId],
+                queryKey: ["playlists", userEmail, variables.playlistId],
             });
         },
     });

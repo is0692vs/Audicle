@@ -1,12 +1,16 @@
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import type { UserSettings } from "@/types/settings";
 
 /**
  * ユーザー設定を取得
  */
 export function useUserSettings() {
+    const { data: session } = useSession();
+    const userEmail = session?.user?.email;
+
     return useQuery({
-        queryKey: ["user-settings"],
+        queryKey: ["user-settings", userEmail],
         queryFn: async () => {
             const response = await fetch("/api/settings/get");
             if (!response.ok) {
@@ -15,11 +19,7 @@ export function useUserSettings() {
             }
             return response.json() as Promise<UserSettings>;
         },
-        staleTime: Infinity,
-        gcTime: Infinity,
-        refetchOnWindowFocus: false,
-        refetchOnMount: false,
-        refetchOnReconnect: false,
+        enabled: !!userEmail,
     });
 }
 
@@ -27,6 +27,8 @@ export function useUserSettings() {
  * ユーザー設定更新ミューテーション
  */
 export function useUpdateUserSettingsMutation() {
+    const { data: session } = useSession();
+    const userEmail = session?.user?.email;
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -43,7 +45,7 @@ export function useUpdateUserSettingsMutation() {
             return response.json();
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["user-settings"] });
+            queryClient.invalidateQueries({ queryKey: ["user-settings", userEmail] });
         },
     });
 }

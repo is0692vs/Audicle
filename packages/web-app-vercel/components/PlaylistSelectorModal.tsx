@@ -40,7 +40,7 @@ export function PlaylistSelectorModal({
 
   // モーダルが開いたときに選択状態を同期
   useEffect(() => {
-    if (isOpen && currentPlaylists.length > 0) {
+    if (isOpen) {
       const currentIds = new Set(currentPlaylists.map((p) => p.id));
       setSelectedPlaylistIds(currentIds);
       setInitialSelectedIds(currentIds);

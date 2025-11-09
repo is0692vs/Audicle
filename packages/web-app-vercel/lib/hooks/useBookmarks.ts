@@ -1,12 +1,16 @@
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import type { Bookmark, PlaylistWithItems } from "@/types/playlist";
 
 /**
  * デフォルトプレイリストのブックマーク一覧を取得
  */
 export function useBookmarks() {
+    const { data: session } = useSession();
+    const userEmail = session?.user?.email;
+
     return useQuery({
-        queryKey: ["bookmarks"],
+        queryKey: ["bookmarks", userEmail],
         queryFn: async () => {
             const response = await fetch("/api/playlists/default");
             if (!response.ok) {
@@ -15,11 +19,7 @@ export function useBookmarks() {
             const playlist: PlaylistWithItems = await response.json();
             return playlist.items?.map((item) => item.bookmark) || [];
         },
-        staleTime: Infinity,
-        gcTime: Infinity,
-        refetchOnWindowFocus: false,
-        refetchOnMount: false,
-        refetchOnReconnect: false,
+        enabled: !!userEmail,
     });
 }
 
@@ -27,6 +27,8 @@ export function useBookmarks() {
  * ブックマーク削除ミューテーション
  */
 export function useDeleteBookmarkMutation() {
+    const { data: session } = useSession();
+    const userEmail = session?.user?.email;
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -41,8 +43,8 @@ export function useDeleteBookmarkMutation() {
         },
         onSuccess: () => {
             // ブックマークと プレイリスト両方を無効化
-            queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
-            queryClient.invalidateQueries({ queryKey: ["playlists"] });
+            queryClient.invalidateQueries({ queryKey: ["bookmarks", userEmail] });
+            queryClient.invalidateQueries({ queryKey: ["playlists", userEmail] });
         },
     });
 }
@@ -51,6 +53,8 @@ export function useDeleteBookmarkMutation() {
  * ブックマーク追加ミューテーション
  */
 export function useAddBookmarkMutation() {
+    const { data: session } = useSession();
+    const userEmail = session?.user?.email;
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -70,8 +74,8 @@ export function useAddBookmarkMutation() {
             return response.json();
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
-            queryClient.invalidateQueries({ queryKey: ["playlists"] });
+            queryClient.invalidateQueries({ queryKey: ["bookmarks", userEmail] });
+            queryClient.invalidateQueries({ queryKey: ["playlists", userEmail] });
         },
     });
 }

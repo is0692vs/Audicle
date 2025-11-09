@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import {
   useUserSettings,
@@ -21,14 +21,12 @@ export default function UserSettingsPanel() {
   );
   const [hasChanged, setHasChanged] = useState(false);
 
-  // originalSettings が変わったら settings を更新（初回読み込みなど）
-  if (
-    originalSettings &&
-    JSON.stringify(settings) !== JSON.stringify(originalSettings) &&
-    !hasChanged
-  ) {
-    setSettings(originalSettings);
-  }
+  // originalSettingsが変わったら、ローカル変更がない場合は同期
+  useEffect(() => {
+    if (originalSettings && !hasChanged) {
+      setSettings(originalSettings);
+    }
+  }, [originalSettings, hasChanged]);
 
   const handlePlaybackSpeedChange = (value: number) => {
     setSettings({ ...settings, playback_speed: value });

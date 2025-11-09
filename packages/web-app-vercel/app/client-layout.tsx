@@ -12,11 +12,11 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: Infinity, // 個人データなので時間経過では古くならない
-            gcTime: Infinity, // キャッシュを永久保持（v5ではcacheTime -> gcTimeに名称変更）
-            refetchOnWindowFocus: false, // ウィンドウフォーカス時に再フェッチしない
-            refetchOnMount: false, // マウント時に再フェッチしない
-            refetchOnReconnect: false, // ネット再接続時に再フェッチしない
+            staleTime: 5 * 60 * 1000, // 5分間は新鮮（クロスタブ同期のため）
+            gcTime: 5 * 60 * 1000, // 5分間（デフォルト）でガベージコレクション
+            refetchOnWindowFocus: true, // ウィンドウフォーカス時に再フェッチ
+            refetchOnMount: true, // マウント時に再フェッチ
+            refetchOnReconnect: true, // ネット再接続時に再フェッチ
           },
         },
       }),

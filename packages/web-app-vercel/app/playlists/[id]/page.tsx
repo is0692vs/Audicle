@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { logger } from "@/lib/logger";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
@@ -33,11 +33,13 @@ export default function PlaylistDetailPage() {
     );
   }, [playlist?.items]);
 
-  // Syncフック: playlistの値が変わったら編集フィールドを更新
-  if (playlist && (editName === "" || editDescription === "")) {
-    if (editName === "") setEditName(playlist.name);
-    if (editDescription === "") setEditDescription(playlist.description || "");
-  }
+  // playlistが読み込まれたら編集フィールドを初期化
+  useEffect(() => {
+    if (playlist) {
+      setEditName(playlist.name);
+      setEditDescription(playlist.description || "");
+    }
+  }, [playlist]);
 
   const handleSave = async () => {
     if (!playlist) return;

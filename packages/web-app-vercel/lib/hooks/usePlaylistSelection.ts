@@ -1,12 +1,16 @@
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import type { Playlist } from "@/types/playlist";
 
 /**
  * ブックマークIDからそのブックマークが属するプレイリスト一覧を取得
  */
 export function useBookmarkPlaylists(bookmarkId: string) {
+    const { data: session } = useSession();
+    const userEmail = session?.user?.email;
+
     return useQuery({
-        queryKey: ["bookmark-playlists", bookmarkId],
+        queryKey: ["bookmark-playlists", userEmail, bookmarkId],
         queryFn: async () => {
             const response = await fetch(`/api/bookmarks/${bookmarkId}/playlists`);
             if (!response.ok) {
@@ -16,12 +20,7 @@ export function useBookmarkPlaylists(bookmarkId: string) {
             }
             return response.json() as Promise<Playlist[]>;
         },
-        staleTime: Infinity,
-        gcTime: Infinity,
-        refetchOnWindowFocus: false,
-        refetchOnMount: false,
-        refetchOnReconnect: false,
-        enabled: !!bookmarkId,
+        enabled: !!bookmarkId && !!userEmail,
     });
 }
 
@@ -29,6 +28,8 @@ export function useBookmarkPlaylists(bookmarkId: string) {
  * ブックマークのプレイリスト関連付け更新ミューテーション
  */
 export function useUpdateBookmarkPlaylistsMutation() {
+    const { data: session } = useSession();
+    const userEmail = session?.user?.email;
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -49,9 +50,9 @@ export function useUpdateBookmarkPlaylistsMutation() {
         },
         onSuccess: () => {
             // ブックマーク関連の全てのキャッシュを無効化
-            queryClient.invalidateQueries({ queryKey: ["bookmark-playlists"] });
-            queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
-            queryClient.invalidateQueries({ queryKey: ["playlists"] });
+            queryClient.invalidateQueries({ queryKey: ["bookmark-playlists", userEmail] });
+            queryClient.invalidateQueries({ queryKey: ["bookmarks", userEmail] });
+            queryClient.invalidateQueries({ queryKey: ["playlists", userEmail] });
         },
     });
 }
