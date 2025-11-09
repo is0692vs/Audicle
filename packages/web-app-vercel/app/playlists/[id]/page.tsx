@@ -35,11 +35,11 @@ export default function PlaylistDetailPage() {
 
   // playlistが読み込まれたら編集フィールドを初期化
   useEffect(() => {
-    if (playlist) {
+    if (playlist && !isEditing) {
       setEditName(playlist.name);
       setEditDescription(playlist.description || "");
     }
-  }, [playlist]);
+  }, [playlist, isEditing]);
 
   const handleSave = async () => {
     if (!playlist) return;
