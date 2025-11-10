@@ -43,6 +43,8 @@ export default function ReaderPageClient() {
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>("");
+  const [arePlaylistsLoaded, setArePlaylistsLoaded] = useState(false);
+  const [hasLoadedFromQuery, setHasLoadedFromQuery] = useState(false);
 
   // 再生制御フック
   const {
@@ -181,6 +183,9 @@ export default function ReaderPageClient() {
         }
       } catch (error) {
         logger.error("プレイリストの読み込みに失敗", error);
+      } finally {
+        // プレイリスト読み込み完了をマーク
+        setArePlaylistsLoaded(true);
       }
     };
 
@@ -206,7 +211,8 @@ export default function ReaderPageClient() {
 
   // URLクエリパラメータが指定されている場合は記事を自動取得
   useEffect(() => {
-    if (urlFromQuery) {
+    // プレイリスト読み込みが完了してから記事を読み込む
+    if (urlFromQuery && arePlaylistsLoaded && !hasLoadedFromQuery) {
       setUrl(urlFromQuery);
       // 既にlocalStorageに同じURLの記事が存在するかチェック
       const existingArticle = articleStorage
@@ -223,8 +229,9 @@ export default function ReaderPageClient() {
         // 新しい記事の場合は取得
         loadAndSaveArticle(urlFromQuery);
       }
+      setHasLoadedFromQuery(true);
     }
-  }, [urlFromQuery, router, loadAndSaveArticle]);
+  }, [urlFromQuery, arePlaylistsLoaded, router, loadAndSaveArticle, hasLoadedFromQuery]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

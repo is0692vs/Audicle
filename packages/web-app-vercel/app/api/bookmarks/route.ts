@@ -58,7 +58,7 @@ export async function POST(request: Request) {
                 .eq('id', playlist_id)
                 .eq('owner_email', userEmail!)
                 .single();
-            
+
             if (playlistError || !playlist) {
                 return NextResponse.json(
                     { error: 'Invalid or unauthorized playlist ID.' },
