@@ -231,7 +231,13 @@ export default function ReaderPageClient() {
       }
       setHasLoadedFromQuery(true);
     }
-  }, [urlFromQuery, arePlaylistsLoaded, router, loadAndSaveArticle, hasLoadedFromQuery]);
+  }, [
+    urlFromQuery,
+    arePlaylistsLoaded,
+    router,
+    loadAndSaveArticle,
+    hasLoadedFromQuery,
+  ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
