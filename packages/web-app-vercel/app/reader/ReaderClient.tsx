@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import ReaderView from "@/components/ReaderView";
 import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
 import { Chunk } from "@/types/api";
+import { Playlist } from "@/types/playlist";
 import { extractContent } from "@/lib/api";
 import { usePlayback } from "@/hooks/usePlayback";
 import { articleStorage } from "@/lib/storage";
@@ -40,6 +41,8 @@ export default function ReaderPageClient() {
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [bookmarkId, setBookmarkId] = useState<string | null>(null);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>("");
 
   // 再生制御フック
   const {
@@ -71,7 +74,7 @@ export default function ReaderPageClient() {
         setChunks(chunksWithId);
         setTitle(response.title);
 
-        // Supabaseにブックマークを保存（デフォルトプレイリストに自動追加）
+        // Supabaseにブックマークを保存（選択されたプレイリストに追加）
         let newBookmarkId: string | null = null;
         try {
           const bookmarkResponse = await fetch("/api/bookmarks", {
@@ -84,6 +87,7 @@ export default function ReaderPageClient() {
               article_title: response.title,
               thumbnail_url: null,
               last_read_position: 0,
+              playlist_id: selectedPlaylistId || undefined, // 選択されたプレイリストIDを送信
             }),
           });
 
@@ -95,6 +99,7 @@ export default function ReaderPageClient() {
               id: newBookmarkId,
               url: articleUrl,
               title: response.title,
+              playlistId: selectedPlaylistId,
             });
           } else {
             logger.error(
@@ -157,6 +162,32 @@ export default function ReaderPageClient() {
     };
 
     loadSettings();
+  }, []);
+
+  // プレイリスト一覧を取得
+  useEffect(() => {
+    const fetchPlaylists = async () => {
+      try {
+        const response = await fetch("/api/playlists");
+        if (response.ok) {
+          const data = await response.json();
+          setPlaylists(data);
+
+          // デフォルトプレイリストを初期選択
+          const defaultPlaylist = data.find((p: Playlist) => p.is_default);
+          if (defaultPlaylist) {
+            setSelectedPlaylistId(defaultPlaylist.id);
+          } else if (data.length > 0) {
+            // デフォルトプレイリストがない場合は最初のプレイリストを選択
+            setSelectedPlaylistId(data[0].id);
+          }
+        }
+      } catch (error) {
+        logger.error("プレイリストの読み込みに失敗", error);
+      }
+    };
+
+    fetchPlaylists();
   }, []);
 
   // 記事IDが指定されている場合は読み込み
@@ -222,7 +253,7 @@ export default function ReaderPageClient() {
               {title}
             </h2>
           )}
-          <form onSubmit={handleSubmit} className="flex gap-2">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-2">
             <input
               type="url"
               value={url}
@@ -232,13 +263,33 @@ export default function ReaderPageClient() {
               disabled={isLoading}
               required
             />
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-            >
-              {isLoading ? "読込中..." : "読込"}
-            </button>
+
+            <div className="flex gap-2 items-center">
+              <label className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                追加先:
+              </label>
+              <select
+                value={selectedPlaylistId}
+                onChange={(e) => setSelectedPlaylistId(e.target.value)}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={isLoading || playlists.length === 0}
+              >
+                {playlists.map((playlist) => (
+                  <option key={playlist.id} value={playlist.id}>
+                    {playlist.is_default ? "📌 " : ""}
+                    {playlist.name}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                {isLoading ? "読込中..." : "読込"}
+              </button>
+            </div>
           </form>
           {error && (
             <div className="mt-2 text-red-600 dark:text-red-400 text-sm">
