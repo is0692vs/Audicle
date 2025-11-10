@@ -11,7 +11,7 @@ export async function POST(request: Request) {
         if (response) return response
         const body = await request.json()
 
-        const { article_url, article_title, thumbnail_url, last_read_position } = body
+        const { article_url, article_title, thumbnail_url, last_read_position, playlist_id } = body
 
         if (!article_url || !article_title) {
             return NextResponse.json(
@@ -47,16 +47,36 @@ export async function POST(request: Request) {
             )
         }
 
-        // デフォルトプレイリストを取得（なければ作成）
-        const defaultPlaylistResult = await getOrCreateDefaultPlaylist(userEmail!)
-        if (defaultPlaylistResult.error) {
-            return NextResponse.json(
-                { error: defaultPlaylistResult.error },
-                { status: 500 }
-            )
-        }
+        // プレイリストIDの決定
+        let selectedPlaylistId: string;
 
-        const playlistId = defaultPlaylistResult.playlist!.id
+        if (playlist_id) {
+            // リクエストで指定されたプレイリストを検証して使用
+            const { data: playlist, error: playlistError } = await supabase
+                .from('playlists')
+                .select('id')
+                .eq('id', playlist_id)
+                .eq('owner_email', userEmail!)
+                .single();
+
+            if (playlistError || !playlist) {
+                return NextResponse.json(
+                    { error: 'Invalid or unauthorized playlist ID.' },
+                    { status: 400 }
+                );
+            }
+            selectedPlaylistId = playlist_id;
+        } else {
+            // 未指定の場合はデフォルトプレイリストを取得（後方互換性）
+            const defaultPlaylistResult = await getOrCreateDefaultPlaylist(userEmail!)
+            if (defaultPlaylistResult.error || !defaultPlaylistResult.playlist) {
+                return NextResponse.json(
+                    { error: defaultPlaylistResult.error || 'Failed to get or create default playlist' },
+                    { status: 500 }
+                )
+            }
+            selectedPlaylistId = defaultPlaylistResult.playlist.id
+        }
 
         // プレイリストに追加（既に存在する場合は無視）
         // 注: positionはDB側のトリガーで自動採番される
@@ -64,7 +84,7 @@ export async function POST(request: Request) {
             .from('playlist_items')
             .upsert(
                 {
-                    playlist_id: playlistId,
+                    playlist_id: selectedPlaylistId,
                     bookmark_id: bookmark.id,
                 },
                 {
