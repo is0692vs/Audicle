@@ -134,7 +134,7 @@ export default function ReaderPageClient() {
         setIsLoading(false);
       }
     },
-    [router]
+    [router, selectedPlaylistId]
   );
 
   // ユーザー設定を読み込む
@@ -170,15 +170,12 @@ export default function ReaderPageClient() {
       try {
         const response = await fetch("/api/playlists");
         if (response.ok) {
-          const data = await response.json();
+          const data: Playlist[] = await response.json();
           setPlaylists(data);
 
-          // デフォルトプレイリストを初期選択
-          const defaultPlaylist = data.find((p: Playlist) => p.is_default);
-          if (defaultPlaylist) {
-            setSelectedPlaylistId(defaultPlaylist.id);
-          } else if (data.length > 0) {
-            // デフォルトプレイリストがない場合は最初のプレイリストを選択
+          // APIレスポンスはデフォルトプレイリストが先頭に来るようにソートされているため，
+          // 最初のアイテムを選択すればよい
+          if (data.length > 0) {
             setSelectedPlaylistId(data[0].id);
           }
         }

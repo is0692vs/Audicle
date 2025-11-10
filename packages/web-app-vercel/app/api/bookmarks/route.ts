@@ -51,14 +51,27 @@ export async function POST(request: Request) {
         let selectedPlaylistId: string;
 
         if (playlist_id) {
-            // リクエストで指定されたプレイリストを使用
+            // リクエストで指定されたプレイリストを検証して使用
+            const { data: playlist, error: playlistError } = await supabase
+                .from('playlists')
+                .select('id')
+                .eq('id', playlist_id)
+                .eq('owner_email', userEmail!)
+                .single();
+            
+            if (playlistError || !playlist) {
+                return NextResponse.json(
+                    { error: 'Invalid or unauthorized playlist ID.' },
+                    { status: 400 }
+                );
+            }
             selectedPlaylistId = playlist_id;
         } else {
             // 未指定の場合はデフォルトプレイリストを取得（後方互換性）
             const defaultPlaylistResult = await getOrCreateDefaultPlaylist(userEmail!)
             if (defaultPlaylistResult.error || !defaultPlaylistResult.playlist) {
                 return NextResponse.json(
-                    { error: 'Failed to get or create default playlist' },
+                    { error: defaultPlaylistResult.error || 'Failed to get or create default playlist' },
                     { status: 500 }
                 )
             }
