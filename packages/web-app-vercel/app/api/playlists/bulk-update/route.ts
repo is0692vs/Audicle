@@ -93,8 +93,8 @@ export async function POST(request: Request) {
             }
 
             if (data) {
-                addedCount = data.added_count;
-                removedCount = data.removed_count;
+                addedCount = data.added_count ?? 0;
+                removedCount = data.removed_count ?? 0;
 
                 console.log("プレイリストを更新", {
                     bookmarkId,
