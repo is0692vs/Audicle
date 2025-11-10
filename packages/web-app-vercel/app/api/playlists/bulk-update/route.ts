@@ -73,52 +73,42 @@ export async function POST(request: Request) {
             }
         }
 
-        // 削除操作: 指定されたプレイリストからブックマークを削除
-        if (removeFromPlaylistIds.length > 0) {
-            const { error: deleteError } = await supabase
-                .from('playlist_items')
-                .delete()
-                .eq('bookmark_id', bookmarkId)
-                .in('playlist_id', removeFromPlaylistIds)
+        // バルク更新API呼び出し（トランザクション保証）
+        let addedCount = 0;
+        let removedCount = 0;
 
-            if (deleteError) {
-                console.error('Supabase delete error:', deleteError)
+        if (addToPlaylistIds.length > 0 || removeFromPlaylistIds.length > 0) {
+            const { data, error } = await supabase.rpc('bulk_update_playlist_items', {
+                bookmark_id_param: bookmarkId,
+                add_playlist_ids: addToPlaylistIds,
+                remove_playlist_ids: removeFromPlaylistIds
+            });
+
+            if (error) {
+                console.error('Supabase RPC error:', error)
                 return NextResponse.json(
-                    { error: 'Failed to remove from playlists' },
+                    { error: 'プレイリストの更新に失敗しました' },
                     { status: 500 }
                 )
             }
-        }
 
-        // 追加操作: 指定されたプレイリストにブックマークを追加
-        if (addToPlaylistIds.length > 0) {
-            const resolvedItems = addToPlaylistIds.map((playlistId) => ({
-                playlist_id: playlistId,
-                bookmark_id: bookmarkId,
-            }));
+            if (data) {
+                addedCount = data.added_count;
+                removedCount = data.removed_count;
 
-            // upsertで追加（既に存在する場合はスキップ）
-            const { error: insertError } = await supabase
-                .from('playlist_items')
-                .upsert(resolvedItems, {
-                    onConflict: 'playlist_id,bookmark_id',
-                    ignoreDuplicates: true,
-                })
-
-            if (insertError) {
-                console.error('Supabase insert error:', insertError)
-                return NextResponse.json(
-                    { error: 'Failed to add to playlists' },
-                    { status: 500 }
-                )
+                console.log("プレイリストを更新", {
+                    bookmarkId,
+                    addedCount,
+                    removedCount,
+                });
             }
         }
 
         return NextResponse.json(
             {
                 message: 'Bulk update completed',
-                addedCount: addToPlaylistIds.length,
-                removedCount: removeFromPlaylistIds.length,
+                addedCount,
+                removedCount,
             },
             { status: 200 }
         )
