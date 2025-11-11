@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { getOrCreateDefaultPlaylist } from './playlist-utils'
 
 export interface UserInitializationResult {
     success: boolean
@@ -11,9 +12,10 @@ export interface UserInitializationResult {
  * - デフォルトプレイリストは getOrCreateDefaultPlaylist で作成
  *
  * @param userId NextAuth のユーザーID
+ * @param userEmail ユーザーのメールアドレス
  * @returns 初期化結果
  */
-export async function initializeNewUser(userId: string): Promise<UserInitializationResult> {
+export async function initializeNewUser(userId: string, userEmail: string): Promise<UserInitializationResult> {
     try {
         // user_settings が既に存在するか確認
         const { data: existingSettings, error: checkError } = await supabase
@@ -52,6 +54,14 @@ export async function initializeNewUser(userId: string): Promise<UserInitializat
         }
 
         console.log(`User settings created for user: ${userId}`, newSettings)
+
+        // デフォルトプレイリストを作成
+        const playlistResult = await getOrCreateDefaultPlaylist(userEmail);
+        if (playlistResult.error) {
+            console.error('Failed to create default playlist:', playlistResult.error);
+            // エラーだが、user_settingsは作成済みなので success: true
+        }
+
         return { success: true }
     } catch (error) {
         console.error('Unexpected error in initializeNewUser:', error)

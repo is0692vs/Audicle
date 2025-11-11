@@ -36,7 +36,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             if (account) {
                 token.id = profile?.sub || account.providerAccountId;
                 // 新規ユーザーの場合、初期化処理を実行
-                await initializeNewUser(token.id as string);
+                await initializeNewUser(token.id as string, profile?.email || '');
             }
             return token;
         },
