@@ -37,7 +37,7 @@ export async function GET(
         // bookmark_id を持つすべてのプレイリストを効率的に取得
         const { data: playlistsWithItems, error: playlistsError } = await supabase
             .from('playlists')
-            .select('id, name, is_default, playlist_items!inner(bookmark_id)')
+            .select('*, playlist_items!inner(bookmark_id)')
             .eq('owner_email', userEmail)
             .eq('playlist_items.bookmark_id', bookmark_id)
             .order('is_default', { ascending: false })
