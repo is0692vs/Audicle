@@ -144,8 +144,8 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         audioRef.current = audio;
         currentAudioUrlRef.current = audioUrl;
         // 現在の playbackRate を取得して反映
-        const currentRate = parseFloat(localStorage.getItem(PLAYBACK_RATE_STORAGE_KEY) || DEFAULT_PLAYBACK_RATE.toString());
-        audio.playbackRate = currentRate;
+        const rate = parseFloat(localStorage.getItem(PLAYBACK_RATE_STORAGE_KEY) || '');
+        audio.playbackRate = isNaN(rate) ? DEFAULT_PLAYBACK_RATE : rate;
 
         audio.onended = async () => {
           // 見出しの後、または段落間にポーズ
