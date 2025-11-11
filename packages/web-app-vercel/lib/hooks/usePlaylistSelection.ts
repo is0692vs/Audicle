@@ -62,9 +62,9 @@ export function useUpdateArticlePlaylistsMutation() {
             }
             return response.json();
         },
-        onSuccess: () => {
-            // 記事関連の全てのキャッシュを無効化
-            queryClient.invalidateQueries({ queryKey: ['article', 'playlists'] });
+        onSuccess: (data, variables) => {
+            // 更新対象の特定の記事のプレイリストキャッシュのみを無効化
+            queryClient.invalidateQueries({ queryKey: ['article', 'playlists', variables.articleId, userEmail] });
             queryClient.invalidateQueries({ queryKey: ['playlist-item-playlists'] });
             queryClient.invalidateQueries({ queryKey: ["playlists", userEmail] });
         },
