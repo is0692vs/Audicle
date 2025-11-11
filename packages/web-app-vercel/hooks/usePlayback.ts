@@ -182,9 +182,11 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         };
 
         audio.onerror = (e) => {
-          const errorMessage = `音声の再生に失敗しました (URL: ${audioUrl})`;
+          const mediaError = audio.error;
+          const errorMessage = `音声の再生に失敗しました (URL: ${audioUrl}, Code: ${mediaError?.code})`;
           logger.error("音声再生エラー", {
-            error: e,
+            error: mediaError,
+            event: e,
             audioUrl,
             chunkIndex: index,
             audioUrlType: audioUrl.startsWith('blob:') ? 'blob' : 'other',
