@@ -11,6 +11,7 @@ import {
 interface PlaylistSelectorModalProps {
   isOpen: boolean;
   onClose: () => void;
+  itemId: string;
   bookmarkId: string;
   articleTitle: string;
 }
@@ -18,6 +19,7 @@ interface PlaylistSelectorModalProps {
 export function PlaylistSelectorModal({
   isOpen,
   onClose,
+  itemId,
   bookmarkId,
   articleTitle,
 }: PlaylistSelectorModalProps) {

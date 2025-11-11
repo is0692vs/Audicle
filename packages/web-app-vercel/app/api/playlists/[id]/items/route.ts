@@ -63,36 +63,20 @@ export async function POST(
             )
         }
 
-        // playlist_itemsに挿入
+        // playlist_itemsに挿入または既存のものを取得
         const { data: playlistItem, error: itemError } = await supabase
             .from('playlist_items')
-            .insert({
+            .upsert({
                 playlist_id: id,
                 bookmark_id: bookmark.id,
+            }, {
+                onConflict: 'playlist_id,bookmark_id'
             })
             .select()
             .single()
 
         if (itemError) {
-            // 23505はunique_violationエラー
-            if (itemError.code === '23505') {
-                // アイテムが既に存在するため、既存のアイテムを取得して返す
-                const { data: existingItem, error: fetchError } = await supabase
-                    .from('playlist_items')
-                    .select()
-                    .eq('playlist_id', id)
-                    .eq('bookmark_id', bookmark.id)
-                    .single()
-
-                if (fetchError) {
-                    return NextResponse.json({ error: 'Failed to fetch existing item' }, { status: 500 })
-                }
-
-                return NextResponse.json({
-                    item: existingItem,
-                    bookmark: bookmark,
-                })
-            }
+            console.error('Supabase item upsert error:', itemError)
             return NextResponse.json(
                 { error: 'Failed to add item to playlist' },
                 { status: 500 }

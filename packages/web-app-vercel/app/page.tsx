@@ -118,6 +118,7 @@ export default function Home() {
                 setIsPlaylistModalOpen(false);
                 setSelectedItemId(null);
               }}
+              itemId={selectedItemId}
               bookmarkId={selectedItem.bookmark_id}
               articleTitle={selectedItem.bookmark.article_title}
             />
