@@ -8,6 +8,7 @@ import React, {
   useEffect,
 } from "react";
 import { useRouter } from "next/navigation";
+import { createReaderUrl } from "@/lib/urlBuilder";
 import type { PlaylistItemWithArticle } from "@/types/playlist";
 
 export interface PlaylistPlaybackState {
@@ -120,9 +121,12 @@ export function PlaylistPlaybackProvider({
       // 最初の記事に遷移（自動再生フラグ付き）
       if (items.length > startIndex) {
         const firstItem = items[startIndex];
-        const readerUrl = `/reader?url=${encodeURIComponent(
-          firstItem.article.url
-        )}&playlist=${playlistId}&index=${startIndex}&autoplay=true`;
+        const readerUrl = createReaderUrl({
+          articleUrl: firstItem.article.url,
+          playlistId,
+          playlistIndex: startIndex,
+          autoplay: true,
+        });
         router.push(readerUrl);
       }
     },
@@ -141,10 +145,13 @@ export function PlaylistPlaybackProvider({
       const nextIndex = prevState.currentIndex + 1;
       const nextItem = prevState.items[nextIndex];
 
-      if (nextItem) {
-        const nextUrl = `/reader?url=${encodeURIComponent(
-          nextItem.article.url
-        )}&playlist=${prevState.playlistId}&index=${nextIndex}&autoplay=true`;
+      if (nextItem && prevState.playlistId) {
+        const nextUrl = createReaderUrl({
+          articleUrl: nextItem.article.url,
+          playlistId: prevState.playlistId,
+          playlistIndex: nextIndex,
+          autoplay: true,
+        });
         router.push(nextUrl);
       }
 
@@ -164,10 +171,13 @@ export function PlaylistPlaybackProvider({
       const prevIndex = prevState.currentIndex - 1;
       const prevItem = prevState.items[prevIndex];
 
-      if (prevItem) {
-        const prevUrl = `/reader?url=${encodeURIComponent(
-          prevItem.article.url
-        )}&playlist=${prevState.playlistId}&index=${prevIndex}&autoplay=true`;
+      if (prevItem && prevState.playlistId) {
+        const prevUrl = createReaderUrl({
+          articleUrl: prevItem.article.url,
+          playlistId: prevState.playlistId,
+          playlistIndex: prevIndex,
+          autoplay: true,
+        });
         router.push(prevUrl);
       }
 
@@ -200,10 +210,13 @@ export function PlaylistPlaybackProvider({
         const nextIndex = prevState.currentIndex + 1;
         const nextItem = prevState.items[nextIndex];
 
-        if (nextItem) {
-          const nextUrl = `/reader?url=${encodeURIComponent(
-            nextItem.article.url
-          )}&playlist=${prevState.playlistId}&index=${nextIndex}&autoplay=true`;
+        if (nextItem && prevState.playlistId) {
+          const nextUrl = createReaderUrl({
+            articleUrl: nextItem.article.url,
+            playlistId: prevState.playlistId,
+            playlistIndex: nextIndex,
+            autoplay: true,
+          });
           router.push(nextUrl);
         }
 
