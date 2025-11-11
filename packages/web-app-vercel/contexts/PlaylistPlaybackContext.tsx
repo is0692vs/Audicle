@@ -117,12 +117,12 @@ export function PlaylistPlaybackProvider({
         isPlaylistMode: true,
       });
 
-      // 最初の記事に遷移
+      // 最初の記事に遷移（自動再生フラグ付き）
       if (items.length > startIndex) {
         const firstItem = items[startIndex];
         const readerUrl = `/reader?url=${encodeURIComponent(
           firstItem.article.url
-        )}&playlist=${playlistId}&index=${startIndex}`;
+        )}&playlist=${playlistId}&index=${startIndex}&autoplay=true`;
         router.push(readerUrl);
       }
     },
@@ -144,7 +144,7 @@ export function PlaylistPlaybackProvider({
       if (nextItem) {
         const nextUrl = `/reader?url=${encodeURIComponent(
           nextItem.article.url
-        )}&playlist=${prevState.playlistId}&index=${nextIndex}`;
+        )}&playlist=${prevState.playlistId}&index=${nextIndex}&autoplay=true`;
         router.push(nextUrl);
       }
 
@@ -167,7 +167,7 @@ export function PlaylistPlaybackProvider({
       if (prevItem) {
         const prevUrl = `/reader?url=${encodeURIComponent(
           prevItem.article.url
-        )}&playlist=${prevState.playlistId}&index=${prevIndex}`;
+        )}&playlist=${prevState.playlistId}&index=${prevIndex}&autoplay=true`;
         router.push(prevUrl);
       }
 
@@ -196,14 +196,14 @@ export function PlaylistPlaybackProvider({
       }
 
       if (prevState.currentIndex < prevState.items.length - 1) {
-        // 次の記事に自動遷移
+        // 次の記事に自動遷移（自動再生フラグ付き）
         const nextIndex = prevState.currentIndex + 1;
         const nextItem = prevState.items[nextIndex];
 
         if (nextItem) {
           const nextUrl = `/reader?url=${encodeURIComponent(
             nextItem.article.url
-          )}&playlist=${prevState.playlistId}&index=${nextIndex}`;
+          )}&playlist=${prevState.playlistId}&index=${nextIndex}&autoplay=true`;
           router.push(nextUrl);
         }
 
