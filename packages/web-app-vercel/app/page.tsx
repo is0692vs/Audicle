@@ -7,12 +7,8 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { logger } from "@/lib/logger";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
-import {
-  useDefaultPlaylistItems,
-} from "@/lib/hooks/useDefaultPlaylistItems";
-import {
-  useRemoveFromPlaylistMutation,
-} from "@/lib/hooks/usePlaylists";
+import { useDefaultPlaylistItems } from "@/lib/hooks/useDefaultPlaylistItems";
+import { useRemoveFromPlaylistMutation } from "@/lib/hooks/usePlaylists";
 import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
 import { ArticleCard } from "@/components/ArticleCard";
 import { Button } from "@/components/ui/button";
@@ -104,9 +100,7 @@ export default function Home() {
   };
 
   const handleArticleClick = (item: (typeof items)[0]) => {
-    router.push(
-      `/reader?url=${encodeURIComponent(item.bookmark.article_url)}`
-    );
+    router.push(`/reader?url=${encodeURIComponent(item.bookmark.article_url)}`);
   };
 
   return (

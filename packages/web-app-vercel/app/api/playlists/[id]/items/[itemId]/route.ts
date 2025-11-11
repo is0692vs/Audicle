@@ -4,58 +4,58 @@ import { requireAuth } from '@/lib/api-auth'
 
 // DELETE: プレイリストからアイテムを削除
 export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string; itemId: string }> }
+    request: Request,
+    { params }: { params: Promise<{ id: string; itemId: string }> }
 ) {
-  try {
-    const { userEmail, response } = await requireAuth()
-    if (response) return response
+    try {
+        const { userEmail, response } = await requireAuth()
+        if (response) return response
 
-    const { id: playlistId, itemId } = await params
+        const { id: playlistId, itemId } = await params
 
-    // プレイリストの所有権を確認
-    const { data: playlist, error: playlistError } = await supabase
-      .from('playlists')
-      .select('owner_email')
-      .eq('id', playlistId)
-      .single()
+        // プレイリストの所有権を確認
+        const { data: playlist, error: playlistError } = await supabase
+            .from('playlists')
+            .select('owner_email')
+            .eq('id', playlistId)
+            .single()
 
-    if (playlistError || !playlist) {
-      console.error('Supabase error:', playlistError)
-      return NextResponse.json(
-        { error: 'Playlist not found' },
-        { status: 404 }
-      )
+        if (playlistError || !playlist) {
+            console.error('Supabase error:', playlistError)
+            return NextResponse.json(
+                { error: 'Playlist not found' },
+                { status: 404 }
+            )
+        }
+
+        if (playlist.owner_email !== userEmail) {
+            return NextResponse.json(
+                { error: 'Forbidden' },
+                { status: 403 }
+            )
+        }
+
+        // playlist_itemsから削除
+        const { error: deleteError } = await supabase
+            .from('playlist_items')
+            .delete()
+            .eq('id', itemId)
+            .eq('playlist_id', playlistId)
+
+        if (deleteError) {
+            console.error('Supabase error:', deleteError)
+            return NextResponse.json(
+                { error: 'Failed to delete item' },
+                { status: 500 }
+            )
+        }
+
+        return NextResponse.json({ success: true })
+    } catch (error) {
+        console.error('Error in DELETE /api/playlists/[id]/items/[itemId]:', error)
+        return NextResponse.json(
+            { error: 'Internal server error' },
+            { status: 500 }
+        )
     }
-
-    if (playlist.owner_email !== userEmail) {
-      return NextResponse.json(
-        { error: 'Forbidden' },
-        { status: 403 }
-      )
-    }
-
-    // playlist_itemsから削除
-    const { error: deleteError } = await supabase
-      .from('playlist_items')
-      .delete()
-      .eq('id', itemId)
-      .eq('playlist_id', playlistId)
-
-    if (deleteError) {
-      console.error('Supabase error:', deleteError)
-      return NextResponse.json(
-        { error: 'Failed to delete item' },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error('Error in DELETE /api/playlists/[id]/items/[itemId]:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
-  }
 }
