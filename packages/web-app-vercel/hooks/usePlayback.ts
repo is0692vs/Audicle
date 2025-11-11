@@ -19,6 +19,10 @@ interface UsePlaybackProps {
 
 const PREFETCH_AHEAD = 3; // 3つ先まで先読み
 
+// localStorage のキー定数
+const PLAYBACK_RATE_STORAGE_KEY = "audicle-playback-rate";
+const DEFAULT_PLAYBACK_RATE = 1.0;
+
 /**
  * 指定時間待機する
  */
@@ -33,10 +37,10 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
   const [error, setError] = useState<string>("");
   const [playbackRate, setPlaybackRate] = useState<number>(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("audicle-playback-rate");
-      return saved ? parseFloat(saved) : 1.0;
+      const saved = localStorage.getItem(PLAYBACK_RATE_STORAGE_KEY);
+      return saved ? parseFloat(saved) : DEFAULT_PLAYBACK_RATE;
     }
-    return 1.0;
+    return DEFAULT_PLAYBACK_RATE;
   });
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -50,7 +54,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
 
   // playbackRateの変更をlocalStorageに保存
   useEffect(() => {
-    localStorage.setItem("audicle-playback-rate", playbackRate.toString());
+    localStorage.setItem(PLAYBACK_RATE_STORAGE_KEY, playbackRate.toString());
   }, [playbackRate]);
 
   // playbackSpeedプロパティの変更をplaybackRateに反映
@@ -63,6 +67,8 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
   // playbackRateを設定する関数
   const updatePlaybackRate = useCallback((rate: number) => {
     setPlaybackRate(rate);
+    // localStorage を同期的に更新して競合状態を回避
+    localStorage.setItem(PLAYBACK_RATE_STORAGE_KEY, rate.toString());
     if (audioRef.current) {
       audioRef.current.playbackRate = rate;
     }
@@ -138,7 +144,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         audioRef.current = audio;
         currentAudioUrlRef.current = audioUrl;
         // 現在の playbackRate を取得して反映
-        const currentRate = parseFloat(localStorage.getItem("audicle-playback-rate") || "1.0");
+        const currentRate = parseFloat(localStorage.getItem(PLAYBACK_RATE_STORAGE_KEY) || DEFAULT_PLAYBACK_RATE.toString());
         audio.playbackRate = currentRate;
 
         audio.onended = async () => {
