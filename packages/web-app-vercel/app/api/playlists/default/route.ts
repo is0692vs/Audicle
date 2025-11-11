@@ -17,8 +17,6 @@ export async function GET() {
             )
         }
 
-        const playlist = defaultPlaylistResult.playlist
-
         // getOrCreateDefaultPlaylistが既にitemsを含んでいるのでそのまま返す
         return NextResponse.json(defaultPlaylistResult.playlist)
     } catch (error) {

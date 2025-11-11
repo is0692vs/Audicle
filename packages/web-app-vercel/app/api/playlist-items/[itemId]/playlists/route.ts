@@ -23,9 +23,12 @@ export async function GET(
             return NextResponse.json({ error: 'Item not found' }, { status: 404 })
         }
 
-        const playlists_data = itemData.playlists as { owner_email: string } | { owner_email: string }[] | null
+        // 配列またはオブジェクトの両方に対応
+        const playlists_data = Array.isArray(itemData.playlists)
+            ? itemData.playlists[0]
+            : itemData.playlists
 
-        if (!playlists_data || (Array.isArray(playlists_data) ? playlists_data[0]?.owner_email : playlists_data.owner_email) !== userEmail) {
+        if (!playlists_data || playlists_data.owner_email !== userEmail) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
 

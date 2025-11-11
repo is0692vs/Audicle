@@ -5,7 +5,7 @@ import type { Playlist } from "@/types/playlist";
 /**
  * プレイリストアイテムIDからそのアイテムが属するプレイリスト一覧を取得
  */
-export function usePlaylistItemPlaylists(itemId: string) {
+export function usePlaylistItemPlaylists(itemId: string, options?: { enabled?: boolean }) {
     const { data: session } = useSession();
     const userEmail = session?.user?.email;
 
@@ -20,13 +20,27 @@ export function usePlaylistItemPlaylists(itemId: string) {
             }
             return response.json() as Promise<Playlist[]>;
         },
-        enabled: !!itemId && !!userEmail,
+        enabled: options?.enabled !== undefined ? options.enabled : (!!itemId && !!userEmail),
     });
 }
 
 /**
- * ブックマークのプレイリスト関連付け更新ミューテーション
+ * ブックマークIDからそのブックマークが属するプレイリスト一覧を取得（レガシー対応）
  */
+export function useBookmarkPlaylists(bookmarkId: string, options?: { enabled?: boolean }) {
+    const { data: session } = useSession();
+    const userEmail = session?.user?.email;
+
+    return useQuery<Playlist[]>({
+        queryKey: ['bookmark', 'playlists', bookmarkId],
+        queryFn: async () => {
+            const response = await fetch(`/api/bookmarks/${bookmarkId}/playlists`)
+            if (!response.ok) throw new Error('Failed to fetch playlists')
+            return response.json()
+        },
+        enabled: options?.enabled !== undefined ? options.enabled : (!!bookmarkId && !!userEmail),
+    })
+}
 export function useUpdateBookmarkPlaylistsMutation() {
     const { data: session } = useSession();
     const userEmail = session?.user?.email;
