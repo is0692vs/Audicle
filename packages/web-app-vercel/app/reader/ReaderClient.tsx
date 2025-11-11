@@ -280,17 +280,68 @@ export default function ReaderPageClient() {
     }
   }, [articleIdFromQuery, stop]);
 
-  // インデックスパラメータが変わったときに状態を更新
+  // インデックスパラメータが変わったときに該当記事を読み込む
   useEffect(() => {
-    if (indexFromQuery !== null && playlistIdFromQuery) {
+    if (
+      indexFromQuery !== null &&
+      playlistIdFromQuery &&
+      playlistState.items.length > 0
+    ) {
       const newIndex = parseInt(indexFromQuery, 10);
-      setCurrentPlaylistIndex(newIndex);
-      logger.info("プレイリストインデックスを更新", {
-        newIndex,
-        playlistId: playlistIdFromQuery,
-      });
+
+      // インデックスが変わった場合のみ処理（無限ループを防ぐ）
+      if (newIndex !== currentPlaylistIndex || !chunks.length) {
+        setCurrentPlaylistIndex(newIndex);
+
+        // プレイリストから該当記事を取得
+        const item = playlistState.items[newIndex];
+        if (item) {
+          logger.info("プレイリストから記事を読み込み", {
+            newIndex,
+            playlistId: playlistIdFromQuery,
+            articleId: item.articleId,
+            articleUrl: item.articleUrl,
+          });
+
+          // 前の再生状態をクリア
+          stop();
+
+          // 記事をlocalStorageから読み込む
+          const article = articleStorage.getById(item.articleId);
+          if (article) {
+            setTitle(article.title);
+            setChunks(article.chunks);
+            setUrl(article.url);
+            setArticleId(article.id);
+            // 新しい記事が読み込まれたら、自動再生フラグをリセット
+            hasInitiatedAutoplayRef.current = false;
+            logger.success("記事を読み込み完了", {
+              id: article.id,
+              title: article.title,
+              chunkCount: article.chunks.length,
+            });
+          } else {
+            logger.warn("記事がlocalStorageに見つかりません", {
+              articleId: item.articleId,
+            });
+            setError("記事が見つかりませんでした");
+          }
+        } else {
+          logger.error("プレイリストにインデックスが存在しません", {
+            newIndex,
+            itemsLength: playlistState.items.length,
+          });
+        }
+      }
     }
-  }, [indexFromQuery, playlistIdFromQuery]); // URLクエリパラメータが指定されている場合は記事を自動取得
+  }, [
+    indexFromQuery,
+    playlistIdFromQuery,
+    playlistState.items,
+    currentPlaylistIndex,
+    chunks.length,
+    stop,
+  ]); // URLクエリパラメータが指定されている場合は記事を自動取得
   useEffect(() => {
     // プレイリスト読み込みが完了してから記事を読み込む
     if (urlFromQuery && arePlaylistsLoaded && !hasLoadedFromQuery) {
