@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SessionProvider } from "next-auth/react";
 import { ReactNode, useMemo } from "react";
 import { Toaster } from "react-hot-toast";
+import { PlaylistPlaybackProvider } from "@/contexts/PlaylistPlaybackContext";
 
 export default function ClientLayout({ children }: { children: ReactNode }) {
   const queryClient = useMemo(
@@ -26,8 +27,10 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
   return (
     <SessionProvider>
       <QueryClientProvider client={queryClient}>
-        <Toaster position="top-right" />
-        {children}
+        <PlaylistPlaybackProvider>
+          <Toaster position="top-right" />
+          {children}
+        </PlaylistPlaybackProvider>
       </QueryClientProvider>
     </SessionProvider>
   );

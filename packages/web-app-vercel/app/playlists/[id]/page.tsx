@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { Play } from "lucide-react";
 import { logger } from "@/lib/logger";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
+import { usePlaylistPlayback } from "@/contexts/PlaylistPlaybackContext";
 import {
   usePlaylistDetail,
   useUpdatePlaylistMutation,
@@ -16,6 +18,7 @@ export default function PlaylistDetailPage() {
   const router = useRouter();
   const params = useParams();
   const playlistId = params.id as string;
+  const { startPlaylistPlayback } = usePlaylistPlayback();
 
   const { data: playlist, isLoading, error } = usePlaylistDetail(playlistId);
   const updatePlaylistMutation = useUpdatePlaylistMutation();
@@ -172,20 +175,40 @@ export default function PlaylistDetailPage() {
           </div>
         ) : (
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
-            <div className="flex items-center gap-2 mb-2">
-              <h1 className="text-2xl font-bold">{playlist.name}</h1>
-              {playlist.is_default && (
-                <span className="px-2 py-1 text-xs bg-violet-900 text-violet-300 rounded">
-                  デフォルト
-                </span>
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <h1 className="text-2xl font-bold">{playlist.name}</h1>
+                  {playlist.is_default && (
+                    <span className="px-2 py-1 text-xs bg-violet-900 text-violet-300 rounded">
+                      デフォルト
+                    </span>
+                  )}
+                </div>
+                {playlist.description && (
+                  <p className="text-zinc-400">{playlist.description}</p>
+                )}
+                <p className="text-sm text-zinc-500 mt-2">
+                  {playlist.item_count || 0} 件の記事
+                </p>
+              </div>
+              {playlist.items && playlist.items.length > 0 && (
+                <button
+                  onClick={() =>
+                    startPlaylistPlayback(
+                      playlist.id,
+                      playlist.name,
+                      sortedItems,
+                      0
+                    )
+                  }
+                  className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors flex items-center gap-2 whitespace-nowrap"
+                >
+                  <Play className="size-4" />
+                  再生
+                </button>
               )}
             </div>
-            {playlist.description && (
-              <p className="text-zinc-400">{playlist.description}</p>
-            )}
-            <p className="text-sm text-zinc-500 mt-2">
-              {playlist.item_count || 0} 件の記事
-            </p>
           </div>
         )}
       </div>
