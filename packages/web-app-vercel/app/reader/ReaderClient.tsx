@@ -299,15 +299,15 @@ export default function ReaderPageClient() {
           logger.info("プレイリストから記事を読み込み", {
             newIndex,
             playlistId: playlistIdFromQuery,
-            articleId: item.articleId,
-            articleUrl: item.articleUrl,
+            articleId: item.article_id,
+            articleUrl: item.article.url,
           });
 
           // 前の再生状態をクリア
           stop();
 
           // 記事をlocalStorageから読み込む
-          const article = articleStorage.getById(item.articleId);
+          const article = articleStorage.getById(item.article_id);
           if (article) {
             setTitle(article.title);
             setChunks(article.chunks);
@@ -322,15 +322,26 @@ export default function ReaderPageClient() {
             });
           } else {
             logger.warn("記事がlocalStorageに見つかりません", {
-              articleId: item.articleId,
+              articleId: item.article_id,
             });
             setError("記事が見つかりませんでした");
+            // 以前の記事情報をクリア
+            setTitle("");
+            setChunks([]);
+            setUrl("");
+            setArticleId(null);
           }
         } else {
           logger.error("プレイリストにインデックスが存在しません", {
             newIndex,
             itemsLength: playlistState.items.length,
           });
+          setError("無効な記事インデックスです。");
+          // 以前の記事情報をクリア
+          setTitle("");
+          setChunks([]);
+          setUrl("");
+          setArticleId(null);
         }
       }
     }
