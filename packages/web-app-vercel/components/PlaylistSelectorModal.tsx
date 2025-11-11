@@ -12,7 +12,7 @@ import {
 interface PlaylistSelectorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  itemId: string;
+  itemId: string | null;
   bookmarkId: string;
   articleTitle: string;
   onPlaylistsUpdated: () => Promise<void>;
