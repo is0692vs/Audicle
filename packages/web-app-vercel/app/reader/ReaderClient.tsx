@@ -539,16 +539,14 @@ export default function ReaderPageClient() {
       </main>
 
       {/* プレイリストセレクターモーダル */}
-      {articleId && (
-        <PlaylistSelectorModal
-          isOpen={isPlaylistModalOpen}
-          onClose={() => setIsPlaylistModalOpen(false)}
-          itemId={itemId || undefined}
-          articleId={articleId}
-          articleTitle={title}
-          onPlaylistsUpdated={async () => {}}
-        />
-      )}
+      <PlaylistSelectorModal
+        isOpen={isPlaylistModalOpen}
+        onClose={() => setIsPlaylistModalOpen(false)}
+        itemId={itemId || undefined}
+        articleId={articleId || ""}
+        articleTitle={title}
+        onPlaylistsUpdated={async () => {}}
+      />
     </div>
   );
 }
