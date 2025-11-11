@@ -7,8 +7,8 @@ import { useConfirmDialog } from "@/components/ConfirmDialog";
 import {
   usePlaylistDetail,
   useUpdatePlaylistMutation,
+  useRemoveFromPlaylistMutation,
 } from "@/lib/hooks/usePlaylists";
-import { useDeleteBookmarkMutation } from "@/lib/hooks/useBookmarks";
 import { ArticleCard } from "@/components/ArticleCard";
 import type { PlaylistWithItems } from "@/types/playlist";
 
@@ -19,7 +19,7 @@ export default function PlaylistDetailPage() {
 
   const { data: playlist, isLoading, error } = usePlaylistDetail(playlistId);
   const updatePlaylistMutation = useUpdatePlaylistMutation();
-  const deleteBookmarkMutation = useDeleteBookmarkMutation();
+  const removeFromPlaylistMutation = useRemoveFromPlaylistMutation();
 
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState("");
@@ -60,21 +60,24 @@ export default function PlaylistDetailPage() {
     }
   };
 
-  const handleDeleteBookmark = async (bookmarkId: string, title: string) => {
+  const handleRemoveFromPlaylist = async (itemId: string, title: string) => {
     const confirmed = await showConfirm({
-      title: "ブックマークを削除",
-      message: `「${title}」を削除しますか？`,
-      confirmText: "削除",
+      title: "プレイリストから除く",
+      message: `「${title}」を「${playlist?.name}」から除きますか?\n\n他のプレイリストには残ります。`,
+      confirmText: "除く",
       cancelText: "キャンセル",
-      isDangerous: true,
+      isDangerous: false,
     });
 
     if (confirmed) {
       try {
-        await deleteBookmarkMutation.mutateAsync(bookmarkId);
-        logger.success("ブックマークを削除", { id: bookmarkId, title });
+        await removeFromPlaylistMutation.mutateAsync({
+          playlistId,
+          itemId,
+        });
+        logger.success("アイテムをプレイリストから削除", { itemId, title });
       } catch (error) {
-        logger.error("ブックマークの削除に失敗", error);
+        logger.error("アイテムの削除に失敗", error);
       }
     }
   };
@@ -198,16 +201,17 @@ export default function PlaylistDetailPage() {
             {sortedItems.map((item) => (
               <ArticleCard
                 key={item.id}
-                article={item.bookmark}
-                addedAt={item.added_at}
-                onArticleClick={(article) =>
+                item={item}
+                onArticleClick={(playlistItem) =>
                   router.push(
-                    `/reader?url=${encodeURIComponent(article.article_url)}`
+                    `/reader?url=${encodeURIComponent(
+                      playlistItem.bookmark.article_url
+                    )}`
                   )
                 }
                 onPlaylistAdd={() => {}}
-                onDelete={(id) =>
-                  handleDeleteBookmark(id, item.bookmark.article_title)
+                onRemove={(id) =>
+                  handleRemoveFromPlaylist(id, item.bookmark.article_title)
                 }
               />
             ))}

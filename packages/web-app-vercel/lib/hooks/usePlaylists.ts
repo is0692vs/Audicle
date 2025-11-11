@@ -128,3 +128,38 @@ export function useUpdatePlaylistMutation() {
         },
     });
 }
+
+/**
+ * プレイリストからアイテムを削除するミューテーション
+ */
+export function useRemoveFromPlaylistMutation() {
+    const { data: session } = useSession();
+    const userEmail = session?.user?.email;
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (data: { playlistId: string; itemId: string }) => {
+            const response = await fetch(
+                `/api/playlists/${data.playlistId}/items/${data.itemId}`,
+                {
+                    method: "DELETE",
+                }
+            );
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || "アイテムの削除に失敗しました");
+            }
+            return response.json();
+        },
+        onSuccess: (_, variables) => {
+            // すべてのプレイリストキャッシュを無効化
+            queryClient.invalidateQueries({ queryKey: ["playlists", userEmail] });
+            queryClient.invalidateQueries({
+                queryKey: ["playlists", userEmail, variables.playlistId],
+            });
+            queryClient.invalidateQueries({
+                queryKey: ["playlists/default"],
+            });
+        },
+    });
+}

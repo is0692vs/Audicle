@@ -30,7 +30,12 @@ export interface PlaylistItem {
     added_at: string;
 }
 
+export interface PlaylistItemWithBookmark extends PlaylistItem {
+    bookmark: Bookmark;
+}
+
 export interface PlaylistWithItems extends Playlist {
-    items?: Array<PlaylistItem & { bookmark: Bookmark }>;
+    items?: PlaylistItemWithBookmark[];
     item_count?: number;
 }
+
