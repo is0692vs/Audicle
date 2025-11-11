@@ -48,7 +48,7 @@ export function ArticleCard({
               variant="ghost"
               onClick={(e) => {
                 e.stopPropagation();
-                onPlaylistAdd(item.id);
+                onPlaylistAdd(item.article_id);
               }}
               className="text-violet-400 hover:text-violet-300 hover:bg-violet-950/30"
             >
