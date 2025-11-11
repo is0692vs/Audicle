@@ -31,12 +31,11 @@ export async function GET(
 
         const { bookmark_id } = itemData
 
-        // bookmark_id を持つプレイリストを inner join で取得
-        const { data: playlistsData, error: playlistsError } = await supabase
+        // bookmark_id を持つすべてのプレイリストを取得
+        const { data: allPlaylists, error: playlistsError } = await supabase
             .from('playlists')
-            .select('id, name, is_default, owner_email, visibility, allow_fork, created_at, updated_at, playlist_items!inner(bookmark_id)')
+            .select('id, name, is_default, playlist_items(bookmark_id)')
             .eq('owner_email', userEmail)
-            .eq('playlist_items.bookmark_id', bookmark_id)
             .order('is_default', { ascending: false })
             .order('created_at', { ascending: false })
 
@@ -47,10 +46,15 @@ export async function GET(
             )
         }
 
-        // playlist_items フィールドを除外してレスポンス
-        const playlists = (playlistsData || []).map(({ playlist_items, ...rest }) => rest) as Playlist[]
+        // bookmark_idを持つプレイリストのみをフィルタリング
+        const playlists = allPlaylists
+            .filter((playlist) => {
+                const items = (playlist.playlist_items || []) as Array<{ bookmark_id: string }>
+                return items.some((item) => item.bookmark_id === bookmark_id)
+            })
+            .map(({ playlist_items, ...rest }) => rest)
 
-        return NextResponse.json(playlists)
+        return NextResponse.json(playlists as Playlist[])
     } catch (error) {
         console.error('Error in GET /api/playlist-items/[itemId]/playlists:', error)
         return NextResponse.json(

@@ -11,7 +11,6 @@ import {
 interface PlaylistSelectorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  itemId: string;
   bookmarkId: string;
   articleTitle: string;
 }
@@ -19,7 +18,6 @@ interface PlaylistSelectorModalProps {
 export function PlaylistSelectorModal({
   isOpen,
   onClose,
-  itemId,
   bookmarkId,
   articleTitle,
 }: PlaylistSelectorModalProps) {
@@ -47,12 +45,11 @@ export function PlaylistSelectorModal({
       setSelectedPlaylistIds(currentIds);
       setInitialSelectedIds(currentIds);
       logger.info("プレイリストを読み込み", {
-        itemId,
         totalCount: allPlaylists.length,
         selectedCount: currentIds.size,
       });
     }
-  }, [isOpen, isLoadingCurrent, itemId, currentPlaylists, allPlaylists]);
+  }, [isOpen, isLoadingCurrent]);
 
   // エラー状態を管理
   useEffect(() => {
