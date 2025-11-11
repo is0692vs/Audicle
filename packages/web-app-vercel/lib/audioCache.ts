@@ -48,9 +48,11 @@ class AudioCache {
           URL.revokeObjectURL(cached.url);
         }
         const freshUrl = URL.createObjectURL(cached.blob);
-        cached.url = freshUrl;
-        cached.timestamp = Date.now();
-        this.cache.set(key, cached);
+        this.cache.set(key, {
+          ...cached,
+          url: freshUrl,
+          timestamp: Date.now(),
+        });
         return freshUrl;
       } else {
         // 期限切れのキャッシュを削除
