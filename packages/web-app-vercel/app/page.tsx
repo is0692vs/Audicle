@@ -34,12 +34,7 @@ export default function Home() {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
 
-  const items = useMemo(() => playlistData?.items || [], [playlistData]);
-  const playlistId = useMemo(() => playlistData?.playlistId, [playlistData]);
-  const playlistName = useMemo(
-    () => playlistData?.playlistName,
-    [playlistData]
-  );
+  const { items = [], playlistId, playlistName } = playlistData ?? {};
 
   const sortedItems = useMemo(() => {
     return [...items].sort((a, b) => {
