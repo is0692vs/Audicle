@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
@@ -16,6 +16,7 @@ import { articleStorage } from "@/lib/storage";
 import { logger } from "@/lib/logger";
 import { parseHTMLToParagraphs } from "@/lib/paragraphParser";
 import { UserSettings, DEFAULT_SETTINGS } from "@/types/settings";
+import { createReaderUrl } from "@/lib/urlBuilder";
 import { Play, Pause, Square, SkipBack, SkipForward } from "lucide-react";
 
 function convertParagraphsToChunks(htmlContent: string): Chunk[] {
@@ -68,6 +69,9 @@ export default function ReaderPageClient() {
     !!playlistIdFromQuery
   );
   const [showCompletionScreen, setShowCompletionScreen] = useState(false);
+
+  // 自動再生の参照フラグ（useEffectの無限ループを防ぐため）
+  const hasInitiatedAutoplayRef = useRef(false);
 
   // 再生制御フック
   const {
@@ -257,6 +261,8 @@ export default function ReaderPageClient() {
         setChunks(article.chunks);
         setUrl(article.url);
         setArticleId(articleIdFromQuery);
+        // 新しい記事が読み込まれたら、自動再生フラグをリセット
+        hasInitiatedAutoplayRef.current = false;
       } else {
         logger.warn("記事が見つかりません", { id: articleIdFromQuery });
         setError("記事が見つかりませんでした");
@@ -279,14 +285,22 @@ export default function ReaderPageClient() {
           id: existingArticle.id,
           title: existingArticle.title,
         });
-        // autoplayパラメータを保持
-        const autoplayParam = autoplayFromQuery ? "&autoplay=true" : "";
-        const playlistParam = playlistIdFromQuery
-          ? `&playlist=${playlistIdFromQuery}&index=${indexFromQuery || 0}`
-          : "";
-        router.push(
-          `/reader?id=${existingArticle.id}${playlistParam}${autoplayParam}`
-        );
+        // 既存の記事情報をステートに設定
+        setTitle(existingArticle.title);
+        setChunks(existingArticle.chunks);
+        setArticleId(existingArticle.id);
+        // URLSearchParamsを使用して安全にURLを生成
+        const readerUrl = createReaderUrl({
+          articleId: existingArticle.id,
+          playlistId: playlistIdFromQuery || undefined,
+          playlistIndex: indexFromQuery
+            ? parseInt(indexFromQuery, 10)
+            : undefined,
+          autoplay: autoplayFromQuery,
+        });
+        // 新しいURLにリダイレクトするため、参照フラグをリセット
+        hasInitiatedAutoplayRef.current = false;
+        router.push(readerUrl);
       } else {
         // 新しい記事の場合は取得
         loadAndSaveArticle(urlFromQuery);
@@ -315,13 +329,13 @@ export default function ReaderPageClient() {
       autoplayFromQuery &&
       chunks.length > 0 &&
       !isPlaying &&
-      !isPlaybackLoading
+      !isPlaybackLoading &&
+      !hasInitiatedAutoplayRef.current
     ) {
-      // 少し遅延を入れてから再生開始（UIの準備のため）
-      const timer = setTimeout(() => {
-        play();
-      }, 500);
-      return () => clearTimeout(timer);
+      // 自動再生フラグを立てて、再生を開始
+      // useRefを使用することで、複数回呼び出されるのを防ぐ
+      hasInitiatedAutoplayRef.current = true;
+      play();
     }
   }, [autoplayFromQuery, chunks.length, isPlaying, isPlaybackLoading, play]);
 
@@ -330,11 +344,13 @@ export default function ReaderPageClient() {
     (index: number) => {
       const item = playlistState.items[index];
       if (item && playlistState.playlistId) {
-        router.push(
-          `/reader?url=${encodeURIComponent(item.article.url)}&playlist=${
-            playlistState.playlistId
-          }&index=${index}&autoplay=true`
-        );
+        const readerUrl = createReaderUrl({
+          articleUrl: item.article.url,
+          playlistId: playlistState.playlistId,
+          playlistIndex: index,
+          autoplay: true,
+        });
+        router.push(readerUrl);
       }
     },
     [playlistState, router]
@@ -566,14 +582,16 @@ export default function ReaderPageClient() {
       </main>
 
       {/* プレイリストセレクターモーダル */}
-      <PlaylistSelectorModal
-        isOpen={isPlaylistModalOpen}
-        onClose={() => setIsPlaylistModalOpen(false)}
-        itemId={itemId || undefined}
-        articleId={articleId || ""}
-        articleTitle={title}
-        onPlaylistsUpdated={async () => {}}
-      />
+      {articleId && (
+        <PlaylistSelectorModal
+          isOpen={isPlaylistModalOpen}
+          onClose={() => setIsPlaylistModalOpen(false)}
+          itemId={itemId || undefined}
+          articleId={articleId}
+          articleTitle={title}
+          onPlaylistsUpdated={async () => {}}
+        />
+      )}
     </div>
   );
 }
