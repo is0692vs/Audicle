@@ -12,13 +12,34 @@ export async function GET(
         const { userEmail, response } = await requireAuth()
         if (response) return response
 
-        // article_id を持つすべてのプレイリストを効率的に取得
-        const { data: playlistsWithItems, error: playlistsError } = await supabase
+        // article_id を持つプレイリストアイテムを取得
+        const { data: playlistItems, error: playlistItemsError } = await supabase
+            .from('playlist_items')
+            .select('playlist_id')
+            .eq('article_id', articleId)
+
+        if (playlistItemsError) {
+            console.error('Supabase error:', playlistItemsError)
+            return NextResponse.json(
+                { error: 'Failed to fetch playlists' },
+                { status: 500 }
+            )
+        }
+
+        if (!playlistItems || playlistItems.length === 0) {
+            return NextResponse.json([])
+        }
+
+        // プレイリストIDのリストを取得
+        const playlistIds = playlistItems.map(item => item.playlist_id)
+
+        // プレイリストを取得（所有権フィルタリング付き）
+        const { data: playlists, error: playlistsError } = await supabase
             .from('playlists')
-            .select('*, playlist_items!inner(article_id)')
+            .select('*')
             .eq('owner_email', userEmail)
-            .eq('playlist_items.article_id', articleId)
-            .order('position', { ascending: true }) // ユーザー設定可能な順序を考慮
+            .in('id', playlistIds)
+            .order('position', { ascending: true })
             .order('is_default', { ascending: false })
             .order('created_at', { ascending: false })
 
@@ -29,9 +50,6 @@ export async function GET(
                 { status: 500 }
             )
         }
-
-        // playlist_itemsプロパティを削除して返す
-        const playlists = playlistsWithItems.map(({ playlist_items: _, ...rest }) => rest)
 
         return NextResponse.json(playlists as Playlist[])
     } catch (error) {
