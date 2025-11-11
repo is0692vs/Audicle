@@ -31,7 +31,7 @@ export async function GET(
         // プレイリスト情報を取得
         const { data: playlists, error: playlistsError } = await supabase
             .from('playlists')
-            .select('id, name, is_default')
+            .select('*')
             .in('id', playlistIds)
             .eq('owner_email', userEmail)
             .order('is_default', { ascending: false })
