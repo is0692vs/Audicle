@@ -137,24 +137,10 @@ export default function StorageManager() {
       {/* ストレージ使用量 */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
         <h3 className="text-lg font-semibold mb-3">ストレージ使用量</h3>
-        <div className="space-y-2">
-          <div className="text-sm">
-            <span className="text-zinc-400">
-              {formatBytes(storageUsage.used)}
-            </span>
-          </div>
-          <div className="w-full bg-zinc-800 rounded-full h-2">
-            <div
-              className={`h-2 rounded-full transition-all ${
-                usagePercentage > 80
-                  ? "bg-red-600"
-                  : usagePercentage > 50
-                  ? "bg-yellow-600"
-                  : "bg-green-600"
-              }`}
-              style={{ width: `${Math.min(usagePercentage, 100)}%` }}
-            />
-          </div>
+        <div className="text-sm">
+          <span className="text-zinc-400">
+            {formatBytes(storageUsage.used)}
+          </span>
         </div>
       </div>
 
