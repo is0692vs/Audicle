@@ -75,13 +75,13 @@ export async function DELETE(
         }
 
         // この記事が他のプレイリストに存在しないか確認
-        const { data: otherItems, error: checkError } = await supabase
+        const { count, error: checkError } = await supabase
             .from('playlist_items')
-            .select('id')
+            .select('*', { count: 'exact', head: true })
             .eq('article_id', itemToDelete.article_id)
 
         // 他のプレイリストに存在しない場合、articlesからも削除
-        if (!checkError && (!otherItems || otherItems.length === 0)) {
+        if (!checkError && count === 0) {
             const { error: articleDeleteError } = await supabase
                 .from('articles')
                 .delete()
