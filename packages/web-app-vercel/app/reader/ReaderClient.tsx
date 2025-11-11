@@ -38,6 +38,7 @@ export default function ReaderPageClient() {
   const urlFromQuery = searchParams.get("url");
   const playlistIdFromQuery = searchParams.get("playlist");
   const indexFromQuery = searchParams.get("index");
+  const autoplayFromQuery = searchParams.get("autoplay") === "true";
   const queryClient = useQueryClient();
   const { data: session } = useSession();
   const userEmail = session?.user?.email;
@@ -278,7 +279,14 @@ export default function ReaderPageClient() {
           id: existingArticle.id,
           title: existingArticle.title,
         });
-        router.push(`/reader?id=${existingArticle.id}`);
+        // autoplayパラメータを保持
+        const autoplayParam = autoplayFromQuery ? "&autoplay=true" : "";
+        const playlistParam = playlistIdFromQuery
+          ? `&playlist=${playlistIdFromQuery}&index=${indexFromQuery || 0}`
+          : "";
+        router.push(
+          `/reader?id=${existingArticle.id}${playlistParam}${autoplayParam}`
+        );
       } else {
         // 新しい記事の場合は取得
         loadAndSaveArticle(urlFromQuery);
@@ -291,12 +299,31 @@ export default function ReaderPageClient() {
     router,
     loadAndSaveArticle,
     hasLoadedFromQuery,
+    autoplayFromQuery,
+    playlistIdFromQuery,
+    indexFromQuery,
   ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     loadAndSaveArticle(url);
   };
+
+  // autoplay パラメータが指定されている場合、チャンクが読み込まれたら自動再生
+  useEffect(() => {
+    if (
+      autoplayFromQuery &&
+      chunks.length > 0 &&
+      !isPlaying &&
+      !isPlaybackLoading
+    ) {
+      // 少し遅延を入れてから再生開始（UIの準備のため）
+      const timer = setTimeout(() => {
+        play();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [autoplayFromQuery, chunks.length, isPlaying, isPlaybackLoading, play]);
 
   // プレイリスト内の特定の記事に遷移するヘルパー関数
   const navigateToPlaylistItem = useCallback(
@@ -306,7 +333,7 @@ export default function ReaderPageClient() {
         router.push(
           `/reader?url=${encodeURIComponent(item.article.url)}&playlist=${
             playlistState.playlistId
-          }&index=${index}`
+          }&index=${index}&autoplay=true`
         );
       }
     },
@@ -539,16 +566,14 @@ export default function ReaderPageClient() {
       </main>
 
       {/* プレイリストセレクターモーダル */}
-      {articleId && (
-        <PlaylistSelectorModal
-          isOpen={isPlaylistModalOpen}
-          onClose={() => setIsPlaylistModalOpen(false)}
-          itemId={itemId || undefined}
-          articleId={articleId}
-          articleTitle={title}
-          onPlaylistsUpdated={async () => {}}
-        />
-      )}
+      <PlaylistSelectorModal
+        isOpen={isPlaylistModalOpen}
+        onClose={() => setIsPlaylistModalOpen(false)}
+        itemId={itemId || undefined}
+        articleId={articleId || ""}
+        articleTitle={title}
+        onPlaylistsUpdated={async () => {}}
+      />
     </div>
   );
 }
