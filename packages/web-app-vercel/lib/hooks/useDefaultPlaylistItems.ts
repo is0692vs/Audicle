@@ -21,6 +21,7 @@ export function useDefaultPlaylistItems() {
             const playlist: PlaylistWithItems = await response.json();
             return {
                 playlistId: playlist.id,
+                playlistName: playlist.name,
                 items: playlist.items || [],
             };
         },
