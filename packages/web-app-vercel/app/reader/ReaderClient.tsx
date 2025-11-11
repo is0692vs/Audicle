@@ -298,6 +298,21 @@ export default function ReaderPageClient() {
     loadAndSaveArticle(url);
   };
 
+  // プレイリスト内の特定の記事に遷移するヘルパー関数
+  const navigateToPlaylistItem = useCallback(
+    (index: number) => {
+      const item = playlistState.items[index];
+      if (item && playlistState.playlistId) {
+        router.push(
+          `/reader?url=${encodeURIComponent(item.article.url)}&playlist=${
+            playlistState.playlistId
+          }&index=${index}`
+        );
+      }
+    },
+    [playlistState, router]
+  );
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* ヘッダー: URL入力欄 */}
@@ -384,17 +399,7 @@ export default function ReaderPageClient() {
                   <button
                     onClick={() => {
                       if (currentPlaylistIndex > 0) {
-                        const prevItem =
-                          playlistState.items[currentPlaylistIndex - 1];
-                        if (prevItem) {
-                          router.push(
-                            `/reader?url=${encodeURIComponent(
-                              prevItem.article.url
-                            )}&playlist=${playlistState.playlistId}&index=${
-                              currentPlaylistIndex - 1
-                            }`
-                          );
-                        }
+                        navigateToPlaylistItem(currentPlaylistIndex - 1);
                       }
                     }}
                     disabled={currentPlaylistIndex === 0}
@@ -406,17 +411,7 @@ export default function ReaderPageClient() {
                   <button
                     onClick={() => {
                       if (currentPlaylistIndex < playlistState.totalCount - 1) {
-                        const nextItem =
-                          playlistState.items[currentPlaylistIndex + 1];
-                        if (nextItem) {
-                          router.push(
-                            `/reader?url=${encodeURIComponent(
-                              nextItem.article.url
-                            )}&playlist=${playlistState.playlistId}&index=${
-                              currentPlaylistIndex + 1
-                            }`
-                          );
-                        }
+                        navigateToPlaylistItem(currentPlaylistIndex + 1);
                       }
                     }}
                     disabled={
@@ -528,15 +523,7 @@ export default function ReaderPageClient() {
             totalCount={playlistState.totalCount}
             onReplay={() => {
               setShowCompletionScreen(false);
-              // 最初の記事に戻る
-              const firstItem = playlistState.items[0];
-              if (firstItem) {
-                router.push(
-                  `/reader?url=${encodeURIComponent(
-                    firstItem.article.url
-                  )}&playlist=${playlistState.playlistId}&index=0`
-                );
-              }
+              navigateToPlaylistItem(0);
             }}
           />
         ) : (
