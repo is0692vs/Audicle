@@ -56,10 +56,12 @@ export async function initializeNewUser(userId: string, userEmail: string): Prom
         console.log(`User settings created for user: ${userId}`, newSettings)
 
         // デフォルトプレイリストを作成
-        const playlistResult = await getOrCreateDefaultPlaylist(userEmail);
-        if (playlistResult.error) {
-            console.error('Failed to create default playlist:', playlistResult.error);
-            // エラーだが、user_settingsは作成済みなので success: true
+        if (userEmail) {
+            const playlistResult = await getOrCreateDefaultPlaylist(userEmail);
+            if (playlistResult.error) {
+                console.error('Failed to create default playlist:', playlistResult.error);
+                // エラーだが、user_settingsは作成済みなので success: true
+            }
         }
 
         return { success: true }
