@@ -42,7 +42,6 @@ export async function GET(
             .select('*, playlist_items!inner(article_id)')
             .eq('owner_email', userEmail)
             .eq('playlist_items.article_id', article_id)
-            .order('position', { ascending: true })
             .order('is_default', { ascending: false })
             .order('created_at', { ascending: false })
 

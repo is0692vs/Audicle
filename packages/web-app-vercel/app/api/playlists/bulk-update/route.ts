@@ -79,7 +79,7 @@ export async function POST(request: Request) {
 
         if (addToPlaylistIds.length > 0 || removeFromPlaylistIds.length > 0) {
             const { data, error } = await supabase.rpc('bulk_update_playlist_items', {
-                article_id_param: articleId,
+                bookmark_id_param: articleId,
                 add_playlist_ids: addToPlaylistIds,
                 remove_playlist_ids: removeFromPlaylistIds
             })
