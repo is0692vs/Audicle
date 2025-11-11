@@ -12,26 +12,48 @@ export async function GET(
         const { userEmail, response } = await requireAuth()
         if (response) return response
 
-        // article_id を持つすべてのプレイリストを効率的に取得
-        const { data: playlistsWithItems, error: playlistsError } = await supabase
-            .from('playlists')
-            .select('*, playlist_items!inner(article_id)')
-            .eq('owner_email', userEmail)
-            .eq('playlist_items.article_id', articleId)
-            .order('position', { ascending: true }) // ユーザー設定可能な順序を考慮
-            .order('is_default', { ascending: false })
-            .order('created_at', { ascending: false })
+        // article_id を持つプレイリストアイテムを取得し、そこからプレイリストを取得
+        const { data: playlistItems, error: playlistItemsError } = await supabase
+            .from('playlist_items')
+            .select(`
+                playlist_id,
+                playlists (
+                    id,
+                    name,
+                    description,
+                    owner_email,
+                    is_default,
+                    position,
+                    created_at,
+                    updated_at
+                )
+            `)
+            .eq('article_id', articleId)
 
-        if (playlistsError) {
-            console.error('Supabase error:', playlistsError)
+        if (playlistItemsError) {
+            console.error('Supabase error:', playlistItemsError)
             return NextResponse.json(
                 { error: 'Failed to fetch playlists' },
                 { status: 500 }
             )
         }
 
-        // playlist_itemsプロパティを削除して返す
-        const playlists = playlistsWithItems.map(({ playlist_items: _, ...rest }) => rest)
+        // プレイリストを抽出し、所有権でフィルタリング、ソート
+        const playlists = (playlistItems || [])
+            .map(item => item.playlists)
+            .filter((playlist): playlist is NonNullable<typeof playlist> => 
+                playlist !== null && playlist.owner_email === userEmail
+            )
+            .sort((a, b) => {
+                // position -> is_default (desc) -> created_at (desc) の順でソート
+                if (a.position !== b.position) {
+                    return (a.position ?? 0) - (b.position ?? 0)
+                }
+                if (a.is_default !== b.is_default) {
+                    return a.is_default ? -1 : 1
+                }
+                return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            })
 
         return NextResponse.json(playlists as Playlist[])
     } catch (error) {
