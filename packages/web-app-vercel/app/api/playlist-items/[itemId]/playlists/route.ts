@@ -34,8 +34,9 @@ export async function GET(
         // bookmark_id を持つすべてのプレイリストを効率的に取得
         const { data: playlistsWithItems, error: playlistsError } = await supabase
             .from('playlists')
-            .select('id, name, is_default')
+            .select('id, name, is_default, playlist_items!inner(bookmark_id)')
             .eq('owner_email', userEmail)
+            .eq('playlist_items.bookmark_id', bookmark_id)
             .order('is_default', { ascending: false })
             .order('created_at', { ascending: false })
 
@@ -47,7 +48,7 @@ export async function GET(
         }
 
         // playlist_itemsプロパティを削除して返す
-        const playlists = playlistsWithItems.map(({ playlist_items, ...rest }) => rest)
+        const playlists = playlistsWithItems.map(({ playlist_items: _, ...rest }) => rest)
 
         return NextResponse.json(playlists as Playlist[])
     } catch (error) {

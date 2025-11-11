@@ -40,6 +40,7 @@ export default function ReaderPageClient() {
   const [error, setError] = useState("");
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [bookmarkId, setBookmarkId] = useState<string | null>(null);
+  const [itemId, setItemId] = useState<string | null>(null);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>("");
@@ -108,6 +109,7 @@ export default function ReaderPageClient() {
             const itemData = await itemResponse.json();
             newBookmarkId = itemData.bookmark.id;
             setBookmarkId(newBookmarkId);
+            setItemId(itemData.item.id);
             logger.success("記事をプレイリストに追加", {
               id: newBookmarkId,
               url: articleUrl,
@@ -414,8 +416,10 @@ export default function ReaderPageClient() {
         <PlaylistSelectorModal
           isOpen={isPlaylistModalOpen}
           onClose={() => setIsPlaylistModalOpen(false)}
+          itemId={itemId || bookmarkId}
           bookmarkId={bookmarkId}
           articleTitle={title}
+          onPlaylistsUpdated={async () => {}}
         />
       )}
     </div>

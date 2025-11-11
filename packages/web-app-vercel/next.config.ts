@@ -19,7 +19,6 @@ export default withPWA({
   dest: "public",
   register: true,
   skipWaiting: true,
-  disable: true,
   // PWAがAPI Routesをキャッシュしないように設定
   runtimeCaching: [
     {

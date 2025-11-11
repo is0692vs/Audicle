@@ -11,15 +11,19 @@ import {
 interface PlaylistSelectorModalProps {
   isOpen: boolean;
   onClose: () => void;
+  itemId: string;
   bookmarkId: string;
   articleTitle: string;
+  onPlaylistsUpdated: () => Promise<void>;
 }
 
 export function PlaylistSelectorModal({
   isOpen,
   onClose,
+  itemId,
   bookmarkId,
   articleTitle,
+  onPlaylistsUpdated,
 }: PlaylistSelectorModalProps) {
   const { data: allPlaylists = [], isLoading: isLoadingPlaylists } =
     usePlaylists();
@@ -27,7 +31,7 @@ export function PlaylistSelectorModal({
     data: currentPlaylists = [],
     isLoading: isLoadingCurrent,
     error: currentError,
-  } = usePlaylistItemPlaylists(bookmarkId);
+  } = usePlaylistItemPlaylists(itemId);
   const updateMutation = useUpdateBookmarkPlaylistsMutation();
 
   const [selectedPlaylistIds, setSelectedPlaylistIds] = useState<Set<string>>(
