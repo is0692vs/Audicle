@@ -36,6 +36,10 @@ export default function Home() {
 
   const items = useMemo(() => playlistData?.items || [], [playlistData]);
   const playlistId = useMemo(() => playlistData?.playlistId, [playlistData]);
+  const playlistName = useMemo(
+    () => playlistData?.playlistName,
+    [playlistData]
+  );
 
   const sortedItems = useMemo(() => {
     return [...items].sort((a, b) => {
@@ -155,7 +159,9 @@ export default function Home() {
               </Button>
             </div>
             <p className="text-sm lg:text-base text-zinc-400">
-              読み込んだ記事の一覧です
+              {playlistName
+                ? `${playlistName}内の記事の一覧です`
+                : "読み込んだ記事の一覧です"}
             </p>
           </div>
 
