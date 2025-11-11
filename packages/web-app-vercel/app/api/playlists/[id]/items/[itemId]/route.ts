@@ -23,7 +23,7 @@ export async function DELETE(
         if (playlistError || !playlist) {
             console.error('Supabase error:', playlistError)
             return NextResponse.json(
-                { error: 'Playlist not found' },
+                { error: playlistError.message || 'Playlist not found' },
                 { status: 404 }
             )
         }
