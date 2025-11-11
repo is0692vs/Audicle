@@ -92,7 +92,7 @@ export function PlaylistPlaybackProvider({
       playlistId: saved?.playlistId || null,
       playlistName: saved?.playlistName || null,
       currentIndex: saved?.currentIndex || 0,
-      items: [],
+      items: saved?.items || [],
       totalCount: saved?.totalCount || 0,
       isPlaylistMode: saved?.isPlaylistMode || false,
     };
