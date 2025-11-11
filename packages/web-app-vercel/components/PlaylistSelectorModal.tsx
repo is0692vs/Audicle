@@ -144,6 +144,11 @@ export function PlaylistSelectorModal({
         removeCount: removeFromPlaylistIds.length,
       });
 
+      // 保存成功後、コールバックを呼び出す
+      if (onPlaylistsUpdated) {
+        await onPlaylistsUpdated();
+      }
+
       onClose();
     } catch (err) {
       const errorMessage =
