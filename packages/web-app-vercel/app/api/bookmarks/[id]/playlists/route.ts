@@ -12,28 +12,13 @@ export async function GET(
         const { userEmail, response } = await requireAuth()
         if (response) return response
 
-        // bookmarkIdから、ユーザーの全playlist_itemsを取得
-        const { data: items, error: itemsError } = await supabase
-            .from('playlist_items')
-            .select('playlist_id')
-            .eq('bookmark_id', bookmarkId)
-
-        if (itemsError) {
-            console.error('Supabase error:', itemsError)
-            return NextResponse.json(
-                { error: 'Failed to fetch playlist items' },
-                { status: 500 }
-            )
-        }
-
-        const playlistIds = items.map(item => item.playlist_id)
-
-        // プレイリスト情報を取得
-        const { data: playlists, error: playlistsError } = await supabase
+        // bookmark_id を持つすべてのプレイリストを効率的に取得
+        const { data: playlistsWithItems, error: playlistsError } = await supabase
             .from('playlists')
-            .select('*')
-            .in('id', playlistIds)
+            .select('*, playlist_items!inner(bookmark_id)')
             .eq('owner_email', userEmail)
+            .eq('playlist_items.bookmark_id', bookmarkId)
+            .order('position', { ascending: true }) // ユーザー設定可能な順序を考慮
             .order('is_default', { ascending: false })
             .order('created_at', { ascending: false })
 
@@ -44,6 +29,9 @@ export async function GET(
                 { status: 500 }
             )
         }
+
+        // playlist_itemsプロパティを削除して返す
+        const playlists = playlistsWithItems.map(({ playlist_items: _, ...rest }) => rest)
 
         return NextResponse.json(playlists as Playlist[])
     } catch (error) {
