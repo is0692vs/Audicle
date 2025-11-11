@@ -85,7 +85,7 @@ export default function ReaderPageClient() {
           if (!defaultPlaylistResponse.ok) {
             throw new Error("デフォルトプレイリストの取得に失敗");
           }
-          const { playlistId } = await defaultPlaylistResponse.json();
+          const { id: playlistId } = await defaultPlaylistResponse.json();
           const targetPlaylistId = selectedPlaylistId || playlistId;
 
           // プレイリストに直接追加
