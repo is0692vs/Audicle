@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
 import { requireAuth } from '@/lib/api-auth'
 import { getOrCreateDefaultPlaylist } from '@/lib/playlist-utils'
 
@@ -18,37 +17,20 @@ export async function GET() {
             )
         }
 
-        const playlistId = defaultPlaylistResult.playlist.id
+        const playlist = defaultPlaylistResult.playlist
 
-        // プレイリストの詳細情報と items を取得
-        const { data: playlist, error: playlistError } = await supabase
-            .from('playlists')
-            .select(`
-                *,
-                playlist_items(
-                    id,
-                    playlist_id,
-                    bookmark_id,
-                    position,
-                    added_at,
-                    bookmark:bookmarks(*)
-                )
-            `)
-            .eq('id', playlistId)
-            .eq('owner_email', userEmail)
-            .order('position', { foreignTable: 'playlist_items', ascending: true })
-            .single()
-
-        if (playlistError) {
-            console.error('Supabase error:', playlistError)
-            return NextResponse.json(
-                { error: 'Failed to fetch playlist details' },
-                { status: 500 }
-            )
+        // 既存のplaylist_itemsデータが含まれていない場合は、追加の取得が必要
+        if (!('playlist_items' in playlist)) {
+            // playlist_itemsをitemsにリネームして返す
+            return NextResponse.json({
+                ...playlist,
+                items: [],
+                item_count: 0,
+            })
         }
 
         // playlist_itemsをitemsにリネーム
-        const { playlist_items: items = [], ...playlistData } = playlist
+        const { playlist_items: items = [], ...playlistData } = playlist as Record<string, unknown>
 
         return NextResponse.json({
             ...playlistData,

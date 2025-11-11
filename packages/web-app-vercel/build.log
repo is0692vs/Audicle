@@ -8,34 +8,3 @@
      · serverActions
 
    Creating an optimized production build ...
-> [PWA] Compile server
-> [PWA] Compile server
-> [PWA] Compile client (static)
-> [PWA] Auto register service worker with: /workspaces/Audicle/packages/web-app-vercel/node_modules/next-pwa/register.js
-> [PWA] Service worker: /workspaces/Audicle/packages/web-app-vercel/public/sw.js
-> [PWA]   url: /sw.js
-> [PWA]   scope: /
- ✓ Compiled successfully in 11.8s
-   Linting and checking validity of types ...
-
-./app/api/playlist-items/[itemId]/playlists/route.ts
-51:56  Warning: 'playlist_items' is defined but never used.  @typescript-eslint/no-unused-vars
-
-./app/playlists/[id]/page.tsx
-3:20  Warning: 'useCallback' is defined but never used.  @typescript-eslint/no-unused-vars
-13:15  Warning: 'PlaylistWithItems' is defined but never used.  @typescript-eslint/no-unused-vars
-
-info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
-Failed to compile.
-
-./app/reader/ReaderClient.tsx:414:10
-Type error: Property 'itemId' is missing in type '{ isOpen: boolean; onClose: () => void; bookmarkId: string; articleTitle: string; }' but required in type 'PlaylistSelectorModalProps'.
-
-[0m [90m 412 |[39m       {[90m/* プレイリストセレクターモーダル */[39m}
- [90m 413 |[39m       {bookmarkId [33m&&[39m (
-[31m[1m>[22m[39m[90m 414 |[39m         [33m<[39m[33mPlaylistSelectorModal[39m
- [90m     |[39m          [31m[1m^[22m[39m
- [90m 415 |[39m           isOpen[33m=[39m{isPlaylistModalOpen}
- [90m 416 |[39m           onClose[33m=[39m{() [33m=>[39m setIsPlaylistModalOpen([36mfalse[39m)}
- [90m 417 |[39m           bookmarkId[33m=[39m{bookmarkId}[0m
-Next.js build worker exited with code: 1 and signal: null

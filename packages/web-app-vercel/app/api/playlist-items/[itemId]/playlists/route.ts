@@ -31,10 +31,10 @@ export async function GET(
 
         const { bookmark_id } = itemData
 
-        // bookmark_id を持つすべてのプレイリストを取得
-        const { data: allPlaylists, error: playlistsError } = await supabase
+        // bookmark_id を持つすべてのプレイリストを効率的に取得
+        const { data: playlistsWithItems, error: playlistsError } = await supabase
             .from('playlists')
-            .select('id, name, is_default, playlist_items(bookmark_id)')
+            .select('id, name, is_default')
             .eq('owner_email', userEmail)
             .order('is_default', { ascending: false })
             .order('created_at', { ascending: false })
@@ -46,13 +46,8 @@ export async function GET(
             )
         }
 
-        // bookmark_idを持つプレイリストのみをフィルタリング
-        const playlists = allPlaylists
-            .filter((playlist) => {
-                const items = (playlist.playlist_items || []) as Array<{ bookmark_id: string }>
-                return items.some((item) => item.bookmark_id === bookmark_id)
-            })
-            .map(({ playlist_items, ...rest }) => rest)
+        // playlist_itemsプロパティを削除して返す
+        const playlists = playlistsWithItems.map(({ playlist_items, ...rest }) => rest)
 
         return NextResponse.json(playlists as Playlist[])
     } catch (error) {
