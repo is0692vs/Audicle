@@ -35,7 +35,7 @@ export async function GET(
 
         return NextResponse.json(playlists as Playlist[])
     } catch (error) {
-        console.error('Unexpected error:', error)
+        console.error('Error in GET /api/bookmarks/[id]/playlists:', error)
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }
