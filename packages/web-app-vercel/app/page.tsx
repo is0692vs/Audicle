@@ -57,7 +57,7 @@ export default function Home() {
   }, [items, sortBy]);
 
   const selectedItem = useMemo(
-    () => items.find((item) => item.id === selectedItemId),
+    () => items.find((item) => item.article_id === selectedItemId),
     [items, selectedItemId]
   );
 
@@ -116,7 +116,7 @@ export default function Home() {
                 setIsPlaylistModalOpen(false);
                 setSelectedItemId(null);
               }}
-              itemId={selectedItemId || undefined}
+              itemId={undefined}
               articleId={selectedItem.article_id}
               articleTitle={selectedItem.article.title}
               onPlaylistsUpdated={async () => {
