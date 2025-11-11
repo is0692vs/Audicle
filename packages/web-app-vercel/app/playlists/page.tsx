@@ -7,6 +7,7 @@ import {
   usePlaylists,
   useCreatePlaylistMutation,
   useDeletePlaylistMutation,
+  useSetDefaultPlaylistMutation,
 } from "@/lib/hooks/usePlaylists";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ export default function PlaylistsPage() {
   const { data: playlists = [], isLoading, error } = usePlaylists();
   const createPlaylistMutation = useCreatePlaylistMutation();
   const deletePlaylistMutation = useDeletePlaylistMutation();
+  const setDefaultPlaylistMutation = useSetDefaultPlaylistMutation();
 
   const [sortBy, setSortBy] = useState<PlaylistSortBy>("newest");
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -91,6 +93,22 @@ export default function PlaylistsPage() {
         logger.error("プレイリストの削除に失敗", error);
         alert(error instanceof Error ? error.message : "削除に失敗しました");
       }
+    }
+  };
+
+  const handleSetDefaultPlaylist = async (
+    e: React.MouseEvent,
+    id: string,
+    name: string
+  ) => {
+    e.stopPropagation();
+
+    try {
+      await setDefaultPlaylistMutation.mutateAsync(id);
+      logger.success("デフォルトプレイリストを更新", { id, name });
+    } catch (error) {
+      logger.error("デフォルト設定に失敗", error);
+      alert(error instanceof Error ? error.message : "設定に失敗しました");
     }
   };
 
@@ -238,20 +256,51 @@ export default function PlaylistsPage() {
                       </p>
                     )}
 
-                    {/* Delete Button */}
-                    {!playlist.is_default && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeletePlaylist(playlist.id, playlist.name);
-                        }}
-                        className="mt-3 w-full text-xs text-red-400 hover:text-red-300 hover:bg-red-950/30"
-                      >
-                        削除
-                      </Button>
-                    )}
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 mt-3">
+                      {!playlist.is_default && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) =>
+                              handleSetDefaultPlaylist(
+                                e,
+                                playlist.id,
+                                playlist.name
+                              )
+                            }
+                            disabled={setDefaultPlaylistMutation.isPending}
+                            className="flex-1 text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-950/30"
+                          >
+                            {setDefaultPlaylistMutation.isPending
+                              ? "設定中..."
+                              : "デフォルトに設定"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeletePlaylist(playlist.id, playlist.name);
+                            }}
+                            className="flex-1 text-xs text-red-400 hover:text-red-300 hover:bg-red-950/30"
+                          >
+                            削除
+                          </Button>
+                        </>
+                      )}
+                      {playlist.is_default && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled
+                          className="w-full text-xs text-zinc-500 hover:bg-transparent"
+                        >
+                          デフォルト設定済み
+                        </Button>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               ))}

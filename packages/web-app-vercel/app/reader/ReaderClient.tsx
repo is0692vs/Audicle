@@ -139,8 +139,12 @@ export default function ReaderPageClient() {
           chunkCount: chunksWithId.length,
         });
 
-        // 記事保存成功後、デフォルトプレイリスト（ホーム）のキャッシュを無効化
-        if (userEmail) {
+        // デフォルトプレイリストに追加した場合のみキャッシュ無効化
+        const modifiedPlaylist = playlists.find(
+          (p) => p.id === selectedPlaylistId
+        );
+
+        if (userEmail && modifiedPlaylist?.is_default) {
           queryClient.invalidateQueries({
             queryKey: ["defaultPlaylist", "items", userEmail],
           });
@@ -156,7 +160,7 @@ export default function ReaderPageClient() {
         setIsLoading(false);
       }
     },
-    [router, selectedPlaylistId, queryClient, userEmail]
+    [router, selectedPlaylistId, queryClient, userEmail, playlists]
   );
 
   // ユーザー設定を読み込む

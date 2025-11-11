@@ -163,3 +163,34 @@ export function useRemoveFromPlaylistMutation() {
         },
     });
 }
+
+/**
+ * デフォルトプレイリスト設定ミューテーション
+ */
+export function useSetDefaultPlaylistMutation() {
+    const { data: session } = useSession();
+    const userEmail = session?.user?.email;
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (playlistId: string) => {
+            const response = await fetch(
+                `/api/playlists/${playlistId}/set-default`,
+                {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                }
+            );
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || "デフォルト設定に失敗しました");
+            }
+            return response.json();
+        },
+        onSuccess: () => {
+            // プレイリスト一覧とデフォルトプレイリストキャッシュを無効化
+            queryClient.invalidateQueries({ queryKey: ["playlists", userEmail] });
+            queryClient.invalidateQueries({ queryKey: ["defaultPlaylist"] });
+        },
+    });
+}
