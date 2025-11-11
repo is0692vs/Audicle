@@ -194,7 +194,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         setIsLoading(false);
       }
     },
-    [chunks, articleUrl, voiceModel, onChunkChange, prefetchAudio, onArticleEnd]
+    [chunks, articleUrl, voiceModel, onChunkChange, prefetchAudio]
   );
 
   // 再生開始
