@@ -64,8 +64,8 @@ export function useUpdateArticlePlaylistsMutation() {
         },
         onSuccess: () => {
             // 記事関連の全てのキャッシュを無効化
-            queryClient.invalidateQueries({ queryKey: ["article-playlists", userEmail] });
-            queryClient.invalidateQueries({ queryKey: ["articles", userEmail] });
+            queryClient.invalidateQueries({ queryKey: ['article', 'playlists'] });
+            queryClient.invalidateQueries({ queryKey: ['playlist-item-playlists'] });
             queryClient.invalidateQueries({ queryKey: ["playlists", userEmail] });
         },
     });

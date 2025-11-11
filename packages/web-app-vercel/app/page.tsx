@@ -49,9 +49,7 @@ export default function Home() {
             new Date(a.added_at).getTime() - new Date(b.added_at).getTime()
           );
         case "title":
-          return a.article.title.localeCompare(
-            b.article.title
-          );
+          return a.article.title.localeCompare(b.article.title);
         default:
           return 0;
       }
@@ -118,7 +116,7 @@ export default function Home() {
                 setIsPlaylistModalOpen(false);
                 setSelectedItemId(null);
               }}
-              itemId={selectedItemId}
+              itemId={selectedItemId || undefined}
               articleId={selectedItem.article_id}
               articleTitle={selectedItem.article.title}
               onPlaylistsUpdated={async () => {

@@ -204,7 +204,10 @@ export default function ReaderPageClient() {
     if (articleIdFromQuery) {
       const article = articleStorage.getById(articleIdFromQuery);
       if (article) {
-        logger.info("記事を読み込み", { id: articleIdFromQuery, title: article.title });
+        logger.info("記事を読み込み", {
+          id: articleIdFromQuery,
+          title: article.title,
+        });
         setTitle(article.title);
         setChunks(article.chunks);
         setUrl(article.url);
