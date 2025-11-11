@@ -15,7 +15,7 @@ interface PlaylistSelectorModalProps {
   itemId: string | null;
   bookmarkId: string;
   articleTitle: string;
-  onPlaylistsUpdated: () => Promise<void>;
+  onPlaylistsUpdated?: () => Promise<void>;
 }
 
 export function PlaylistSelectorModal({

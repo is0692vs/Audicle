@@ -32,7 +32,7 @@ export function useBookmarkPlaylists(bookmarkId: string, options?: { enabled?: b
     const userEmail = session?.user?.email;
 
     return useQuery<Playlist[]>({
-        queryKey: ['bookmark', 'playlists', bookmarkId],
+        queryKey: ['bookmark', 'playlists', bookmarkId, userEmail],
         queryFn: async () => {
             const response = await fetch(`/api/bookmarks/${bookmarkId}/playlists`)
             if (!response.ok) throw new Error('Failed to fetch playlists')

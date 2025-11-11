@@ -23,10 +23,7 @@ export async function GET(
             return NextResponse.json({ error: 'Item not found' }, { status: 404 })
         }
 
-        // 配列またはオブジェクトの両方に対応
-        const playlists_data = Array.isArray(itemData.playlists)
-            ? itemData.playlists[0]
-            : itemData.playlists
+        const playlists_data = itemData.playlists
 
         if (!playlists_data || playlists_data.owner_email !== userEmail) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
