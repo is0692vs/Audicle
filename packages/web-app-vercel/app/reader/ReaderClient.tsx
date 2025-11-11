@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import ReaderView from "@/components/ReaderView";
 import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
 import { Chunk } from "@/types/api";
@@ -32,6 +34,9 @@ export default function ReaderPageClient() {
   const searchParams = useSearchParams();
   const articleIdFromQuery = searchParams.get("id");
   const urlFromQuery = searchParams.get("url");
+  const queryClient = useQueryClient();
+  const { data: session } = useSession();
+  const userEmail = session?.user?.email;
 
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -134,6 +139,14 @@ export default function ReaderPageClient() {
           chunkCount: chunksWithId.length,
         });
 
+        // 記事保存成功後、デフォルトプレイリスト（ホーム）のキャッシュを無効化
+        if (userEmail) {
+          queryClient.invalidateQueries({
+            queryKey: ["defaultPlaylist", "items", userEmail],
+          });
+          logger.success("ホームのキャッシュを無効化しました");
+        }
+
         // URLに記事IDを追加（サーバーIDを優先）
         router.push(`/reader?id=${newArticleId || newArticle.id}`);
       } catch (err) {
@@ -143,7 +156,7 @@ export default function ReaderPageClient() {
         setIsLoading(false);
       }
     },
-    [router, selectedPlaylistId]
+    [router, selectedPlaylistId, queryClient, userEmail]
   );
 
   // ユーザー設定を読み込む
