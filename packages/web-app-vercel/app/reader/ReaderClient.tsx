@@ -265,6 +265,8 @@ export default function ReaderPageClient() {
           id: articleIdFromQuery,
           title: article.title,
         });
+        // 前の再生状態をクリア
+        stop();
         setTitle(article.title);
         setChunks(article.chunks);
         setUrl(article.url);
@@ -276,7 +278,7 @@ export default function ReaderPageClient() {
         setError("記事が見つかりませんでした");
       }
     }
-  }, [articleIdFromQuery]);
+  }, [articleIdFromQuery, stop]);
 
   // インデックスパラメータが変わったときに状態を更新
   useEffect(() => {
@@ -346,16 +348,30 @@ export default function ReaderPageClient() {
     if (
       autoplayFromQuery &&
       chunks.length > 0 &&
+      !isLoading &&
       !isPlaying &&
       !isPlaybackLoading &&
       !hasInitiatedAutoplayRef.current
     ) {
       // 自動再生フラグを立てて、再生を開始
       // useRefを使用することで、複数回呼び出されるのを防ぐ
+      logger.info("自動再生を開始", {
+        chunksCount: chunks.length,
+        isLoading,
+        isPlaying,
+        isPlaybackLoading,
+      });
       hasInitiatedAutoplayRef.current = true;
       play();
     }
-  }, [autoplayFromQuery, chunks.length, isPlaying, isPlaybackLoading, play]);
+  }, [
+    autoplayFromQuery,
+    chunks.length,
+    isLoading,
+    isPlaying,
+    isPlaybackLoading,
+    play,
+  ]);
 
   // プレイリスト内の特定の記事に遷移するヘルパー関数
   const navigateToPlaylistItem = useCallback(

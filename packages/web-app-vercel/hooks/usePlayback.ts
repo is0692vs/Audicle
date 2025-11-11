@@ -100,6 +100,10 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
   const playFromIndex = useCallback(
     async (index: number) => {
       if (index < 0 || index >= chunks.length) {
+        logger.warn("無効なチャンクインデックス", {
+          index,
+          chunksLength: chunks.length,
+        });
         return;
       }
 
@@ -177,8 +181,15 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
           }
         };
 
-        audio.onerror = () => {
-          setError("音声の再生に失敗しました");
+        audio.onerror = (e) => {
+          const errorMessage = `音声の再生に失敗しました (URL: ${audioUrl})`;
+          logger.error("音声再生エラー", {
+            error: e,
+            audioUrl,
+            chunkIndex: index,
+            audioUrlType: audioUrl.startsWith('blob:') ? 'blob' : 'other',
+          });
+          setError(errorMessage);
           setIsPlaying(false);
         };
 
