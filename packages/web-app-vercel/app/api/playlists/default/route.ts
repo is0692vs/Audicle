@@ -10,13 +10,14 @@ export async function GET() {
 
         // デフォルトプレイリストを取得（なければ作成）
         const defaultPlaylistResult = await getOrCreateDefaultPlaylist(userEmail!)
-        if (defaultPlaylistResult.error) {
+        if (defaultPlaylistResult.error || !defaultPlaylistResult.playlist) {
             return NextResponse.json(
-                { error: defaultPlaylistResult.error },
+                { error: defaultPlaylistResult.error || 'Failed to get default playlist' },
                 { status: 500 }
             )
         }
 
+        // getOrCreateDefaultPlaylistが既にitemsを含んでいるのでそのまま返す
         return NextResponse.json(defaultPlaylistResult.playlist)
     } catch (error) {
         console.error('Error in GET /api/playlists/default:', error)

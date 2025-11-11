@@ -7,10 +7,8 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { logger } from "@/lib/logger";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
-import {
-  useBookmarks,
-  useDeleteBookmarkMutation,
-} from "@/lib/hooks/useBookmarks";
+import { useDefaultPlaylistItems } from "@/lib/hooks/useDefaultPlaylistItems";
+import { useRemoveFromPlaylistMutation } from "@/lib/hooks/usePlaylists";
 import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
 import { ArticleCard } from "@/components/ArticleCard";
 import { Button } from "@/components/ui/button";
@@ -23,76 +21,86 @@ import {
 } from "@/components/ui/select";
 import { Plus, RotateCcw } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
-import type { Bookmark } from "@/types/playlist";
 
 type ArticleSortBy = "newest" | "oldest" | "title";
 
 export default function Home() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: articles = [], isLoading, error } = useBookmarks();
-  const deleteBookmarkMutation = useDeleteBookmarkMutation();
+  const { data: playlistData, isLoading, error } = useDefaultPlaylistItems();
+  const removeFromPlaylistMutation = useRemoveFromPlaylistMutation();
 
   const [sortBy, setSortBy] = useState<ArticleSortBy>("newest");
-  const [selectedBookmarkId, setSelectedBookmarkId] = useState<string | null>(
-    null
-  );
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
 
-  const sortedArticles = useMemo(() => {
-    return [...articles].sort((a, b) => {
+  const items = useMemo(() => playlistData?.items || [], [playlistData]);
+  const playlistId = useMemo(() => playlistData?.playlistId, [playlistData]);
+
+  const sortedItems = useMemo(() => {
+    return [...items].sort((a, b) => {
       switch (sortBy) {
         case "newest":
           return (
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            new Date(b.added_at).getTime() - new Date(a.added_at).getTime()
           );
         case "oldest":
           return (
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+            new Date(a.added_at).getTime() - new Date(b.added_at).getTime()
           );
         case "title":
-          return a.article_title.localeCompare(b.article_title);
+          return a.bookmark.article_title.localeCompare(
+            b.bookmark.article_title
+          );
         default:
           return 0;
       }
     });
-  }, [articles, sortBy]);
+  }, [items, sortBy]);
 
-  const selectedArticle = useMemo(
-    () => articles.find((a) => a.id === selectedBookmarkId),
-    [articles, selectedBookmarkId]
+  const selectedItem = useMemo(
+    () => items.find((item) => item.id === selectedItemId),
+    [items, selectedItemId]
   );
 
   const { showConfirm, confirmDialog } = useConfirmDialog();
 
   const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+    queryClient.invalidateQueries({
+      queryKey: ["defaultPlaylist", "items"],
+    });
   };
 
-  const handleDelete = async (id: string) => {
-    const article = articles.find((a) => a.id === id);
-    if (!article) return;
+  const handleRemoveFromHome = async (itemId: string) => {
+    const item = items.find((i) => i.id === itemId);
+    if (!item || !playlistId) return;
 
     const confirmed = await showConfirm({
-      title: "記事を削除",
-      message: `「${article.article_title}」を削除しますか?`,
-      confirmText: "削除",
+      title: "ホームから除く",
+      message: `「${item.bookmark.article_title}」をホームから除きますか?\n\n他のプレイリストには残ります。`,
+      confirmText: "除く",
       cancelText: "キャンセル",
-      isDangerous: true,
+      isDangerous: false,
     });
 
     if (confirmed) {
       try {
-        await deleteBookmarkMutation.mutateAsync(id);
-        logger.success("記事を削除", { id, title: article.article_title });
+        await removeFromPlaylistMutation.mutateAsync({
+          playlistId,
+          itemId,
+        });
+        logger.success("アイテムを削除", {
+          itemId,
+          title: item.bookmark.article_title,
+        });
       } catch (error) {
-        logger.error("記事の削除に失敗", error);
+        logger.error("アイテムの削除に失敗", error);
       }
     }
   };
 
-  const handleArticleClick = (article: Bookmark) => {
-    router.push(`/reader?url=${encodeURIComponent(article.article_url)}`);
+  const handleArticleClick = (item: (typeof items)[0]) => {
+    router.push(`/reader?url=${encodeURIComponent(item.bookmark.article_url)}`);
   };
 
   return (
@@ -103,15 +111,19 @@ export default function Home() {
         <div className="p-4 sm:p-6 lg:p-8">
           {confirmDialog}
 
-          {selectedArticle && selectedBookmarkId && (
+          {selectedItem && selectedItemId && (
             <PlaylistSelectorModal
               isOpen={isPlaylistModalOpen}
               onClose={() => {
                 setIsPlaylistModalOpen(false);
-                setSelectedBookmarkId(null);
+                setSelectedItemId(null);
               }}
-              bookmarkId={selectedBookmarkId}
-              articleTitle={selectedArticle.article_title}
+              itemId={selectedItemId}
+              bookmarkId={selectedItem.bookmark_id}
+              articleTitle={selectedItem.bookmark.article_title}
+              onPlaylistsUpdated={async () => {
+                handleRefresh();
+              }}
             />
           )}
 
@@ -173,7 +185,7 @@ export default function Home() {
                 再試行
               </Button>
             </div>
-          ) : articles.length === 0 ? (
+          ) : items.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">📚</div>
               <h3 className="text-xl font-semibold text-white mb-2">
@@ -192,16 +204,16 @@ export default function Home() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8">
-              {sortedArticles.map((article) => (
+              {sortedItems.map((item) => (
                 <ArticleCard
-                  key={article.id}
-                  article={article}
+                  key={item.id}
+                  item={item}
                   onArticleClick={handleArticleClick}
                   onPlaylistAdd={(id) => {
-                    setSelectedBookmarkId(id);
+                    setSelectedItemId(id);
                     setIsPlaylistModalOpen(true);
                   }}
-                  onDelete={handleDelete}
+                  onRemove={handleRemoveFromHome}
                 />
               ))}
             </div>

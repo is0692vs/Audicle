@@ -3,61 +3,39 @@ import { supabase } from '@/lib/supabase'
 import { requireAuth } from '@/lib/api-auth'
 import type { Playlist } from '@/types/playlist'
 
-// GET: ブックマークが含まれるプレイリスト一覧取得
 export async function GET(
     request: Request,
-    { params }: { params: Promise<{ id: string }> }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id: bookmarkId } = await context.params
         const { userEmail, response } = await requireAuth()
         if (response) return response
 
-        const { id: bookmarkId } = await params
-
-        // ブックマークの所有者確認
-        const { data: bookmark, error: bookmarkError } = await supabase
-            .from('bookmarks')
-            .select('id')
-            .eq('id', bookmarkId)
-            .eq('owner_email', userEmail)
-            .single()
-
-        if (bookmarkError || !bookmark) {
-            return NextResponse.json(
-                { error: 'Bookmark not found' },
-                { status: 404 }
-            )
-        }
-
-        // ブックマークが含まれるプレイリスト一覧を取得
-        const { data: playlists, error } = await supabase
+        // bookmark_id を持つすべてのプレイリストを効率的に取得
+        const { data: playlistsWithItems, error: playlistsError } = await supabase
             .from('playlists')
             .select('*, playlist_items!inner(bookmark_id)')
             .eq('owner_email', userEmail)
             .eq('playlist_items.bookmark_id', bookmarkId)
-            .order('created_at', { ascending: true })
+            .order('position', { ascending: true }) // ユーザー設定可能な順序を考慮
+            .order('is_default', { ascending: false })
+            .order('created_at', { ascending: false })
 
-        if (error) {
-            console.error('Supabase error:', error)
+        if (playlistsError) {
+            console.error('Supabase error:', playlistsError)
             return NextResponse.json(
                 { error: 'Failed to fetch playlists' },
                 { status: 500 }
             )
         }
 
-        // playlist_itemsを削除してクリーンアップ
-        const cleanedPlaylists = playlists?.map((p) => {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { playlist_items: _playlist_items, ...rest } = p
-            return rest as Playlist
-        }) || []
+        // playlist_itemsプロパティを削除して返す
+        const playlists = playlistsWithItems.map(({ playlist_items: _, ...rest }) => rest)
 
-        return NextResponse.json(cleanedPlaylists)
+        return NextResponse.json(playlists as Playlist[])
     } catch (error) {
         console.error('Error in GET /api/bookmarks/[id]/playlists:', error)
-        return NextResponse.json(
-            { error: 'Internal server error' },
-            { status: 500 }
-        )
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }

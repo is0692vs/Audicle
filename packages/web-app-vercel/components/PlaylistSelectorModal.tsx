@@ -4,30 +4,50 @@ import { useState, useEffect } from "react";
 import { logger } from "@/lib/logger";
 import { usePlaylists } from "@/lib/hooks/usePlaylists";
 import {
-  useBookmarkPlaylists,
+  usePlaylistItemPlaylists,
   useUpdateBookmarkPlaylistsMutation,
+  useBookmarkPlaylists,
 } from "@/lib/hooks/usePlaylistSelection";
 
 interface PlaylistSelectorModalProps {
   isOpen: boolean;
   onClose: () => void;
+  itemId: string | null;
   bookmarkId: string;
   articleTitle: string;
+  onPlaylistsUpdated?: () => Promise<void>;
 }
 
 export function PlaylistSelectorModal({
   isOpen,
   onClose,
+  itemId,
   bookmarkId,
   articleTitle,
+  onPlaylistsUpdated,
 }: PlaylistSelectorModalProps) {
   const { data: allPlaylists = [], isLoading: isLoadingPlaylists } =
     usePlaylists();
+
+  // 両方のHooksを常に呼び出す（React Hooksルール）が、enabled オプションで制御
   const {
-    data: currentPlaylists = [],
-    isLoading: isLoadingCurrent,
-    error: currentError,
-  } = useBookmarkPlaylists(bookmarkId);
+    data: playlistsByItemId,
+    isLoading: isLoadingItemId,
+    error: errorItemId,
+  } = usePlaylistItemPlaylists(itemId || "", { enabled: !!itemId });
+
+  const {
+    data: playlistsByBookmarkId,
+    isLoading: isLoadingBookmarkId,
+    error: errorBookmarkId,
+  } = useBookmarkPlaylists(bookmarkId, { enabled: !itemId && !!bookmarkId });
+
+  // 結果を安全に選択（デフォルト値付き）
+  const currentPlaylists = itemId
+    ? playlistsByItemId || []
+    : playlistsByBookmarkId || [];
+  const isLoadingCurrent = itemId ? isLoadingItemId : isLoadingBookmarkId;
+  const currentError = itemId ? errorItemId : errorBookmarkId;
   const updateMutation = useUpdateBookmarkPlaylistsMutation();
 
   const [selectedPlaylistIds, setSelectedPlaylistIds] = useState<Set<string>>(
@@ -40,7 +60,7 @@ export function PlaylistSelectorModal({
 
   // モーダルが開いたときに選択状態を同期
   useEffect(() => {
-    if (isOpen && !isLoadingCurrent) {
+    if (isOpen && !isLoadingCurrent && currentPlaylists) {
       const currentIds = new Set(currentPlaylists.map((p) => p.id));
       setSelectedPlaylistIds(currentIds);
       setInitialSelectedIds(currentIds);
@@ -49,7 +69,7 @@ export function PlaylistSelectorModal({
         selectedCount: currentIds.size,
       });
     }
-  }, [isOpen, isLoadingCurrent]);
+  }, [isOpen, isLoadingCurrent, currentPlaylists, allPlaylists.length]);
 
   // エラー状態を管理
   useEffect(() => {
@@ -123,6 +143,11 @@ export function PlaylistSelectorModal({
         addCount: addToPlaylistIds.length,
         removeCount: removeFromPlaylistIds.length,
       });
+
+      // 保存成功後、コールバックを呼び出す
+      if (onPlaylistsUpdated) {
+        await onPlaylistsUpdated();
+      }
 
       onClose();
     } catch (err) {

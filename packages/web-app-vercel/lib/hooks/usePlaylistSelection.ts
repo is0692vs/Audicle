@@ -3,30 +3,44 @@ import { useSession } from "next-auth/react";
 import type { Playlist } from "@/types/playlist";
 
 /**
- * ブックマークIDからそのブックマークが属するプレイリスト一覧を取得
+ * プレイリストアイテムIDからそのアイテムが属するプレイリスト一覧を取得
  */
-export function useBookmarkPlaylists(bookmarkId: string) {
+export function usePlaylistItemPlaylists(itemId: string, options?: { enabled?: boolean }) {
     const { data: session } = useSession();
     const userEmail = session?.user?.email;
 
     return useQuery({
-        queryKey: ["bookmark-playlists", userEmail, bookmarkId],
+        queryKey: ["playlist-item-playlists", userEmail, itemId],
         queryFn: async () => {
-            const response = await fetch(`/api/bookmarks/${bookmarkId}/playlists`);
+            const response = await fetch(`/api/playlist-items/${itemId}/playlists`);
             if (!response.ok) {
                 throw new Error(
-                    "ブックマークが所属するプレイリストの取得に失敗しました"
+                    "プレイリストアイテムが所属するプレイリストの取得に失敗しました"
                 );
             }
             return response.json() as Promise<Playlist[]>;
         },
-        enabled: !!bookmarkId && !!userEmail,
+        enabled: options?.enabled !== undefined ? options.enabled : (!!itemId && !!userEmail),
     });
 }
 
 /**
- * ブックマークのプレイリスト関連付け更新ミューテーション
+ * ブックマークIDからそのブックマークが属するプレイリスト一覧を取得（レガシー対応）
  */
+export function useBookmarkPlaylists(bookmarkId: string, options?: { enabled?: boolean }) {
+    const { data: session } = useSession();
+    const userEmail = session?.user?.email;
+
+    return useQuery<Playlist[]>({
+        queryKey: ['bookmark', 'playlists', bookmarkId, userEmail],
+        queryFn: async () => {
+            const response = await fetch(`/api/bookmarks/${bookmarkId}/playlists`)
+            if (!response.ok) throw new Error('Failed to fetch playlists')
+            return response.json()
+        },
+        enabled: options?.enabled !== undefined ? options.enabled : (!!bookmarkId && !!userEmail),
+    })
+}
 export function useUpdateBookmarkPlaylistsMutation() {
     const { data: session } = useSession();
     const userEmail = session?.user?.email;
