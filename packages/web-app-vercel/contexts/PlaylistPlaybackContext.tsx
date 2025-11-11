@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 import { createReaderUrl } from "@/lib/urlBuilder";
+import { logger } from "@/lib/logger";
 import type { PlaylistItemWithArticle } from "@/types/playlist";
 
 export interface PlaylistPlaybackState {
@@ -100,6 +101,12 @@ export function PlaylistPlaybackProvider({
   // 状態が変わったらlocalStorageに保存
   useEffect(() => {
     savePlaybackState(state);
+    logger.info("プレイリスト状態を保存", {
+      playlistId: state.playlistId,
+      currentIndex: state.currentIndex,
+      totalCount: state.totalCount,
+      itemsCount: state.items.length,
+    });
   }, [state]);
 
   const startPlaylistPlayback = useCallback(
@@ -137,13 +144,29 @@ export function PlaylistPlaybackProvider({
     setState((prevState) => {
       if (
         !prevState.isPlaylistMode ||
+        prevState.items.length === 0 ||
         prevState.currentIndex >= prevState.items.length - 1
       ) {
+        logger.warn(
+          "playNext: プレイリストの最後またはプレイリストモードではない",
+          {
+            isPlaylistMode: prevState.isPlaylistMode,
+            currentIndex: prevState.currentIndex,
+            itemsCount: prevState.items.length,
+          }
+        );
         return prevState;
       }
 
       const nextIndex = prevState.currentIndex + 1;
       const nextItem = prevState.items[nextIndex];
+
+      logger.info("次の記事へ移動", {
+        currentIndex: prevState.currentIndex,
+        nextIndex,
+        totalCount: prevState.items.length,
+        articleUrl: nextItem?.article.url,
+      });
 
       if (nextItem && prevState.playlistId) {
         const nextUrl = createReaderUrl({
@@ -153,23 +176,39 @@ export function PlaylistPlaybackProvider({
           autoplay: true,
         });
         router.push(nextUrl);
+
+        return {
+          ...prevState,
+          currentIndex: nextIndex,
+        };
       }
 
-      return {
-        ...prevState,
-        currentIndex: nextIndex,
-      };
+      return prevState;
     });
   }, [router]);
 
   const playPrevious = useCallback(() => {
     setState((prevState) => {
       if (!prevState.isPlaylistMode || prevState.currentIndex === 0) {
+        logger.warn(
+          "playPrevious: プレイリストの最初またはプレイリストモードではない",
+          {
+            isPlaylistMode: prevState.isPlaylistMode,
+            currentIndex: prevState.currentIndex,
+          }
+        );
         return prevState;
       }
 
       const prevIndex = prevState.currentIndex - 1;
       const prevItem = prevState.items[prevIndex];
+
+      logger.info("前の記事へ移動", {
+        currentIndex: prevState.currentIndex,
+        prevIndex,
+        totalCount: prevState.items.length,
+        articleUrl: prevItem?.article.url,
+      });
 
       if (prevItem && prevState.playlistId) {
         const prevUrl = createReaderUrl({
@@ -179,12 +218,14 @@ export function PlaylistPlaybackProvider({
           autoplay: true,
         });
         router.push(prevUrl);
+
+        return {
+          ...prevState,
+          currentIndex: prevIndex,
+        };
       }
 
-      return {
-        ...prevState,
-        currentIndex: prevIndex,
-      };
+      return prevState;
     });
   }, [router]);
 
@@ -202,13 +243,26 @@ export function PlaylistPlaybackProvider({
   const onArticleEnd = useCallback(() => {
     setState((prevState) => {
       if (!prevState.isPlaylistMode) {
+        logger.info("onArticleEnd: プレイリストモードではない");
         return prevState;
       }
+
+      logger.info("記事終了", {
+        currentIndex: prevState.currentIndex,
+        totalCount: prevState.items.length,
+        itemsCount: prevState.items.length,
+      });
 
       if (prevState.currentIndex < prevState.items.length - 1) {
         // 次の記事に自動遷移（自動再生フラグ付き）
         const nextIndex = prevState.currentIndex + 1;
         const nextItem = prevState.items[nextIndex];
+
+        logger.info("自動的に次の記事へ遷移", {
+          nextIndex,
+          totalCount: prevState.items.length,
+          articleUrl: nextItem?.article.url,
+        });
 
         if (nextItem && prevState.playlistId) {
           const nextUrl = createReaderUrl({
@@ -227,6 +281,9 @@ export function PlaylistPlaybackProvider({
       }
 
       // プレイリストの最後に到達
+      logger.info("プレイリストの最後に到達", {
+        totalCount: prevState.items.length,
+      });
       return prevState;
     });
   }, [router]);

@@ -91,12 +91,20 @@ export default function ReaderPageClient() {
     voiceModel: settings.voice_model,
     playbackSpeed: settings.playback_speed,
     onArticleEnd: () => {
-      if (isPlaylistMode) {
+      if (isPlaylistMode && playlistState.isPlaylistMode) {
         // プレイリストの最後の記事の場合は完了画面を表示
-        if (currentPlaylistIndex === playlistState.totalCount - 1) {
+        if (currentPlaylistIndex >= playlistState.totalCount - 1) {
           setShowCompletionScreen(true);
+          logger.info("プレイリスト完了", {
+            playlistId: playlistState.playlistId,
+            totalCount: playlistState.totalCount,
+          });
         } else {
           // そうでなければ次の記事へ進む
+          logger.info("次の記事へ進む", {
+            currentIndex: currentPlaylistIndex,
+            totalCount: playlistState.totalCount,
+          });
           onArticleEnd();
         }
       }
@@ -270,7 +278,17 @@ export default function ReaderPageClient() {
     }
   }, [articleIdFromQuery]);
 
-  // URLクエリパラメータが指定されている場合は記事を自動取得
+  // インデックスパラメータが変わったときに状態を更新
+  useEffect(() => {
+    if (indexFromQuery !== null && playlistIdFromQuery) {
+      const newIndex = parseInt(indexFromQuery, 10);
+      setCurrentPlaylistIndex(newIndex);
+      logger.info("プレイリストインデックスを更新", {
+        newIndex,
+        playlistId: playlistIdFromQuery,
+      });
+    }
+  }, [indexFromQuery, playlistIdFromQuery]); // URLクエリパラメータが指定されている場合は記事を自動取得
   useEffect(() => {
     // プレイリスト読み込みが完了してから記事を読み込む
     if (urlFromQuery && arePlaylistsLoaded && !hasLoadedFromQuery) {
