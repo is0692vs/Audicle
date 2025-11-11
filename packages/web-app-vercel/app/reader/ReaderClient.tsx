@@ -76,41 +76,49 @@ export default function ReaderPageClient() {
         setChunks(chunksWithId);
         setTitle(response.title);
 
-        // Supabaseにブックマークを保存（選択されたプレイリストに追加）
+        // プレイリストに記事を追加
         let newBookmarkId: string | null = null;
         try {
-          const bookmarkResponse = await fetch("/api/bookmarks", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              article_url: articleUrl,
-              article_title: response.title,
-              thumbnail_url: null,
-              last_read_position: 0,
-              playlist_id: selectedPlaylistId || undefined, // 選択されたプレイリストIDを送信
-            }),
-          });
+          // デフォルトプレイリストを取得
+          const defaultPlaylistResponse = await fetch("/api/playlists/default");
+          if (!defaultPlaylistResponse.ok) {
+            throw new Error("デフォルトプレイリストの取得に失敗");
+          }
+          const { playlistId } = await defaultPlaylistResponse.json();
+          const targetPlaylistId = selectedPlaylistId || playlistId;
 
-          if (bookmarkResponse.ok) {
-            const bookmarkData = await bookmarkResponse.json();
-            newBookmarkId = bookmarkData.id;
+          // プレイリストに直接追加
+          const itemResponse = await fetch(
+            `/api/playlists/${targetPlaylistId}/items`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                article_url: articleUrl,
+                article_title: response.title,
+                thumbnail_url: null,
+                last_read_position: 0,
+              }),
+            }
+          );
+
+          if (itemResponse.ok) {
+            const itemData = await itemResponse.json();
+            newBookmarkId = itemData.bookmark.id;
             setBookmarkId(newBookmarkId);
-            logger.success("ブックマークを保存", {
+            logger.success("記事をプレイリストに追加", {
               id: newBookmarkId,
               url: articleUrl,
               title: response.title,
-              playlistId: selectedPlaylistId,
+              playlistId: targetPlaylistId,
             });
           } else {
-            logger.error(
-              "ブックマークの保存に失敗",
-              await bookmarkResponse.text()
-            );
+            logger.error("記事の追加に失敗", await itemResponse.text());
           }
-        } catch (bookmarkError) {
-          logger.error("ブックマークの保存に失敗", bookmarkError);
+        } catch (itemError) {
+          logger.error("記事の追加に失敗", itemError);
         }
 
         // ローカルストレージに保存（サーバーIDを優先）

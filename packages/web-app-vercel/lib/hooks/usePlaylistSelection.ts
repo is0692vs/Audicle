@@ -3,25 +3,32 @@ import { useSession } from "next-auth/react";
 import type { Playlist } from "@/types/playlist";
 
 /**
- * ブックマークIDからそのブックマークが属するプレイリスト一覧を取得
+ * プレイリストアイテムIDからそのアイテムが属するプレイリスト一覧を取得
  */
-export function useBookmarkPlaylists(bookmarkId: string) {
+export function usePlaylistItemPlaylists(itemId: string) {
     const { data: session } = useSession();
     const userEmail = session?.user?.email;
 
     return useQuery({
-        queryKey: ["bookmark-playlists", userEmail, bookmarkId],
+        queryKey: ["playlist-item-playlists", userEmail, itemId],
         queryFn: async () => {
-            const response = await fetch(`/api/bookmarks/${bookmarkId}/playlists`);
+            const response = await fetch(`/api/playlist-items/${itemId}/playlists`);
             if (!response.ok) {
                 throw new Error(
-                    "ブックマークが所属するプレイリストの取得に失敗しました"
+                    "プレイリストアイテムが所属するプレイリストの取得に失敗しました"
                 );
             }
             return response.json() as Promise<Playlist[]>;
         },
-        enabled: !!bookmarkId && !!userEmail,
+        enabled: !!itemId && !!userEmail,
     });
+}
+
+/**
+ * @deprecated usePlaylistItemPlaylists を使用してください
+ */
+export function useBookmarkPlaylists(bookmarkId: string) {
+    return usePlaylistItemPlaylists(bookmarkId);
 }
 
 /**
