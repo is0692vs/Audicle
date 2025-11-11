@@ -39,7 +39,6 @@ export async function GET(
             .select('*')
             .eq('owner_email', userEmail)
             .in('id', playlistIds)
-            .order('position', { ascending: true })
             .order('is_default', { ascending: false })
             .order('created_at', { ascending: false })
 
