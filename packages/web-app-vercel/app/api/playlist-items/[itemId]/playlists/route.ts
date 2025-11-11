@@ -23,7 +23,7 @@ export async function GET(
             return NextResponse.json({ error: 'Item not found' }, { status: 404 })
         }
 
-        const playlists_data = itemData.playlists as { owner_email: string } | null
+        const playlists_data = itemData.playlists as unknown as { owner_email: string } | null
 
         if (!playlists_data || playlists_data.owner_email !== userEmail) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
