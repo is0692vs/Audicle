@@ -15,7 +15,7 @@ export async function GET(
         // itemIdからarticle_idを取得し、同時に所有権を確認
         const { data: itemData, error: itemError } = await supabase
             .from('playlist_items')
-            .select('article_id, playlists(owner_email)')
+            .select('article_id, playlist_id')
             .eq('id', itemId)
             .single()
 
@@ -23,9 +23,14 @@ export async function GET(
             return NextResponse.json({ error: 'Item not found' }, { status: 404 })
         }
 
-        const playlistsData = itemData.playlists as { owner_email?: string } | null
+        // playlist_idから所有権を確認
+        const { data: playlistData, error: playlistError } = await supabase
+            .from('playlists')
+            .select('owner_email')
+            .eq('id', itemData.playlist_id)
+            .single()
 
-        if (!playlistsData || playlistsData.owner_email !== userEmail) {
+        if (playlistError || !playlistData || playlistData.owner_email !== userEmail) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
 
