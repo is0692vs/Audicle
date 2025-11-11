@@ -137,7 +137,9 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         const audio = new Audio(audioUrl);
         audioRef.current = audio;
         currentAudioUrlRef.current = audioUrl;
-        audio.playbackRate = playbackRate;
+        // 現在の playbackRate を取得して反映
+        const currentRate = parseFloat(localStorage.getItem("audicle-playback-rate") || "1.0");
+        audio.playbackRate = currentRate;
 
         audio.onended = async () => {
           // 見出しの後、または段落間にポーズ
@@ -177,7 +179,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         setIsLoading(false);
       }
     },
-    [chunks, articleUrl, voiceModel, onChunkChange, prefetchAudio, playbackRate]
+    [chunks, articleUrl, voiceModel, onChunkChange, prefetchAudio]
   );
 
   // 再生開始
