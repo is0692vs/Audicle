@@ -47,11 +47,12 @@ export function PlaylistSelectorModal({
       setSelectedPlaylistIds(currentIds);
       setInitialSelectedIds(currentIds);
       logger.info("プレイリストを読み込み", {
+        itemId,
         totalCount: allPlaylists.length,
         selectedCount: currentIds.size,
       });
     }
-  }, [isOpen, isLoadingCurrent]);
+  }, [isOpen, isLoadingCurrent, itemId, currentPlaylists, allPlaylists]);
 
   // エラー状態を管理
   useEffect(() => {
