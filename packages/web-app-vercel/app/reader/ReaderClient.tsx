@@ -146,7 +146,7 @@ export default function ReaderPageClient() {
 
         if (userEmail && modifiedPlaylist?.is_default) {
           queryClient.invalidateQueries({
-            queryKey: ["defaultPlaylist", "items", userEmail],
+            queryKey: ["defaultPlaylist"],
           });
           logger.success("ホームのキャッシュを無効化しました");
         }
