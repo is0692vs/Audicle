@@ -121,11 +121,6 @@ export default function StorageManager() {
     return <div className="p-4 text-center text-zinc-400">読み込み中...</div>;
   }
 
-  const usagePercentage =
-    storageUsage.available > 0
-      ? (storageUsage.used / storageUsage.available) * 100
-      : 0;
-
   return (
     <div className="space-y-4">
       {confirmDialog}
@@ -137,27 +132,9 @@ export default function StorageManager() {
       {/* ストレージ使用量 */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
         <h3 className="text-lg font-semibold mb-3">ストレージ使用量</h3>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-zinc-400">
-              {formatBytes(storageUsage.used)} /{" "}
-              {formatBytes(storageUsage.available)}
-            </span>
-            <span className="text-zinc-400">{usagePercentage.toFixed(1)}%</span>
-          </div>
-          <div className="w-full bg-zinc-800 rounded-full h-2">
-            <div
-              className={`h-2 rounded-full transition-all ${
-                usagePercentage > 80
-                  ? "bg-red-600"
-                  : usagePercentage > 50
-                  ? "bg-yellow-600"
-                  : "bg-green-600"
-              }`}
-              style={{ width: `${Math.min(usagePercentage, 100)}%` }}
-            />
-          </div>
-        </div>
+        <span className="text-sm text-zinc-400">
+          {formatBytes(storageUsage.used)}
+        </span>
       </div>
 
       {/* ダウンロード済み記事一覧 */}
