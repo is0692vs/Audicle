@@ -43,10 +43,9 @@ export async function GET(
 
         if (playlistsError) {
             return NextResponse.json(
-                { error: 'Failed to fetch playlists' },
+                { error: playlistsError.message || 'Failed to fetch playlists' },
                 { status: 500 }
             )
-        }
 
         // playlist_itemsプロパティを削除して返す
         const playlists = playlistsWithItems.map(({ playlist_items: _, ...rest }) => rest)
