@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { logger } from "@/lib/logger";
 import { usePlaylists } from "@/lib/hooks/usePlaylists";
 import {
-  useBookmarkPlaylists,
+  usePlaylistItemPlaylists,
   useUpdateBookmarkPlaylistsMutation,
 } from "@/lib/hooks/usePlaylistSelection";
 
@@ -27,7 +27,7 @@ export function PlaylistSelectorModal({
     data: currentPlaylists = [],
     isLoading: isLoadingCurrent,
     error: currentError,
-  } = useBookmarkPlaylists(bookmarkId);
+  } = usePlaylistItemPlaylists(bookmarkId);
   const updateMutation = useUpdateBookmarkPlaylistsMutation();
 
   const [selectedPlaylistIds, setSelectedPlaylistIds] = useState<Set<string>>(

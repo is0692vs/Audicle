@@ -41,11 +41,19 @@ export async function DELETE(
             .delete()
             .eq('id', itemId)
             .eq('playlist_id', playlistId)
+            .single()
 
         if (deleteError) {
+            // PGRST116は「No rows found」エラーコード
+            if (deleteError.code === 'PGRST116') {
+                return NextResponse.json(
+                    { error: 'Item not found' },
+                    { status: 404 }
+                )
+            }
             console.error('Supabase error:', deleteError)
             return NextResponse.json(
-                { error: 'Failed to delete item' },
+                { error: deleteError.message || 'Failed to delete item' },
                 { status: 500 }
             )
         }

@@ -12,22 +12,29 @@ export async function GET(
         const { userEmail, response } = await requireAuth()
         if (response) return response
 
-        // プレイリストアイテムを取得
-        const { data: item, error: itemError } = await supabase
+        // itemIdからbookmark_idを取得し、同時に所有権を確認
+        const { data: itemData, error: itemError } = await supabase
             .from('playlist_items')
-            .select('playlist_id')
+            .select('bookmark_id, playlists!inner(owner_email)')
             .eq('id', itemId)
             .single()
 
-        if (itemError || !item) {
+        if (itemError || !itemData) {
             return NextResponse.json({ error: 'Item not found' }, { status: 404 })
         }
 
-        // プレイリストが存在し、ユーザーのものであることを確認
+        if (itemData.playlists.owner_email !== userEmail) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+        }
+
+        const { bookmark_id } = itemData
+
+        // bookmark_id を持つすべてのプレイリストを取得
         const { data: playlists, error: playlistsError } = await supabase
             .from('playlists')
-            .select('id, name, is_default')
+            .select('id, name, is_default, playlist_items!inner(bookmark_id)')
             .eq('owner_email', userEmail)
+            .eq('playlist_items.bookmark_id', bookmark_id)
             .order('is_default', { ascending: false })
             .order('created_at', { ascending: false })
 
@@ -38,7 +45,10 @@ export async function GET(
             )
         }
 
-        return NextResponse.json(playlists as Playlist[])
+        // `playlist_items`プロパティは不要なので除外
+        const cleanedPlaylists = playlists.map(({ playlist_items, ...rest }) => rest)
+
+        return NextResponse.json(cleanedPlaylists as Playlist[])
     } catch (error) {
         console.error('Error in GET /api/playlist-items/[itemId]/playlists:', error)
         return NextResponse.json(

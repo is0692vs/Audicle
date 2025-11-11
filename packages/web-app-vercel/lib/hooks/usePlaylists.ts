@@ -158,7 +158,7 @@ export function useRemoveFromPlaylistMutation() {
                 queryKey: ["playlists", userEmail, variables.playlistId],
             });
             queryClient.invalidateQueries({
-                queryKey: ["playlists/default"],
+                queryKey: ["defaultPlaylist"],
             });
         },
     });

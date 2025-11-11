@@ -25,13 +25,6 @@ export function usePlaylistItemPlaylists(itemId: string) {
 }
 
 /**
- * @deprecated usePlaylistItemPlaylists を使用してください
- */
-export function useBookmarkPlaylists(bookmarkId: string) {
-    return usePlaylistItemPlaylists(bookmarkId);
-}
-
-/**
  * ブックマークのプレイリスト関連付け更新ミューテーション
  */
 export function useUpdateBookmarkPlaylistsMutation() {
