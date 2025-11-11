@@ -42,7 +42,16 @@ class AudioCache {
       const age = Date.now() - cached.timestamp;
       if (age < CACHE_EXPIRY) {
         logger.cache("HIT", `${text.substring(0, 30)}...`);
-        return cached.url;
+
+        // blob URL は再生成して返す（以前の URL が revoke 済みでも再生可能にする）
+        if (cached.url.startsWith("blob:")) {
+          URL.revokeObjectURL(cached.url);
+        }
+        const freshUrl = URL.createObjectURL(cached.blob);
+        cached.url = freshUrl;
+        cached.timestamp = Date.now();
+        this.cache.set(key, cached);
+        return freshUrl;
       } else {
         // 期限切れのキャッシュを削除
         this.revoke(key);
