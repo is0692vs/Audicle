@@ -30,7 +30,7 @@ function convertParagraphsToChunks(htmlContent: string): Chunk[] {
 export default function ReaderPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const articleId = searchParams.get("id");
+  const articleIdFromQuery = searchParams.get("id");
   const urlFromQuery = searchParams.get("url");
 
   const [url, setUrl] = useState("");
@@ -39,7 +39,7 @@ export default function ReaderPageClient() {
   const [title, setTitle] = useState("");
   const [error, setError] = useState("");
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
-  const [bookmarkId, setBookmarkId] = useState<string | null>(null);
+  const [articleId, setArticleId] = useState<string | null>(null);
   const [itemId, setItemId] = useState<string | null>(null);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
@@ -78,7 +78,7 @@ export default function ReaderPageClient() {
         setTitle(response.title);
 
         // プレイリストに記事を追加
-        let newBookmarkId: string | null = null;
+        let newArticleId: string | null = null;
         try {
           if (!selectedPlaylistId) {
             throw new Error("追加先のプレイリストが選択されていません。");
@@ -104,11 +104,11 @@ export default function ReaderPageClient() {
 
           if (itemResponse.ok) {
             const itemData = await itemResponse.json();
-            newBookmarkId = itemData.bookmark.id;
-            setBookmarkId(newBookmarkId);
+            newArticleId = itemData.article.id;
+            setArticleId(newArticleId);
             setItemId(itemData.item.id);
             logger.success("記事をプレイリストに追加", {
-              id: newBookmarkId,
+              id: newArticleId,
               url: articleUrl,
               title: response.title,
               playlistId: targetPlaylistId,
@@ -122,7 +122,7 @@ export default function ReaderPageClient() {
 
         // ローカルストレージに保存（サーバーIDを優先）
         const newArticle = articleStorage.upsert({
-          id: newBookmarkId || undefined, // サーバーIDがあれば使用
+          id: newArticleId || undefined, // サーバーIDがあれば使用
           url: articleUrl,
           title: response.title,
           chunks: chunksWithId,
@@ -135,7 +135,7 @@ export default function ReaderPageClient() {
         });
 
         // URLに記事IDを追加（サーバーIDを優先）
-        router.push(`/reader?id=${newBookmarkId || newArticle.id}`);
+        router.push(`/reader?id=${newArticleId || newArticle.id}`);
       } catch (err) {
         setError(err instanceof Error ? err.message : "エラーが発生しました");
         logger.error("記事の抽出に失敗", err);
@@ -201,20 +201,20 @@ export default function ReaderPageClient() {
 
   // 記事IDが指定されている場合は読み込み
   useEffect(() => {
-    if (articleId) {
-      const article = articleStorage.getById(articleId);
+    if (articleIdFromQuery) {
+      const article = articleStorage.getById(articleIdFromQuery);
       if (article) {
-        logger.info("記事を読み込み", { id: articleId, title: article.title });
+        logger.info("記事を読み込み", { id: articleIdFromQuery, title: article.title });
         setTitle(article.title);
         setChunks(article.chunks);
         setUrl(article.url);
-        setBookmarkId(articleId);
+        setArticleId(articleIdFromQuery);
       } else {
-        logger.warn("記事が見つかりません", { id: articleId });
+        logger.warn("記事が見つかりません", { id: articleIdFromQuery });
         setError("記事が見つかりませんでした");
       }
     }
-  }, [articleId]);
+  }, [articleIdFromQuery]);
 
   // URLクエリパラメータが指定されている場合は記事を自動取得
   useEffect(() => {
@@ -382,7 +382,7 @@ export default function ReaderPageClient() {
                 </div>
               </div>
               {/* プレイリスト追加ボタン */}
-              {bookmarkId && (
+              {articleId && (
                 <button
                   onClick={() => setIsPlaylistModalOpen(true)}
                   className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
@@ -409,12 +409,12 @@ export default function ReaderPageClient() {
       </main>
 
       {/* プレイリストセレクターモーダル */}
-      {bookmarkId && (
+      {articleId && (
         <PlaylistSelectorModal
           isOpen={isPlaylistModalOpen}
           onClose={() => setIsPlaylistModalOpen(false)}
-          itemId={itemId}
-          bookmarkId={bookmarkId}
+          itemId={itemId || undefined}
+          articleId={articleId}
           articleTitle={title}
           onPlaylistsUpdated={async () => {}}
         />

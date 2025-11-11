@@ -205,13 +205,13 @@ export default function PlaylistDetailPage() {
                 onArticleClick={(playlistItem) =>
                   router.push(
                     `/reader?url=${encodeURIComponent(
-                      playlistItem.bookmark.article_url
+                      playlistItem.article.url
                     )}`
                   )
                 }
                 onPlaylistAdd={() => {}}
                 onRemove={(id) =>
-                  handleRemoveFromPlaylist(id, item.bookmark.article_title)
+                  handleRemoveFromPlaylist(id, item.article.title)
                 }
               />
             ))}

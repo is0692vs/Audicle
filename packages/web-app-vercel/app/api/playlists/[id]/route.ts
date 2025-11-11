@@ -20,10 +20,10 @@ export async function GET(
         playlist_items(
           id,
           playlist_id,
-          bookmark_id,
+          article_id,
           position,
           added_at,
-          bookmark:bookmarks(*)
+          article:articles(*)
         )
       `)
             .eq('id', id)

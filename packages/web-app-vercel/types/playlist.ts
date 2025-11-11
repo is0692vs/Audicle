@@ -11,11 +11,11 @@ export interface Playlist {
     updated_at: string;
 }
 
-export interface Bookmark {
+export interface Article {
     id: string;
     owner_email: string;
-    article_url: string;
-    article_title: string;
+    url: string;
+    title: string;
     thumbnail_url?: string;
     last_read_position?: number;
     created_at: string;
@@ -25,17 +25,17 @@ export interface Bookmark {
 export interface PlaylistItem {
     id: string;
     playlist_id: string;
-    bookmark_id: string;
+    article_id: string;
     position: number;
     added_at: string;
 }
 
-export interface PlaylistItemWithBookmark extends PlaylistItem {
-    bookmark: Bookmark;
+export interface PlaylistItemWithArticle extends PlaylistItem {
+    article: Article;
 }
 
 export interface PlaylistWithItems extends Playlist {
-    items?: PlaylistItemWithBookmark[];
+    items?: PlaylistItemWithArticle[];
     item_count?: number;
 }
 
