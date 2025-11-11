@@ -80,13 +80,10 @@ export default function ReaderPageClient() {
         // プレイリストに記事を追加
         let newBookmarkId: string | null = null;
         try {
-          // デフォルトプレイリストを取得
-          const defaultPlaylistResponse = await fetch("/api/playlists/default");
-          if (!defaultPlaylistResponse.ok) {
-            throw new Error("デフォルトプレイリストの取得に失敗");
+          if (!selectedPlaylistId) {
+            throw new Error("追加先のプレイリストが選択されていません。");
           }
-          const { id: playlistId } = await defaultPlaylistResponse.json();
-          const targetPlaylistId = selectedPlaylistId || playlistId;
+          const targetPlaylistId = selectedPlaylistId;
 
           // プレイリストに直接追加
           const itemResponse = await fetch(

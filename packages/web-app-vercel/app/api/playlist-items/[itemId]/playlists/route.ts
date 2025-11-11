@@ -40,6 +40,7 @@ export async function GET(
             .select('*, playlist_items!inner(bookmark_id)')
             .eq('owner_email', userEmail)
             .eq('playlist_items.bookmark_id', bookmark_id)
+            .order('position', { ascending: true })
             .order('is_default', { ascending: false })
             .order('created_at', { ascending: false })
 
