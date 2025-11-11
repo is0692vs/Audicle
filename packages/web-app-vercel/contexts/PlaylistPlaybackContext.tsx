@@ -51,6 +51,7 @@ function savePlaybackState(state: PlaylistPlaybackState): void {
           playlistId: state.playlistId,
           playlistName: state.playlistName,
           currentIndex: state.currentIndex,
+          items: state.items,
           totalCount: state.totalCount,
           isPlaylistMode: state.isPlaylistMode,
         })
