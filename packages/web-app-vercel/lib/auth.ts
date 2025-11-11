@@ -35,9 +35,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         async jwt({ token, account, profile }) {
             if (account) {
                 token.id = profile?.sub || account.providerAccountId;
-                // 新規ユーザーの場合、初期化処理を実行
-                await initializeNewUser(token.id as string, profile?.email || '');
             }
+
+            // 新規・既存問わず、常に初期化チェックを実行
+            // initializeNewUser内で存在チェックするため、既存ユーザーはスキップされる
+            await initializeNewUser(token.id as string, profile?.email || '');
+
             return token;
         },
         async session({ session, token }) {
