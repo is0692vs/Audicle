@@ -416,7 +416,7 @@ export default function ReaderPageClient() {
         <PlaylistSelectorModal
           isOpen={isPlaylistModalOpen}
           onClose={() => setIsPlaylistModalOpen(false)}
-          itemId={itemId || bookmarkId}
+          itemId={itemId}
           bookmarkId={bookmarkId}
           articleTitle={title}
           onPlaylistsUpdated={async () => {}}
