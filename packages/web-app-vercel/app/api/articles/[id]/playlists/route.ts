@@ -40,9 +40,12 @@ export async function GET(
 
         // プレイリストを抽出し、所有権でフィルタリング、ソート
         const playlists = (playlistItems || [])
-            .map(item => item.playlists)
+            .map(item => item.playlists as any) // Type assertion to bypass TypeScript issue
             .filter((playlist): playlist is NonNullable<typeof playlist> => 
-                playlist !== null && playlist.owner_email === userEmail
+                playlist !== null && 
+                typeof playlist === 'object' && 
+                'owner_email' in playlist && 
+                playlist.owner_email === userEmail
             )
             .sort((a, b) => {
                 // position -> is_default (desc) -> created_at (desc) の順でソート
