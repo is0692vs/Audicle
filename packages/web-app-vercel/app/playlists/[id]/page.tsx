@@ -12,6 +12,7 @@ import {
   useRemoveFromPlaylistMutation,
 } from "@/lib/hooks/usePlaylists";
 import { ArticleCard } from "@/components/ArticleCard";
+import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
 import type { PlaylistWithItems } from "@/types/playlist";
 
 export default function PlaylistDetailPage() {
@@ -27,6 +28,9 @@ export default function PlaylistDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
+  const [selectedArticleId, setSelectedArticleId] = useState<string>("");
+  const [selectedArticleTitle, setSelectedArticleTitle] = useState<string>("");
   const { showConfirm, confirmDialog } = useConfirmDialog();
 
   const sortedItems = useMemo(() => {
@@ -82,6 +86,15 @@ export default function PlaylistDetailPage() {
       } catch (error) {
         logger.error("アイテムの削除に失敗", error);
       }
+    }
+  };
+
+  const handlePlaylistAdd = (articleId: string) => {
+    const item = sortedItems.find((item) => item.article_id === articleId);
+    if (item) {
+      setSelectedArticleId(articleId);
+      setSelectedArticleTitle(item.article.title);
+      setIsPlaylistModalOpen(true);
     }
   };
 
@@ -232,7 +245,7 @@ export default function PlaylistDetailPage() {
                     )}`
                   )
                 }
-                onPlaylistAdd={() => {}}
+                onPlaylistAdd={handlePlaylistAdd}
                 onRemove={(id) =>
                   handleRemoveFromPlaylist(id, item.article.title)
                 }
@@ -241,6 +254,16 @@ export default function PlaylistDetailPage() {
           </div>
         )}
       </main>
+
+      <PlaylistSelectorModal
+        isOpen={isPlaylistModalOpen}
+        onClose={() => setIsPlaylistModalOpen(false)}
+        articleId={selectedArticleId}
+        articleTitle={selectedArticleTitle}
+        onPlaylistsUpdated={async () => {
+          // 必要に応じてプレイリストを再読み込み
+        }}
+      />
     </div>
   );
 }

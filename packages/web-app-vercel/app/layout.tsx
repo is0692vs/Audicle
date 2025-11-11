@@ -25,6 +25,9 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "Audicle",
   },
+};
+
+export const viewport = {
   themeColor: "#000000",
 };
 
