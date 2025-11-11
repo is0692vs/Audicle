@@ -23,9 +23,9 @@ export async function GET(
             return NextResponse.json({ error: 'Item not found' }, { status: 404 })
         }
 
-        const playlists_data = itemData.playlists as unknown as { owner_email: string } | null
+        const playlistsData = itemData.playlists as { owner_email?: string } | null
 
-        if (!playlists_data || playlists_data.owner_email !== userEmail) {
+        if (!playlistsData || playlistsData.owner_email !== userEmail) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
 
@@ -46,6 +46,7 @@ export async function GET(
                 { error: playlistsError.message || 'Failed to fetch playlists' },
                 { status: 500 }
             )
+        }
 
         // playlist_itemsプロパティを削除して返す
         const playlists = playlistsWithItems.map(({ playlist_items: _, ...rest }) => rest)

@@ -58,7 +58,7 @@ export async function POST(
 
         if (bookmarkError) {
             return NextResponse.json(
-                { error: 'Failed to create bookmark' },
+                { error: bookmarkError.message || 'Failed to create bookmark' },
                 { status: 500 }
             )
         }
@@ -82,7 +82,7 @@ export async function POST(
         if (itemError) {
             console.error('Supabase error:', itemError)
             return NextResponse.json(
-                { error: 'Failed to add item to playlist' },
+                { error: itemError.message || 'Failed to add item to playlist' },
                 { status: 500 }
             )
         }
