@@ -6,6 +6,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import ReaderView from "@/components/ReaderView";
 import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
+import { PlaylistCompletionScreen } from "@/components/PlaylistCompletionScreen";
+import { usePlaylistPlayback } from "@/contexts/PlaylistPlaybackContext";
 import { Chunk } from "@/types/api";
 import { Playlist } from "@/types/playlist";
 import { extractContent } from "@/lib/api";
@@ -14,7 +16,7 @@ import { articleStorage } from "@/lib/storage";
 import { logger } from "@/lib/logger";
 import { parseHTMLToParagraphs } from "@/lib/paragraphParser";
 import { UserSettings, DEFAULT_SETTINGS } from "@/types/settings";
-import { Play, Pause, Square } from "lucide-react";
+import { Play, Pause, Square, SkipBack, SkipForward } from "lucide-react";
 
 function convertParagraphsToChunks(htmlContent: string): Chunk[] {
   // HTML構造を保持して段落を抽出
@@ -34,9 +36,14 @@ export default function ReaderPageClient() {
   const searchParams = useSearchParams();
   const articleIdFromQuery = searchParams.get("id");
   const urlFromQuery = searchParams.get("url");
+  const playlistIdFromQuery = searchParams.get("playlist");
+  const indexFromQuery = searchParams.get("index");
   const queryClient = useQueryClient();
   const { data: session } = useSession();
   const userEmail = session?.user?.email;
+
+  // プレイリスト再生コンテキスト
+  const { state: playlistState, onArticleEnd } = usePlaylistPlayback();
 
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -51,6 +58,15 @@ export default function ReaderPageClient() {
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>("");
   const [arePlaylistsLoaded, setArePlaylistsLoaded] = useState(false);
   const [hasLoadedFromQuery, setHasLoadedFromQuery] = useState(false);
+
+  // プレイリスト再生のための追加状態
+  const [currentPlaylistIndex, setCurrentPlaylistIndex] = useState<number>(
+    indexFromQuery ? parseInt(indexFromQuery, 10) : 0
+  );
+  const [isPlaylistMode, setIsPlaylistMode] = useState<boolean>(
+    !!playlistIdFromQuery
+  );
+  const [showCompletionScreen, setShowCompletionScreen] = useState(false);
 
   // 再生制御フック
   const {
@@ -69,6 +85,17 @@ export default function ReaderPageClient() {
     articleUrl: url,
     voiceModel: settings.voice_model,
     playbackSpeed: settings.playback_speed,
+    onArticleEnd: () => {
+      if (isPlaylistMode) {
+        // プレイリストの最後の記事の場合は完了画面を表示
+        if (currentPlaylistIndex === playlistState.totalCount - 1) {
+          setShowCompletionScreen(true);
+        } else {
+          // そうでなければ次の記事へ進む
+          onArticleEnd();
+        }
+      }
+    },
   });
 
   // 記事を読み込んで保存する共通ロジック
@@ -338,6 +365,82 @@ export default function ReaderPageClient() {
               {playbackError}
             </div>
           )}
+          {/* プレイリスト再生情報 */}
+          {isPlaylistMode && playlistState.isPlaylistMode && (
+            <div className="mt-4 bg-violet-950/30 p-4 rounded-lg border border-violet-900/50">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="text-sm text-zinc-400">
+                    プレイリストから再生中
+                  </p>
+                  <p className="text-lg font-semibold text-violet-300">
+                    {playlistState.playlistName}
+                  </p>
+                  <p className="text-sm text-zinc-500">
+                    {currentPlaylistIndex + 1} / {playlistState.totalCount}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      if (currentPlaylistIndex > 0) {
+                        const prevItem =
+                          playlistState.items[currentPlaylistIndex - 1];
+                        if (prevItem) {
+                          router.push(
+                            `/reader?url=${encodeURIComponent(
+                              prevItem.article.url
+                            )}&playlist=${playlistState.playlistId}&index=${
+                              currentPlaylistIndex - 1
+                            }`
+                          );
+                        }
+                      }
+                    }}
+                    disabled={currentPlaylistIndex === 0}
+                    className="px-3 py-1 bg-violet-600 text-white rounded hover:bg-violet-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center gap-1 text-sm"
+                  >
+                    <SkipBack className="size-4" />
+                    <span className="hidden sm:inline">前へ</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (currentPlaylistIndex < playlistState.totalCount - 1) {
+                        const nextItem =
+                          playlistState.items[currentPlaylistIndex + 1];
+                        if (nextItem) {
+                          router.push(
+                            `/reader?url=${encodeURIComponent(
+                              nextItem.article.url
+                            )}&playlist=${playlistState.playlistId}&index=${
+                              currentPlaylistIndex + 1
+                            }`
+                          );
+                        }
+                      }
+                    }}
+                    disabled={
+                      currentPlaylistIndex === playlistState.totalCount - 1
+                    }
+                    className="px-3 py-1 bg-violet-600 text-white rounded hover:bg-violet-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center gap-1 text-sm"
+                  >
+                    <span className="hidden sm:inline">次へ</span>
+                    <SkipForward className="size-4" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (playlistState.playlistId) {
+                        router.push(`/playlists/${playlistState.playlistId}`);
+                      }
+                    }}
+                    className="px-3 py-1 bg-zinc-700 text-white rounded hover:bg-zinc-600 transition-colors text-sm"
+                  >
+                    プレイリストに戻る
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* 再生コントロール */}
           {chunks.length > 0 && (
@@ -346,7 +449,7 @@ export default function ReaderPageClient() {
                 <button
                   onClick={isPlaying ? pause : play}
                   disabled={isPlaybackLoading}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 min-w-[44px]"
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 min-w-11"
                   title={
                     isPlaybackLoading
                       ? "処理中..."
@@ -371,7 +474,7 @@ export default function ReaderPageClient() {
                 <button
                   onClick={stop}
                   disabled={!isPlaying && !isPlaybackLoading}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 min-w-[44px]"
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 min-w-11"
                   title="停止"
                 >
                   <Square className="size-5" />
@@ -416,16 +519,36 @@ export default function ReaderPageClient() {
         </div>
       </header>
 
-      {/* メインコンテンツ: リーダービュー */}
+      {/* メインコンテンツ: リーダービューまたは完了画面 */}
       <main className="flex-1 overflow-hidden">
-        <ReaderView
-          chunks={chunks}
-          currentChunkId={currentChunkId}
-          articleUrl={url}
-          voiceModel={settings.voice_model}
-          speed={playbackRate}
-          onChunkClick={seekToChunk}
-        />
+        {showCompletionScreen && isPlaylistMode ? (
+          <PlaylistCompletionScreen
+            playlistId={playlistState.playlistId || ""}
+            playlistName={playlistState.playlistName || "プレイリスト"}
+            totalCount={playlistState.totalCount}
+            onReplay={() => {
+              setShowCompletionScreen(false);
+              // 最初の記事に戻る
+              const firstItem = playlistState.items[0];
+              if (firstItem) {
+                router.push(
+                  `/reader?url=${encodeURIComponent(
+                    firstItem.article.url
+                  )}&playlist=${playlistState.playlistId}&index=0`
+                );
+              }
+            }}
+          />
+        ) : (
+          <ReaderView
+            chunks={chunks}
+            currentChunkId={currentChunkId}
+            articleUrl={url}
+            voiceModel={settings.voice_model}
+            speed={playbackRate}
+            onChunkClick={seekToChunk}
+          />
+        )}
       </main>
 
       {/* プレイリストセレクターモーダル */}

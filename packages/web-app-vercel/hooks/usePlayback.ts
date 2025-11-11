@@ -15,6 +15,7 @@ interface UsePlaybackProps {
   voiceModel?: string;       // 音声モデル（例: 'ja-JP-Standard-B'）
   playbackSpeed?: number;    // 再生速度（例: 1.0, 1.5, 2.0）
   onChunkChange?: (chunkId: string) => void;
+  onArticleEnd?: () => void; // 記事の再生終了時のコールバック
 }
 
 const PREFETCH_AHEAD = 3; // 3つ先まで先読み
@@ -30,7 +31,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onChunkChange }: UsePlaybackProps) {
+export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onChunkChange, onArticleEnd }: UsePlaybackProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState<number>(-1);
   const [isLoading, setIsLoading] = useState(false);
@@ -45,12 +46,18 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentAudioUrlRef = useRef<string | null>(null);
+  const onArticleEndRef = useRef<(() => void) | undefined>(onArticleEnd);
 
   // 現在のチャンクID
   const currentChunkId =
     currentIndex >= 0 && currentIndex < chunks.length
       ? chunks[currentIndex].id
       : undefined;
+
+  // onArticleEndRefを同期
+  useEffect(() => {
+    onArticleEndRef.current = onArticleEnd;
+  }, [onArticleEnd]);
 
   // playbackRateの変更をlocalStorageに保存
   useEffect(() => {
@@ -165,6 +172,8 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
             }
             setIsPlaying(false);
             setCurrentIndex(-1);
+            // 記事の再生が終了したときのコールバック
+            onArticleEndRef.current?.();
           }
         };
 
@@ -185,7 +194,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         setIsLoading(false);
       }
     },
-    [chunks, articleUrl, voiceModel, onChunkChange, prefetchAudio]
+    [chunks, articleUrl, voiceModel, onChunkChange, prefetchAudio, onArticleEnd]
   );
 
   // 再生開始
