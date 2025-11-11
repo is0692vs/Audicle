@@ -62,7 +62,7 @@ export async function DELETE(
     } catch (error) {
         console.error('Error in DELETE /api/playlists/[id]/items/[itemId]:', error)
         return NextResponse.json(
-            { error: 'Internal server error' },
+            { error: error instanceof Error ? error.message : 'Internal server error' },
             { status: 500 }
         )
     }
