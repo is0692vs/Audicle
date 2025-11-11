@@ -12,22 +12,10 @@ export async function GET(
         const { userEmail, response } = await requireAuth()
         if (response) return response
 
-        // article_id を持つプレイリストアイテムを取得し、そこからプレイリストを取得
+        // article_id を持つプレイリストアイテムを取得
         const { data: playlistItems, error: playlistItemsError } = await supabase
             .from('playlist_items')
-            .select(`
-                playlist_id,
-                playlists (
-                    id,
-                    name,
-                    description,
-                    owner_email,
-                    is_default,
-                    position,
-                    created_at,
-                    updated_at
-                )
-            `)
+            .select('playlist_id')
             .eq('article_id', articleId)
 
         if (playlistItemsError) {
@@ -38,25 +26,30 @@ export async function GET(
             )
         }
 
-        // プレイリストを抽出し、所有権でフィルタリング、ソート
-        const playlists = (playlistItems || [])
-            .map(item => item.playlists as any) // Type assertion to bypass TypeScript issue
-            .filter((playlist): playlist is NonNullable<typeof playlist> => 
-                playlist !== null && 
-                typeof playlist === 'object' && 
-                'owner_email' in playlist && 
-                playlist.owner_email === userEmail
+        if (!playlistItems || playlistItems.length === 0) {
+            return NextResponse.json([])
+        }
+
+        // プレイリストIDのリストを取得
+        const playlistIds = playlistItems.map(item => item.playlist_id)
+
+        // プレイリストを取得（所有権フィルタリング付き）
+        const { data: playlists, error: playlistsError } = await supabase
+            .from('playlists')
+            .select('*')
+            .eq('owner_email', userEmail)
+            .in('id', playlistIds)
+            .order('position', { ascending: true })
+            .order('is_default', { ascending: false })
+            .order('created_at', { ascending: false })
+
+        if (playlistsError) {
+            console.error('Supabase error:', playlistsError)
+            return NextResponse.json(
+                { error: 'Failed to fetch playlists' },
+                { status: 500 }
             )
-            .sort((a, b) => {
-                // position -> is_default (desc) -> created_at (desc) の順でソート
-                if (a.position !== b.position) {
-                    return (a.position ?? 0) - (b.position ?? 0)
-                }
-                if (a.is_default !== b.is_default) {
-                    return a.is_default ? -1 : 1
-                }
-                return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-            })
+        }
 
         return NextResponse.json(playlists as Playlist[])
     } catch (error) {
