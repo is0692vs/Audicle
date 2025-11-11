@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import { initializeNewUser } from "./user-initialization";
 
 const allowedUsers = process.env.ALLOWED_USERS?.split(',').map(email => email.trim()) || [];
 
@@ -34,6 +35,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         async jwt({ token, account, profile }) {
             if (account) {
                 token.id = profile?.sub || account.providerAccountId;
+                // 新規ユーザーの場合、初期化処理を実行
+                await initializeNewUser(token.id as string);
             }
             return token;
         },
