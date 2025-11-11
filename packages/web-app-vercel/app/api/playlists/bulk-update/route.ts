@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { requireAuth } from '@/lib/api-auth'
 
 interface BulkUpdateRequest {
-    bookmarkId: string
+    articleId: string
     addToPlaylistIds: string[]
     removeFromPlaylistIds: string[]
 }
@@ -15,11 +15,11 @@ export async function POST(request: Request) {
         if (response) return response
 
         const body: BulkUpdateRequest = await request.json()
-        const { bookmarkId, addToPlaylistIds, removeFromPlaylistIds } = body
+        const { articleId, addToPlaylistIds, removeFromPlaylistIds } = body
 
-        if (!bookmarkId) {
+        if (!articleId) {
             return NextResponse.json(
-                { error: 'bookmarkId is required' },
+                { error: 'articleId is required' },
                 { status: 400 }
             )
         }
@@ -32,17 +32,17 @@ export async function POST(request: Request) {
             )
         }
 
-        // ブックマークの所有者確認
-        const { data: bookmark, error: bookmarkError } = await supabase
-            .from('bookmarks')
+        // 記事の所有者確認
+        const { data: article, error: articleError } = await supabase
+            .from('articles')
             .select('id')
-            .eq('id', bookmarkId)
+            .eq('id', articleId)
             .eq('owner_email', userEmail)
             .single()
 
-        if (bookmarkError || !bookmark) {
+        if (articleError || !article) {
             return NextResponse.json(
-                { error: 'Bookmark not found' },
+                { error: 'Article not found' },
                 { status: 404 }
             )
         }
@@ -79,10 +79,10 @@ export async function POST(request: Request) {
 
         if (addToPlaylistIds.length > 0 || removeFromPlaylistIds.length > 0) {
             const { data, error } = await supabase.rpc('bulk_update_playlist_items', {
-                bookmark_id_param: bookmarkId,
+                article_id_param: articleId,
                 add_playlist_ids: addToPlaylistIds,
                 remove_playlist_ids: removeFromPlaylistIds
-            });
+            })
 
             if (error) {
                 console.error('Supabase RPC error:', error)
@@ -97,7 +97,7 @@ export async function POST(request: Request) {
                 removedCount = data.removed_count ?? 0;
 
                 console.log("プレイリストを更新", {
-                    bookmarkId,
+                    articleId,
                     addedCount,
                     removedCount,
                 });

@@ -25,30 +25,30 @@ export function usePlaylistItemPlaylists(itemId: string, options?: { enabled?: b
 }
 
 /**
- * ブックマークIDからそのブックマークが属するプレイリスト一覧を取得（レガシー対応）
+ * 記事IDからその記事が属するプレイリスト一覧を取得
  */
-export function useBookmarkPlaylists(bookmarkId: string, options?: { enabled?: boolean }) {
+export function useArticlePlaylists(articleId: string, options?: { enabled?: boolean }) {
     const { data: session } = useSession();
     const userEmail = session?.user?.email;
 
     return useQuery<Playlist[]>({
-        queryKey: ['bookmark', 'playlists', bookmarkId, userEmail],
+        queryKey: ['article', 'playlists', articleId, userEmail],
         queryFn: async () => {
-            const response = await fetch(`/api/bookmarks/${bookmarkId}/playlists`)
+            const response = await fetch(`/api/articles/${articleId}/playlists`)
             if (!response.ok) throw new Error('Failed to fetch playlists')
             return response.json()
         },
-        enabled: options?.enabled !== undefined ? options.enabled : (!!bookmarkId && !!userEmail),
+        enabled: options?.enabled !== undefined ? options.enabled : (!!articleId && !!userEmail),
     })
 }
-export function useUpdateBookmarkPlaylistsMutation() {
+export function useUpdateArticlePlaylistsMutation() {
     const { data: session } = useSession();
     const userEmail = session?.user?.email;
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: async (data: {
-            bookmarkId: string;
+            articleId: string;
             addToPlaylistIds: string[];
             removeFromPlaylistIds: string[];
         }) => {
@@ -62,10 +62,10 @@ export function useUpdateBookmarkPlaylistsMutation() {
             }
             return response.json();
         },
-        onSuccess: () => {
-            // ブックマーク関連の全てのキャッシュを無効化
-            queryClient.invalidateQueries({ queryKey: ["bookmark-playlists", userEmail] });
-            queryClient.invalidateQueries({ queryKey: ["bookmarks", userEmail] });
+        onSuccess: (data, variables) => {
+            // 更新対象の特定の記事のプレイリストキャッシュのみを無効化
+            queryClient.invalidateQueries({ queryKey: ['article', 'playlists', variables.articleId, userEmail] });
+            queryClient.invalidateQueries({ queryKey: ['playlist-item-playlists'] });
             queryClient.invalidateQueries({ queryKey: ["playlists", userEmail] });
         },
     });

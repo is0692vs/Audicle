@@ -37,28 +37,28 @@ export async function POST(
             )
         }
 
-        // ブックマークを作成または既存のものを取得
-        const { data: bookmark, error: bookmarkError } = await supabase
-            .from('bookmarks')
+        // 記事を作成または既存のものを取得
+        const { data: article, error: articleError } = await supabase
+            .from('articles')
             .upsert(
                 {
                     owner_email: userEmail,
-                    article_url,
-                    article_title,
+                    url: article_url,
+                    title: article_title,
                     thumbnail_url: thumbnail_url || null,
                     last_read_position: last_read_position || 0,
                 },
                 {
-                    onConflict: 'owner_email,article_url',
+                    onConflict: 'owner_email,url',
                     ignoreDuplicates: false,
                 }
             )
             .select()
             .single()
 
-        if (bookmarkError) {
+        if (articleError) {
             return NextResponse.json(
-                { error: bookmarkError.message || 'Failed to create bookmark' },
+                { error: articleError.message || 'Failed to create article' },
                 { status: 500 }
             )
         }
@@ -69,10 +69,10 @@ export async function POST(
             .upsert(
                 {
                     playlist_id: id,
-                    bookmark_id: bookmark.id,
+                    article_id: article.id,
                 },
                 {
-                    onConflict: 'playlist_id,bookmark_id',
+                    onConflict: 'playlist_id,article_id',
                     ignoreDuplicates: false,
                 }
             )
@@ -89,7 +89,7 @@ export async function POST(
 
         return NextResponse.json({
             item: playlistItem,
-            bookmark: bookmark,
+            article: article,
         })
     } catch (error) {
         console.error('Error in POST /api/playlists/[id]/items:', error)

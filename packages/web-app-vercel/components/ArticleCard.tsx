@@ -5,11 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Minus } from "lucide-react";
 import { extractDomain } from "@/lib/utils";
-import type { PlaylistItemWithBookmark } from "@/types/playlist";
+import type { PlaylistItemWithArticle } from "@/types/playlist";
 
 interface ArticleCardProps {
-  item: PlaylistItemWithBookmark;
-  onArticleClick: (item: PlaylistItemWithBookmark) => void;
+  item: PlaylistItemWithArticle;
+  onArticleClick: (item: PlaylistItemWithArticle) => void;
   onPlaylistAdd: (itemId: string) => void;
   onRemove: (itemId: string) => void;
 }
@@ -29,10 +29,10 @@ export function ArticleCard({
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="flex-1 min-w-0">
             <h3 className="text-lg lg:text-xl font-semibold text-white mb-2 truncate">
-              {item.bookmark.article_title}
+              {item.article.title}
             </h3>
             <p className="text-sm text-zinc-400 mb-3 truncate">
-              {extractDomain(item.bookmark.article_url)}
+              {extractDomain(item.article.url)}
             </p>
             <div className="flex items-center gap-4 text-xs text-zinc-500">
               <span>

@@ -5,15 +5,15 @@ import { logger } from "@/lib/logger";
 import { usePlaylists } from "@/lib/hooks/usePlaylists";
 import {
   usePlaylistItemPlaylists,
-  useUpdateBookmarkPlaylistsMutation,
-  useBookmarkPlaylists,
+  useUpdateArticlePlaylistsMutation,
+  useArticlePlaylists,
 } from "@/lib/hooks/usePlaylistSelection";
 
 interface PlaylistSelectorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  itemId: string | null;
-  bookmarkId: string;
+  itemId?: string;
+  articleId: string;
   articleTitle: string;
   onPlaylistsUpdated?: () => Promise<void>;
 }
@@ -22,7 +22,7 @@ export function PlaylistSelectorModal({
   isOpen,
   onClose,
   itemId,
-  bookmarkId,
+  articleId,
   articleTitle,
   onPlaylistsUpdated,
 }: PlaylistSelectorModalProps) {
@@ -37,18 +37,18 @@ export function PlaylistSelectorModal({
   } = usePlaylistItemPlaylists(itemId || "", { enabled: !!itemId });
 
   const {
-    data: playlistsByBookmarkId,
-    isLoading: isLoadingBookmarkId,
-    error: errorBookmarkId,
-  } = useBookmarkPlaylists(bookmarkId, { enabled: !itemId && !!bookmarkId });
+    data: playlistsByArticleId,
+    isLoading: isLoadingArticleId,
+    error: errorArticleId,
+  } = useArticlePlaylists(articleId, { enabled: !itemId && !!articleId });
 
   // 結果を安全に選択（デフォルト値付き）
   const currentPlaylists = itemId
     ? playlistsByItemId || []
-    : playlistsByBookmarkId || [];
-  const isLoadingCurrent = itemId ? isLoadingItemId : isLoadingBookmarkId;
-  const currentError = itemId ? errorItemId : errorBookmarkId;
-  const updateMutation = useUpdateBookmarkPlaylistsMutation();
+    : playlistsByArticleId || [];
+  const isLoadingCurrent = itemId ? isLoadingItemId : isLoadingArticleId;
+  const currentError = itemId ? errorItemId : errorArticleId;
+  const updateMutation = useUpdateArticlePlaylistsMutation();
 
   const [selectedPlaylistIds, setSelectedPlaylistIds] = useState<Set<string>>(
     new Set()
@@ -132,14 +132,14 @@ export function PlaylistSelectorModal({
 
       if (addToPlaylistIds.length > 0 || removeFromPlaylistIds.length > 0) {
         await updateMutation.mutateAsync({
-          bookmarkId,
+          articleId,
           addToPlaylistIds,
           removeFromPlaylistIds,
         });
       }
 
       logger.success("プレイリストを更新", {
-        bookmarkId,
+        articleId,
         addCount: addToPlaylistIds.length,
         removeCount: removeFromPlaylistIds.length,
       });
