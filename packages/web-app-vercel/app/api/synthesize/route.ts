@@ -215,60 +215,36 @@ export async function POST(request: NextRequest) {
         for (const chunkText of textChunks) {
             const textHash = calculateHash(chunkText);
             const cacheKey = `${textHash}:${voiceToUse}.mp3`;
-
-            try {
-                // キャッシュ存在確認
-                const blobExists = await head(cacheKey).catch(() => null);
-
-                if (blobExists) {
-                    // キャッシュヒット：Blobから取得
-                    console.log(`Cache hit for key: ${cacheKey}`);
-                    cacheHits++;
-                    audioUrls.push(blobExists.url);
-                } else {
-                    // キャッシュミス：TTS生成
-                    console.log(`Cache miss for key: ${cacheKey}`);
-                    cacheMisses++;
-
-                    const audioBuffer = await synthesizeToBuffer(chunkText, voiceToUse, speakingRate);
-
-                    // Vercel Blobに保存
-                    const blob = await put(cacheKey, audioBuffer, {
-                        access: 'public',
-                        contentType: 'audio/mpeg',
-                        addRandomSuffix: false,
-                    });
-
-                    audioUrls.push(blob.url);
-                }
-            } catch (cacheError) {
-                console.error(`Cache error for key ${cacheKey}:`, cacheError);
-                // キャッシュ失敗時は TTS API にフォールバック
-                const audioBuffer = await synthesizeToBuffer(chunkText, voiceToUse, speakingRate);
-
-                try {
-                    const blob = await put(cacheKey, audioBuffer, {
-                        access: 'public',
-                        contentType: 'audio/mpeg',
-                        addRandomSuffix: false,
-                    }).catch(() => null);
-
-                    if (blob) {
-                        audioUrls.push(blob.url);
-                    } else {
-                        throw new Error('Failed to save to cache');
-                    }
-                } catch (saveError) {
-                    console.error(`Failed to save audio to cache: ${saveError}`);
-                    // 保存失敗時も生成した音声を返す（ただし一時的なBlobにアップロード）
-                    // または base64 でフォールバック
-                    const base64Audio = audioBuffer.toString('base64');
-                    audioUrls.push(`data:audio/mpeg;base64,${base64Audio}`);
-                }
+            
+            // 1. キャッシュ存在確認
+            const blobExists = await head(cacheKey).catch(() => null);
+            
+            if (blobExists) {
+                console.log(`Cache hit for key: ${cacheKey}`);
+                cacheHits++;
+                audioUrls.push(blobExists.url);
+                continue;
             }
-        }
-
-        // キャッシュヒット率を計算
+            
+            // 2. キャッシュミス：TTS生成
+            console.log(`Cache miss for key: ${cacheKey}`);
+            cacheMisses++;
+            const audioBuffer = await synthesizeToBuffer(chunkText, voiceToUse, speakingRate);
+            
+            // 3. Vercel Blobに保存（失敗時はbase64にフォールバック）
+            try {
+                const blob = await put(cacheKey, audioBuffer, {
+                    access: 'public',
+                    contentType: 'audio/mpeg',
+                    addRandomSuffix: false,
+                });
+                audioUrls.push(blob.url);
+            } catch (putError) {
+                console.error(`Failed to save audio to cache, falling back to base64 for key ${cacheKey}:`, putError);
+                const base64Audio = audioBuffer.toString('base64');
+                audioUrls.push(`data:audio/mpeg;base64,${base64Audio}`);
+            }
+        }        // キャッシュヒット率を計算
         const totalChunks = textChunks.length;
         const hitRate = totalChunks > 0 ? cacheHits / totalChunks : 0;
 
