@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
             ? body.chunks.map((c: SynthesizeChunk) => c.text)
             : [body.text];
 
-        const voiceToUse = body.voice || body.voiceModel || 'ja-JP-Standard-B';
+        const voiceToUse = body.voice || body.voice_model || 'ja-JP-Standard-B';
 
         // キャッシュ統計情報
         let cacheHits = 0;
