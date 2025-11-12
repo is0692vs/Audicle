@@ -3,25 +3,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DomainBadge } from "@/components/DomainBadge";
-import { Clock, Users } from "lucide-react";
 import type { PopularArticle } from "@/types/stats";
 
 interface PopularArticleCardProps {
   article: PopularArticle;
   onRead: (url: string) => void;
-}
-
-function formatRelativeTime(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const secondsDiff = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-  if (secondsDiff < 60) return "今";
-  if (secondsDiff < 3600) return `${Math.floor(secondsDiff / 60)}分前`;
-  if (secondsDiff < 86400) return `${Math.floor(secondsDiff / 3600)}時間前`;
-  if (secondsDiff < 604800) return `${Math.floor(secondsDiff / 86400)}日前`;
-
-  return date.toLocaleDateString("ja-JP");
 }
 
 export function PopularArticleCard({
@@ -44,23 +30,15 @@ export function PopularArticleCard({
             </div>
 
             {/* メタデータ */}
-            <div className="flex flex-wrap items-center gap-4 text-sm text-zinc-400">
-              {/* アクセス数 */}
-              <div className="flex items-center gap-1.5">
-                <Users className="h-4 w-4" />
-                <span>{article.accessCount.toLocaleString()}回</span>
-              </div>
-
-              {/* 最終アクセス */}
-              <div className="flex items-center gap-1.5">
-                <Clock className="h-4 w-4" />
-                <span>{formatRelativeTime(article.lastAccessedAt)}</span>
-              </div>
-
-              {/* キャッシュヒット率 */}
-              <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-4 text-sm text-zinc-400">
+              <span className="flex items-center gap-1">
+                <span>👥</span>
+                <span>{article.accessCount}回</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span>📊</span>
                 <span>キャッシュ: {Math.round(article.cacheHitRate)}%</span>
-              </div>
+              </span>
             </div>
           </div>
 
