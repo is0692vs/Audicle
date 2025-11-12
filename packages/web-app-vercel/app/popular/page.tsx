@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import { PeriodFilter } from "@/components/PeriodFilter";
@@ -20,7 +20,7 @@ export default function PopularPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchPopularArticles = async (selectedPeriod: Period) => {
+  const fetchPopularArticles = useCallback(async (selectedPeriod: Period) => {
     setIsLoading(true);
     setError(null);
 
@@ -42,11 +42,11 @@ export default function PopularPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchPopularArticles(period);
-  }, [period]);
+  }, [period, fetchPopularArticles]);
 
   const handleRead = (url: string) => {
     router.push(`/reader?url=${encodeURIComponent(url)}`);
