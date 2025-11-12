@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { SynthesizeRequest } from '@/types/api';
+import { SynthesizeRequest, CacheStats } from '@/types/api';
 import { TextToSpeechClient, protos } from '@google-cloud/text-to-speech';
+import { put, head } from '@vercel/blob';
+import crypto from 'crypto';
 
 // Node.js runtimeを明示的に指定（Google Cloud TTS SDKはEdge Runtimeで動作しない）
 export const runtime = 'nodejs';
@@ -10,6 +12,11 @@ export const dynamic = 'force-dynamic';
 
 // 許可リスト（環境変数から取得、カンマ区切り）
 const ALLOWED_EMAILS = process.env.ALLOWED_EMAILS?.split(',').map(e => e.trim()) || [];
+
+// MD5ハッシュ計算関数
+function calculateHash(text: string): string {
+    return crypto.createHash('md5').update(text, 'utf8').digest('hex').substring(0, 16);
+}
 
 // Google Cloud TTS クライアント
 let ttsCLient: TextToSpeechClient | null = null;
@@ -169,18 +176,27 @@ export async function POST(request: NextRequest) {
 
         // リクエストボディをパース
         const body = await request.json();
-        const { text, voice, voice_model } = body as SynthesizeRequest;
+        const { text, chunks, voice, voice_model } = body as SynthesizeRequest;
 
-        if (!text || typeof text !== 'string') {
+        // チャンク形式とテキスト形式の互換性を保つ
+        let textChunks: string[];
+        
+        if (chunks && Array.isArray(chunks) && chunks.length > 0) {
+            // 新しいチャンク形式
+            textChunks = chunks.map(chunk => chunk.text);
+        } else if (text && typeof text === 'string' && text.trim().length > 0) {
+            // 旧形式：テキストを分割
+            textChunks = splitText(text);
+        } else {
             return NextResponse.json(
-                { error: 'Text is required and must be a string' },
+                { error: 'Text or chunks are required' },
                 { status: 400, headers: corsHeaders }
             );
         }
 
-        if (text.trim().length === 0) {
+        if (textChunks.length === 0) {
             return NextResponse.json(
-                { error: 'Text must not be empty' },
+                { error: 'Failed to process text' },
                 { status: 400, headers: corsHeaders }
             );
         }
@@ -189,33 +205,86 @@ export async function POST(request: NextRequest) {
         // Google TTS APIでは常に1.0倍で合成（再生速度はフロントエンド側で制御）
         const speakingRate = 1.0;
 
-        // テキストを分割
-        const textChunks = splitText(text);
-        if (textChunks.length === 0) {
-            return NextResponse.json(
-                { error: 'Failed to process text' },
-                { status: 400, headers: corsHeaders }
-            );
+        // キャッシュ統計情報
+        let cacheHits = 0;
+        let cacheMisses = 0;
+
+        // 各チャンクを合成またはキャッシュから取得
+        const audioUrls: string[] = [];
+
+        for (const chunkText of textChunks) {
+            const textHash = calculateHash(chunkText);
+            const cacheKey = `${textHash}:${voiceToUse}.mp3`;
+
+            try {
+                // キャッシュ存在確認
+                const blobExists = await head(cacheKey).catch(() => null);
+
+                if (blobExists) {
+                    // キャッシュヒット：Blobから取得
+                    console.log(`Cache hit for key: ${cacheKey}`);
+                    cacheHits++;
+                    audioUrls.push(blobExists.url);
+                } else {
+                    // キャッシュミス：TTS生成
+                    console.log(`Cache miss for key: ${cacheKey}`);
+                    cacheMisses++;
+
+                    const audioBuffer = await synthesizeToBuffer(chunkText, voiceToUse, speakingRate);
+
+                    // Vercel Blobに保存
+                    const blob = await put(cacheKey, audioBuffer, {
+                        access: 'public',
+                        contentType: 'audio/mpeg',
+                        addRandomSuffix: false,
+                    });
+
+                    audioUrls.push(blob.url);
+                }
+            } catch (cacheError) {
+                console.error(`Cache error for key ${cacheKey}:`, cacheError);
+                // キャッシュ失敗時は TTS API にフォールバック
+                const audioBuffer = await synthesizeToBuffer(chunkText, voiceToUse, speakingRate);
+                
+                try {
+                    const blob = await put(cacheKey, audioBuffer, {
+                        access: 'public',
+                        contentType: 'audio/mpeg',
+                        addRandomSuffix: false,
+                    }).catch(() => null);
+
+                    if (blob) {
+                        audioUrls.push(blob.url);
+                    } else {
+                        throw new Error('Failed to save to cache');
+                    }
+                } catch (saveError) {
+                    console.error(`Failed to save audio to cache: ${saveError}`);
+                    // 保存失敗時も生成した音声を返す（ただし一時的なBlobにアップロード）
+                    // または base64 でフォールバック
+                    const base64Audio = audioBuffer.toString('base64');
+                    audioUrls.push(`data:audio/mpeg;base64,${base64Audio}`);
+                }
+            }
         }
 
-        // 各チャンクを合成
-        const audioChunks: Buffer[] = [];
-        for (const chunk of textChunks) {
-            const audioBuffer = await synthesizeToBuffer(chunk, voiceToUse, speakingRate);
-            audioChunks.push(audioBuffer);
-        }
+        // キャッシュヒット率を計算
+        const totalChunks = textChunks.length;
+        const hitRate = totalChunks > 0 ? cacheHits / totalChunks : 0;
 
-        // すべてのオーディオチャンクを結合
-        const fullAudio = Buffer.concat(audioChunks);
+        const cacheStats: CacheStats = {
+            hitRate,
+            cacheHits,
+            cacheMisses,
+            totalChunks,
+        };
 
-        // MP3データをbase64エンコード
-        const base64Audio = fullAudio.toString('base64');
+        console.log(`Cache stats - Hits: ${cacheHits}, Misses: ${cacheMisses}, Rate: ${(hitRate * 100).toFixed(2)}%`);
 
         return NextResponse.json(
             {
-                audio: base64Audio,
-                mediaType: 'audio/mpeg',
-                duration: 0, // 実際の長さは計算が複雑なため0
+                audioUrls,
+                cacheStats,
             },
             {
                 headers: corsHeaders,
