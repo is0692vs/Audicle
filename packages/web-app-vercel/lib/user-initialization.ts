@@ -8,7 +8,7 @@ export interface UserInitializationResult {
 
 /**
  * 新規ユーザー登録時の初期化処理
- * - user_settings を作成（既に存在する場合はスキップ）
+ * - user_settings を作成（既に存在する場合はスキップする）
  * - デフォルトプレイリストは getOrCreateDefaultPlaylist で作成
  *
  * @param userId NextAuth のユーザーID
