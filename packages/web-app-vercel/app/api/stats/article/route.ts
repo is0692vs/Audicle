@@ -26,9 +26,7 @@ interface ArticleStatsResponse {
 function hashEmail(email: string): string {
     const secret = process.env.EMAIL_HASH_SECRET;
     if (!secret) {
-        console.error('WARNING: EMAIL_HASH_SECRET is not set. Using insecure fallback.');
-        // フォールバック（本番環境では使用されない想定）
-        return createHash('sha256').update(email).digest('hex');
+        throw new Error('EMAIL_HASH_SECRET must be set for security reasons.');
     }
     return createHmac('sha256', secret).update(email).digest('hex');
 }
