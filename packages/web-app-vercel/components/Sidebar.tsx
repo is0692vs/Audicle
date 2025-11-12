@@ -13,6 +13,7 @@ import {
   Plus,
   LogOut,
   User,
+  TrendingUp,
 } from "lucide-react";
 import { handleSignOut } from "@/app/auth/signin/actions";
 import { useSession } from "next-auth/react";
@@ -26,6 +27,7 @@ export default function Sidebar() {
   const navItems = [
     { href: "/", label: "ホーム", icon: Home },
     { href: "/playlists", label: "プレイリスト", icon: List },
+    { href: "/popular", label: "人気記事", icon: TrendingUp },
     { href: "/settings", label: "設定", icon: Settings },
   ];
 
