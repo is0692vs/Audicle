@@ -191,14 +191,23 @@ export async function POST(request: NextRequest) {
         if (!body.chunks && body.text) {
             // 旧形式：base64レスポンス
             // audioBuffersに保存された音声データを直接base64に変換
-            const audioBuffer = audioBuffers[0];
+            let audioBuffer = audioBuffers[0];
 
+            // キャッシュヒット時はバッファが空のため、URLから音声データを取得
             if (!audioBuffer || audioBuffer.length === 0) {
-                console.error('Audio buffer not found for legacy format');
-                return NextResponse.json(
-                    { error: 'Audio generation failed' },
-                    { status: 500, headers: corsHeaders }
-                );
+                const audioUrl = audioUrls[0];
+                const response = await fetch(audioUrl);
+
+                if (!response.ok) {
+                    console.error(`Failed to fetch cached audio from ${audioUrl}. Status: ${response.status}`);
+                    return NextResponse.json(
+                        { error: 'Failed to fetch cached audio' },
+                        { status: 500, headers: corsHeaders }
+                    );
+                }
+
+                const arrayBuffer = await response.arrayBuffer();
+                audioBuffer = Buffer.from(arrayBuffer);
             }
 
             const base64Audio = audioBuffer.toString('base64');
