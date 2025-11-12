@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // ユーザーのメールアドレスをハッシュ化
+        // メールアドレスをハッシュ化（ユーザー識別用）
         const userHash = hashEmail(session.user.email);
 
         // キャッシュヒット率を計算
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
         // Supabase RPC関数を呼び出し
         const { data, error } = await supabase.rpc('increment_article_stats', {
             p_article_hash: articleHash,
-            p_user_id_hash: userHash,  
+            p_user_id_hash: userHash,
             p_url: url,
             p_title: title,
             p_domain: domain,
