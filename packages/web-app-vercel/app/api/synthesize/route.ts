@@ -176,34 +176,14 @@ export async function POST(request: NextRequest) {
 
         // リクエストボディをパース
         const body = await request.json();
-        const { text, chunks, voice, voice_model } = body as SynthesizeRequest;
+        const speakingRate = body.speakingRate || 1.0;
 
-        // チャンク形式とテキスト形式の互換性を保つ
-        let textChunks: string[];
+        // 旧形式（text + voiceModel）または新形式（chunks + voice）の両方をサポート
+        const textChunks = body.chunks
+            ? body.chunks.map((c: any) => c.text)
+            : [body.text];
 
-        if (chunks && Array.isArray(chunks) && chunks.length > 0) {
-            // 新しいチャンク形式
-            textChunks = chunks.map(chunk => chunk.text);
-        } else if (text && typeof text === 'string' && text.trim().length > 0) {
-            // 旧形式：テキストを分割
-            textChunks = splitText(text);
-        } else {
-            return NextResponse.json(
-                { error: 'Text or chunks are required' },
-                { status: 400, headers: corsHeaders }
-            );
-        }
-
-        if (textChunks.length === 0) {
-            return NextResponse.json(
-                { error: 'Failed to process text' },
-                { status: 400, headers: corsHeaders }
-            );
-        }
-
-        const voiceToUse = voice_model || voice || 'ja-JP-Standard-B';
-        // Google TTS APIでは常に1.0倍で合成（再生速度はフロントエンド側で制御）
-        const speakingRate = 1.0;
+        const voiceToUse = body.voice || body.voiceModel || 'ja-JP-Standard-B';
 
         // キャッシュ統計情報
         let cacheHits = 0;
