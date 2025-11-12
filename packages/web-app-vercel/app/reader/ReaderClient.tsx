@@ -123,13 +123,13 @@ export default function ReaderPageClient() {
         setChunks(chunksWithId);
         setTitle(response.title);
 
-        // 記事アクセス統計を記録（非同期、エラー無視）
+        // 記事アクセス統計を記録（非同期、エラーは内部で処理される）
         recordArticleStats({
           url: articleUrl,
           title: response.title,
           content: response.content,
           chunks: chunksWithId,
-        }).catch((err) => console.error('Failed to record article stats:', err));
+        });
 
         // プレイリストに記事を追加
         let newArticleId: string | null = null;
