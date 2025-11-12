@@ -14,6 +14,7 @@ import { extractContent } from "@/lib/api";
 import { usePlayback } from "@/hooks/usePlayback";
 import { articleStorage } from "@/lib/storage";
 import { logger } from "@/lib/logger";
+import { recordArticleStats } from "@/lib/articleStats";
 import { parseHTMLToParagraphs } from "@/lib/paragraphParser";
 import { UserSettings, DEFAULT_SETTINGS } from "@/types/settings";
 import { createReaderUrl } from "@/lib/urlBuilder";
@@ -121,6 +122,14 @@ export default function ReaderPageClient() {
         const chunksWithId = convertParagraphsToChunks(response.content);
         setChunks(chunksWithId);
         setTitle(response.title);
+
+        // 記事アクセス統計を記録（非同期、エラーは内部で処理される）
+        recordArticleStats({
+          url: articleUrl,
+          title: response.title,
+          content: response.content,
+          chunks: chunksWithId,
+        });
 
         // プレイリストに記事を追加
         let newArticleId: string | null = null;
