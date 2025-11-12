@@ -42,9 +42,6 @@ function getTTSClient(): TextToSpeechClient {
     }
 }
 
-// Google Cloud TTS APIの最大リクエストバイト数
-const MAX_TTS_BYTES = 5000;
-
 async function synthesizeToBuffer(text: string, voice: string, speakingRate: number = 2.0): Promise<Buffer> {
     const client = getTTSClient();
 
@@ -112,6 +109,15 @@ export async function POST(request: NextRequest) {
 
         // リクエストボディをパース
         const body = await request.json();
+
+        // 入力バリデーション
+        if (!body.chunks && !body.text) {
+            return NextResponse.json(
+                { error: 'text or chunks is required' },
+                { status: 400, headers: corsHeaders }
+            );
+        }
+
         const speakingRate = body.speakingRate || 1.0;
 
         // 旧形式（text + voiceModel）または新形式（chunks + voice）の両方をサポート
@@ -176,6 +182,24 @@ export async function POST(request: NextRequest) {
 
         console.log(`Cache stats - Hits: ${cacheHits}, Misses: ${cacheMisses}, Rate: ${(hitRate * 100).toFixed(2)}%`);
 
+        // 旧形式（1チャンク）の場合はbase64を返す
+        if (!body.chunks && body.text) {
+            // 旧形式：base64レスポンス
+            const audioUrl = audioUrls[0];
+
+            // Vercel BlobのURLから音声データを取得
+            const response = await fetch(audioUrl);
+            const audioBuffer = await response.arrayBuffer();
+            const base64Audio = Buffer.from(audioBuffer).toString('base64');
+
+            return NextResponse.json({
+                audio: base64Audio
+            }, {
+                headers: corsHeaders,
+            });
+        }
+
+        // 新形式：URL配列レスポンス
         return NextResponse.json(
             {
                 audioUrls,
