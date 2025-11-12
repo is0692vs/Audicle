@@ -215,22 +215,22 @@ export async function POST(request: NextRequest) {
         for (const chunkText of textChunks) {
             const textHash = calculateHash(chunkText);
             const cacheKey = `${textHash}:${voiceToUse}.mp3`;
-            
+
             // 1. キャッシュ存在確認
             const blobExists = await head(cacheKey).catch(() => null);
-            
+
             if (blobExists) {
                 console.log(`Cache hit for key: ${cacheKey}`);
                 cacheHits++;
                 audioUrls.push(blobExists.url);
                 continue;
             }
-            
+
             // 2. キャッシュミス：TTS生成
             console.log(`Cache miss for key: ${cacheKey}`);
             cacheMisses++;
             const audioBuffer = await synthesizeToBuffer(chunkText, voiceToUse, speakingRate);
-            
+
             // 3. Vercel Blobに保存（失敗時はbase64にフォールバック）
             try {
                 const blob = await put(cacheKey, audioBuffer, {
