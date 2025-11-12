@@ -59,9 +59,7 @@ export function PopularArticleCard({
 
               {/* キャッシュヒット率 */}
               <div className="flex items-center gap-1.5">
-                <span>
-                  キャッシュ: {Math.round(article.cacheHitRate)}%
-                </span>
+                <span>キャッシュ: {Math.round(article.cacheHitRate)}%</span>
               </div>
             </div>
           </div>
