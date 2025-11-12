@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { SynthesizeRequest, CacheStats } from '@/types/api';
+import { CacheStats, SynthesizeChunk } from '@/types/api';
 import { TextToSpeechClient, protos } from '@google-cloud/text-to-speech';
 import { put, head } from '@vercel/blob';
 import crypto from 'crypto';
@@ -40,73 +40,6 @@ function getTTSClient(): TextToSpeechClient {
     } catch {
         throw new Error('Failed to parse GOOGLE_APPLICATION_CREDENTIALS_JSON');
     }
-}
-
-// Google Cloud TTS APIの最大リクエストバイト数
-const MAX_TTS_BYTES = 5000;
-
-function splitText(text: string): string[] {
-    /**
-     * テキストをGoogle Cloud TTS APIの制限内に分割する
-     * 最大5000バイトごとに分割
-     */
-    const chunks: string[] = [];
-    let currentChunk = '';
-
-    // 。、！、？、\nなどで分割
-    const sentences = text.split(/([。！？\n])/);
-
-    for (let i = 0; i < sentences.length; i++) {
-        const sentence = sentences[i];
-        if (!sentence) continue;
-
-        // 句読点を前の文字に結合
-        if (/^[。！？\n]$/.test(sentence) && currentChunk) {
-            currentChunk += sentence;
-            continue;
-        }
-
-        const combined = currentChunk + sentence;
-        if (Buffer.byteLength(combined, 'utf8') > MAX_TTS_BYTES) {
-            if (currentChunk) {
-                chunks.push(currentChunk);
-            }
-            currentChunk = sentence;
-        } else {
-            currentChunk = combined;
-        }
-    }
-
-    if (currentChunk) {
-        chunks.push(currentChunk);
-    }
-
-    // 1チャンクが5000バイトを超える場合、文字単位で分割
-    const finalChunks: string[] = [];
-    for (const chunk of chunks) {
-        if (Buffer.byteLength(chunk, 'utf8') <= MAX_TTS_BYTES) {
-            finalChunks.push(chunk);
-        } else {
-            // 文字単位で強制分割
-            let current = '';
-            for (const char of chunk) {
-                const test = current + char;
-                if (Buffer.byteLength(test, 'utf8') > MAX_TTS_BYTES) {
-                    if (current) {
-                        finalChunks.push(current);
-                    }
-                    current = char;
-                } else {
-                    current = test;
-                }
-            }
-            if (current) {
-                finalChunks.push(current);
-            }
-        }
-    }
-
-    return finalChunks.filter(chunk => chunk.trim().length > 0);
 }
 
 async function synthesizeToBuffer(text: string, voice: string, speakingRate: number = 2.0): Promise<Buffer> {
@@ -176,34 +109,23 @@ export async function POST(request: NextRequest) {
 
         // リクエストボディをパース
         const body = await request.json();
-        const { text, chunks, voice, voice_model } = body as SynthesizeRequest;
 
-        // チャンク形式とテキスト形式の互換性を保つ
-        let textChunks: string[];
-
-        if (chunks && Array.isArray(chunks) && chunks.length > 0) {
-            // 新しいチャンク形式
-            textChunks = chunks.map(chunk => chunk.text);
-        } else if (text && typeof text === 'string' && text.trim().length > 0) {
-            // 旧形式：テキストを分割
-            textChunks = splitText(text);
-        } else {
+        // 入力バリデーション
+        if (!body.chunks && !body.text) {
             return NextResponse.json(
-                { error: 'Text or chunks are required' },
+                { error: 'text or chunks is required' },
                 { status: 400, headers: corsHeaders }
             );
         }
 
-        if (textChunks.length === 0) {
-            return NextResponse.json(
-                { error: 'Failed to process text' },
-                { status: 400, headers: corsHeaders }
-            );
-        }
+        const speakingRate = body.speakingRate || 1.0;
 
-        const voiceToUse = voice_model || voice || 'ja-JP-Standard-B';
-        // Google TTS APIでは常に1.0倍で合成（再生速度はフロントエンド側で制御）
-        const speakingRate = 1.0;
+        // 旧形式（text + voiceModel）または新形式（chunks + voice）の両方をサポート
+        const textChunks = body.chunks
+            ? body.chunks.map((c: SynthesizeChunk) => c.text)
+            : [body.text];
+
+        const voiceToUse = body.voice || body.voice_model || 'ja-JP-Standard-B';
 
         // キャッシュ統計情報
         let cacheHits = 0;
@@ -260,6 +182,24 @@ export async function POST(request: NextRequest) {
 
         console.log(`Cache stats - Hits: ${cacheHits}, Misses: ${cacheMisses}, Rate: ${(hitRate * 100).toFixed(2)}%`);
 
+        // 旧形式（1チャンク）の場合はbase64を返す
+        if (!body.chunks && body.text) {
+            // 旧形式：base64レスポンス
+            const audioUrl = audioUrls[0];
+
+            // Vercel BlobのURLから音声データを取得
+            const response = await fetch(audioUrl);
+            const audioBuffer = await response.arrayBuffer();
+            const base64Audio = Buffer.from(audioBuffer).toString('base64');
+
+            return NextResponse.json({
+                audio: base64Audio
+            }, {
+                headers: corsHeaders,
+            });
+        }
+
+        // 新形式：URL配列レスポンス
         return NextResponse.json(
             {
                 audioUrls,
