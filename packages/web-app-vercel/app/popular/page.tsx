@@ -6,7 +6,11 @@ import Sidebar from "@/components/Sidebar";
 import { PeriodFilter } from "@/components/PeriodFilter";
 import { PopularArticleCard } from "@/components/PopularArticleCard";
 import { Button } from "@/components/ui/button";
-import type { Period, PopularArticlesResponse, PopularArticle } from "@/types/stats";
+import type {
+  Period,
+  PopularArticlesResponse,
+  PopularArticle,
+} from "@/types/stats";
 import { RotateCcw } from "lucide-react";
 
 export default function PopularPage() {
@@ -77,10 +81,7 @@ export default function PopularPage() {
             </p>
 
             {/* Period Filter */}
-            <PeriodFilter
-              activePeriod={period}
-              onPeriodChange={setPeriod}
-            />
+            <PeriodFilter activePeriod={period} onPeriodChange={setPeriod} />
           </div>
 
           {/* Content */}
@@ -129,9 +130,7 @@ export default function PopularPage() {
           {/* Results Summary */}
           {articles.length > 0 && (
             <div className="mt-8 p-4 bg-zinc-900/50 border border-zinc-800 rounded-lg text-center text-zinc-400">
-              <p>
-                TOP {articles.length} の記事を表示しています
-              </p>
+              <p>TOP {articles.length} の記事を表示しています</p>
             </div>
           )}
         </div>
