@@ -120,7 +120,8 @@ export async function GET(request: NextRequest) {
             domain: row.domain,
             accessCount: row.access_count,
             uniqueUsers: row.unique_users,
-            cacheHitRate: parseFloat(row.cache_hit_rate.toFixed(2)),
+            cacheHitRate: parseFloat((row.cache_hit_rate * 100).toFixed(2)),
+
             isFullyCached: row.is_fully_cached,
             lastAccessedAt: row.last_accessed_at,
         }));
