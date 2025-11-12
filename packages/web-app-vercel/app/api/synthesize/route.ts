@@ -180,7 +180,7 @@ export async function POST(request: NextRequest) {
 
         // チャンク形式とテキスト形式の互換性を保つ
         let textChunks: string[];
-        
+
         if (chunks && Array.isArray(chunks) && chunks.length > 0) {
             // 新しいチャンク形式
             textChunks = chunks.map(chunk => chunk.text);
@@ -245,7 +245,7 @@ export async function POST(request: NextRequest) {
                 console.error(`Cache error for key ${cacheKey}:`, cacheError);
                 // キャッシュ失敗時は TTS API にフォールバック
                 const audioBuffer = await synthesizeToBuffer(chunkText, voiceToUse, speakingRate);
-                
+
                 try {
                     const blob = await put(cacheKey, audioBuffer, {
                         access: 'public',
