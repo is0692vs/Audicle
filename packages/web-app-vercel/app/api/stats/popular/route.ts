@@ -66,10 +66,10 @@ export async function GET(request: NextRequest) {
 
         // クエリパラメータの取得
         const searchParams = request.nextUrl.searchParams;
-        const periodParam = searchParams.get('period') || 'week';
-        // Period型のホワイトリスト検証
+        const periodParam = searchParams.get('period');
         const validPeriods: Period[] = ['today', 'week', 'month', 'all'];
-        const period: Period = validPeriods.includes(periodParam as Period) ? (periodParam as Period) : 'week';
+        const period: Period = validPeriods.find((p) => p === periodParam) ?? 'week';
+
         const domain = searchParams.get('domain');
         const limitParam = searchParams.get('limit');
 
