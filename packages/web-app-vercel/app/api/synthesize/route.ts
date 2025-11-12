@@ -15,7 +15,7 @@ const ALLOWED_EMAILS = process.env.ALLOWED_EMAILS?.split(',').map(e => e.trim())
 
 // MD5ハッシュ計算関数
 function calculateHash(text: string): string {
-    return crypto.createHash('md5').update(text, 'utf8').digest('hex').substring(0, 16);
+    return crypto.createHash('md5').update(text, 'utf8').digest('hex');
 }
 
 // Google Cloud TTS クライアント
@@ -217,7 +217,10 @@ export async function POST(request: NextRequest) {
             const cacheKey = `${textHash}:${voiceToUse}.mp3`;
 
             // 1. キャッシュ存在確認
-            const blobExists = await head(cacheKey).catch(() => null);
+            const blobExists = await head(cacheKey).catch((error) => {
+                console.error(`Failed to check cache for key ${cacheKey}:`, error);
+                return null;
+            });
 
             if (blobExists) {
                 console.log(`Cache hit for key: ${cacheKey}`);
