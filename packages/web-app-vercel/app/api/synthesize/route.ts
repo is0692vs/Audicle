@@ -133,6 +133,7 @@ export async function POST(request: NextRequest) {
 
         // 各チャンクを合成またはキャッシュから取得
         const audioUrls: string[] = [];
+        const audioBuffers: Buffer[] = [];
 
         for (const chunkText of textChunks) {
             const textHash = calculateHash(chunkText);
@@ -148,6 +149,7 @@ export async function POST(request: NextRequest) {
                 console.log(`Cache hit for key: ${cacheKey}`);
                 cacheHits++;
                 audioUrls.push(blobExists.url);
+                audioBuffers.push(Buffer.alloc(0)); // プレースホルダー
                 continue;
             }
 
@@ -155,6 +157,9 @@ export async function POST(request: NextRequest) {
             console.log(`Cache miss for key: ${cacheKey}`);
             cacheMisses++;
             const audioBuffer = await synthesizeToBuffer(chunkText, voiceToUse, speakingRate);
+
+            // 音声バッファを保存
+            audioBuffers.push(audioBuffer);
 
             // 3. Vercel Blobに保存（失敗時はbase64にフォールバック）
             try {
@@ -185,12 +190,18 @@ export async function POST(request: NextRequest) {
         // 旧形式（1チャンク）の場合はbase64を返す
         if (!body.chunks && body.text) {
             // 旧形式：base64レスポンス
-            const audioUrl = audioUrls[0];
+            // audioBuffersに保存された音声データを直接base64に変換
+            const audioBuffer = audioBuffers[0];
 
-            // Vercel BlobのURLから音声データを取得
-            const response = await fetch(audioUrl);
-            const audioBuffer = await response.arrayBuffer();
-            const base64Audio = Buffer.from(audioBuffer).toString('base64');
+            if (!audioBuffer || audioBuffer.length === 0) {
+                console.error('Audio buffer not found for legacy format');
+                return NextResponse.json(
+                    { error: 'Audio generation failed' },
+                    { status: 500, headers: corsHeaders }
+                );
+            }
+
+            const base64Audio = audioBuffer.toString('base64');
 
             return NextResponse.json({
                 audio: base64Audio
