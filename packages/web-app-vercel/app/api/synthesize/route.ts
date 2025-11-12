@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { SynthesizeRequest, CacheStats } from '@/types/api';
+import { CacheStats, SynthesizeChunk } from '@/types/api';
 import { TextToSpeechClient, protos } from '@google-cloud/text-to-speech';
 import { put, head } from '@vercel/blob';
 import crypto from 'crypto';
@@ -44,70 +44,6 @@ function getTTSClient(): TextToSpeechClient {
 
 // Google Cloud TTS APIの最大リクエストバイト数
 const MAX_TTS_BYTES = 5000;
-
-function splitText(text: string): string[] {
-    /**
-     * テキストをGoogle Cloud TTS APIの制限内に分割する
-     * 最大5000バイトごとに分割
-     */
-    const chunks: string[] = [];
-    let currentChunk = '';
-
-    // 。、！、？、\nなどで分割
-    const sentences = text.split(/([。！？\n])/);
-
-    for (let i = 0; i < sentences.length; i++) {
-        const sentence = sentences[i];
-        if (!sentence) continue;
-
-        // 句読点を前の文字に結合
-        if (/^[。！？\n]$/.test(sentence) && currentChunk) {
-            currentChunk += sentence;
-            continue;
-        }
-
-        const combined = currentChunk + sentence;
-        if (Buffer.byteLength(combined, 'utf8') > MAX_TTS_BYTES) {
-            if (currentChunk) {
-                chunks.push(currentChunk);
-            }
-            currentChunk = sentence;
-        } else {
-            currentChunk = combined;
-        }
-    }
-
-    if (currentChunk) {
-        chunks.push(currentChunk);
-    }
-
-    // 1チャンクが5000バイトを超える場合、文字単位で分割
-    const finalChunks: string[] = [];
-    for (const chunk of chunks) {
-        if (Buffer.byteLength(chunk, 'utf8') <= MAX_TTS_BYTES) {
-            finalChunks.push(chunk);
-        } else {
-            // 文字単位で強制分割
-            let current = '';
-            for (const char of chunk) {
-                const test = current + char;
-                if (Buffer.byteLength(test, 'utf8') > MAX_TTS_BYTES) {
-                    if (current) {
-                        finalChunks.push(current);
-                    }
-                    current = char;
-                } else {
-                    current = test;
-                }
-            }
-            if (current) {
-                finalChunks.push(current);
-            }
-        }
-    }
-
-    return finalChunks.filter(chunk => chunk.trim().length > 0);
-}
 
 async function synthesizeToBuffer(text: string, voice: string, speakingRate: number = 2.0): Promise<Buffer> {
     const client = getTTSClient();
@@ -180,7 +116,7 @@ export async function POST(request: NextRequest) {
 
         // 旧形式（text + voiceModel）または新形式（chunks + voice）の両方をサポート
         const textChunks = body.chunks
-            ? body.chunks.map((c: any) => c.text)
+            ? body.chunks.map((c: SynthesizeChunk) => c.text)
             : [body.text];
 
         const voiceToUse = body.voice || body.voiceModel || 'ja-JP-Standard-B';
