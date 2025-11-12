@@ -12,16 +12,30 @@ export interface ExtractResponse {
   siteName?: string;
 }
 
-export interface SynthesizeRequest {
+export interface SynthesizeChunk {
   text: string;
+}
+
+export interface SynthesizeRequest {
+  text?: string;
   voice?: string;
   voice_model?: string;      // オプショナル（未指定時はDB設定使用）
+  chunks?: SynthesizeChunk[]; // 新しいチャンク形式
+}
+
+export interface CacheStats {
+  hitRate: number;      // キャッシュヒット率（0.0〜1.0）
+  cacheHits: number;    // ヒット数
+  cacheMisses: number;  // ミス数
+  totalChunks: number;  // 総チャンク数
 }
 
 export interface SynthesizeResponse {
-  audio: string; // base64エンコードされた音声データ
-  mediaType: string;
-  duration: number;
+  audio?: string; // base64エンコードされた音声データ（旧形式互換）
+  audioUrls?: string[]; // 新形式：各チャンクの音声URL
+  mediaType?: string;
+  duration?: number;
+  cacheStats?: CacheStats; // キャッシュ統計情報
 }
 
 // チャンク情報の拡張型（クライアント側で使用）
