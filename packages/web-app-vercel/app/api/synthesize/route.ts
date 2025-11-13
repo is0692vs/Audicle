@@ -220,9 +220,9 @@ export async function POST(request: NextRequest) {
             isPopular: isPopularArticle
         });
 
-        // Supabaseキャッシュインデックスを取得（人気記事の場合のみ）
+        // Supabaseキャッシュインデックスを取得（articleUrlがある場合）
         let cacheIndex = null;
-        if (isPopularArticle && articleUrl) {
+        if (articleUrl) {
             try {
                 cacheIndex = await getCacheIndex(articleUrl, voiceToUse);
                 console.log('[Supabase Index] Cache index loaded:', {
@@ -256,8 +256,8 @@ export async function POST(request: NextRequest) {
             // 1. キャッシュ存在確認
             let blobExists = null;
 
-            if (isPopularArticle && cacheIndex) {
-                // 人気記事 & Supabaseインデックスあり → インデックスでチェック
+            if (cacheIndex) {
+                // Supabaseインデックスあり → インデックスでチェック
                 const isCached = isCachedInIndex(cacheIndex, textHash);
 
                 if (isCached) {
@@ -304,8 +304,8 @@ export async function POST(request: NextRequest) {
                 }
             }
 
-            // 通常フロー or Supabaseインデックスでミス → head()でチェック
-            if (!isPopularArticle || !cacheIndex || !isCachedInIndex(cacheIndex, textHash)) {
+            // 通常フロー or Supabaseインデックスなし or ミス → head()でチェック
+            if (!cacheIndex || !isCachedInIndex(cacheIndex, textHash)) {
                 console.log('[Optimize] 🔍 Checking with head() for key:', cacheKey);
                 blobExists = await head(cacheKey).catch((error) => {
                     console.error(`Failed to check cache for key ${cacheKey}:`, error);
@@ -364,9 +364,7 @@ export async function POST(request: NextRequest) {
         };
 
         console.log(`Cache stats - Hits: ${cacheHits}, Misses: ${cacheMisses}, Rate: ${(hitRate * 100).toFixed(2)}%`);
-        if (isPopularArticle) {
-            console.log(`[Optimize] ⚡ Simple Operations saved: ${headOperationsSkipped} head() calls skipped`);
-        }
+        console.log(`[Optimize] ⚡ Simple Operations saved: ${headOperationsSkipped} head() calls skipped`);
 
         // 旧形式（1チャンク）の場合はbase64を返す
         if (!body.chunks && body.text) {
