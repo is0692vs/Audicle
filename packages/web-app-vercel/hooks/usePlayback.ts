@@ -81,6 +81,47 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
     }
   }, []);
 
+  // オーディオオブジェクトを作成して再生するヘルパー関数
+  const createAndPlayAudio = useCallback(async (audioUrl: string, audioIndex: number) => {
+    // 前のAudioをクリーンアップ
+    if (audioRef.current) {
+      if (currentAudioUrlRef.current?.startsWith('blob:')) {
+        URL.revokeObjectURL(currentAudioUrlRef.current);
+      }
+      audioRef.current.pause();
+    }
+
+    const audio = new Audio(audioUrl);
+    audioRef.current = audio;
+    currentAudioUrlRef.current = audioUrl;
+
+    // playbackRateを復元
+    const rate = parseFloat(localStorage.getItem(PLAYBACK_RATE_STORAGE_KEY) || '');
+    audio.playbackRate = isNaN(rate) ? DEFAULT_PLAYBACK_RATE : rate;
+
+    audio.onended = () => handleAudioEnded(audioIndex);
+
+    audio.onerror = () => {
+      const mediaError = audio.error;
+      const errorMessage = `音声の再生に失敗しました (URL: ${audioUrl}, Code: ${mediaError?.code})`;
+      logger.error("音声再生エラー", {
+        error: mediaError,
+        audioUrl,
+        chunkIndex: audioIndex,
+        audioUrlType: audioUrl.startsWith('blob:') ? 'blob' : 'other',
+      });
+      setError(errorMessage);
+      setIsPlaying(false);
+    };
+
+    await audio.play();
+    setCurrentIndex(audioIndex);
+    setIsPlaying(true);
+    setIsLoading(false);
+    const chunk = chunks[audioIndex];
+    onChunkChange?.(chunk.id);
+  }, [chunks, onChunkChange, handleAudioEnded]);
+
   // 先読み処理（クリーンアップ済みテキストを使用）
   const prefetchAudio = useCallback(
     async (startIndex: number) => {
@@ -152,15 +193,6 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         // 先読み処理（非同期で実行）
         prefetchAudio(index + 1);
 
-        // Audio要素を作成して再生
-        if (audioRef.current) {
-          // 前のURLを解放
-          if (currentAudioUrlRef.current?.startsWith('blob:')) {
-            URL.revokeObjectURL(currentAudioUrlRef.current);
-          }
-          audioRef.current.pause();
-        }
-
         const audio = new Audio(audioUrl);
         audioRef.current = audio;
         currentAudioUrlRef.current = audioUrl;
@@ -192,33 +224,8 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
                   newUrl: newUrl.substring(0, 50)
                 });
 
-                // 新しいAudioオブジェクトを作成して再生
-                const newAudio = new Audio(newUrl);
-                const rate = parseFloat(localStorage.getItem(PLAYBACK_RATE_STORAGE_KEY) || '');
-                newAudio.playbackRate = isNaN(rate) ? DEFAULT_PLAYBACK_RATE : rate;
-
-                newAudio.onended = () => handleAudioEnded(index);
-
-                newAudio.onerror = () => {
-                  logger.error("❌ Regenerated audio failed to load", {
-                    chunk: index
-                  });
-                  setError("再生成された音声の読み込みに失敗しました");
-                  setIsPlaying(false);
-                };
-
-                // 前のURLを解放
-                if (currentAudioUrlRef.current?.startsWith('blob:')) {
-                  URL.revokeObjectURL(currentAudioUrlRef.current);
-                }
-
-                audioRef.current = newAudio;
-                currentAudioUrlRef.current = newUrl;
-                await newAudio.play();
-                setCurrentIndex(index);
-                setIsPlaying(true);
-                setIsLoading(false);
-                onChunkChange?.(chunk.id);
+                // ヘルパー関数を使用して音声を作成・再生
+                await createAndPlayAudio(newUrl, index);
                 return;
               } catch (err) {
                 logger.error("❌ Audio regeneration failed", err);

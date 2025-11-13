@@ -15,7 +15,8 @@ export const dynamic = 'force-dynamic';
 // 許可リスト（環境変数から取得、カンマ区切り）
 const ALLOWED_EMAILS = process.env.ALLOWED_EMAILS?.split(',').map(e => e.trim()) || [];
 
-// 人気記事判定の閾値
+// 人気記事判定の閾値（本番環境では5以上に調整することを推奨）
+// 現在は2に設定して開発/テスト環境での最適化検証を行う
 const POPULAR_ARTICLE_READ_COUNT_THRESHOLD = 2;
 
 // MD5ハッシュ計算関数
@@ -250,15 +251,19 @@ export async function POST(request: NextRequest) {
                 const token = process.env.BLOB_READ_WRITE_TOKEN;
                 if (token) {
                     const parts = token.split('_');
-                    const storeId = parts[3]; // Format: vercel_blob_rw_STOREID_...
-
-                    if (storeId) {
-                        headOperationsSkipped++;
-                        const blobUrl = `https://${storeId}.public.blob.vercel-storage.com/${cacheKey}`;
-                        audioUrls.push(blobUrl);
-                        audioBuffers.push(Buffer.alloc(0)); // プレースホルダー
-                        cacheHits++; // 人気記事は確実にキャッシュ済みと仮定
-                        continue;
+                    // トークン形式を検証: vercel_blob_rw_STOREID_...
+                    if (parts.length > 3 && parts[0] === 'vercel' && parts[1] === 'blob' && parts[2] === 'rw') {
+                        const storeId = parts[3];
+                        if (storeId) {
+                            headOperationsSkipped++;
+                            const blobUrl = `https://${storeId}.public.blob.vercel-storage.com/${cacheKey}`;
+                            audioUrls.push(blobUrl);
+                            audioBuffers.push(Buffer.alloc(0)); // プレースホルダー
+                            cacheHits++; // 人気記事は確実にキャッシュ済みと仮定
+                            continue;
+                        }
+                    } else {
+                        console.warn('[Optimize] ⚠️ Invalid token format, expected vercel_blob_rw_STOREID_...');
                     }
                 }
 
@@ -271,7 +276,9 @@ export async function POST(request: NextRequest) {
                     console.error(`Failed to check cache for key ${cacheKey}:`, error);
                     return null;
                 });
-            } if (blobExists) {
+            }
+
+            if (blobExists) {
                 console.log(`Cache hit for key: ${cacheKey}`);
                 cacheHits++;
                 audioUrls.push(blobExists.url);
