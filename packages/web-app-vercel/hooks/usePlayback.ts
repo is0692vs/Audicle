@@ -120,7 +120,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
     setIsLoading(false);
     const chunk = chunks[audioIndex];
     onChunkChange?.(chunk.id);
-  }, [chunks, onChunkChange, handleAudioEnded]);
+  }, [chunks, onChunkChange]);
 
   // 先読み処理（クリーンアップ済みテキストを使用）
   const prefetchAudio = useCallback(
