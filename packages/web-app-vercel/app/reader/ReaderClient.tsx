@@ -716,13 +716,7 @@ export default function ReaderPageClient() {
           <ReaderView
             chunks={chunks}
             currentChunkId={currentChunkId}
-            articleUrl={
-              url ||
-              (articleId
-                ? articleStorage.getById(articleId)?.url
-                : undefined) ||
-              ""
-            }
+            articleUrl={url}
             voiceModel={settings.voice_model}
             speed={playbackRate}
             onChunkClick={seekToChunk}
