@@ -15,8 +15,9 @@ export const dynamic = 'force-dynamic';
 // 許可リスト（環境変数から取得、カンマ区切り）
 const ALLOWED_EMAILS = process.env.ALLOWED_EMAILS?.split(',').map(e => e.trim()) || [];
 
-// 人気記事判定の閾値
-const POPULAR_ARTICLE_READ_COUNT_THRESHOLD = 5;
+// 人気記事判定の閾値（本番環境では5以上に調整することを推奨）
+// 現在は2に設定して開発/テスト環境での最適化検証を行う
+const POPULAR_ARTICLE_READ_COUNT_THRESHOLD = 2;
 
 // MD5ハッシュ計算関数
 function calculateHash(text: string): string {
@@ -150,6 +151,7 @@ export async function POST(request: NextRequest) {
 
         // 記事メタデータ処理
         let isPopularArticle = false;
+        let metadata = null;
         const kv = await getKv();
 
         if (kv) {
@@ -163,7 +165,7 @@ export async function POST(request: NextRequest) {
                 try {
                     // 既存メタデータを確認
                     const metadataHash = await kv.hgetall(metadataKey);
-                    const metadata = parseArticleMetadata(metadataHash);
+                    metadata = parseArticleMetadata(metadataHash);
 
                     // 新規 or 記事編集時のみハッシュ/totalChunksを保存
                     if (!metadata || metadata.articleHash !== currentHash) {
@@ -189,11 +191,17 @@ export async function POST(request: NextRequest) {
                 try {
                     // アクセスメタデータを取得（人気記事判定用）
                     const metadataHash = await kv.hgetall(metadataKey);
-                    const metadata = parseArticleMetadata(metadataHash);
+                    metadata = parseArticleMetadata(metadataHash);
 
                     // 人気記事判定（記事レベルメタデータから）
                     if (metadata && metadata.readCount >= POPULAR_ARTICLE_READ_COUNT_THRESHOLD && metadata.completedPlayback === true) {
                         isPopularArticle = true;
+                        console.log('[Optimize] ⚡ Popular article detected:', {
+                            articleUrl,
+                            readCount: metadata.readCount,
+                            completedPlayback: metadata.completedPlayback,
+                            threshold: POPULAR_ARTICLE_READ_COUNT_THRESHOLD
+                        });
                     }
 
                     // アクセスカウントと最終アクセス時刻を更新
@@ -209,6 +217,14 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        // デバッグログ: 人気記事判定結果
+        console.log('[Optimize] Article metadata:', {
+            articleUrl,
+            readCount: metadata?.readCount ?? 0,
+            completedPlayback: metadata?.completedPlayback ?? false,
+            isPopular: isPopularArticle
+        });
+
         // キャッシュ統計情報
         let cacheHits = 0;
         let cacheMisses = 0;
@@ -216,6 +232,12 @@ export async function POST(request: NextRequest) {
         // 各チャンクを合成またはキャッシュから取得
         const audioUrls: string[] = [];
         const audioBuffers: Buffer[] = [];
+
+        // Simple Operations 削減カウンター
+        let headOperationsSkipped = 0;
+
+        // ループ外で環境変数を一度だけ読み込む（パフォーマンス最適化）
+        const blobReadWriteToken = process.env.BLOB_READ_WRITE_TOKEN;
 
         for (const chunkText of textChunks) {
             const textHash = calculateHash(chunkText);
@@ -225,14 +247,36 @@ export async function POST(request: NextRequest) {
             let blobExists = null;
 
             if (isPopularArticle) {
-                // 人気記事の場合、キャッシュミス時のログを警告レベルに下げる
-                const cached = await head(cacheKey).catch(() => null);
-                if (cached) {
-                    blobExists = cached;
-                } else {
-                    console.warn(`Cache miss for popular article, fallback to TTS for key ${cacheKey}`);
+                // 人気記事 → head()スキップ！Simple Operations削減
+                console.log('[Optimize] ⚡ Skipping head() for popular article, key:', cacheKey);
+
+                // Vercel Blob URLを直接構築（head()なし）
+                // 注意: このロジックはVercelの内部トークン形式 'vercel_blob_rw_STOREID_...' に依存しています
+                // Vercelがトークン形式を変更した場合、この最適化は動作しなくなる可能性があります
+                const token = blobReadWriteToken;
+                if (token) {
+                    const parts = token.split('_');
+                    // トークン形式を検証: vercel_blob_rw_STOREID_...
+                    if (parts.length > 3 && parts[0] === 'vercel' && parts[1] === 'blob' && parts[2] === 'rw') {
+                        const storeId = parts[3];
+                        if (storeId) {
+                            headOperationsSkipped++;
+                            const blobUrl = `https://${storeId}.public.blob.vercel-storage.com/${cacheKey}`;
+                            audioUrls.push(blobUrl);
+                            audioBuffers.push(Buffer.alloc(0)); // プレースホルダー
+                            cacheHits++; // 人気記事は確実にキャッシュ済みと仮定
+                            continue;
+                        }
+                    } else {
+                        console.warn('[Optimize] ⚠️ Invalid token format, expected vercel_blob_rw_STOREID_...');
+                    }
                 }
+
+                // トークンやストアIDがない場合は通常フローにフォールバック
+                console.warn('[Optimize] ⚠️ Token not available, falling back to head() check');
             } else {
+                // 通常フロー → head()でチェック
+                console.log('[Optimize] 🔍 Normal flow with head() check for key:', cacheKey);
                 blobExists = await head(cacheKey).catch((error) => {
                     console.error(`Failed to check cache for key ${cacheKey}:`, error);
                     return null;
@@ -280,6 +324,9 @@ export async function POST(request: NextRequest) {
         };
 
         console.log(`Cache stats - Hits: ${cacheHits}, Misses: ${cacheMisses}, Rate: ${(hitRate * 100).toFixed(2)}%`);
+        if (isPopularArticle) {
+            console.log(`[Optimize] ⚡ Simple Operations saved: ${headOperationsSkipped} head() calls skipped`);
+        }
 
         // 旧形式（1チャンク）の場合はbase64を返す
         if (!body.chunks && body.text) {
