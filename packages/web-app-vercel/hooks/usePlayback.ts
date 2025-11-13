@@ -191,8 +191,92 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
           }
         };
 
-        audio.onerror = (e) => {
+        audio.onerror = async (e) => {
           const mediaError = audio.error;
+          
+          // 404エラー（Vercel Blob LRU削除）の場合は強制再生成
+          if (mediaError?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED) {
+            logger.warn("⚠️ Audio 404 detected (LRU deletion), regenerating...", {
+              chunk: index,
+              text: chunk.cleanedText.substring(0, 50),
+              errorCode: mediaError.code,
+              errorMessage: mediaError.message,
+              audioUrl: audioUrl.substring(0, 50)
+            });
+            
+            // 強制再生成フラグで新しいオーディオURLを取得
+            if (chunk && articleUrl) {
+              try {
+                const newUrl = await audioCache.get(chunk.cleanedText, voiceModel, articleUrl, true);
+                logger.info("✅ Audio regenerated successfully", {
+                  chunk: index,
+                  newUrl: newUrl.substring(0, 50)
+                });
+                
+                // 新しいAudioオブジェクトを作成して再生
+                const newAudio = new Audio(newUrl);
+                const rate = parseFloat(localStorage.getItem(PLAYBACK_RATE_STORAGE_KEY) || '');
+                newAudio.playbackRate = isNaN(rate) ? DEFAULT_PLAYBACK_RATE : rate;
+                
+                newAudio.onended = async () => {
+                  // 見出しの後、または段落間にポーズ
+                  if (needsPauseAfter(chunk.type)) {
+                    await sleep(getPauseDuration('heading'));
+                  } else {
+                    await sleep(getPauseDuration('paragraph'));
+                  }
+
+                  // 次のチャンクがあれば自動的に再生
+                  if (index + 1 < chunks.length) {
+                    playFromIndex(index + 1);
+                  } else {
+                    // 最後のチャンク終了時も URL を解放
+                    if (currentAudioUrlRef.current?.startsWith('blob:')) {
+                      URL.revokeObjectURL(currentAudioUrlRef.current);
+                    }
+                    setIsPlaying(false);
+                    setCurrentIndex(-1);
+                    // 記事の再生が終了したときのコールバック
+                    onArticleEndRef.current?.();
+                  }
+                };
+                
+                newAudio.onerror = () => {
+                  logger.error("❌ Regenerated audio failed to load", {
+                    chunk: index
+                  });
+                  setError("再生成された音声の読み込みに失敗しました");
+                  setIsPlaying(false);
+                };
+                
+                // 前のURLを解放
+                if (currentAudioUrlRef.current?.startsWith('blob:')) {
+                  URL.revokeObjectURL(currentAudioUrlRef.current);
+                }
+                
+                audioRef.current = newAudio;
+                currentAudioUrlRef.current = newUrl;
+                await newAudio.play();
+                setCurrentIndex(index);
+                setIsPlaying(true);
+                setIsLoading(false);
+                return;
+              } catch (err) {
+                logger.error("❌ Audio regeneration failed", err);
+                setError("音声の再生成に失敗しました");
+                setIsPlaying(false);
+                setIsLoading(false);
+                return;
+              }
+            } else {
+              logger.error("❌ Cannot regenerate: missing chunk or articleUrl", {
+                hasChunk: !!chunk,
+                hasArticleUrl: !!articleUrl
+              });
+            }
+          }
+          
+          // その他のエラー
           const errorMessage = `音声の再生に失敗しました (URL: ${audioUrl}, Code: ${mediaError?.code})`;
           logger.error("音声再生エラー", {
             error: mediaError,

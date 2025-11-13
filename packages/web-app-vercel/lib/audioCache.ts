@@ -37,32 +37,38 @@ class AudioCache {
   async get(
     text: string,
     voiceModel: string = DEFAULT_VOICE,
-    articleUrl?: string
+    articleUrl?: string,
+    forceRegenerate: boolean = false
   ): Promise<string> {
     const key = this.getCacheKey(text, voiceModel, articleUrl);
 
-    // キャッシュチェック
-    const cached = this.cache.get(key);
-    if (cached) {
-      const age = Date.now() - cached.timestamp;
-      if (age < CACHE_EXPIRY) {
-        logger.cache("HIT", `${text.substring(0, 30)}...`);
+    // forceRegenerate フラグがある場合はキャッシュをスキップ
+    if (!forceRegenerate) {
+      // キャッシュチェック
+      const cached = this.cache.get(key);
+      if (cached) {
+        const age = Date.now() - cached.timestamp;
+        if (age < CACHE_EXPIRY) {
+          logger.cache("HIT", `${text.substring(0, 30)}...`);
 
-        // blob URL は再生成して返す（以前の URL が revoke 済みでも再生可能にする）
-        if (cached.url.startsWith("blob:")) {
-          URL.revokeObjectURL(cached.url);
+          // blob URL は再生成して返す（以前の URL が revoke 済みでも再生可能にする）
+          if (cached.url.startsWith("blob:")) {
+            URL.revokeObjectURL(cached.url);
+          }
+          const freshUrl = URL.createObjectURL(cached.blob);
+          this.cache.set(key, {
+            ...cached,
+            url: freshUrl,
+            timestamp: Date.now(),
+          });
+          return freshUrl;
+        } else {
+          // 期限切れのキャッシュを削除
+          this.revoke(key);
         }
-        const freshUrl = URL.createObjectURL(cached.blob);
-        this.cache.set(key, {
-          ...cached,
-          url: freshUrl,
-          timestamp: Date.now(),
-        });
-        return freshUrl;
-      } else {
-        // 期限切れのキャッシュを削除
-        this.revoke(key);
       }
+    } else {
+      logger.info("🔄 強制再生成モード", { text: text.substring(0, 30) });
     }
 
     // キャッシュミス - 新規合成
