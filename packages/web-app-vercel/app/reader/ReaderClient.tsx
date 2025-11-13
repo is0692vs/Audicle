@@ -158,6 +158,7 @@ export default function ReaderPageClient() {
         const response = await extractContent(articleUrl);
         const chunksWithId = convertParagraphsToChunks(response.content);
         setChunks(chunksWithId);
+        setUrl(articleUrl);
         setTitle(response.title);
 
         // 記事アクセス統計を記録（非同期、エラーは内部で処理される）
@@ -715,7 +716,13 @@ export default function ReaderPageClient() {
           <ReaderView
             chunks={chunks}
             currentChunkId={currentChunkId}
-            articleUrl={url}
+            articleUrl={
+              url ||
+              (articleId
+                ? articleStorage.getById(articleId)?.url
+                : undefined) ||
+              ""
+            }
             voiceModel={settings.voice_model}
             speed={playbackRate}
             onChunkClick={seekToChunk}

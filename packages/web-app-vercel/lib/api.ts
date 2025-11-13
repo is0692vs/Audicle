@@ -66,7 +66,7 @@ async function fetchTTSFromAPI(
   if (voiceModel) {
     request.voice_model = voiceModel;
   }
-  if (articleUrl) {
+  if (articleUrl !== undefined) {
     request.articleUrl = articleUrl;
   }
   // playbackSpeedはフロントエンドでの再生速度制御用なのでAPIには渡さない
