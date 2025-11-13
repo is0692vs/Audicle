@@ -17,8 +17,9 @@ class AudioCache {
   private cache = new Map<string, CacheEntry>();
 
   // キャッシュキーを生成（音声モデルと再生速度を含む）
-  private getCacheKey(text: string, voiceModel: string = DEFAULT_VOICE): string {
-    return `${CACHE_PREFIX}${this.hashString(text)}_${voiceModel}`;
+  private getCacheKey(text: string, voiceModel: string = DEFAULT_VOICE, articleUrl?: string): string {
+    const articleParam = articleUrl ? `_${articleUrl}` : "";
+    return `${CACHE_PREFIX}${this.hashString(text)}_${voiceModel}${articleParam}`;
   }
 
   // 簡単なハッシュ関数
@@ -38,7 +39,7 @@ class AudioCache {
     voiceModel: string = DEFAULT_VOICE,
     articleUrl?: string
   ): Promise<string> {
-    const key = this.getCacheKey(text, voiceModel);
+    const key = this.getCacheKey(text, voiceModel, articleUrl);
 
     // キャッシュチェック
     const cached = this.cache.get(key);
