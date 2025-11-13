@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic';
 const ALLOWED_EMAILS = process.env.ALLOWED_EMAILS?.split(',').map(e => e.trim()) || [];
 
 // 人気記事判定の閾値
-const POPULAR_ARTICLE_READ_COUNT_THRESHOLD = 1;
+const POPULAR_ARTICLE_READ_COUNT_THRESHOLD = 2;
 
 // MD5ハッシュ計算関数
 function calculateHash(text: string): string {
@@ -245,14 +245,25 @@ export async function POST(request: NextRequest) {
             if (isPopularArticle) {
                 // 人気記事 → head()スキップ！Simple Operations削減
                 console.log('[Optimize] ⚡ Skipping head() for popular article, key:', cacheKey);
-                headOperationsSkipped++;
-
-                // Vercel Blob URL を直接構築（head()なし）
-                const blobUrl = `https://${process.env.BLOB_READ_WRITE_TOKEN?.split('_')[1]}.public.blob.vercel-storage.com/${cacheKey}`;
-                audioUrls.push(blobUrl);
-                audioBuffers.push(Buffer.alloc(0)); // プレースホルダー
-                cacheHits++; // 人気記事は確実にキャッシュ済みと仮定
-                continue;
+                
+                // Vercel Blob URLを直接構築（head()なし）
+                const token = process.env.BLOB_READ_WRITE_TOKEN;
+                if (token) {
+                    const parts = token.split('_');
+                    const storeId = parts[3]; // Format: vercel_blob_rw_STOREID_...
+                    
+                    if (storeId) {
+                        headOperationsSkipped++;
+                        const blobUrl = `https://${storeId}.public.blob.vercel-storage.com/${cacheKey}`;
+                        audioUrls.push(blobUrl);
+                        audioBuffers.push(Buffer.alloc(0)); // プレースホルダー
+                        cacheHits++; // 人気記事は確実にキャッシュ済みと仮定
+                        continue;
+                    }
+                }
+                
+                // トークンやストアIDがない場合は通常フローにフォールバック
+                console.warn('[Optimize] ⚠️ Token not available, falling back to head() check');
             } else {
                 // 通常フロー → head()でチェック
                 console.log('[Optimize] 🔍 Normal flow with head() check for key:', cacheKey);
@@ -260,9 +271,7 @@ export async function POST(request: NextRequest) {
                     console.error(`Failed to check cache for key ${cacheKey}:`, error);
                     return null;
                 });
-            }
-
-            if (blobExists) {
+            }            if (blobExists) {
                 console.log(`Cache hit for key: ${cacheKey}`);
                 cacheHits++;
                 audioUrls.push(blobExists.url);

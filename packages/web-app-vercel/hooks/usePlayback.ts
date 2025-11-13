@@ -81,6 +81,31 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
     }
   }, []);
 
+  // onended ハンドラを共通化
+  const handleAudioEnded = useCallback(async (currentIndex: number) => {
+    const chunk = chunks[currentIndex];
+    // 見出しの後、または段落間にポーズ
+    if (needsPauseAfter(chunk.type)) {
+      await sleep(getPauseDuration('heading'));
+    } else {
+      await sleep(getPauseDuration('paragraph'));
+    }
+
+    // 次のチャンクがあれば自動的に再生
+    if (currentIndex + 1 < chunks.length) {
+      playFromIndex(currentIndex + 1);
+    } else {
+      // 最後のチャンク終了時も URL を解放
+      if (currentAudioUrlRef.current?.startsWith('blob:')) {
+        URL.revokeObjectURL(currentAudioUrlRef.current);
+      }
+      setIsPlaying(false);
+      setCurrentIndex(-1);
+      // 記事の再生が終了したときのコールバック
+      onArticleEndRef.current?.();
+    }
+  }, [chunks, setIsPlaying, setCurrentIndex, playFromIndex]);
+
   // 先読み処理（クリーンアップ済みテキストを使用）
   const prefetchAudio = useCallback(
     async (startIndex: number) => {
@@ -168,28 +193,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         const rate = parseFloat(localStorage.getItem(PLAYBACK_RATE_STORAGE_KEY) || '');
         audio.playbackRate = isNaN(rate) ? DEFAULT_PLAYBACK_RATE : rate;
 
-        audio.onended = async () => {
-          // 見出しの後、または段落間にポーズ
-          if (needsPauseAfter(chunk.type)) {
-            await sleep(getPauseDuration('heading'));
-          } else {
-            await sleep(getPauseDuration('paragraph'));
-          }
-
-          // 次のチャンクがあれば自動的に再生
-          if (index + 1 < chunks.length) {
-            playFromIndex(index + 1);
-          } else {
-            // 最後のチャンク終了時も URL を解放
-            if (currentAudioUrlRef.current?.startsWith('blob:')) {
-              URL.revokeObjectURL(currentAudioUrlRef.current);
-            }
-            setIsPlaying(false);
-            setCurrentIndex(-1);
-            // 記事の再生が終了したときのコールバック
-            onArticleEndRef.current?.();
-          }
-        };
+        audio.onended = () => handleAudioEnded(index);
 
         audio.onerror = async (e) => {
           const mediaError = audio.error;
@@ -218,28 +222,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
                 const rate = parseFloat(localStorage.getItem(PLAYBACK_RATE_STORAGE_KEY) || '');
                 newAudio.playbackRate = isNaN(rate) ? DEFAULT_PLAYBACK_RATE : rate;
 
-                newAudio.onended = async () => {
-                  // 見出しの後、または段落間にポーズ
-                  if (needsPauseAfter(chunk.type)) {
-                    await sleep(getPauseDuration('heading'));
-                  } else {
-                    await sleep(getPauseDuration('paragraph'));
-                  }
-
-                  // 次のチャンクがあれば自動的に再生
-                  if (index + 1 < chunks.length) {
-                    playFromIndex(index + 1);
-                  } else {
-                    // 最後のチャンク終了時も URL を解放
-                    if (currentAudioUrlRef.current?.startsWith('blob:')) {
-                      URL.revokeObjectURL(currentAudioUrlRef.current);
-                    }
-                    setIsPlaying(false);
-                    setCurrentIndex(-1);
-                    // 記事の再生が終了したときのコールバック
-                    onArticleEndRef.current?.();
-                  }
-                };
+                newAudio.onended = () => handleAudioEnded(index);
 
                 newAudio.onerror = () => {
                   logger.error("❌ Regenerated audio failed to load", {
@@ -260,6 +243,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
                 setCurrentIndex(index);
                 setIsPlaying(true);
                 setIsLoading(false);
+                onChunkChange?.(chunk.id);
                 return;
               } catch (err) {
                 logger.error("❌ Audio regeneration failed", err);
