@@ -230,8 +230,8 @@ export async function POST(request: NextRequest) {
                     voice: voiceToUse,
                     cachedChunksCount: cacheIndex?.cached_chunks.length ?? 0
                 });
-            } catch (indexError) {
-                console.error('[Supabase Index] ❌ Failed to load cache index:', indexError);
+            } catch {
+                // getCacheIndex関数内で既にエラーログが出力されているため、ここではログ出力しない
             }
         }
 
@@ -265,7 +265,8 @@ export async function POST(request: NextRequest) {
                     console.log('[Supabase Index] ⚡ Cache hit, skipping head() for key:', cacheKey);
                     headOperationsSkipped++;
 
-                    // Vercel Blob URLを直接構築
+                    // Vercel Blob URLを直接構築（リスク認識済み：トークン形式変更の可能性）
+                    let urlConstructed = false;
                     const token = blobReadWriteToken;
                     if (token) {
                         const parts = token.split('_');
@@ -276,13 +277,27 @@ export async function POST(request: NextRequest) {
                                 audioUrls.push(blobUrl);
                                 audioBuffers.push(Buffer.alloc(0));
                                 cacheHits++;
+                                urlConstructed = true;
                                 continue;
                             }
                         }
                     }
 
-                    // トークンがない場合はhead()にフォールバック
-                    console.warn('[Supabase Index] ⚠️ Token not available, falling back to head() check');
+                    // URL構築失敗時はhead()にフォールバック（堅牢性のための改善）
+                    if (!urlConstructed) {
+                        console.warn('[Supabase Index] ⚠️ URL construction failed or token not available, falling back to head() check');
+                        blobExists = await head(cacheKey).catch((error) => {
+                            console.error(`Failed to check cache for key ${cacheKey}:`, error);
+                            return null;
+                        });
+                        if (blobExists) {
+                            console.log(`Cache hit for key: ${cacheKey}`);
+                            cacheHits++;
+                            audioUrls.push(blobExists.url);
+                            audioBuffers.push(Buffer.alloc(0));
+                            continue;
+                        }
+                    }
                 } else {
                     // Supabaseインデックスになし → キャッシュミス確定
                     console.log('[Supabase Index] ❌ Cache miss for key:', cacheKey);
@@ -328,8 +343,8 @@ export async function POST(request: NextRequest) {
                     try {
                         await addCachedChunk(articleUrl, voiceToUse, textHash);
                         console.log('[Supabase Index] ✅ Chunk added to index:', textHash);
-                    } catch (indexError) {
-                        console.error('[Supabase Index] ❌ Failed to add chunk to index:', indexError);
+                    } catch {
+                        // addCachedChunk関数内で既にエラーログが出力されているため、ここではログ出力しない
                     }
                 }
             } catch (putError) {
