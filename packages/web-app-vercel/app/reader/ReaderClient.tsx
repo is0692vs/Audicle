@@ -76,7 +76,7 @@ export default function ReaderPageClient() {
 
   // 再生完了をバックエンドに記録する関数
   const recordPlaybackCompletion = useCallback(async () => {
-    if (!url) return;
+    if (!url || !settings.voice_model) return;
 
     try {
       const response = await fetch("/api/update-playback", {
@@ -86,6 +86,8 @@ export default function ReaderPageClient() {
         },
         body: JSON.stringify({
           articleUrl: url,
+          voice: settings.voice_model,
+          completedPlayback: true,
         }),
       });
 
@@ -93,16 +95,18 @@ export default function ReaderPageClient() {
         logger.warn("再生完了の記録に失敗", {
           status: response.status,
           articleUrl: url,
+          voice: settings.voice_model,
         });
       } else {
         logger.info("再生完了を記録", {
           articleUrl: url,
+          voice: settings.voice_model,
         });
       }
     } catch (error) {
       logger.error("再生完了の記録エラー", error);
     }
-  }, [url]);
+  }, [url, settings.voice_model]);
 
   // 再生制御フック
   const {

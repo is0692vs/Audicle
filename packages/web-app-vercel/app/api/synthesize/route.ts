@@ -1,36 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import { getKv } from '@/lib/kv';
 import { CacheStats, SynthesizeChunk } from '@/types/api';
 import { TextToSpeechClient, protos } from '@google-cloud/text-to-speech';
 import { put, head } from '@vercel/blob';
 import crypto from 'crypto';
 import type { ArticleMetadata } from '@/types/cache';
-
-// Vercel KV 初期化関数
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let kvInstance: unknown = undefined;
-
-async function getKv() {
-    if (kvInstance !== undefined) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return kvInstance as any;
-    }
-
-    try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const kvModule = await import('@vercel/kv').catch(() => null);
-        if (kvModule) {
-            kvInstance = kvModule.kv;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return kvInstance as any;
-        }
-    } catch {
-        console.warn('@vercel/kv is not available, metadata tracking will be skipped');
-    }
-
-    kvInstance = null;
-    return null;
-}
 
 // Node.js runtimeを明示的に指定（Google Cloud TTS SDKはEdge Runtimeで動作しない）
 export const runtime = 'nodejs';
@@ -225,17 +200,12 @@ export async function POST(request: NextRequest) {
             let blobExists = null;
 
             if (skipHeadCheck) {
-                // head()スキップ：直接get()を試行
-                try {
-                    const cached = await head(cacheKey).catch(() => null);
-                    if (!cached) {
-                        console.warn('Cache miss for popular article, fallback to TTS');
-                    } else {
-                        blobExists = cached;
-                    }
-                } catch (error) {
-                    // 404の場合は通常フローにフォールバック
-                    console.warn('Cache miss for popular article, fallback to TTS');
+                // 人気記事の場合、キャッシュミス時のログを警告レベルに下げる
+                const cached = await head(cacheKey).catch(() => null);
+                if (cached) {
+                    blobExists = cached;
+                } else {
+                    console.warn(`Cache miss for popular article, fallback to TTS for key ${cacheKey}`);
                 }
             } else {
                 blobExists = await head(cacheKey).catch((error) => {

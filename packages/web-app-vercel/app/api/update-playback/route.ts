@@ -1,31 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import { getKv } from '@/lib/kv';
 import type { ArticleMetadata } from '@/types/cache';
-
-// Vercel KV 初期化関数
-let kvInstance: unknown = undefined;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getKv(): Promise<any | null> {
-    if (kvInstance !== undefined) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return kvInstance as any;
-    }
-
-    try {
-        const kvModule = await import('@vercel/kv').catch(() => null);
-        if (kvModule) {
-            kvInstance = kvModule.kv;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return kvInstance as any;
-        }
-    } catch {
-        console.warn('@vercel/kv is not available, metadata tracking will be skipped');
-    }
-
-    kvInstance = null;
-    return null;
-}
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
