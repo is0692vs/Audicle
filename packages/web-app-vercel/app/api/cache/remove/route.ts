@@ -5,30 +5,30 @@ import { calculateTextHash } from '@/lib/textHash';
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
-  try {
-    const { articleUrl, voice, text } = await request.json();
+    try {
+        const { articleUrl, voice, text } = await request.json();
 
-    if (!articleUrl || !voice || !text) {
-      return NextResponse.json(
-        { error: 'articleUrl, voice, and text are required' },
-        { status: 400 }
-      );
+        if (!articleUrl || !voice || !text) {
+            return NextResponse.json(
+                { error: 'articleUrl, voice, and text are required' },
+                { status: 400 }
+            );
+        }
+
+        // テキストからハッシュを計算
+        const textHash = calculateTextHash(text);
+
+        // Supabaseインデックスから削除
+        await removeCachedChunk(articleUrl, voice, textHash);
+
+        console.log('[Cache Remove API] ✅ Removed from index:', { articleUrl, voice, textHash });
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error('[Cache Remove API] Error:', error);
+        return NextResponse.json(
+            { error: 'Failed to remove cached chunk' },
+            { status: 500 }
+        );
     }
-
-    // テキストからハッシュを計算
-    const textHash = calculateTextHash(text);
-
-    // Supabaseインデックスから削除
-    await removeCachedChunk(articleUrl, voice, textHash);
-
-    console.log('[Cache Remove API] ✅ Removed from index:', { articleUrl, voice, textHash });
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('[Cache Remove API] Error:', error);
-    return NextResponse.json(
-      { error: 'Failed to remove cached chunk' },
-      { status: 500 }
-    );
-  }
 }

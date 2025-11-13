@@ -10,7 +10,6 @@ CREATE TABLE audio_cache_index (
 );
 
 -- 高速検索用インデックス
-CREATE INDEX idx_cache_lookup ON audio_cache_index(article_url, voice);
 CREATE INDEX idx_last_accessed ON audio_cache_index(last_accessed);
 CREATE INDEX idx_cached_chunks ON audio_cache_index USING GIN(cached_chunks);
 
@@ -21,15 +20,14 @@ CREATE OR REPLACE FUNCTION add_cached_chunk(
   p_text_hash TEXT
 ) RETURNS void AS $$
 BEGIN
-  INSERT INTO audio_cache_index (article_url, voice, cached_chunks, read_count)
-  VALUES (p_article_url, p_voice, ARRAY[p_text_hash], 1)
+  INSERT INTO audio_cache_index (article_url, voice, cached_chunks)
+  VALUES (p_article_url, p_voice, ARRAY[p_text_hash])
   ON CONFLICT (article_url, voice)
   DO UPDATE SET
     cached_chunks = CASE 
       WHEN p_text_hash = ANY(audio_cache_index.cached_chunks) THEN audio_cache_index.cached_chunks
       ELSE array_append(audio_cache_index.cached_chunks, p_text_hash)
     END,
-    read_count = audio_cache_index.read_count + 1,
     last_accessed = NOW();
 END;
 $$ LANGUAGE plpgsql;

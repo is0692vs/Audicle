@@ -313,7 +313,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
       }
       setIsPlaying(false);
       setCurrentIndex(-1);
-      
+
       // 記事の再生が終了したときにSupabaseインデックスを更新
       if (articleUrl && voiceModel) {
         fetch('/api/cache/update-completed', {
@@ -328,7 +328,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
           logger.error('[Cache Update] Failed to update completed playback:', err);
         });
       }
-      
+
       // 記事の再生が終了したときのコールバック
       onArticleEndRef.current?.();
     }

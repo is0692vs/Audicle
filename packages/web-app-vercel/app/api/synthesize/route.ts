@@ -259,7 +259,7 @@ export async function POST(request: NextRequest) {
             if (isPopularArticle && cacheIndex) {
                 // 人気記事 & Supabaseインデックスあり → インデックスでチェック
                 const isCached = isCachedInIndex(cacheIndex, textHash);
-                
+
                 if (isCached) {
                     // Supabaseインデックスにキャッシュ済み → head()スキップ！
                     console.log('[Supabase Index] ⚡ Cache hit, skipping head() for key:', cacheKey);
@@ -280,7 +280,7 @@ export async function POST(request: NextRequest) {
                             }
                         }
                     }
-                    
+
                     // トークンがない場合はhead()にフォールバック
                     console.warn('[Supabase Index] ⚠️ Token not available, falling back to head() check');
                 } else {
@@ -322,7 +322,7 @@ export async function POST(request: NextRequest) {
                     addRandomSuffix: false,
                 });
                 audioUrls.push(blob.url);
-                
+
                 // 4. Supabaseインデックスに追加（articleUrlがある場合）
                 if (articleUrl) {
                     try {
