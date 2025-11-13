@@ -21,6 +21,7 @@ export interface SynthesizeRequest {
   voice?: string;
   voice_model?: string;      // オプショナル（未指定時はDB設定使用）
   chunks?: SynthesizeChunk[]; // 新しいチャンク形式
+  articleUrl?: string;        // 記事メタデータ保存用
 }
 
 export interface CacheStats {

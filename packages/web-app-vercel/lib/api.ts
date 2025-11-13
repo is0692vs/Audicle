@@ -56,7 +56,8 @@ export async function extractContent(url: string): Promise<ExtractResponse> {
 async function fetchTTSFromAPI(
   text: string,
   voice?: string,
-  voiceModel?: string
+  voiceModel?: string,
+  articleUrl?: string
 ): Promise<Blob> {
   const request: SynthesizeRequest = { text };
   if (voice) {
@@ -64,6 +65,9 @@ async function fetchTTSFromAPI(
   }
   if (voiceModel) {
     request.voice_model = voiceModel;
+  }
+  if (articleUrl) {
+    request.articleUrl = articleUrl;
   }
   // playbackSpeedはフロントエンドでの再生速度制御用なのでAPIには渡さない
 
@@ -113,7 +117,8 @@ async function fetchTTSFromAPI(
 async function getAudio(
   text: string,
   voice?: string,
-  voiceModel?: string
+  voiceModel?: string,
+  articleUrl?: string
 ): Promise<Blob> {
   // キャッシュキーを生成
   const key = getPendingKey(text, voice, voiceModel);
@@ -125,7 +130,7 @@ async function getAudio(
   }
 
   // 2. 新規リクエスト
-  const promise = fetchTTSFromAPI(text, voice, voiceModel)
+  const promise = fetchTTSFromAPI(text, voice, voiceModel, articleUrl)
     .finally(() => {
       // 完了後にMapから削除
       pendingRequests.delete(key);
@@ -142,8 +147,9 @@ async function getAudio(
 export async function synthesizeSpeech(
   text: string,
   voice?: string,
-  voiceModel?: string
+  voiceModel?: string,
+  articleUrl?: string
 ): Promise<Blob> {
   // Pending Map を経由してリクエストを管理
-  return getAudio(text, voice, voiceModel);
+  return getAudio(text, voice, voiceModel, articleUrl);
 }

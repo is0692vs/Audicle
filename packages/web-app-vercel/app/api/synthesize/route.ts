@@ -122,6 +122,14 @@ export async function POST(request: NextRequest) {
         // リクエストボディをパース
         const body = await request.json();
 
+        // デバッグログ
+        console.log('[DEBUG] Request params:', {
+            hasText: !!body.text,
+            hasArticleUrl: !!body.articleUrl,
+            hasChunks: !!body.chunks,
+            voice: body.voice || body.voice_model
+        });
+
         // 入力バリデーション
         if (!body.chunks && !body.text) {
             return NextResponse.json(
@@ -143,7 +151,7 @@ export async function POST(request: NextRequest) {
         // 記事メタデータ処理
         let isPopularArticle = false;
 
-        if (articleUrl && chunks && Array.isArray(chunks)) {
+        if (articleUrl) {
             const kv = await getKv();
             if (kv) {
                 const currentHash = calculateArticleHash(textChunks);
@@ -167,6 +175,7 @@ export async function POST(request: NextRequest) {
                             lastUpdated: new Date().toISOString(),
                             lastAccessed: new Date().toISOString()
                         }));
+                        console.log(`[INFO] ✅ Metadata saved (new) for article: ${articleUrl}`);
                     } else {
                         // 既存メタデータあり
                         const isPopular = metadata.readCount >= POPULAR_ARTICLE_READ_COUNT_THRESHOLD && metadata.completedPlayback === true;
@@ -180,9 +189,10 @@ export async function POST(request: NextRequest) {
 
                         // lastAccessedを更新
                         await kv.hset(metadataKey, { lastAccessed: new Date().toISOString() });
+                        console.log(`[INFO] ✅ Metadata updated for article: ${articleUrl}`);
                     }
                 } catch (kvError) {
-                    console.error('KV error, falling back to normal flow:', kvError);
+                    console.error('[ERROR] ❌ Failed to save metadata:', kvError);
                     // KVエラー時は通常フローにフォールバック
                 }
             }
