@@ -5,7 +5,7 @@ import type { ArticleMetadata } from '@/types/cache';
  */
 export function parseArticleMetadata(hash: Record<string, unknown> | null): ArticleMetadata | null {
     if (!hash) return null;
-    
+
     return {
         articleUrl: String(hash.articleUrl),
         articleHash: String(hash.articleHash),
@@ -24,7 +24,7 @@ export function parseArticleMetadata(hash: Record<string, unknown> | null): Arti
  */
 export function serializeArticleMetadata(metadata: Partial<ArticleMetadata>): Record<string, string> {
     const result: Record<string, string> = {};
-    
+
     if (metadata.articleUrl) result.articleUrl = metadata.articleUrl;
     if (metadata.articleHash) result.articleHash = metadata.articleHash;
     if (metadata.voice) result.voice = metadata.voice;
@@ -34,6 +34,6 @@ export function serializeArticleMetadata(metadata: Partial<ArticleMetadata>): Re
     if (typeof metadata.lastPlayedChunk === 'number') result.lastPlayedChunk = metadata.lastPlayedChunk.toString();
     if (metadata.lastUpdated) result.lastUpdated = metadata.lastUpdated;
     if (metadata.lastAccessed) result.lastAccessed = metadata.lastAccessed;
-    
+
     return result;
 }

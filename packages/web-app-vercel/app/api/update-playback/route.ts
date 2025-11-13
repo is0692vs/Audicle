@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
         }
 
         const metadataKey = `article:${articleUrl}:${voice}`;
-        
+
         // Hash全体を取得
         const metadataHash = await kv.hgetall(metadataKey);
         const metadata = parseArticleMetadata(metadataHash);
