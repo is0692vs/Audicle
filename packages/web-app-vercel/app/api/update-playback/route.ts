@@ -76,8 +76,8 @@ export async function POST(request: NextRequest) {
         // メタデータ更新
         await kv.set(metadataKey, {
             ...metadata,
-            completedPlayback: completedPlayback ?? metadata.completedPlayback,
-            lastPlayedChunk: lastPlayedChunk ?? metadata.lastPlayedChunk,
+            completedPlayback: typeof completedPlayback === 'boolean' ? completedPlayback : metadata.completedPlayback,
+            lastPlayedChunk: typeof lastPlayedChunk === 'number' ? lastPlayedChunk : metadata.lastPlayedChunk,
             lastAccessed: new Date().toISOString()
         });
 
