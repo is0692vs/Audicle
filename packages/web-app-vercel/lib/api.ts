@@ -16,9 +16,15 @@ const pendingRequests = new Map<string, Promise<Blob>>();
 /**
  * テキスト＋音声パラメータから統合キーを生成
  */
-function getPendingKey(text: string, voice?: string, voiceModel?: string): string {
+function getPendingKey(
+  text: string,
+  voice?: string,
+  voiceModel?: string,
+  articleUrl?: string
+): string {
   const voiceParam = voice ?? voiceModel ?? "default";
-  return `${text}_${voiceParam}`;
+  const articleParam = articleUrl ? `_${articleUrl}` : "";
+  return `${text}_${voiceParam}${articleParam}`;
 }
 
 /**
@@ -72,10 +78,11 @@ async function fetchTTSFromAPI(
   // playbackSpeedはフロントエンドでの再生速度制御用なのでAPIには渡さない
 
   logger.apiRequest("POST", "/api/synthesize", {
-    text: text.substring(0, 50) + "...",
+    textPreview: `${text.substring(0, 50)}...`,
     voice,
     voiceModel,
-    // playbackSpeedはフロントエンド制御用
+    articleUrl,
+    hasArticleUrl: Boolean(articleUrl),
   });
 
   const response = await fetch("/api/synthesize", {
@@ -121,7 +128,7 @@ async function getAudio(
   articleUrl?: string
 ): Promise<Blob> {
   // キャッシュキーを生成
-  const key = getPendingKey(text, voice, voiceModel);
+  const key = getPendingKey(text, voice, voiceModel, articleUrl);
 
   // 1. 進行中リクエストがあればそれを返す
   if (pendingRequests.has(key)) {
