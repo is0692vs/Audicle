@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { getKv } from '@/lib/kv';
-import type { ArticleMetadata } from '@/types/cache';
+import { parseArticleMetadata } from '@/lib/kv-helpers';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -61,7 +61,10 @@ export async function POST(request: NextRequest) {
         }
 
         const metadataKey = `article:${articleUrl}:${voice}`;
-        const metadata = await kv.get(metadataKey) as ArticleMetadata | null;
+        
+        // Hash全体を取得
+        const metadataHash = await kv.hgetall(metadataKey);
+        const metadata = parseArticleMetadata(metadataHash);
 
         if (!metadata) {
             return NextResponse.json(
@@ -70,13 +73,20 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // メタデータ更新
-        await kv.set(metadataKey, {
-            ...metadata,
-            completedPlayback: typeof completedPlayback === 'boolean' ? completedPlayback : metadata.completedPlayback,
-            lastPlayedChunk: typeof lastPlayedChunk === 'number' ? lastPlayedChunk : metadata.lastPlayedChunk,
+        // アトミック操作：個別フィールドを更新
+        const updates: Record<string, string> = {
             lastAccessed: new Date().toISOString()
-        });
+        };
+
+        if (typeof completedPlayback === 'boolean') {
+            updates.completedPlayback = completedPlayback.toString();
+        }
+
+        if (typeof lastPlayedChunk === 'number') {
+            updates.lastPlayedChunk = lastPlayedChunk.toString();
+        }
+
+        await kv.hset(metadataKey, updates);
 
         return NextResponse.json({ success: true }, { headers: corsHeaders });
     } catch (error) {

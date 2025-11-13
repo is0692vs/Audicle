@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { getKv } from '@/lib/kv';
+import { parseArticleMetadata, serializeArticleMetadata } from '@/lib/kv-helpers';
 import { CacheStats, SynthesizeChunk } from '@/types/api';
 import { TextToSpeechClient, protos } from '@google-cloud/text-to-speech';
 import { put, head } from '@vercel/blob';
 import crypto from 'crypto';
-import type { ArticleMetadata } from '@/types/cache';
 
 // Node.js runtimeを明示的に指定（Google Cloud TTS SDKはEdge Runtimeで動作しない）
 export const runtime = 'nodejs';
@@ -150,21 +150,23 @@ export async function POST(request: NextRequest) {
                 const metadataKey = `article:${articleUrl}:${voiceToUse}`;
 
                 try {
-                    const metadata = await kv.get(metadataKey) as ArticleMetadata | null;
+                    // Hash全体を取得
+                    const metadataHash = await kv.hgetall(metadataKey);
+                    const metadata = parseArticleMetadata(metadataHash);
 
                     if (!metadata || metadata.articleHash !== currentHash) {
                         // メタデータなし or 編集検知 → 新規作成
-                        await kv.set(metadataKey, {
+                        await kv.hset(metadataKey, serializeArticleMetadata({
                             articleUrl,
                             articleHash: currentHash,
                             voice: voiceToUse,
-                            totalChunks: chunks.length,
+                            totalChunks: textChunks.length,
                             readCount: 1,
                             completedPlayback: false,
                             lastPlayedChunk: chunkIndex ?? 0,
                             lastUpdated: new Date().toISOString(),
                             lastAccessed: new Date().toISOString()
-                        } as ArticleMetadata);
+                        }));
                     } else {
                         // 既存メタデータあり
                         const isPopular = metadata.readCount >= POPULAR_ARTICLE_READ_COUNT_THRESHOLD && metadata.completedPlayback === true;
@@ -173,12 +175,11 @@ export async function POST(request: NextRequest) {
                             isPopularArticle = true;
                         }
 
-                        // アクセス記録更新
-                        await kv.set(metadataKey, {
-                            ...metadata,
-                            readCount: metadata.readCount + 1,
-                            lastAccessed: new Date().toISOString()
-                        } as ArticleMetadata);
+                        // アトミック操作：readCountをインクリメント
+                        await kv.hincrby(metadataKey, 'readCount', 1);
+
+                        // lastAccessedを更新
+                        await kv.hset(metadataKey, { lastAccessed: new Date().toISOString() });
                     }
                 } catch (kvError) {
                     console.error('KV error, falling back to normal flow:', kvError);
