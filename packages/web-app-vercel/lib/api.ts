@@ -7,6 +7,20 @@ import {
 } from "@/types/api";
 import { logger } from "./logger";
 
+// ============================================================================
+// Pending Map: 進行中のリクエストを管理（重複リクエスト対策）
+// ============================================================================
+
+const pendingRequests = new Map<string, Promise<Blob>>();
+
+/**
+ * テキスト＋音声パラメータから統合キーを生成
+ */
+function getPendingKey(text: string, voice?: string, voiceModel?: string): string {
+  const voiceParam = voice ?? voiceModel ?? "default";
+  return `${text}_${voiceParam}`;
+}
+
 /**
  * URLから本文を抽出する
  */
@@ -36,10 +50,10 @@ export async function extractContent(url: string): Promise<ExtractResponse> {
 }
 
 /**
- * テキストを音声に変換する
+ * 実際の TTS API へのリクエストを行う（内部用）
  * @returns 音声データのBlobを返す
  */
-export async function synthesizeSpeech(
+async function fetchTTSFromAPI(
   text: string,
   voice?: string,
   voiceModel?: string
@@ -88,4 +102,48 @@ export async function synthesizeSpeech(
   logger.success(`音声合成完了: ${blob.size} bytes`);
 
   return blob;
+}
+
+/**
+ * Pending Map を考慮した音声取得関数
+ * 
+ * 1. 進行中リクエスト確認
+ * 2. 新規 HTTP リクエスト発行
+ */
+async function getAudio(
+  text: string,
+  voice?: string,
+  voiceModel?: string
+): Promise<Blob> {
+  // キャッシュキーを生成
+  const key = getPendingKey(text, voice, voiceModel);
+
+  // 1. 進行中リクエストがあればそれを返す
+  if (pendingRequests.has(key)) {
+    logger.pending(`リクエスト待機: ${text.substring(0, 30)}...`);
+    return pendingRequests.get(key)!;
+  }
+
+  // 2. 新規リクエスト
+  const promise = fetchTTSFromAPI(text, voice, voiceModel)
+    .finally(() => {
+      // 完了後にMapから削除
+      pendingRequests.delete(key);
+    });
+
+  pendingRequests.set(key, promise);
+  return promise;
+}
+
+/**
+ * 公開API: テキストを音声に変換する（Pending Map 対応）
+ * @returns 音声データのBlobを返す
+ */
+export async function synthesizeSpeech(
+  text: string,
+  voice?: string,
+  voiceModel?: string
+): Promise<Blob> {
+  // Pending Map を経由してリクエストを管理
+  return getAudio(text, voice, voiceModel);
 }

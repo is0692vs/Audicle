@@ -60,4 +60,12 @@ export const logger = {
       `${action}: ${key}`
     );
   },
+
+  pending: (message: string) => {
+    console.log(
+      `%c${LOG_PREFIX} [PENDING]`,
+      LOG_STYLES.data,
+      message
+    );
+  },
 };
