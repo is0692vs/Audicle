@@ -11,25 +11,25 @@ import type { ArticleMetadata } from '@/types/cache';
 let kvInstance: unknown = undefined;
 
 async function getKv() {
-  if (kvInstance !== undefined) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return kvInstance as any;
-  }
-  
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const kvModule = await import('@vercel/kv').catch(() => null);
-    if (kvModule) {
-      kvInstance = kvModule.kv;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return kvInstance as any;
+    if (kvInstance !== undefined) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return kvInstance as any;
     }
-  } catch {
-    console.warn('@vercel/kv is not available, metadata tracking will be skipped');
-  }
-  
-  kvInstance = null;
-  return null;
+
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const kvModule = await import('@vercel/kv').catch(() => null);
+        if (kvModule) {
+            kvInstance = kvModule.kv;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return kvInstance as any;
+        }
+    } catch {
+        console.warn('@vercel/kv is not available, metadata tracking will be skipped');
+    }
+
+    kvInstance = null;
+    return null;
 }
 
 // Node.js runtimeを明示的に指定（Google Cloud TTS SDKはEdge Runtimeで動作しない）
@@ -47,9 +47,9 @@ function calculateHash(text: string): string {
 
 // 記事ハッシュ計算関数を追加
 function calculateArticleHash(chunks: string[]): string {
-  const content = chunks.join('\n');
-  const hash = crypto.createHash('md5').update(content).digest('hex');
-  return hash.substring(0, 16);
+    const content = chunks.join('\n');
+    const hash = crypto.createHash('md5').update(content).digest('hex');
+    return hash.substring(0, 16);
 }
 
 // Google Cloud TTS クライアント
@@ -164,49 +164,49 @@ export async function POST(request: NextRequest) {
 
         // 記事メタデータ処理
         let skipHeadCheck = false;
-        
+
         if (articleUrl && chunks && Array.isArray(chunks)) {
-          const kv = await getKv();
-          if (kv) {
-            const currentHash = calculateArticleHash(chunks);
-            const metadataKey = `article:${articleUrl}:${voiceToUse}`;
-            
-            try {
-              const metadata = await kv.get(metadataKey) as ArticleMetadata | null;
-              
-              if (!metadata || metadata.articleHash !== currentHash) {
-                // メタデータなし or 編集検知 → 新規作成
-                await kv.set(metadataKey, {
-                  articleUrl,
-                  articleHash: currentHash,
-                  voice: voiceToUse,
-                  totalChunks: chunks.length,
-                  readCount: 1,
-                  completedPlayback: false,
-                  lastPlayedChunk: chunkIndex ?? 0,
-                  lastUpdated: new Date().toISOString(),
-                  lastAccessed: new Date().toISOString()
-                } as ArticleMetadata);
-              } else {
-                // 既存メタデータあり
-                const isPopular = metadata.readCount >= 5 && metadata.completedPlayback === true;
-                
-                if (isPopular) {
-                  skipHeadCheck = true;
+            const kv = await getKv();
+            if (kv) {
+                const currentHash = calculateArticleHash(chunks);
+                const metadataKey = `article:${articleUrl}:${voiceToUse}`;
+
+                try {
+                    const metadata = await kv.get(metadataKey) as ArticleMetadata | null;
+
+                    if (!metadata || metadata.articleHash !== currentHash) {
+                        // メタデータなし or 編集検知 → 新規作成
+                        await kv.set(metadataKey, {
+                            articleUrl,
+                            articleHash: currentHash,
+                            voice: voiceToUse,
+                            totalChunks: chunks.length,
+                            readCount: 1,
+                            completedPlayback: false,
+                            lastPlayedChunk: chunkIndex ?? 0,
+                            lastUpdated: new Date().toISOString(),
+                            lastAccessed: new Date().toISOString()
+                        } as ArticleMetadata);
+                    } else {
+                        // 既存メタデータあり
+                        const isPopular = metadata.readCount >= 5 && metadata.completedPlayback === true;
+
+                        if (isPopular) {
+                            skipHeadCheck = true;
+                        }
+
+                        // アクセス記録更新
+                        await kv.set(metadataKey, {
+                            ...metadata,
+                            readCount: metadata.readCount + 1,
+                            lastAccessed: new Date().toISOString()
+                        } as ArticleMetadata);
+                    }
+                } catch (kvError) {
+                    console.error('KV error, falling back to normal flow:', kvError);
+                    // KVエラー時は通常フローにフォールバック
                 }
-                
-                // アクセス記録更新
-                await kv.set(metadataKey, {
-                  ...metadata,
-                  readCount: metadata.readCount + 1,
-                  lastAccessed: new Date().toISOString()
-                } as ArticleMetadata);
-              }
-            } catch (kvError) {
-              console.error('KV error, falling back to normal flow:', kvError);
-              // KVエラー時は通常フローにフォールバック
             }
-          }
         }
 
         // キャッシュ統計情報
@@ -223,25 +223,25 @@ export async function POST(request: NextRequest) {
 
             // 1. キャッシュ存在確認
             let blobExists = null;
-            
+
             if (skipHeadCheck) {
-              // head()スキップ：直接get()を試行
-              try {
-                const cached = await head(cacheKey).catch(() => null);
-                if (!cached) {
-                  console.warn('Cache miss for popular article, fallback to TTS');
-                } else {
-                  blobExists = cached;
+                // head()スキップ：直接get()を試行
+                try {
+                    const cached = await head(cacheKey).catch(() => null);
+                    if (!cached) {
+                        console.warn('Cache miss for popular article, fallback to TTS');
+                    } else {
+                        blobExists = cached;
+                    }
+                } catch (error) {
+                    // 404の場合は通常フローにフォールバック
+                    console.warn('Cache miss for popular article, fallback to TTS');
                 }
-              } catch (error) {
-                // 404の場合は通常フローにフォールバック
-                console.warn('Cache miss for popular article, fallback to TTS');
-              }
             } else {
-              blobExists = await head(cacheKey).catch((error) => {
-                console.error(`Failed to check cache for key ${cacheKey}:`, error);
-                return null;
-              });
+                blobExists = await head(cacheKey).catch((error) => {
+                    console.error(`Failed to check cache for key ${cacheKey}:`, error);
+                    return null;
+                });
             }
 
             if (blobExists) {

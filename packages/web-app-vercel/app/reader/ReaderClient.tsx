@@ -77,12 +77,12 @@ export default function ReaderPageClient() {
   // 再生完了をバックエンドに記録する関数
   const recordPlaybackCompletion = useCallback(async () => {
     if (!url) return;
-    
+
     try {
-      const response = await fetch('/api/update-playback', {
-        method: 'POST',
+      const response = await fetch("/api/update-playback", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           articleUrl: url,
@@ -90,17 +90,17 @@ export default function ReaderPageClient() {
       });
 
       if (!response.ok) {
-        logger.warn('再生完了の記録に失敗', {
+        logger.warn("再生完了の記録に失敗", {
           status: response.status,
           articleUrl: url,
         });
       } else {
-        logger.info('再生完了を記録', {
+        logger.info("再生完了を記録", {
           articleUrl: url,
         });
       }
     } catch (error) {
-      logger.error('再生完了の記録エラー', error);
+      logger.error("再生完了の記録エラー", error);
     }
   }, [url]);
 
