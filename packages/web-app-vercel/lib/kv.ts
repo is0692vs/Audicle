@@ -1,21 +1,30 @@
+import { createClient } from '@vercel/kv';
 import type { VercelKV } from '@vercel/kv';
 
-let kvPromise: Promise<VercelKV | null> | null = null;
+let kv: VercelKV | null | undefined = undefined;
 
-export function getKv(): Promise<VercelKV | null> {
-    if (!kvPromise) {
-        kvPromise = (async () => {
-            try {
-                // @vercel/kv はオプショナルな依存関係のため、動的インポートを使用
-                const kvModule = await import('@vercel/kv').catch(() => null);
-                if (kvModule && 'kv' in kvModule) {
-                    return kvModule.kv as VercelKV;
-                }
-            } catch (error) {
-                console.warn('@vercel/kv is not available, metadata tracking will be skipped', error);
-            }
-            return null;
-        })();
+export async function getKv(): Promise<VercelKV | null> {
+    if (kv !== undefined) {
+        return kv;
     }
-    return kvPromise;
+
+    try {
+        // 環境変数チェック
+        if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
+            console.warn('[WARN] ⚠️ KV environment variables not configured, metadata features disabled');
+            kv = null;
+            return kv;
+        }
+
+        kv = createClient({
+            url: process.env.KV_REST_API_URL,
+            token: process.env.KV_REST_API_TOKEN,
+        });
+
+        return kv;
+    } catch (error) {
+        console.error('[ERROR] Failed to initialize KV:', error);
+        kv = null;
+        return kv;
+    }
 }
