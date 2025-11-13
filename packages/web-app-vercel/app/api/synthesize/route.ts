@@ -15,6 +15,9 @@ export const dynamic = 'force-dynamic';
 // 許可リスト（環境変数から取得、カンマ区切り）
 const ALLOWED_EMAILS = process.env.ALLOWED_EMAILS?.split(',').map(e => e.trim()) || [];
 
+// 人気記事判定の閾値
+const POPULAR_ARTICLE_READ_COUNT_THRESHOLD = 5;
+
 // MD5ハッシュ計算関数
 function calculateHash(text: string): string {
     return crypto.createHash('md5').update(text, 'utf8').digest('hex');
@@ -138,7 +141,7 @@ export async function POST(request: NextRequest) {
         const { articleUrl, chunks, chunkIndex } = body;
 
         // 記事メタデータ処理
-        let skipHeadCheck = false;
+        let isPopularArticle = false;
 
         if (articleUrl && chunks && Array.isArray(chunks)) {
             const kv = await getKv();
@@ -164,10 +167,10 @@ export async function POST(request: NextRequest) {
                         } as ArticleMetadata);
                     } else {
                         // 既存メタデータあり
-                        const isPopular = metadata.readCount >= 5 && metadata.completedPlayback === true;
+                        const isPopular = metadata.readCount >= POPULAR_ARTICLE_READ_COUNT_THRESHOLD && metadata.completedPlayback === true;
 
                         if (isPopular) {
-                            skipHeadCheck = true;
+                            isPopularArticle = true;
                         }
 
                         // アクセス記録更新
@@ -199,7 +202,7 @@ export async function POST(request: NextRequest) {
             // 1. キャッシュ存在確認
             let blobExists = null;
 
-            if (skipHeadCheck) {
+            if (isPopularArticle) {
                 // 人気記事の場合、キャッシュミス時のログを警告レベルに下げる
                 const cached = await head(cacheKey).catch(() => null);
                 if (cached) {
