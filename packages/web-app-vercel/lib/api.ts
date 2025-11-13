@@ -14,27 +14,11 @@ import { logger } from "./logger";
 const pendingRequests = new Map<string, Promise<Blob>>();
 
 /**
- * テキストを hash してキャッシュキーを生成
- * ブラウザキャッシュやバックエンド Blob キャッシュの key と同じフォーマット
- */
-function generateHashKey(text: string): string {
-  // シンプルなハッシュ実装（基本的な衝突回避）
-  let hash = 0;
-  for (let i = 0; i < text.length; i++) {
-    const char = text.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash |= 0; // Convert to 32bit integer
-  }
-  return hash.toString(36);
-}
-
-/**
  * テキスト＋音声パラメータから統合キーを生成
  */
 function getPendingKey(text: string, voice?: string, voiceModel?: string): string {
-  const textHash = generateHashKey(text);
-  const voiceParam = voice || voiceModel || "default";
-  return `${textHash}_${voiceParam}`;
+  const voiceParam = voice ?? voiceModel ?? "default";
+  return `${text}_${voiceParam}`;
 }
 
 /**
