@@ -236,6 +236,9 @@ export async function POST(request: NextRequest) {
         // Simple Operations 削減カウンター
         let headOperationsSkipped = 0;
 
+        // ループ外で環境変数を一度だけ読み込む（パフォーマンス最適化）
+        const blobReadWriteToken = process.env.BLOB_READ_WRITE_TOKEN;
+
         for (const chunkText of textChunks) {
             const textHash = calculateHash(chunkText);
             const cacheKey = `${textHash}:${voiceToUse}.mp3`;
@@ -250,7 +253,7 @@ export async function POST(request: NextRequest) {
                 // Vercel Blob URLを直接構築（head()なし）
                 // 注意: このロジックはVercelの内部トークン形式 'vercel_blob_rw_STOREID_...' に依存しています
                 // Vercelがトークン形式を変更した場合、この最適化は動作しなくなる可能性があります
-                const token = process.env.BLOB_READ_WRITE_TOKEN;
+                const token = blobReadWriteToken;
                 if (token) {
                     const parts = token.split('_');
                     // トークン形式を検証: vercel_blob_rw_STOREID_...
