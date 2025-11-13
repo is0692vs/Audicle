@@ -248,6 +248,8 @@ export async function POST(request: NextRequest) {
                 console.log('[Optimize] ⚡ Skipping head() for popular article, key:', cacheKey);
 
                 // Vercel Blob URLを直接構築（head()なし）
+                // 注意: このロジックはVercelの内部トークン形式 'vercel_blob_rw_STOREID_...' に依存しています
+                // Vercelがトークン形式を変更した場合、この最適化は動作しなくなる可能性があります
                 const token = process.env.BLOB_READ_WRITE_TOKEN;
                 if (token) {
                     const parts = token.split('_');

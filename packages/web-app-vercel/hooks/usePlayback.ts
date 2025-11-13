@@ -193,6 +193,14 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         // 先読み処理（非同期で実行）
         prefetchAudio(index + 1);
 
+        // 前のAudioをクリーンアップ（メモリリーク防止）
+        if (audioRef.current) {
+          if (currentAudioUrlRef.current?.startsWith('blob:')) {
+            URL.revokeObjectURL(currentAudioUrlRef.current);
+          }
+          audioRef.current.pause();
+        }
+
         const audio = new Audio(audioUrl);
         audioRef.current = audio;
         currentAudioUrlRef.current = audioUrl;
