@@ -81,31 +81,6 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
     }
   }, []);
 
-  // onended ハンドラを共通化
-  const handleAudioEnded = useCallback(async (currentIndex: number) => {
-    const chunk = chunks[currentIndex];
-    // 見出しの後、または段落間にポーズ
-    if (needsPauseAfter(chunk.type)) {
-      await sleep(getPauseDuration('heading'));
-    } else {
-      await sleep(getPauseDuration('paragraph'));
-    }
-
-    // 次のチャンクがあれば自動的に再生
-    if (currentIndex + 1 < chunks.length) {
-      playFromIndex(currentIndex + 1);
-    } else {
-      // 最後のチャンク終了時も URL を解放
-      if (currentAudioUrlRef.current?.startsWith('blob:')) {
-        URL.revokeObjectURL(currentAudioUrlRef.current);
-      }
-      setIsPlaying(false);
-      setCurrentIndex(-1);
-      // 記事の再生が終了したときのコールバック
-      onArticleEndRef.current?.();
-    }
-  }, [chunks, setIsPlaying, setCurrentIndex, playFromIndex]);
-
   // 先読み処理（クリーンアップ済みテキストを使用）
   const prefetchAudio = useCallback(
     async (startIndex: number) => {
@@ -287,6 +262,31 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
     },
     [chunks, articleUrl, voiceModel, onChunkChange, prefetchAudio]
   );
+
+  // onended ハンドラを共通化
+  const handleAudioEnded = useCallback(async (currentIndex: number) => {
+    const chunk = chunks[currentIndex];
+    // 見出しの後、または段落間にポーズ
+    if (needsPauseAfter(chunk.type)) {
+      await sleep(getPauseDuration('heading'));
+    } else {
+      await sleep(getPauseDuration('paragraph'));
+    }
+
+    // 次のチャンクがあれば自動的に再生
+    if (currentIndex + 1 < chunks.length) {
+      playFromIndex(currentIndex + 1);
+    } else {
+      // 最後のチャンク終了時も URL を解放
+      if (currentAudioUrlRef.current?.startsWith('blob:')) {
+        URL.revokeObjectURL(currentAudioUrlRef.current);
+      }
+      setIsPlaying(false);
+      setCurrentIndex(-1);
+      // 記事の再生が終了したときのコールバック
+      onArticleEndRef.current?.();
+    }
+  }, [chunks, setIsPlaying, setCurrentIndex, playFromIndex]);
 
   // 再生開始
   const play = useCallback(() => {
