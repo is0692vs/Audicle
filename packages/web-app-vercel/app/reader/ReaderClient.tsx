@@ -74,6 +74,36 @@ export default function ReaderPageClient() {
   // 自動再生の参照フラグ（useEffectの無限ループを防ぐため）
   const hasInitiatedAutoplayRef = useRef(false);
 
+  // 再生完了をバックエンドに記録する関数
+  const recordPlaybackCompletion = useCallback(async () => {
+    if (!url) return;
+    
+    try {
+      const response = await fetch('/api/update-playback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          articleUrl: url,
+        }),
+      });
+
+      if (!response.ok) {
+        logger.warn('再生完了の記録に失敗', {
+          status: response.status,
+          articleUrl: url,
+        });
+      } else {
+        logger.info('再生完了を記録', {
+          articleUrl: url,
+        });
+      }
+    } catch (error) {
+      logger.error('再生完了の記録エラー', error);
+    }
+  }, [url]);
+
   // 再生制御フック
   const {
     isPlaying,
@@ -92,6 +122,9 @@ export default function ReaderPageClient() {
     voiceModel: settings.voice_model,
     playbackSpeed: settings.playback_speed,
     onArticleEnd: () => {
+      // 再生完了を記録
+      recordPlaybackCompletion();
+
       if (isPlaylistMode && playlistState.isPlaylistMode) {
         // プレイリストの最後の記事の場合は完了画面を表示
         if (currentPlaylistIndex >= playlistState.totalCount - 1) {
