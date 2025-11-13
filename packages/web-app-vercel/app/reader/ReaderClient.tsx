@@ -402,7 +402,7 @@ export default function ReaderPageClient() {
   useEffect(() => {
     // プレイリスト読み込みが完了してから記事を読み込む
     if (urlFromQuery && arePlaylistsLoaded && !hasLoadedFromQuery) {
-      setUrl(urlFromQuery);
+      setUrl(urlFromQuery || "");
       // 既にlocalStorageに同じURLの記事が存在するかチェック
       const existingArticle = articleStorage
         .getAll()
