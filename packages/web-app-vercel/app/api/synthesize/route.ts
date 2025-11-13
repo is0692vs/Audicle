@@ -150,12 +150,13 @@ export async function POST(request: NextRequest) {
 
         // 記事メタデータ処理
         let isPopularArticle = false;
+        const kv = await getKv();
 
-        // ステップ1: 記事レベルのメタデータ（body.chunks存在時のみ）
-        if (articleUrl && chunks && Array.isArray(chunks)) {
-            const kv = await getKv();
-            if (kv) {
-                const metadataKey = `article:${articleUrl}:${voiceToUse}`;
+        if (kv) {
+            const metadataKey = `article:${articleUrl}:${voiceToUse}`;
+
+            // ステップ1: 記事レベルのメタデータ（body.chunks存在時のみ）
+            if (articleUrl && chunks && Array.isArray(chunks)) {
                 const currentHash = calculateArticleHash(textChunks);
                 const totalChunks = textChunks.length;
 
@@ -182,14 +183,9 @@ export async function POST(request: NextRequest) {
                     console.error('[ERROR] ❌ Failed to initialize article metadata:', kvError);
                 }
             }
-        }
 
-        // ステップ2: アクセスレベルのメタデータ（articleUrl存在時は常に）
-        if (articleUrl) {
-            const kv = await getKv();
-            if (kv) {
-                const metadataKey = `article:${articleUrl}:${voiceToUse}`;
-
+            // ステップ2: アクセスレベルのメタデータ（articleUrl存在時は常に）
+            if (articleUrl) {
                 try {
                     // アクセスメタデータを取得（人気記事判定用）
                     const metadataHash = await kv.hgetall(metadataKey);
