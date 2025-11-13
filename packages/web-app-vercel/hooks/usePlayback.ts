@@ -223,6 +223,21 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
               audioUrl: audioUrl.substring(0, 50)
             });
 
+            // Supabaseインデックスから削除（非同期で実行、エラーは無視）
+            if (articleUrl && voiceModel) {
+              fetch('/api/cache/remove', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  articleUrl,
+                  voice: voiceModel,
+                  text: chunk.cleanedText
+                })
+              }).catch((err) => {
+                logger.error('[Cache Remove] Failed to remove from Supabase index:', err);
+              });
+            }
+
             // 強制再生成フラグで新しいオーディオURLを取得
             if (chunk && articleUrl) {
               try {
@@ -298,10 +313,26 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
       }
       setIsPlaying(false);
       setCurrentIndex(-1);
+      
+      // 記事の再生が終了したときにSupabaseインデックスを更新
+      if (articleUrl && voiceModel) {
+        fetch('/api/cache/update-completed', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            articleUrl,
+            voice: voiceModel,
+            completed: true
+          })
+        }).catch((err) => {
+          logger.error('[Cache Update] Failed to update completed playback:', err);
+        });
+      }
+      
       // 記事の再生が終了したときのコールバック
       onArticleEndRef.current?.();
     }
-  }, [chunks, setIsPlaying, setCurrentIndex, playFromIndex]);
+  }, [chunks, setIsPlaying, setCurrentIndex, playFromIndex, articleUrl, voiceModel]);
 
   // 再生開始
   const play = useCallback(() => {

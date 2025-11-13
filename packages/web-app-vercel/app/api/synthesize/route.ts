@@ -5,7 +5,8 @@ import { parseArticleMetadata, serializeArticleMetadata } from '@/lib/kv-helpers
 import { CacheStats, SynthesizeChunk } from '@/types/api';
 import { TextToSpeechClient, protos } from '@google-cloud/text-to-speech';
 import { put, head } from '@vercel/blob';
-import crypto from 'crypto';
+import { getCacheIndex, addCachedChunk, isCachedInIndex } from '@/lib/db/cacheIndex';
+import { calculateTextHash } from '@/lib/textHash';
 
 // Node.js runtimeを明示的に指定（Google Cloud TTS SDKはEdge Runtimeで動作しない）
 export const runtime = 'nodejs';
@@ -19,16 +20,10 @@ const ALLOWED_EMAILS = process.env.ALLOWED_EMAILS?.split(',').map(e => e.trim())
 // 現在は2に設定して開発/テスト環境での最適化検証を行う
 const POPULAR_ARTICLE_READ_COUNT_THRESHOLD = 2;
 
-// MD5ハッシュ計算関数
-function calculateHash(text: string): string {
-    return crypto.createHash('md5').update(text, 'utf8').digest('hex');
-}
-
 // 記事ハッシュ計算関数を追加
 function calculateArticleHash(chunks: string[]): string {
     const content = chunks.join('\n');
-    const hash = crypto.createHash('md5').update(content).digest('hex');
-    return hash.substring(0, 16);
+    return calculateTextHash(content).substring(0, 16);
 }
 
 // Google Cloud TTS クライアント
@@ -225,6 +220,21 @@ export async function POST(request: NextRequest) {
             isPopular: isPopularArticle
         });
 
+        // Supabaseキャッシュインデックスを取得（人気記事の場合のみ）
+        let cacheIndex = null;
+        if (isPopularArticle && articleUrl) {
+            try {
+                cacheIndex = await getCacheIndex(articleUrl, voiceToUse);
+                console.log('[Supabase Index] Cache index loaded:', {
+                    articleUrl,
+                    voice: voiceToUse,
+                    cachedChunksCount: cacheIndex?.cached_chunks.length ?? 0
+                });
+            } catch (indexError) {
+                console.error('[Supabase Index] ❌ Failed to load cache index:', indexError);
+            }
+        }
+
         // キャッシュ統計情報
         let cacheHits = 0;
         let cacheMisses = 0;
@@ -240,43 +250,48 @@ export async function POST(request: NextRequest) {
         const blobReadWriteToken = process.env.BLOB_READ_WRITE_TOKEN;
 
         for (const chunkText of textChunks) {
-            const textHash = calculateHash(chunkText);
+            const textHash = calculateTextHash(chunkText);
             const cacheKey = `${textHash}:${voiceToUse}.mp3`;
 
             // 1. キャッシュ存在確認
             let blobExists = null;
 
-            if (isPopularArticle) {
-                // 人気記事 → head()スキップ！Simple Operations削減
-                console.log('[Optimize] ⚡ Skipping head() for popular article, key:', cacheKey);
+            if (isPopularArticle && cacheIndex) {
+                // 人気記事 & Supabaseインデックスあり → インデックスでチェック
+                const isCached = isCachedInIndex(cacheIndex, textHash);
+                
+                if (isCached) {
+                    // Supabaseインデックスにキャッシュ済み → head()スキップ！
+                    console.log('[Supabase Index] ⚡ Cache hit, skipping head() for key:', cacheKey);
+                    headOperationsSkipped++;
 
-                // Vercel Blob URLを直接構築（head()なし）
-                // 注意: このロジックはVercelの内部トークン形式 'vercel_blob_rw_STOREID_...' に依存しています
-                // Vercelがトークン形式を変更した場合、この最適化は動作しなくなる可能性があります
-                const token = blobReadWriteToken;
-                if (token) {
-                    const parts = token.split('_');
-                    // トークン形式を検証: vercel_blob_rw_STOREID_...
-                    if (parts.length > 3 && parts[0] === 'vercel' && parts[1] === 'blob' && parts[2] === 'rw') {
-                        const storeId = parts[3];
-                        if (storeId) {
-                            headOperationsSkipped++;
-                            const blobUrl = `https://${storeId}.public.blob.vercel-storage.com/${cacheKey}`;
-                            audioUrls.push(blobUrl);
-                            audioBuffers.push(Buffer.alloc(0)); // プレースホルダー
-                            cacheHits++; // 人気記事は確実にキャッシュ済みと仮定
-                            continue;
+                    // Vercel Blob URLを直接構築
+                    const token = blobReadWriteToken;
+                    if (token) {
+                        const parts = token.split('_');
+                        if (parts.length > 3 && parts[0] === 'vercel' && parts[1] === 'blob' && parts[2] === 'rw') {
+                            const storeId = parts[3];
+                            if (storeId) {
+                                const blobUrl = `https://${storeId}.public.blob.vercel-storage.com/${cacheKey}`;
+                                audioUrls.push(blobUrl);
+                                audioBuffers.push(Buffer.alloc(0));
+                                cacheHits++;
+                                continue;
+                            }
                         }
-                    } else {
-                        console.warn('[Optimize] ⚠️ Invalid token format, expected vercel_blob_rw_STOREID_...');
                     }
+                    
+                    // トークンがない場合はhead()にフォールバック
+                    console.warn('[Supabase Index] ⚠️ Token not available, falling back to head() check');
+                } else {
+                    // Supabaseインデックスになし → キャッシュミス確定
+                    console.log('[Supabase Index] ❌ Cache miss for key:', cacheKey);
                 }
+            }
 
-                // トークンやストアIDがない場合は通常フローにフォールバック
-                console.warn('[Optimize] ⚠️ Token not available, falling back to head() check');
-            } else {
-                // 通常フロー → head()でチェック
-                console.log('[Optimize] 🔍 Normal flow with head() check for key:', cacheKey);
+            // 通常フロー or Supabaseインデックスでミス → head()でチェック
+            if (!isPopularArticle || !cacheIndex || !isCachedInIndex(cacheIndex, textHash)) {
+                console.log('[Optimize] 🔍 Checking with head() for key:', cacheKey);
                 blobExists = await head(cacheKey).catch((error) => {
                     console.error(`Failed to check cache for key ${cacheKey}:`, error);
                     return null;
@@ -307,6 +322,16 @@ export async function POST(request: NextRequest) {
                     addRandomSuffix: false,
                 });
                 audioUrls.push(blob.url);
+                
+                // 4. Supabaseインデックスに追加（articleUrlがある場合）
+                if (articleUrl) {
+                    try {
+                        await addCachedChunk(articleUrl, voiceToUse, textHash);
+                        console.log('[Supabase Index] ✅ Chunk added to index:', textHash);
+                    } catch (indexError) {
+                        console.error('[Supabase Index] ❌ Failed to add chunk to index:', indexError);
+                    }
+                }
             } catch (putError) {
                 console.error(`Failed to save audio to cache, falling back to base64 for key ${cacheKey}:`, putError);
                 const base64Audio = audioBuffer.toString('base64');
