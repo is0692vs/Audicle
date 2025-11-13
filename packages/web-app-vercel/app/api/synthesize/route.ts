@@ -246,7 +246,7 @@ export async function POST(request: NextRequest) {
                 // 人気記事 → head()スキップ！Simple Operations削減
                 console.log('[Optimize] ⚡ Skipping head() for popular article, key:', cacheKey);
                 headOperationsSkipped++;
-                
+
                 // Vercel Blob URL を直接構築（head()なし）
                 const blobUrl = `https://${process.env.BLOB_READ_WRITE_TOKEN?.split('_')[1]}.public.blob.vercel-storage.com/${cacheKey}`;
                 audioUrls.push(blobUrl);

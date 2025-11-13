@@ -193,7 +193,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
 
         audio.onerror = async (e) => {
           const mediaError = audio.error;
-          
+
           // 404エラー（Vercel Blob LRU削除）の場合は強制再生成
           if (mediaError?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED) {
             logger.warn("⚠️ Audio 404 detected (LRU deletion), regenerating...", {
@@ -203,7 +203,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
               errorMessage: mediaError.message,
               audioUrl: audioUrl.substring(0, 50)
             });
-            
+
             // 強制再生成フラグで新しいオーディオURLを取得
             if (chunk && articleUrl) {
               try {
@@ -212,12 +212,12 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
                   chunk: index,
                   newUrl: newUrl.substring(0, 50)
                 });
-                
+
                 // 新しいAudioオブジェクトを作成して再生
                 const newAudio = new Audio(newUrl);
                 const rate = parseFloat(localStorage.getItem(PLAYBACK_RATE_STORAGE_KEY) || '');
                 newAudio.playbackRate = isNaN(rate) ? DEFAULT_PLAYBACK_RATE : rate;
-                
+
                 newAudio.onended = async () => {
                   // 見出しの後、または段落間にポーズ
                   if (needsPauseAfter(chunk.type)) {
@@ -240,7 +240,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
                     onArticleEndRef.current?.();
                   }
                 };
-                
+
                 newAudio.onerror = () => {
                   logger.error("❌ Regenerated audio failed to load", {
                     chunk: index
@@ -248,12 +248,12 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
                   setError("再生成された音声の読み込みに失敗しました");
                   setIsPlaying(false);
                 };
-                
+
                 // 前のURLを解放
                 if (currentAudioUrlRef.current?.startsWith('blob:')) {
                   URL.revokeObjectURL(currentAudioUrlRef.current);
                 }
-                
+
                 audioRef.current = newAudio;
                 currentAudioUrlRef.current = newUrl;
                 await newAudio.play();
@@ -275,7 +275,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
               });
             }
           }
-          
+
           // その他のエラー
           const errorMessage = `音声の再生に失敗しました (URL: ${audioUrl}, Code: ${mediaError?.code})`;
           logger.error("音声再生エラー", {
