@@ -1,8 +1,6 @@
 import { createClient } from '@vercel/kv';
 import type { VercelKV } from '@vercel/kv';
 
-let kvPromise: Promise<VercelKV | null> | null = null;
-
 export async function getKv() {
     try {
         // 環境変数チェック
