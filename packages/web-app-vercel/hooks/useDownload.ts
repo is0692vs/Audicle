@@ -40,6 +40,11 @@ export function useDownload({ articleUrl, chunks, voiceModel, speed, onSlowConne
 
         try {
             // 音声合成（1倍速固定）
+            logger.info('ダウンロード用音声合成リクエスト', {
+                chunkIndex: index,
+                hasArticleUrl: !!articleUrl,
+                articleUrl,
+            });
             const audioBlob = await synthesizeSpeech(chunk.cleanedText, undefined, voiceModel, articleUrl);
 
             // IndexedDBに直接保存
@@ -53,7 +58,9 @@ export function useDownload({ articleUrl, chunks, voiceModel, speed, onSlowConne
                 size: audioBlob.size,
             });
 
-            logger.success(`チャンク ${index + 1}/${chunks.length} ダウンロード完了`);
+            logger.success(`チャンク ${index + 1}/${chunks.length} ダウンロード完了`, {
+                articleUrl,
+            });
         } catch (err) {
             if (cancelledRef.current) {
                 throw err;

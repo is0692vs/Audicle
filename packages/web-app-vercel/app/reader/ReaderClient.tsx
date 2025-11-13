@@ -74,6 +74,16 @@ export default function ReaderPageClient() {
   // 自動再生の参照フラグ（useEffectの無限ループを防ぐため）
   const hasInitiatedAutoplayRef = useRef(false);
 
+  const chunkCount = chunks.length;
+
+  useEffect(() => {
+    if (!url) return;
+    logger.info("ReaderClient articleUrl ready", {
+      articleUrl: url,
+      chunkCount,
+    });
+  }, [url, chunkCount]);
+
   // 再生完了をバックエンドに記録する関数
   const recordPlaybackCompletion = useCallback(async () => {
     if (!url || !settings.voice_model) return;

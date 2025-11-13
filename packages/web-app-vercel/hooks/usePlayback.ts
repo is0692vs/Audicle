@@ -90,10 +90,10 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         .map((chunk) => chunk.cleanedText);
 
       if (textsToFetch.length > 0) {
-        await audioCache.prefetch(textsToFetch, voiceModel);
+        await audioCache.prefetch(textsToFetch, voiceModel, articleUrl);
       }
     },
-    [chunks, voiceModel]
+    [chunks, voiceModel, articleUrl]
   );
 
   // 特定のインデックスから再生
@@ -131,11 +131,21 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
             audioUrl = URL.createObjectURL(cachedChunk.audioData);
           } else {
             // キャッシュミス: API呼び出し
-            logger.info(`🌐 キャッシュミス: API呼び出し`);
-            audioUrl = await audioCache.get(chunk.cleanedText, voiceModel);
+            logger.info(`🌐 キャッシュミス: API呼び出し`, {
+              articleUrl: articleUrl ?? null,
+              chunkIndex: index,
+            });
+            audioUrl = await audioCache.get(
+              chunk.cleanedText,
+              voiceModel,
+              articleUrl
+            );
           }
         } else {
           // articleURLがない場合は既存の動作
+          logger.info("🌐 キャッシュミス: articleUrlが未設定のためテキストのみでAPI呼び出し", {
+            chunkIndex: index,
+          });
           audioUrl = await audioCache.get(chunk.cleanedText, voiceModel);
         }
 

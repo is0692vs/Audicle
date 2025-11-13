@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import { useAutoScroll } from "@/hooks/useAutoScroll";
 import { useDownload } from "@/hooks/useDownload";
 import { cn } from "@/lib/utils";
 import { Chunk } from "@/types/api";
+import { logger } from "@/lib/logger";
 
 interface ReaderViewProps {
   chunks?: Chunk[];
@@ -25,6 +26,16 @@ export default function ReaderView({
   onChunkClick,
 }: ReaderViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const chunkCount = chunks.length;
+
+  useEffect(() => {
+    if (!articleUrl) return;
+    logger.info("ReaderView received articleUrl", {
+      articleUrl,
+      chunkCount,
+    });
+  }, [articleUrl, chunkCount]);
 
   const primaryHeading = useMemo(
     () => chunks.find((chunk) => /^h[1-3]$/.test(chunk.type))?.text,
