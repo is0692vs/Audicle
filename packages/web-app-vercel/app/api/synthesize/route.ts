@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import { getKv } from '@/lib/kv';
+import { parseArticleMetadata, serializeArticleMetadata } from '@/lib/kv-helpers';
 import { CacheStats, SynthesizeChunk } from '@/types/api';
 import { TextToSpeechClient, protos } from '@google-cloud/text-to-speech';
 import { put, head } from '@vercel/blob';
@@ -13,9 +15,19 @@ export const dynamic = 'force-dynamic';
 // 許可リスト（環境変数から取得、カンマ区切り）
 const ALLOWED_EMAILS = process.env.ALLOWED_EMAILS?.split(',').map(e => e.trim()) || [];
 
+// 人気記事判定の閾値
+const POPULAR_ARTICLE_READ_COUNT_THRESHOLD = 5;
+
 // MD5ハッシュ計算関数
 function calculateHash(text: string): string {
     return crypto.createHash('md5').update(text, 'utf8').digest('hex');
+}
+
+// 記事ハッシュ計算関数を追加
+function calculateArticleHash(chunks: string[]): string {
+    const content = chunks.join('\n');
+    const hash = crypto.createHash('md5').update(content).digest('hex');
+    return hash.substring(0, 16);
 }
 
 // Google Cloud TTS クライアント
@@ -126,6 +138,55 @@ export async function POST(request: NextRequest) {
             : [body.text];
 
         const voiceToUse = body.voice || body.voice_model || 'ja-JP-Standard-B';
+        const { articleUrl, chunks, chunkIndex } = body;
+
+        // 記事メタデータ処理
+        let isPopularArticle = false;
+
+        if (articleUrl && chunks && Array.isArray(chunks)) {
+            const kv = await getKv();
+            if (kv) {
+                const currentHash = calculateArticleHash(textChunks);
+                const metadataKey = `article:${articleUrl}:${voiceToUse}`;
+
+                try {
+                    // Hash全体を取得
+                    const metadataHash = await kv.hgetall(metadataKey);
+                    const metadata = parseArticleMetadata(metadataHash);
+
+                    if (!metadata || metadata.articleHash !== currentHash) {
+                        // メタデータなし or 編集検知 → 新規作成
+                        await kv.hset(metadataKey, serializeArticleMetadata({
+                            articleUrl,
+                            articleHash: currentHash,
+                            voice: voiceToUse,
+                            totalChunks: textChunks.length,
+                            readCount: 1,
+                            completedPlayback: false,
+                            lastPlayedChunk: chunkIndex ?? 0,
+                            lastUpdated: new Date().toISOString(),
+                            lastAccessed: new Date().toISOString()
+                        }));
+                    } else {
+                        // 既存メタデータあり
+                        const isPopular = metadata.readCount >= POPULAR_ARTICLE_READ_COUNT_THRESHOLD && metadata.completedPlayback === true;
+
+                        if (isPopular) {
+                            isPopularArticle = true;
+                        }
+
+                        // アトミック操作：readCountをインクリメント
+                        await kv.hincrby(metadataKey, 'readCount', 1);
+
+                        // lastAccessedを更新
+                        await kv.hset(metadataKey, { lastAccessed: new Date().toISOString() });
+                    }
+                } catch (kvError) {
+                    console.error('KV error, falling back to normal flow:', kvError);
+                    // KVエラー時は通常フローにフォールバック
+                }
+            }
+        }
 
         // キャッシュ統計情報
         let cacheHits = 0;
@@ -140,10 +201,22 @@ export async function POST(request: NextRequest) {
             const cacheKey = `${textHash}:${voiceToUse}.mp3`;
 
             // 1. キャッシュ存在確認
-            const blobExists = await head(cacheKey).catch((error) => {
-                console.error(`Failed to check cache for key ${cacheKey}:`, error);
-                return null;
-            });
+            let blobExists = null;
+
+            if (isPopularArticle) {
+                // 人気記事の場合、キャッシュミス時のログを警告レベルに下げる
+                const cached = await head(cacheKey).catch(() => null);
+                if (cached) {
+                    blobExists = cached;
+                } else {
+                    console.warn(`Cache miss for popular article, fallback to TTS for key ${cacheKey}`);
+                }
+            } else {
+                blobExists = await head(cacheKey).catch((error) => {
+                    console.error(`Failed to check cache for key ${cacheKey}:`, error);
+                    return null;
+                });
+            }
 
             if (blobExists) {
                 console.log(`Cache hit for key: ${cacheKey}`);
