@@ -4,18 +4,31 @@ import type { ArticleMetadata } from '@/types/cache';
  * Vercel KVのHash形式からArticleMetadataに変換
  */
 export function parseArticleMetadata(hash: Record<string, unknown> | null): ArticleMetadata | null {
-    if (!hash) return null;
+    // 必須フィールドのチェック
+    if (!hash || typeof hash.articleUrl !== 'string' || !hash.articleUrl) {
+        return null;
+    }
+
+    // 数値フィールドのパース
+    const totalChunks = parseInt(String(hash.totalChunks ?? 0), 10);
+    const readCount = parseInt(String(hash.readCount ?? 0), 10);
+    const lastPlayedChunk = parseInt(String(hash.lastPlayedChunk ?? 0), 10);
+
+    // NaNチェック
+    if (isNaN(totalChunks) || isNaN(readCount) || isNaN(lastPlayedChunk)) {
+        return null;
+    }
 
     return {
-        articleUrl: String(hash.articleUrl),
-        articleHash: String(hash.articleHash),
-        voice: String(hash.voice),
-        totalChunks: parseInt(String(hash.totalChunks), 10),
-        readCount: parseInt(String(hash.readCount), 10),
+        articleUrl: hash.articleUrl,
+        articleHash: String(hash.articleHash ?? ''),
+        voice: String(hash.voice ?? ''),
+        totalChunks,
+        readCount,
         completedPlayback: String(hash.completedPlayback) === 'true',
-        lastPlayedChunk: parseInt(String(hash.lastPlayedChunk), 10),
-        lastUpdated: String(hash.lastUpdated),
-        lastAccessed: String(hash.lastAccessed)
+        lastPlayedChunk,
+        lastUpdated: String(hash.lastUpdated ?? ''),
+        lastAccessed: String(hash.lastAccessed ?? ''),
     };
 }
 
