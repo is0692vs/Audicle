@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
         if (articleUrl && chunks && Array.isArray(chunks)) {
             const kv = await getKv();
             if (kv) {
-                const currentHash = calculateArticleHash(chunks);
+                const currentHash = calculateArticleHash(textChunks);
                 const metadataKey = `article:${articleUrl}:${voiceToUse}`;
 
                 try {
