@@ -18,6 +18,10 @@ const ALLOWED_EMAILS = process.env.ALLOWED_EMAILS?.split(',').map(e => e.trim())
 // 人気記事判定の閾値
 const POPULAR_ARTICLE_READ_COUNT_THRESHOLD = 5;
 
+// Vercel Blob head() レスポンスのインメモリキャッシュ（1分間有効）
+const blobExistenceCache = new Map<string, { exists: boolean; url?: string; timestamp: number }>();
+const BLOB_CACHE_TTL = 60 * 1000; // 1分
+
 // MD5ハッシュ計算関数
 function calculateHash(text: string): string {
     return crypto.createHash('md5').update(text, 'utf8').digest('hex');
@@ -212,31 +216,76 @@ export async function POST(request: NextRequest) {
         // キャッシュ統計情報
         let cacheHits = 0;
         let cacheMisses = 0;
+        let headCallsSaved = 0;
 
         // 各チャンクを合成またはキャッシュから取得
         const audioUrls: string[] = [];
         const audioBuffers: Buffer[] = [];
 
-        for (const chunkText of textChunks) {
+        // バッチでhead()チェックを実行（キャッシュされていないキーのみ）
+        const cacheKeys = textChunks.map((chunkText) => {
             const textHash = calculateHash(chunkText);
-            const cacheKey = `${textHash}:${voiceToUse}.mp3`;
+            return `${textHash}:${voiceToUse}.mp3`;
+        });
 
-            // 1. キャッシュ存在確認
+        // インメモリキャッシュをチェック＆期限切れを削除
+        const now = Date.now();
+        const uncachedKeys: string[] = [];
+        
+        for (const key of cacheKeys) {
+            const cached = blobExistenceCache.get(key);
+            if (cached && (now - cached.timestamp) < BLOB_CACHE_TTL) {
+                headCallsSaved++;
+            } else {
+                blobExistenceCache.delete(key); // 期限切れを削除
+                uncachedKeys.push(key);
+            }
+        }
+
+        // 人気記事の場合、キャッシュが存在する前提でhead()呼び出しをスキップ
+        const keysToCheck = isPopularArticle ? [] : uncachedKeys;
+        
+        console.log(`[OPTIMIZATION] Head calls saved: ${headCallsSaved}, Keys to check: ${keysToCheck.length}/${cacheKeys.length}`);
+
+        // バッチhead()チェック（並列実行で最大5件ずつ）
+        const BATCH_SIZE = 5;
+        for (let i = 0; i < keysToCheck.length; i += BATCH_SIZE) {
+            const batch = keysToCheck.slice(i, i + BATCH_SIZE);
+            const results = await Promise.all(
+                batch.map(async (key) => {
+                    try {
+                        const result = await head(key);
+                        return { key, exists: true, url: result.url };
+                    } catch {
+                        return { key, exists: false };
+                    }
+                })
+            );
+
+            // 結果をキャッシュに保存
+            for (const result of results) {
+                blobExistenceCache.set(result.key, {
+                    exists: result.exists,
+                    url: result.url,
+                    timestamp: now,
+                });
+            }
+        }
+
+        for (let i = 0; i < textChunks.length; i++) {
+            const chunkText = textChunks[i];
+            const cacheKey = cacheKeys[i];
+
+            // 1. キャッシュ存在確認（インメモリキャッシュから）
+            const cachedInfo = blobExistenceCache.get(cacheKey);
             let blobExists = null;
 
-            if (isPopularArticle) {
-                // 人気記事の場合、キャッシュミス時のログを警告レベルに下げる
-                const cached = await head(cacheKey).catch(() => null);
-                if (cached) {
-                    blobExists = cached;
-                } else {
-                    console.warn(`Cache miss for popular article, fallback to TTS for key ${cacheKey}`);
-                }
-            } else {
-                blobExists = await head(cacheKey).catch((error) => {
-                    console.error(`Failed to check cache for key ${cacheKey}:`, error);
-                    return null;
-                });
+            if (cachedInfo?.exists) {
+                blobExists = { url: cachedInfo.url! };
+            } else if (isPopularArticle) {
+                // 人気記事で未キャッシュの場合、存在しないと判断
+                console.warn(`Cache miss for popular article, fallback to TTS for key ${cacheKey}`);
+                blobExists = null;
             }
 
             if (blobExists) {
@@ -279,7 +328,17 @@ export async function POST(request: NextRequest) {
             totalChunks,
         };
 
-        console.log(`Cache stats - Hits: ${cacheHits}, Misses: ${cacheMisses}, Rate: ${(hitRate * 100).toFixed(2)}%`);
+        console.log(`Cache stats - Hits: ${cacheHits}, Misses: ${cacheMisses}, Rate: ${(hitRate * 100).toFixed(2)}%, Head calls saved: ${headCallsSaved}`);
+        console.log(`[OPTIMIZATION] Blob existence cache size: ${blobExistenceCache.size}`);
+
+        // 定期的にキャッシュをクリーンアップ（1000エントリ超えたら古いものから削除）
+        if (blobExistenceCache.size > 1000) {
+            const entries = Array.from(blobExistenceCache.entries());
+            entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+            const toDelete = entries.slice(0, 500);
+            toDelete.forEach(([key]) => blobExistenceCache.delete(key));
+            console.log(`[OPTIMIZATION] Cleaned up ${toDelete.length} old cache entries`);
+        }
 
         // 旧形式（1チャンク）の場合はbase64を返す
         if (!body.chunks && body.text) {
