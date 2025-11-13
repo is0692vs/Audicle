@@ -122,6 +122,14 @@ export async function POST(request: NextRequest) {
         // リクエストボディをパース
         const body = await request.json();
 
+        // デバッグログ
+        console.log('[DEBUG] Request params:', {
+            hasText: !!body.text,
+            hasArticleUrl: !!body.articleUrl,
+            hasChunks: !!body.chunks,
+            voice: body.voice || body.voice_model
+        });
+
         // 入力バリデーション
         if (!body.chunks && !body.text) {
             return NextResponse.json(
@@ -142,48 +150,61 @@ export async function POST(request: NextRequest) {
 
         // 記事メタデータ処理
         let isPopularArticle = false;
+        const kv = await getKv();
 
-        if (articleUrl && chunks && Array.isArray(chunks)) {
-            const kv = await getKv();
-            if (kv) {
+        if (kv) {
+            const metadataKey = `article:${articleUrl}:${voiceToUse}`;
+
+            // ステップ1: 記事レベルのメタデータ（body.chunks存在時のみ）
+            if (articleUrl && chunks && Array.isArray(chunks)) {
                 const currentHash = calculateArticleHash(textChunks);
-                const metadataKey = `article:${articleUrl}:${voiceToUse}`;
+                const totalChunks = textChunks.length;
 
                 try {
-                    // Hash全体を取得
+                    // 既存メタデータを確認
                     const metadataHash = await kv.hgetall(metadataKey);
                     const metadata = parseArticleMetadata(metadataHash);
 
+                    // 新規 or 記事編集時のみハッシュ/totalChunksを保存
                     if (!metadata || metadata.articleHash !== currentHash) {
-                        // メタデータなし or 編集検知 → 新規作成
                         await kv.hset(metadataKey, serializeArticleMetadata({
                             articleUrl,
                             articleHash: currentHash,
                             voice: voiceToUse,
-                            totalChunks: textChunks.length,
-                            readCount: 1,
+                            totalChunks,
                             completedPlayback: false,
-                            lastPlayedChunk: chunkIndex ?? 0,
+                            readCount: 0,
                             lastUpdated: new Date().toISOString(),
                             lastAccessed: new Date().toISOString()
                         }));
-                    } else {
-                        // 既存メタデータあり
-                        const isPopular = metadata.readCount >= POPULAR_ARTICLE_READ_COUNT_THRESHOLD && metadata.completedPlayback === true;
-
-                        if (isPopular) {
-                            isPopularArticle = true;
-                        }
-
-                        // アトミック操作：readCountをインクリメント
-                        await kv.hincrby(metadataKey, 'readCount', 1);
-
-                        // lastAccessedを更新
-                        await kv.hset(metadataKey, { lastAccessed: new Date().toISOString() });
+                        console.log(`[INFO] ✅ Article metadata initialized: ${articleUrl} (${totalChunks} chunks)`);
                     }
                 } catch (kvError) {
-                    console.error('KV error, falling back to normal flow:', kvError);
-                    // KVエラー時は通常フローにフォールバック
+                    console.error('[ERROR] ❌ Failed to initialize article metadata:', kvError);
+                }
+            }
+
+            // ステップ2: アクセスレベルのメタデータ（articleUrl存在時は常に）
+            if (articleUrl) {
+                try {
+                    // アクセスメタデータを取得（人気記事判定用）
+                    const metadataHash = await kv.hgetall(metadataKey);
+                    const metadata = parseArticleMetadata(metadataHash);
+
+                    // 人気記事判定（記事レベルメタデータから）
+                    if (metadata && metadata.readCount >= POPULAR_ARTICLE_READ_COUNT_THRESHOLD && metadata.completedPlayback === true) {
+                        isPopularArticle = true;
+                    }
+
+                    // アクセスカウントと最終アクセス時刻を更新
+                    await kv.hincrby(metadataKey, 'readCount', 1);
+                    await kv.hset(metadataKey, {
+                        lastAccessed: new Date().toISOString(),
+                        lastPlayedChunk: chunkIndex ?? 0
+                    });
+                    console.log(`[INFO] ✅ Access metadata updated: ${articleUrl}`);
+                } catch (kvError) {
+                    console.error('[ERROR] ❌ Failed to update access metadata:', kvError);
                 }
             }
         }
