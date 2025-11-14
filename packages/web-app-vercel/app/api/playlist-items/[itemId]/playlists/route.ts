@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { requireAuth } from '@/lib/api-auth'
+import { fetchPlaylistsByItem } from '@/lib/playlist-queries'
 import type { Playlist } from '@/types/playlist'
 
 export async function GET(
@@ -37,13 +38,14 @@ export async function GET(
         const { article_id } = itemData
 
         // article_id を持つすべてのプレイリストを効率的に取得
-        const { data: playlistsWithItems, error: playlistsError } = await supabase
-            .from('playlists')
-            .select('*, playlist_items!inner(article_id)')
-            .eq('owner_email', userEmail)
-            .eq('playlist_items.article_id', article_id)
-            .order('is_default', { ascending: false })
-            .order('created_at', { ascending: false })
+        const { data: playlistsWithItems, error: playlistsError } =
+            await fetchPlaylistsByItem({
+                supabase,
+                userEmail,
+                itemId: article_id,
+                filterField: 'article_id',
+                includePositionSort: false
+            })
 
         if (playlistsError) {
             return NextResponse.json(
