@@ -6,6 +6,7 @@ import Sidebar from "@/components/Sidebar";
 import { PeriodFilter } from "@/components/PeriodFilter";
 import { PopularArticleCard } from "@/components/PopularArticleCard";
 import { Button } from "@/components/ui/button";
+import Spinner from "@/components/Spinner";
 import type {
   Period,
   PopularArticlesResponse,
@@ -49,6 +50,11 @@ const setCachedEntry = (period: Period, entry: CachedPopularEntry) => {
       error
     );
   }
+};
+
+const isFresh = (timestamp: number | null) => {
+  if (!timestamp) return false;
+  return Date.now() - timestamp < CACHE_TTL_MS;
 };
 
 type SpinnerProps = {
