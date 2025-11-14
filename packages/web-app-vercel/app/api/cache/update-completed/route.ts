@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
         // 認証チェック追加
         const session = await auth();
         if (!session?.user) {
-            console.error('[Cache Update Completed] ❌ Unauthorized');
+            console.error('[Cache Update Completed] ❌ Unauthorized', { ip: request.ip });
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
