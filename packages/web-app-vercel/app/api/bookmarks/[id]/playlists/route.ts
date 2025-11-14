@@ -14,14 +14,14 @@ export async function GET(
         if (response) return response
 
         // bookmark_id を持つすべてのプレイリストを効率的に取得
-        const { playlistsWithItems, playlistsError } = 
-          await fetchPlaylistsByItem({
-            supabase,
-            userEmail,
-            itemId: bookmarkId,
-            filterField: 'bookmark_id',
-            includePositionSort: true
-          });
+        const { playlistsWithItems, playlistsError } =
+            await fetchPlaylistsByItem({
+                supabase,
+                userEmail,
+                itemId: bookmarkId,
+                filterField: 'bookmark_id',
+                includePositionSort: true
+            });
 
         if (playlistsError) {
             console.error('Supabase error:', playlistsError)

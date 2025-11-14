@@ -38,14 +38,14 @@ export async function GET(
         const { article_id } = itemData
 
         // article_id を持つすべてのプレイリストを効率的に取得
-        const { playlistsWithItems, playlistsError } = 
-          await fetchPlaylistsByItem({
-            supabase,
-            userEmail,
-            itemId: article_id,
-            filterField: 'article_id',
-            includePositionSort: false
-          });
+        const { playlistsWithItems, playlistsError } =
+            await fetchPlaylistsByItem({
+                supabase,
+                userEmail,
+                itemId: article_id,
+                filterField: 'article_id',
+                includePositionSort: false
+            });
 
         if (playlistsError) {
             return NextResponse.json(
