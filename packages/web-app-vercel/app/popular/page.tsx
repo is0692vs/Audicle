@@ -21,38 +21,48 @@ type CachedPopularEntry = {
   fetchedAt: number;
 };
 
-type PopularCache = Partial<Record<Period, CachedPopularEntry>>;
+const getCacheKey = (period: Period) => `${POPULAR_CACHE_KEY}_${period}`;
 
-const readCache = (): PopularCache => {
-  if (typeof window === "undefined") return {};
-  const raw = localStorage.getItem(POPULAR_CACHE_KEY);
-  if (!raw) return {};
+const getCachedEntry = (period: Period): CachedPopularEntry | null => {
+  if (typeof window === "undefined") return null;
+  const raw = localStorage.getItem(getCacheKey(period));
+  if (!raw) return null;
 
   try {
-    return JSON.parse(raw) as PopularCache;
+    return JSON.parse(raw) as CachedPopularEntry;
   } catch (error) {
-    console.error("Failed to parse popular articles cache", error);
-    return {};
+    console.error(
+      `Failed to parse popular articles cache for ${period}`,
+      error
+    );
+    return null;
   }
 };
 
-const writeCache = (cache: PopularCache) => {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(POPULAR_CACHE_KEY, JSON.stringify(cache));
-};
-
-const getCachedEntry = (period: Period): CachedPopularEntry | null => {
-  const cache = readCache();
-  const entry = cache[period];
-  return entry ?? null;
-};
-
 const setCachedEntry = (period: Period, entry: CachedPopularEntry) => {
-  const cache = readCache();
-  cache[period] = entry;
-  writeCache(cache);
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(getCacheKey(period), JSON.stringify(entry));
+  } catch (error) {
+    console.error(
+      `Failed to write popular articles cache for ${period}`,
+      error
+    );
+  }
 };
 
+type SpinnerProps = {
+  size?: number;
+  className?: string;
+};
+
+const Spinner = ({ size = 32, className = "" }: SpinnerProps) => (
+  <span
+    className={`inline-block animate-spin rounded-full border-2 border-current border-t-transparent ${className}`}
+    style={{ width: size, height: size }}
+    aria-hidden="true"
+  />
+);
 const isFresh = (timestamp: number | null) => {
   if (!timestamp) return false;
   return Date.now() - timestamp < CACHE_TTL_MS;
@@ -116,6 +126,7 @@ export default function PopularPage() {
       } else {
         // キャッシュがない場合は、前の期間のデータが表示されるのを防ぐためにリストをクリア
         setArticles([]);
+        setLastFetchedAt(null);
       }
       fetchPopularArticles(period);
     }
@@ -156,7 +167,11 @@ export default function PopularPage() {
                 className="text-zinc-400 hover:text-white hover:bg-zinc-800"
                 disabled={isLoading || isRateLimited}
               >
-                <RotateCcw className="h-5 w-5" />
+                {isLoading && articles.length > 0 ? (
+                  <Spinner size={18} className="border-zinc-400" />
+                ) : (
+                  <RotateCcw className="h-5 w-5" />
+                )}
               </Button>
             </div>
             <p className="text-sm lg:text-base text-zinc-400 mb-4">
@@ -179,7 +194,7 @@ export default function PopularPage() {
           {/* Content */}
           {isLoading && articles.length === 0 ? (
             <div className="text-center py-12 text-zinc-500">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600 mb-4" />
+              <Spinner size={32} className="border-violet-600 mb-4" />
               <p className="text-lg">読み込み中...</p>
             </div>
           ) : error ? (
