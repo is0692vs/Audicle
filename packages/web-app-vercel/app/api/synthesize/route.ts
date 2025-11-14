@@ -318,6 +318,18 @@ export async function POST(request: NextRequest) {
                 cacheHits++;
                 audioUrls.push(blobExists.url);
                 audioBuffers.push(Buffer.alloc(0)); // プレースホルダー
+
+                // インデックスにはないが Blob に存在する場合：遅延インデックス作成
+                if (articleUrl && cacheIndex && !isCachedInIndex(cacheIndex, textHash)) {
+                    addCachedChunk(articleUrl, voiceToUse, textHash)
+                        .then(() => {
+                            console.log('[Supabase Index] 🔄 Backfilling index for existing cache:', textHash);
+                        })
+                        .catch((error) => {
+                            console.error('[Supabase Index] ❌ Failed to backfill index:', textHash, error);
+                        });
+                }
+
                 continue;
             }
 
