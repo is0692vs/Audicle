@@ -13,16 +13,64 @@ import type {
 } from "@/types/stats";
 import { RotateCcw } from "lucide-react";
 
+const POPULAR_CACHE_KEY = "audicle_popular_articles_v1";
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // limit fetches to once per day
+
+type CachedPopularEntry = {
+  articles: PopularArticle[];
+  fetchedAt: number;
+};
+
+type PopularCache = Partial<Record<Period, CachedPopularEntry>>;
+
+const readCache = (): PopularCache => {
+  if (typeof window === "undefined") return {};
+  const raw = localStorage.getItem(POPULAR_CACHE_KEY);
+  if (!raw) return {};
+
+  try {
+    return JSON.parse(raw) as PopularCache;
+  } catch (error) {
+    console.error("Failed to parse popular articles cache", error);
+    return {};
+  }
+};
+
+const writeCache = (cache: PopularCache) => {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(POPULAR_CACHE_KEY, JSON.stringify(cache));
+};
+
+const getCachedEntry = (period: Period): CachedPopularEntry | null => {
+  const cache = readCache();
+  const entry = cache[period];
+  return entry ?? null;
+};
+
+const setCachedEntry = (period: Period, entry: CachedPopularEntry) => {
+  const cache = readCache();
+  cache[period] = entry;
+  writeCache(cache);
+};
+
+const isFresh = (timestamp: number | null) => {
+  if (!timestamp) return false;
+  return Date.now() - timestamp < CACHE_TTL_MS;
+};
+
 export default function PopularPage() {
   const router = useRouter();
   const [period, setPeriod] = useState<Period>("week");
   const [articles, setArticles] = useState<PopularArticle[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastFetchedAt, setLastFetchedAt] = useState<number | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const fetchPopularArticles = useCallback(async (selectedPeriod: Period) => {
     setIsLoading(true);
     setError(null);
+    setNotice(null);
 
     try {
       const response = await fetch(
@@ -33,7 +81,13 @@ export default function PopularPage() {
       }
 
       const data: PopularArticlesResponse = await response.json();
+      const fetchedAt = Date.now();
       setArticles(data.articles);
+      setLastFetchedAt(fetchedAt);
+      setCachedEntry(selectedPeriod, {
+        articles: data.articles,
+        fetchedAt,
+      });
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "予期しないエラーが発生しました"
@@ -45,16 +99,35 @@ export default function PopularPage() {
   }, []);
 
   useEffect(() => {
-    fetchPopularArticles(period);
-  }, [period, fetchPopularArticles]);
+    const cached = getCachedEntry(period);
+    if (cached) {
+      setArticles(cached.articles);
+      setLastFetchedAt(cached.fetchedAt);
+    } else {
+      setArticles([]);
+      setLastFetchedAt(null);
+    }
+    setError(null);
+    setNotice(null);
+    setIsLoading(false);
+  }, [period]);
 
   const handleRead = (url: string) => {
     router.push(`/reader?url=${encodeURIComponent(url)}`);
   };
 
   const handleRefresh = () => {
+    if (isFresh(lastFetchedAt)) {
+      setNotice("人気記事は期間ごとに1日1回まで取得できます。");
+      return;
+    }
     fetchPopularArticles(period);
   };
+
+  const formattedLastFetchedAt =
+    lastFetchedAt !== null ? new Date(lastFetchedAt).toLocaleString() : null;
+
+  const isRateLimited = isFresh(lastFetchedAt);
 
   return (
     <div className="h-screen bg-black text-white flex flex-col lg:flex-row">
@@ -70,8 +143,9 @@ export default function PopularPage() {
                 onClick={handleRefresh}
                 variant="ghost"
                 size="icon"
-                title="手動更新"
+                title={isRateLimited ? "本日は取得済みです" : "手動更新"}
                 className="text-zinc-400 hover:text-white hover:bg-zinc-800"
+                disabled={isLoading || isRateLimited}
               >
                 <RotateCcw className="h-5 w-5" />
               </Button>
@@ -82,6 +156,15 @@ export default function PopularPage() {
 
             {/* Period Filter */}
             <PeriodFilter activePeriod={period} onPeriodChange={setPeriod} />
+
+            {(formattedLastFetchedAt || notice) && (
+              <div className="mt-3 text-sm text-zinc-400">
+                {formattedLastFetchedAt && (
+                  <p>最終更新: {formattedLastFetchedAt}</p>
+                )}
+                {notice && <p className="text-amber-400 mt-1">{notice}</p>}
+              </div>
+            )}
           </div>
 
           {/* Content */}
@@ -100,6 +183,7 @@ export default function PopularPage() {
               <Button
                 onClick={handleRefresh}
                 className="bg-violet-600 hover:bg-violet-700 text-white"
+                disabled={isLoading || isRateLimited}
               >
                 <RotateCcw className="size-4 mr-2" />
                 再試行
@@ -114,6 +198,14 @@ export default function PopularPage() {
               <p className="text-zinc-400 mb-6">
                 この期間の人気記事データはまだありません
               </p>
+              <Button
+                onClick={handleRefresh}
+                className="bg-violet-600 hover:bg-violet-700 text-white"
+                disabled={isLoading || isRateLimited}
+              >
+                <RotateCcw className="size-4 mr-2" />
+                人気記事を読み込む
+              </Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8">
