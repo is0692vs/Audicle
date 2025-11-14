@@ -1,0 +1,65 @@
+import { put, head, del } from "@vercel/blob";
+import type { StorageProvider } from "./types";
+
+export class VercelBlobProvider implements StorageProvider {
+    private publicBaseUrl?: string;
+
+    constructor() {
+        this.publicBaseUrl = this.resolvePublicBaseUrl();
+    }
+
+    private resolvePublicBaseUrl(): string | undefined {
+        const token = process.env.BLOB_READ_WRITE_TOKEN;
+        if (!token) return undefined;
+        const parts = token.split("_");
+        if (parts.length > 3 && parts[0] === "vercel" && parts[1] === "blob") {
+            const storeId = parts[3];
+            return `https://${storeId}.public.blob.vercel-storage.com`;
+        }
+        return undefined;
+    }
+
+    private requirePublicBaseUrl(): string {
+        if (!this.publicBaseUrl) {
+            throw new Error("BLOB_READ_WRITE_TOKEN is required to construct Vercel Blob URLs");
+        }
+        return this.publicBaseUrl;
+    }
+
+    async generatePresignedPutUrl(key: string, _expiresIn: number): Promise<string> {
+        const blob = await put(key, new Blob([]), {
+            access: "public",
+            addRandomSuffix: false,
+            contentType: "audio/mpeg",
+        });
+        return blob.url;
+    }
+
+    async generatePresignedGetUrl(key: string, _expiresIn: number): Promise<string> {
+        const baseUrl = this.requirePublicBaseUrl();
+        return `${baseUrl}/${key}`;
+    }
+
+    async uploadObject(key: string, data: ArrayBuffer | Buffer, contentType: string): Promise<string> {
+        const buffer = data instanceof Buffer ? data : Buffer.from(data);
+        const blob = await put(key, buffer, {
+            access: "public",
+            addRandomSuffix: false,
+            contentType,
+        });
+        return blob.url;
+    }
+
+    async deleteObject(key: string): Promise<void> {
+        await del(key);
+    }
+
+    async headObject(key: string): Promise<{ exists: boolean; size?: number }> {
+        try {
+            const response = await head(key);
+            return { exists: true, size: response.size };
+        } catch {
+            return { exists: false };
+        }
+    }
+}
