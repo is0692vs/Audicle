@@ -72,7 +72,7 @@ export default function PopularPage() {
   const router = useRouter();
   const [period, setPeriod] = useState<Period>("week");
   const [articles, setArticles] = useState<PopularArticle[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastFetchedAt, setLastFetchedAt] = useState<number | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
