@@ -321,12 +321,13 @@ export async function POST(request: NextRequest) {
 
                 // インデックスにはないが Blob に存在する場合：遅延インデックス作成
                 if (articleUrl && cacheIndex && !isCachedInIndex(cacheIndex, textHash)) {
-                    try {
-                        await addCachedChunk(articleUrl, voiceToUse, textHash);
-                        console.log('[Supabase Index] 🔄 Backfilling index for existing cache:', textHash);
-                    } catch (error) {
-                        console.error('[Supabase Index] ❌ Failed to backfill index:', textHash, error);
-                    }
+                    addCachedChunk(articleUrl, voiceToUse, textHash)
+                        .then(() => {
+                            console.log('[Supabase Index] 🔄 Backfilling index for existing cache:', textHash);
+                        })
+                        .catch((error) => {
+                            console.error('[Supabase Index] ❌ Failed to backfill index:', textHash, error);
+                        });
                 }
 
                 continue;
@@ -354,8 +355,8 @@ export async function POST(request: NextRequest) {
                     try {
                         await addCachedChunk(articleUrl, voiceToUse, textHash);
                         console.log('[Supabase Index] ✅ Chunk added to index:', textHash);
-                    } catch (error) {
-                        console.error('[Supabase Index] ❌ Failed to add chunk to index:', textHash, error);
+                    } catch {
+                        // addCachedChunk関数内で既にエラーログが出力されているため、ここではログ出力しない
                     }
                 }
             } catch (putError) {
