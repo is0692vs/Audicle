@@ -109,10 +109,13 @@ export default function PopularPage() {
       setNotice(null);
     } else {
       // キャッシュがないか古い場合は取得
-      // 古いデータがあれば、取得中にそれを表示することも可能
       if (cached) {
+        // 古いデータがあれば、取得中にそれを表示
         setArticles(cached.articles);
         setLastFetchedAt(cached.fetchedAt);
+      } else {
+        // キャッシュがない場合は、前の期間のデータが表示されるのを防ぐためにリストをクリア
+        setArticles([]);
       }
       fetchPopularArticles(period);
     }
@@ -174,7 +177,7 @@ export default function PopularPage() {
           </div>
 
           {/* Content */}
-          {isLoading ? (
+          {isLoading && articles.length === 0 ? (
             <div className="text-center py-12 text-zinc-500">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600 mb-4" />
               <p className="text-lg">読み込み中...</p>
