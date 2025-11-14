@@ -12,7 +12,7 @@ import { Chunk } from "@/types/api";
 import { Playlist } from "@/types/playlist";
 import { extractContent } from "@/lib/api";
 import { usePlayback } from "@/hooks/usePlayback";
-import { articleStorage } from "@/lib/storage";
+import { articleStorage } from "@/lib/articleStorage";
 import { logger } from "@/lib/logger";
 import { recordArticleStats } from "@/lib/articleStats";
 import { parseHTMLToParagraphs } from "@/lib/paragraphParser";
