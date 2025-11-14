@@ -6,18 +6,19 @@ import {
   useUserSettings,
   useUpdateUserSettingsMutation,
 } from "@/lib/hooks/useUserSettings";
-import { VOICE_MODELS, Language, VoiceModel } from "@/types/settings";
+import {
+  VOICE_MODELS,
+  Language,
+  VoiceModel,
+  DEFAULT_SETTINGS,
+} from "@/types/settings";
 
 export default function UserSettingsPanel() {
   const { data: originalSettings, isLoading, error } = useUserSettings();
   const updateSettingsMutation = useUpdateUserSettingsMutation();
 
   const [settings, setSettings] = useState(
-    originalSettings || {
-      playback_speed: 1.0,
-      voice_model: "google-standard" as VoiceModel,
-      language: "ja-JP" as Language,
-    }
+    originalSettings || DEFAULT_SETTINGS
   );
   const [hasChanged, setHasChanged] = useState(false);
 
