@@ -31,3 +31,5 @@ export function getStorageProvider(): StorageProvider {
 export function resetStorageProvider() {
     storageProvider = null;
 }
+
+export type { StorageProvider } from "./types";

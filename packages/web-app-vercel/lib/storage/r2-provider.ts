@@ -54,8 +54,9 @@ export class R2StorageProvider implements StorageProvider {
         return await getSignedUrl(this.client, command, { expiresIn });
     }
 
-    async uploadObject(key: string, data: ArrayBuffer | Buffer, contentType: string): Promise<string> {
-        const body = data instanceof Buffer ? data : Buffer.from(data);
+    async uploadObject(key: string, data: ArrayBuffer | Buffer, contentType: string, expiresIn: number = 3600): Promise<string> {
+        // AWS SDKはUint8Arrayを期待しているため変換が必要
+        const body = data instanceof Buffer ? new Uint8Array(data) : new Uint8Array(data);
         await this.client.send(
             new PutObjectCommand({
                 Bucket: this.bucketName,
@@ -66,7 +67,7 @@ export class R2StorageProvider implements StorageProvider {
         );
 
         // R2は公開エンドポイントを持たないため、取得時は署名付きURLを生成
-        return this.generatePresignedGetUrl(key, 3600);
+        return this.generatePresignedGetUrl(key, expiresIn);
     }
 
     async deleteObject(key: string): Promise<void> {

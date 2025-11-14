@@ -12,7 +12,7 @@ export interface StorageProvider {
     /**
      * サーバーサイドから直接ファイルをアップロード
      */
-    uploadObject(key: string, data: ArrayBuffer | Buffer, contentType: string): Promise<string>;
+    uploadObject(key: string, data: ArrayBuffer | Buffer, contentType: string, expiresIn?: number): Promise<string>;
 
     /**
      * ファイルを削除

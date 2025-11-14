@@ -40,9 +40,11 @@ export class VercelBlobProvider implements StorageProvider {
         return `${baseUrl}/${key}`;
     }
 
-    async uploadObject(key: string, data: ArrayBuffer | Buffer, contentType: string): Promise<string> {
-        const buffer = data instanceof Buffer ? data : Buffer.from(data);
-        const blob = await put(key, buffer, {
+    async uploadObject(key: string, data: ArrayBuffer | Buffer, contentType: string, _expiresIn?: number): Promise<string> {
+        // Vercel BlobのputメソッドはBuffer、Blob、またはstring を受け付ける
+        // ArrayBufferの場合はBufferに変換、既にBufferの場合そのまま使用
+        const fileData = data instanceof ArrayBuffer ? Buffer.from(data) : data;
+        const blob = await put(key, fileData, {
             access: "public",
             addRandomSuffix: false,
             contentType,

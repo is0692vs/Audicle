@@ -277,7 +277,7 @@ export async function POST(request: NextRequest) {
                     return;
                 }
                 headChecked = true;
-                const result = await storage.headObject(cacheKey).catch((error) => {
+                const result = await storage.headObject(cacheKey).catch((error: unknown) => {
                     console.error(`Failed to check cache for key ${cacheKey}:`, error);
                     return null;
                 });
@@ -358,18 +358,7 @@ export async function POST(request: NextRequest) {
 
             // 3. ストレージに保存（失敗時はbase64にフォールバック）
             try {
-                const uploadUrl = await storage.generatePresignedPutUrl(cacheKey, signedUrlTtlSeconds);
-                const uploadResponse = await fetch(uploadUrl, {
-                    method: 'PUT',
-                    body: audioBuffer,
-                    headers: { 'Content-Type': 'audio/mpeg' },
-                });
-
-                if (!uploadResponse.ok) {
-                    throw new Error(`Failed to upload audio. Status: ${uploadResponse.status}`);
-                }
-
-                const storedUrl = await storage.generatePresignedGetUrl(cacheKey, signedUrlTtlSeconds);
+                const storedUrl = await storage.uploadObject(cacheKey, audioBuffer, 'audio/mpeg', signedUrlTtlSeconds);
                 audioUrls.push(storedUrl);
 
                 // 4. Supabaseインデックスに追加（articleUrlがある場合）
