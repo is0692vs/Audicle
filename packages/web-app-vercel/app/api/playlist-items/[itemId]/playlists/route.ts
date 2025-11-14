@@ -38,14 +38,14 @@ export async function GET(
         const { article_id } = itemData
 
         // article_id を持つすべてのプレイリストを効率的に取得
-        const { data: playlistsWithItems, error: playlistsError } =
-            await fetchPlaylistsByItem({
-                supabase,
-                userEmail,
-                itemId: article_id,
-                filterField: 'article_id',
-                includePositionSort: false
-            })
+        const { playlistsWithItems, playlistsError } = 
+          await fetchPlaylistsByItem({
+            supabase,
+            userEmail,
+            itemId: article_id,
+            filterField: 'article_id',
+            includePositionSort: false
+          });
 
         if (playlistsError) {
             return NextResponse.json(
@@ -55,7 +55,7 @@ export async function GET(
         }
 
         // playlist_itemsプロパティを削除して返す
-        const playlists = playlistsWithItems.map(({ playlist_items: _, ...rest }) => rest)
+        const playlists = playlistsWithItems!.map(({ playlist_items: _, ...rest }) => rest)
 
         return NextResponse.json(playlists as Playlist[])
     } catch (error) {

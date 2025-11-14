@@ -14,14 +14,14 @@ export async function GET(
         if (response) return response
 
         // bookmark_id を持つすべてのプレイリストを効率的に取得
-        const { data: playlistsWithItems, error: playlistsError } =
-            await fetchPlaylistsByItem({
-                supabase,
-                userEmail,
-                itemId: bookmarkId,
-                filterField: 'bookmark_id',
-                includePositionSort: true
-            })
+        const { playlistsWithItems, playlistsError } = 
+          await fetchPlaylistsByItem({
+            supabase,
+            userEmail,
+            itemId: bookmarkId,
+            filterField: 'bookmark_id',
+            includePositionSort: true
+          });
 
         if (playlistsError) {
             console.error('Supabase error:', playlistsError)
@@ -32,7 +32,7 @@ export async function GET(
         }
 
         // playlist_itemsプロパティを削除して返す
-        const playlists = playlistsWithItems.map(({ playlist_items: _, ...rest }) => rest)
+        const playlists = playlistsWithItems!.map(({ playlist_items: _, ...rest }) => rest)
 
         return NextResponse.json(playlists as Playlist[])
     } catch (error) {
