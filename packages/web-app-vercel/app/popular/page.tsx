@@ -100,17 +100,23 @@ export default function PopularPage() {
 
   useEffect(() => {
     const cached = getCachedEntry(period);
-    if (cached) {
+    if (cached && isFresh(cached.fetchedAt)) {
+      // 新鮮なキャッシュがあれば表示
       setArticles(cached.articles);
       setLastFetchedAt(cached.fetchedAt);
+      setIsLoading(false);
+      setError(null);
+      setNotice(null);
     } else {
-      setArticles([]);
-      setLastFetchedAt(null);
+      // キャッシュがないか古い場合は取得
+      // 古いデータがあれば、取得中にそれを表示することも可能
+      if (cached) {
+        setArticles(cached.articles);
+        setLastFetchedAt(cached.fetchedAt);
+      }
+      fetchPopularArticles(period);
     }
-    setError(null);
-    setNotice(null);
-    setIsLoading(false);
-  }, [period]);
+  }, [period, fetchPopularArticles]);
 
   const handleRead = (url: string) => {
     router.push(`/reader?url=${encodeURIComponent(url)}`);
