@@ -57,23 +57,6 @@ const isFresh = (timestamp: number | null) => {
   return Date.now() - timestamp < CACHE_TTL_MS;
 };
 
-type SpinnerProps = {
-  size?: number;
-  className?: string;
-};
-
-const Spinner = ({ size = 32, className = "" }: SpinnerProps) => (
-  <span
-    className={`inline-block animate-spin rounded-full border-2 border-current border-t-transparent ${className}`}
-    style={{ width: size, height: size }}
-    aria-hidden="true"
-  />
-);
-const isFresh = (timestamp: number | null) => {
-  if (!timestamp) return false;
-  return Date.now() - timestamp < CACHE_TTL_MS;
-};
-
 export default function PopularPage() {
   const router = useRouter();
   const [period, setPeriod] = useState<Period>("week");
