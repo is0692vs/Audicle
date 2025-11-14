@@ -89,7 +89,7 @@ export default function ReaderPageClient() {
     if (!url || !settings.voice_model) return;
 
     try {
-      const response = await fetch("/api/update-playback", {
+      const response = await fetch("/api/cache/update-completed", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -97,7 +97,7 @@ export default function ReaderPageClient() {
         body: JSON.stringify({
           articleUrl: url,
           voice: settings.voice_model,
-          completedPlayback: true,
+          completed: true,
         }),
       });
 
