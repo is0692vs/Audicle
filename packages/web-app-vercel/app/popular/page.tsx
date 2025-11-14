@@ -6,6 +6,7 @@ import Sidebar from "@/components/Sidebar";
 import { PeriodFilter } from "@/components/PeriodFilter";
 import { PopularArticleCard } from "@/components/PopularArticleCard";
 import { Button } from "@/components/ui/button";
+import Spinner from "@/components/Spinner";
 import type {
   Period,
   PopularArticlesResponse,
@@ -13,16 +14,62 @@ import type {
 } from "@/types/stats";
 import { RotateCcw } from "lucide-react";
 
+const POPULAR_CACHE_KEY = "audicle_popular_articles_v1";
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // limit fetches to once per day
+
+type CachedPopularEntry = {
+  articles: PopularArticle[];
+  fetchedAt: number;
+};
+
+const getCacheKey = (period: Period) => `${POPULAR_CACHE_KEY}_${period}`;
+
+const getCachedEntry = (period: Period): CachedPopularEntry | null => {
+  if (typeof window === "undefined") return null;
+  const raw = localStorage.getItem(getCacheKey(period));
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw) as CachedPopularEntry;
+  } catch (error) {
+    console.error(
+      `Failed to parse popular articles cache for ${period}`,
+      error
+    );
+    return null;
+  }
+};
+
+const setCachedEntry = (period: Period, entry: CachedPopularEntry) => {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(getCacheKey(period), JSON.stringify(entry));
+  } catch (error) {
+    console.error(
+      `Failed to write popular articles cache for ${period}`,
+      error
+    );
+  }
+};
+
+const isFresh = (timestamp: number | null) => {
+  if (!timestamp) return false;
+  return Date.now() - timestamp < CACHE_TTL_MS;
+};
+
 export default function PopularPage() {
   const router = useRouter();
   const [period, setPeriod] = useState<Period>("week");
   const [articles, setArticles] = useState<PopularArticle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastFetchedAt, setLastFetchedAt] = useState<number | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const fetchPopularArticles = useCallback(async (selectedPeriod: Period) => {
     setIsLoading(true);
     setError(null);
+    setNotice(null);
 
     try {
       const response = await fetch(
@@ -33,7 +80,13 @@ export default function PopularPage() {
       }
 
       const data: PopularArticlesResponse = await response.json();
+      const fetchedAt = Date.now();
       setArticles(data.articles);
+      setLastFetchedAt(fetchedAt);
+      setCachedEntry(selectedPeriod, {
+        articles: data.articles,
+        fetchedAt,
+      });
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "予期しないエラーが発生しました"
@@ -45,7 +98,27 @@ export default function PopularPage() {
   }, []);
 
   useEffect(() => {
-    fetchPopularArticles(period);
+    const cached = getCachedEntry(period);
+    if (cached && isFresh(cached.fetchedAt)) {
+      // 新鮮なキャッシュがあれば表示
+      setArticles(cached.articles);
+      setLastFetchedAt(cached.fetchedAt);
+      setIsLoading(false);
+      setError(null);
+      setNotice(null);
+    } else {
+      // キャッシュがないか古い場合は取得
+      if (cached) {
+        // 古いデータがあれば、取得中にそれを表示
+        setArticles(cached.articles);
+        setLastFetchedAt(cached.fetchedAt);
+      } else {
+        // キャッシュがない場合は、前の期間のデータが表示されるのを防ぐためにリストをクリア
+        setArticles([]);
+        setLastFetchedAt(null);
+      }
+      fetchPopularArticles(period);
+    }
   }, [period, fetchPopularArticles]);
 
   const handleRead = (url: string) => {
@@ -53,8 +126,17 @@ export default function PopularPage() {
   };
 
   const handleRefresh = () => {
+    if (isFresh(lastFetchedAt)) {
+      setNotice("人気記事は期間ごとに1日1回まで取得できます。");
+      return;
+    }
     fetchPopularArticles(period);
   };
+
+  const formattedLastFetchedAt =
+    lastFetchedAt !== null ? new Date(lastFetchedAt).toLocaleString() : null;
+
+  const isRateLimited = isFresh(lastFetchedAt);
 
   return (
     <div className="h-screen bg-black text-white flex flex-col lg:flex-row">
@@ -70,10 +152,15 @@ export default function PopularPage() {
                 onClick={handleRefresh}
                 variant="ghost"
                 size="icon"
-                title="手動更新"
+                title={isRateLimited ? "本日は取得済みです" : "手動更新"}
                 className="text-zinc-400 hover:text-white hover:bg-zinc-800"
+                disabled={isLoading || isRateLimited}
               >
-                <RotateCcw className="h-5 w-5" />
+                {isLoading && articles.length > 0 ? (
+                  <Spinner size={18} className="border-zinc-400" />
+                ) : (
+                  <RotateCcw className="h-5 w-5" />
+                )}
               </Button>
             </div>
             <p className="text-sm lg:text-base text-zinc-400 mb-4">
@@ -82,12 +169,21 @@ export default function PopularPage() {
 
             {/* Period Filter */}
             <PeriodFilter activePeriod={period} onPeriodChange={setPeriod} />
+
+            {(formattedLastFetchedAt || notice) && (
+              <div className="mt-3 text-sm text-zinc-400">
+                {formattedLastFetchedAt && (
+                  <p>最終更新: {formattedLastFetchedAt}</p>
+                )}
+                {notice && <p className="text-amber-400 mt-1">{notice}</p>}
+              </div>
+            )}
           </div>
 
           {/* Content */}
-          {isLoading ? (
+          {isLoading && articles.length === 0 ? (
             <div className="text-center py-12 text-zinc-500">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600 mb-4" />
+              <Spinner size={32} className="border-violet-600 mb-4" />
               <p className="text-lg">読み込み中...</p>
             </div>
           ) : error ? (
@@ -100,6 +196,7 @@ export default function PopularPage() {
               <Button
                 onClick={handleRefresh}
                 className="bg-violet-600 hover:bg-violet-700 text-white"
+                disabled={isLoading || isRateLimited}
               >
                 <RotateCcw className="size-4 mr-2" />
                 再試行
@@ -114,6 +211,14 @@ export default function PopularPage() {
               <p className="text-zinc-400 mb-6">
                 この期間の人気記事データはまだありません
               </p>
+              <Button
+                onClick={handleRefresh}
+                className="bg-violet-600 hover:bg-violet-700 text-white"
+                disabled={isLoading || isRateLimited}
+              >
+                <RotateCcw className="size-4 mr-2" />
+                人気記事を読み込む
+              </Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8">
