@@ -23,7 +23,7 @@ const POPULAR_ARTICLE_READ_COUNT_THRESHOLD = 2;
 // 記事ハッシュ計算関数を追加
 function calculateArticleHash(chunks: string[]): string {
     const content = chunks.join('\n');
-    return calculateTextHash(content).substring(0, 16);
+    return calculateTextHash(content, 0).substring(0, 16);
 }
 
 // Google Cloud TTS クライアント
