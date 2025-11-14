@@ -6,17 +6,17 @@ export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
     try {
-        const { articleUrl, voice, text } = await request.json();
+        const { articleUrl, voice, text, index } = await request.json();
 
-        if (!articleUrl || !voice || !text) {
+        if (!articleUrl || !voice || !text || index === undefined) {
             return NextResponse.json(
-                { error: 'articleUrl, voice, and text are required' },
+                { error: 'articleUrl, voice, text, and index are required' },
                 { status: 400 }
             );
         }
 
         // テキストからハッシュを計算
-        const textHash = calculateTextHash(text);
+        const textHash = calculateTextHash(text, index);
 
         // Supabaseインデックスから削除
         await removeCachedChunk(articleUrl, voice, textHash);
