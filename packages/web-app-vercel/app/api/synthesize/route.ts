@@ -23,7 +23,7 @@ const POPULAR_ARTICLE_READ_COUNT_THRESHOLD = 2;
 // 記事ハッシュ計算関数を追加
 function calculateArticleHash(chunks: string[]): string {
     const content = chunks.join('\n');
-    return calculateTextHash(content).substring(0, 16);
+    return calculateTextHash(content, 0).substring(0, 16);
 }
 
 // Google Cloud TTS クライアント
@@ -248,8 +248,9 @@ export async function POST(request: NextRequest) {
         // Simple Operations 削減カウンター
         let headOperationsSkipped = 0;
 
-        for (const chunkText of textChunks) {
-            const textHash = calculateTextHash(chunkText);
+        for (let i = 0; i < textChunks.length; i++) {
+            const chunkText = textChunks[i];
+            const textHash = calculateTextHash(chunkText, i);
             const cacheKey = `${textHash}:${voiceToUse}.mp3`;
             const isCachedByIndex = cacheIndex ? isCachedInIndex(cacheIndex, textHash) : false;
 

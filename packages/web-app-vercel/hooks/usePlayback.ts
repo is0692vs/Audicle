@@ -233,7 +233,8 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
                 body: JSON.stringify({
                   articleUrl,
                   voice: voiceModel,
-                  text: chunk.cleanedText
+                  text: chunk.cleanedText,
+                  index
                 })
               }).catch((err) => {
                 logger.error('[Cache Remove] Failed to remove from Supabase index:', err);
