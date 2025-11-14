@@ -12,8 +12,8 @@ interface FetchPlaylistsOptions {
 }
 
 interface FetchPlaylistsResult {
-  playlistsWithItems: unknown[] | null
-  playlistsError: PostgrestError | null
+    playlistsWithItems: unknown[] | null
+    playlistsError: PostgrestError | null
 }export async function fetchPlaylistsByItem({
     supabase,
     userEmail,
