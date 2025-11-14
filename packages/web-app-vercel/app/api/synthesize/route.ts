@@ -103,6 +103,21 @@ export async function POST(request: NextRequest) {
         'Access-Control-Allow-Headers': 'Content-Type',
     };
 
+    // ヘルパー関数: Vercel Blob URLを構築
+    const tryConstructVercelBlobUrl = (token: string | undefined, key: string): string | null => {
+        if (!token) {
+            return null;
+        }
+        const parts = token.split('_');
+        if (parts.length > 3 && parts[0] === 'vercel' && parts[1] === 'blob' && parts[2] === 'rw') {
+            const storeId = parts[3];
+            if (storeId) {
+                return `https://${storeId}.public.blob.vercel-storage.com/${key}`;
+            }
+        }
+        return null;
+    };
+
     try {
         // 認証チェック
         const session = await auth();
@@ -259,28 +274,18 @@ export async function POST(request: NextRequest) {
                 console.log(`[Optimize] ⚡ Popular article: skipping head() for chunk ${audioUrls.length + 1}`);
                 headOperationsSkipped++;
 
-                // Vercel Blob URLを直接構築
-                const token = blobReadWriteToken;
-                if (token) {
-                    const parts = token.split('_');
-                    if (parts.length > 3 && parts[0] === 'vercel' && parts[1] === 'blob' && parts[2] === 'rw') {
-                        const storeId = parts[3];
-                        if (storeId) {
-                            const blobUrl = `https://${storeId}.public.blob.vercel-storage.com/${cacheKey}`;
-                            audioUrls.push(blobUrl);
-                            audioBuffers.push(Buffer.alloc(0)); // 空のバッファ（後でfetchする）
-                            cacheHits++;
-                            continue; // 次のチャンクへ
-                        }
-                    }
+                const blobUrl = tryConstructVercelBlobUrl(blobReadWriteToken, cacheKey);
+                if (blobUrl) {
+                    audioUrls.push(blobUrl);
+                    audioBuffers.push(Buffer.alloc(0)); // 空のバッファ（後でfetchする）
+                    cacheHits++;
+                    continue; // 次のチャンクへ
                 }
 
                 // URL構築失敗時は通常フローへフォールバック（ログは出力）
                 console.warn('[Optimize] ⚠️ Popular article URL construction failed, falling back to normal flow');
             }
-            // ========== ここまで追加 ==========
-
-            // 1. キャッシュ存在確認
+            // ========== ここまで追加 ==========            // 1. キャッシュ存在確認
             let blobExists = null;
 
             if (cacheIndex) {
@@ -294,20 +299,13 @@ export async function POST(request: NextRequest) {
 
                     // Vercel Blob URLを直接構築（リスク認識済み：トークン形式変更の可能性）
                     let urlConstructed = false;
-                    const token = blobReadWriteToken;
-                    if (token) {
-                        const parts = token.split('_');
-                        if (parts.length > 3 && parts[0] === 'vercel' && parts[1] === 'blob' && parts[2] === 'rw') {
-                            const storeId = parts[3];
-                            if (storeId) {
-                                const blobUrl = `https://${storeId}.public.blob.vercel-storage.com/${cacheKey}`;
-                                audioUrls.push(blobUrl);
-                                audioBuffers.push(Buffer.alloc(0));
-                                cacheHits++;
-                                urlConstructed = true;
-                                continue;
-                            }
-                        }
+                    const blobUrl = tryConstructVercelBlobUrl(blobReadWriteToken, cacheKey);
+                    if (blobUrl) {
+                        audioUrls.push(blobUrl);
+                        audioBuffers.push(Buffer.alloc(0));
+                        cacheHits++;
+                        urlConstructed = true;
+                        continue;
                     }
 
                     // URL構築失敗時はhead()にフォールバック（堅牢性のための改善）
