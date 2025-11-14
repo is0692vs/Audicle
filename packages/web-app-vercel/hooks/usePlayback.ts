@@ -137,28 +137,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
     [chunks, voiceModel, articleUrl]
   );
 
-  const handlePlaybackComplete = useCallback(async (articleUrlToUpdate: string, voice: string) => {
-    try {
-      const response = await fetch('/api/cache/update-completed-kv', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          articleUrl: articleUrlToUpdate,
-          voice,
-          completed: true,
-        }),
-      });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        logger.error('[Playback Complete] Failed to update KV:', { status: response.status, body: errorText });
-      } else {
-        logger.info('[Playback Complete] ✅ completedPlayback updated in KV');
-      }
-    } catch (error) {
-      logger.error('[Playback Complete] Error updating KV:', error);
-    }
-  }, []);
 
   // 特定のインデックスから再生
   const playFromIndex = useCallback(
@@ -351,8 +330,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
           logger.error('[Cache Update] Failed to update completed playback:', err);
         });
 
-        // KVメタデータを更新して人気記事のhead()スキップ最適化を有効化
-        void handlePlaybackComplete(articleUrl, voiceModel);
+
       }
 
       // 記事の再生が終了したときのコールバック
