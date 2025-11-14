@@ -351,6 +351,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
           logger.error('[Cache Update] Failed to update completed playback:', err);
         });
 
+        // KVメタデータを更新して人気記事のhead()スキップ最適化を有効化
         void handlePlaybackComplete(articleUrl, voiceModel);
       }
 

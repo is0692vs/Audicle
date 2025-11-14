@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getKv } from '@/lib/kv';
 import { parseArticleMetadata, serializeArticleMetadata } from '@/lib/kv-helpers';
+import { auth } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
     try {
+        // 認証チェック追加
+        const session = await auth();
+        if (!session?.user) {
+            console.error('[KV Update] ❌ Unauthorized', { requestId: request.headers.get('x-request-id') });
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const { articleUrl, voice, completed } = await request.json();
 
         if (!articleUrl || !voice || typeof completed !== 'boolean') {
