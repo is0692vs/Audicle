@@ -32,7 +32,7 @@ export async function GET(
         }
 
         // playlist_itemsプロパティを削除して返す
-        const playlists = (playlistsWithItems ?? []).map(({ playlist_items: _, ...rest }) => rest)
+        const playlists = (playlistsWithItems as (Playlist & { playlist_items: unknown[] })[]).map(({ playlist_items: _, ...rest }) => rest)
 
         return NextResponse.json(playlists as Playlist[])
     } catch (error) {
