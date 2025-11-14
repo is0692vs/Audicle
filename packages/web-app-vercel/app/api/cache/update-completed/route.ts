@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
         // 認証チェック追加
         const session = await auth();
         if (!session?.user) {
-            console.error('[Cache Update Completed] ❌ Unauthorized');
+            console.error('[Cache Update Completed] ❌ Unauthorized', { requestId: request.headers.get('x-request-id') });
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
