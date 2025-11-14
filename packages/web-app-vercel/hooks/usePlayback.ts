@@ -336,7 +336,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
       // 記事の再生が終了したときのコールバック
       onArticleEndRef.current?.();
     }
-  }, [chunks, setIsPlaying, setCurrentIndex, playFromIndex, articleUrl, voiceModel, handlePlaybackComplete]);
+  }, [chunks, setIsPlaying, setCurrentIndex, playFromIndex, articleUrl, voiceModel]);
 
   // 再生開始
   const play = useCallback(() => {
