@@ -102,9 +102,6 @@ export default function ReaderPageClient() {
     voiceModel: settings.voice_model,
     playbackSpeed: settings.playback_speed,
     onArticleEnd: () => {
-      // 再生完了を記録
-      // recordPlaybackCompletion(); // usePlayback.ts で既に記録されているため削除
-
       if (isPlaylistMode && playlistState.isPlaylistMode) {
         // プレイリストの最後の記事の場合は完了画面を表示
         if (currentPlaylistIndex >= playlistState.totalCount - 1) {

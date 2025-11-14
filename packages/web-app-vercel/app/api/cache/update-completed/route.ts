@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
         const session = await auth();
         if (!session?.user) {
             console.error('[Cache Update Completed] ❌ Unauthorized');
-            return new Response('Unauthorized', { status: 401 });
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const { articleUrl, voice, completed } = await request.json();
