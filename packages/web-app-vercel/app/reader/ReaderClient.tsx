@@ -84,40 +84,6 @@ export default function ReaderPageClient() {
     });
   }, [url, chunkCount]);
 
-  // 再生完了をバックエンドに記録する関数
-  const recordPlaybackCompletion = useCallback(async () => {
-    if (!url || !settings.voice_model) return;
-
-    try {
-      const response = await fetch("/api/update-playback", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          articleUrl: url,
-          voice: settings.voice_model,
-          completedPlayback: true,
-        }),
-      });
-
-      if (!response.ok) {
-        logger.warn("再生完了の記録に失敗", {
-          status: response.status,
-          articleUrl: url,
-          voice: settings.voice_model,
-        });
-      } else {
-        logger.info("再生完了を記録", {
-          articleUrl: url,
-          voice: settings.voice_model,
-        });
-      }
-    } catch (error) {
-      logger.error("再生完了の記録エラー", error);
-    }
-  }, [url, settings.voice_model]);
-
   // 再生制御フック
   const {
     isPlaying,
@@ -136,9 +102,6 @@ export default function ReaderPageClient() {
     voiceModel: settings.voice_model,
     playbackSpeed: settings.playback_speed,
     onArticleEnd: () => {
-      // 再生完了を記録
-      recordPlaybackCompletion();
-
       if (isPlaylistMode && playlistState.isPlaylistMode) {
         // プレイリストの最後の記事の場合は完了画面を表示
         if (currentPlaylistIndex >= playlistState.totalCount - 1) {
