@@ -25,7 +25,7 @@ export async function fetchPlaylistsByItem({
 }: FetchPlaylistsOptions): Promise<FetchPlaylistsResult> {
     let query = supabase
         .from('playlists')
-        .select('*, playlist_items!inner(bookmark_id, article_id)')
+        .select('*, playlist_items!inner(' + filterField + ')')
         .eq('owner_email', userEmail)
         .eq(`playlist_items.${filterField}`, itemId)
 
