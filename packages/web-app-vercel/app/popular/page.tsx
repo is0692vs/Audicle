@@ -14,6 +14,7 @@ import type {
 } from "@/types/stats";
 import { RotateCcw } from "lucide-react";
 import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
+import toast from "react-hot-toast";
 
 const POPULAR_CACHE_KEY = "audicle_popular_articles_v1";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // limit fetches to once per day
@@ -261,7 +262,7 @@ export default function PopularPage() {
           articleId={selectedArticle.articleId}
           articleTitle={selectedArticle.title}
           onPlaylistsUpdated={async () => {
-            // 必要に応じて更新
+            toast.success("プレイリストが更新されました");
           }}
         />
       )}
