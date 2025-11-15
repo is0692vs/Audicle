@@ -83,14 +83,7 @@ export const articleStorage = {
             return articles[existingIndex];
         } else {
             // 新規追加
-            const newArticle: Article = {
-                ...article,
-                id: article.id || crypto.randomUUID(),
-                createdAt: new Date().toISOString(),
-            };
-            articles.unshift(newArticle); // 先頭に追加
-            _writeArticles(articles);
-            return newArticle;
+            return articleStorage.add(article);
         }
     },
 
