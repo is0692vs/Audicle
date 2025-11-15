@@ -1,0 +1,40 @@
+name: Test
+
+on:
+  pull_request:
+    paths:
+      - 'packages/web-app-vercel/**'
+      - '.github/workflows/test.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/web-app-vercel/**'
+
+concurrency:
+  group: $ github.workflow -$ github.ref 
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'packages/web-app-vercel/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: packages/web-app-vercel
+
+      - name: Run tests
+        run: npm test
+        working-directory: packages/web-app-vercel
+        env:
+          NODE_ENV: test
