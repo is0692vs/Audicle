@@ -16,11 +16,19 @@ import { articleStorage } from "@/lib/articleStorage";
 import { logger } from "@/lib/logger";
 import { useDownload } from "@/hooks/useDownload";
 import { MobileArticleMenu } from "@/components/MobileArticleMenu";
+import { PlaybackSpeedDial } from "@/components/PlaybackSpeedDial";
 import { recordArticleStats } from "@/lib/articleStats";
 import { parseHTMLToParagraphs } from "@/lib/paragraphParser";
 import { UserSettings, DEFAULT_SETTINGS } from "@/types/settings";
 import { createReaderUrl } from "@/lib/urlBuilder";
-import { Play, Pause, SkipBack, SkipForward } from "lucide-react";
+import {
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  MoreVertical,
+  Plus,
+} from "lucide-react";
 
 function convertParagraphsToChunks(htmlContent: string): Chunk[] {
   // HTML構造を保持して段落を抽出
@@ -63,6 +71,7 @@ export default function ReaderPageClient() {
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>("");
   const [arePlaylistsLoaded, setArePlaylistsLoaded] = useState(false);
   const [hasLoadedFromQuery, setHasLoadedFromQuery] = useState(false);
+  const [isSpeedModalOpen, setIsSpeedModalOpen] = useState(false);
 
   // プレイリスト再生のための追加状態
   const [currentPlaylistIndex, setCurrentPlaylistIndex] = useState<number>(
@@ -512,16 +521,6 @@ export default function ReaderPageClient() {
               ← {isPlaylistMode ? "プレイリストに戻る" : "記事一覧"}
             </button>
             <h1 className="text-lg sm:text-2xl font-bold">Audicle</h1>
-            {/* モバイルメニュー: 640px未満で表示 */}
-            {url && (
-              <div className="sm:hidden">
-                <MobileArticleMenu
-                  articleUrl={url}
-                  onDownload={startDownload}
-                  isDownloading={downloadStatus === "downloading"}
-                />
-              </div>
-            )}
           </div>
 
           {/* 記事タイトル: ellipsisで1行に省略 */}
@@ -734,62 +733,65 @@ export default function ReaderPageClient() {
         />
       )}
 
-      {/* モバイル版再生コントロール: 画面下部 */}
+      {/* 再生速度調整モーダル */}
+      <PlaybackSpeedDial
+        open={isSpeedModalOpen}
+        value={playbackRate}
+        onValueChange={setPlaybackRate}
+        onOpenChange={setIsSpeedModalOpen}
+      />
+
+      {/* モバイル版再生コントロール: 画面下部 - 1行レイアウト */}
       {chunks.length > 0 && (
         <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 shadow-lg">
-          <div className="flex flex-col gap-3">
-            {/* 再生ボタン */}
-            <div className="flex items-center justify-center gap-4">
-              <button
-                onClick={isPlaying ? pause : play}
-                disabled={isPlaybackLoading}
-                className="px-6 py-3 bg-green-600 text-white rounded-full hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-lg"
-                title={
-                  isPlaybackLoading
-                    ? "処理中..."
-                    : isPlaying
-                    ? "一時停止"
-                    : "再生"
-                }
-              >
-                {isPlaying ? (
-                  <Pause className="size-6" />
-                ) : (
-                  <Play className="size-6" />
-                )}
-              </button>
-            </div>
-            {/* 速度コントロール */}
-            <div className="flex items-center justify-center gap-3">
-              <label
-                htmlFor="playback-rate-mobile"
-                className="text-sm text-gray-600 dark:text-gray-400"
-              >
-                速度:
-              </label>
-              <input
-                id="playback-rate-mobile"
-                type="range"
-                min="0.8"
-                max="3.0"
-                step="0.1"
-                value={playbackRate}
-                onChange={handlePlaybackRateChange}
-                className="w-32"
-              />
-              <span className="text-sm text-gray-600 dark:text-gray-400 w-12">
-                {playbackRate.toFixed(1)}x
-              </span>
-            </div>
+          <div className="flex items-center justify-between">
+            {/* 再生速度ボタン */}
+            <button
+              onClick={() => setIsSpeedModalOpen(true)}
+              className="flex items-center gap-1 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+              title="再生速度を変更"
+            >
+              <span>{playbackRate.toFixed(1)}x</span>
+            </button>
+
+            {/* 再生停止ボタン */}
+            <button
+              onClick={isPlaying ? pause : play}
+              disabled={isPlaybackLoading}
+              className="px-6 py-3 bg-green-600 text-white rounded-full hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-lg"
+              title={
+                isPlaybackLoading
+                  ? "処理中..."
+                  : isPlaying
+                  ? "一時停止"
+                  : "再生"
+              }
+            >
+              {isPlaying ? (
+                <Pause className="size-6" />
+              ) : (
+                <Play className="size-6" />
+              )}
+            </button>
+
             {/* プレイリスト追加ボタン */}
             {articleId && (
               <button
                 onClick={() => setIsPlaylistModalOpen(true)}
-                className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 title="プレイリストに追加"
               >
-                📋 プレイリストに追加
+                <Plus className="size-5 text-gray-600 dark:text-gray-400" />
               </button>
+            )}
+
+            {/* モバイルメニュー */}
+            {url && (
+              <MobileArticleMenu
+                articleUrl={url}
+                onDownload={startDownload}
+                isDownloading={downloadStatus === "downloading"}
+              />
             )}
           </div>
         </div>
