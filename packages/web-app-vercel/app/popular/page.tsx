@@ -76,8 +76,6 @@ export default function PopularPage() {
     setError(null);
     setNotice(null);
 
-    console.log('fetchPopularArticles called with period:', selectedPeriod);
-
     try {
       const response = await fetch(
         `/api/stats/popular?period=${selectedPeriod}&limit=20`
@@ -98,17 +96,33 @@ export default function PopularPage() {
       setError(
         err instanceof Error ? err.message : "予期しないエラーが発生しました"
       );
-      console.error("Error fetching popular articles:", err);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    // キャッシュを無視して常にAPIを呼ぶ（デバッグ用）
-    setArticles([]);
-    setLastFetchedAt(null);
-    fetchPopularArticles(period);
+    const cached = getCachedEntry(period);
+    if (cached && isFresh(cached.fetchedAt)) {
+      // 新鮮なキャッシュがあれば表示
+      setArticles(cached.articles);
+      setLastFetchedAt(cached.fetchedAt);
+      setIsLoading(false);
+      setError(null);
+      setNotice(null);
+    } else {
+      // キャッシュがないか古い場合は取得
+      if (cached) {
+        // 古いデータがあれば、取得中にそれを表示
+        setArticles(cached.articles);
+        setLastFetchedAt(cached.fetchedAt);
+      } else {
+        // キャッシュがない場合は、前の期間のデータが表示されるのを防ぐためにリストをクリア
+        setArticles([]);
+        setLastFetchedAt(null);
+      }
+      fetchPopularArticles(period);
+    }
   }, [period, fetchPopularArticles]);
 
   const handleRead = (url: string) => {
@@ -124,7 +138,6 @@ export default function PopularPage() {
   };
 
   const handlePlaylistAdd = (article: PopularArticle) => {
-    console.log('handlePlaylistAdd called with article:', article);
     setSelectedArticle(article);
     setIsPlaylistModalOpen(true);
   };

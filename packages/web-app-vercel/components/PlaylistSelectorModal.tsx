@@ -26,13 +26,6 @@ export function PlaylistSelectorModal({
   articleTitle,
   onPlaylistsUpdated,
 }: PlaylistSelectorModalProps) {
-  console.log("PlaylistSelectorModal props:", {
-    isOpen,
-    itemId,
-    articleId,
-    articleTitle,
-  });
-
   const { data: allPlaylists = [], isLoading: isLoadingPlaylists } =
     usePlaylists();
 
@@ -49,29 +42,12 @@ export function PlaylistSelectorModal({
     error: errorArticleId,
   } = useArticlePlaylists(articleId, { enabled: !itemId && !!articleId });
 
-  console.log(
-    "useArticlePlaylists data:",
-    playlistsByArticleId,
-    "loading:",
-    isLoadingArticleId,
-    "error:",
-    errorArticleId
-  );
-
   // 結果を安全に選択（デフォルト値付き）
   const currentPlaylists = useMemo(
     () => (itemId ? playlistsByItemId || [] : playlistsByArticleId || []),
     [itemId, playlistsByItemId, playlistsByArticleId]
   );
 
-  console.log(
-    "currentPlaylists:",
-    currentPlaylists,
-    "itemId:",
-    itemId,
-    "articleId:",
-    articleId
-  );
   const isLoadingCurrent = itemId ? isLoadingItemId : isLoadingArticleId;
   const currentError = itemId ? errorItemId : errorArticleId;
   const updateMutation = useUpdateArticlePlaylistsMutation();

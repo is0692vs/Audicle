@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { requireAuth } from '@/lib/api-auth'
+import { resolveArticleId } from '@/lib/api-helpers'
 
 interface BulkUpdateRequest {
     articleId: string
@@ -33,53 +34,14 @@ export async function POST(request: Request) {
         }
 
         // articleId が UUID か article_hash かを判定し、必要に応じて変換
-        let actualArticleId = articleId;
-        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(articleId)) {
-            // article_hash の場合、article_stats から URL を取得
-            const { data: articleStat, error: statError } = await supabase
-                .from('article_stats')
-                .select('url')
-                .eq('article_hash', articleId)
-                .single()
-
-            if (statError || !articleStat?.url) {
-                return NextResponse.json(
-                    { error: 'Article stats not found' },
-                    { status: 404 }
-                )
-            }
-
-            // URL から articles.id を取得
-            const { data: article, error: lookupError } = await supabase
-                .from('articles')
-                .select('id')
-                .eq('url', articleStat.url)
-                .eq('owner_email', userEmail)
-                .single()
-
-            if (lookupError || !article) {
-                return NextResponse.json(
-                    { error: 'Article not found in user bookmarks' },
-                    { status: 404 }
-                )
-            }
-
-            actualArticleId = article.id;
-        } else {
-            // UUID の場合、所有権確認
-            const { data: article, error: articleError } = await supabase
-                .from('articles')
-                .select('id')
-                .eq('id', articleId)
-                .eq('owner_email', userEmail)
-                .single()
-
-            if (articleError || !article) {
-                return NextResponse.json(
-                    { error: 'Article not found' },
-                    { status: 404 }
-                )
-            }
+        let actualArticleId: string
+        try {
+            actualArticleId = await resolveArticleId(articleId, userEmail)
+        } catch (error) {
+            return NextResponse.json(
+                { error: error instanceof Error ? error.message : 'Article resolution failed' },
+                { status: 404 }
+            )
         }
 
         // プレイリストIDの所有者確認
@@ -93,7 +55,6 @@ export async function POST(request: Request) {
                 .eq('owner_email', userEmail);
 
             if (playlistError) {
-                console.error('Supabase playlist check error:', playlistError);
                 return NextResponse.json(
                     { error: 'Failed to verify playlists' },
                     { status: 500 }
@@ -108,60 +69,31 @@ export async function POST(request: Request) {
             }
         }
 
-        // バルク更新処理（個別操作）
-        let addedCount = 0;
-        let removedCount = 0;
+        // バルク更新処理（RPC関数を使用）
+        const { data: result, error: rpcError } = await supabase.rpc('bulk_update_playlist_items', {
+            article_id_param: actualArticleId,
+            add_playlist_ids: addToPlaylistIds,
+            remove_playlist_ids: removeFromPlaylistIds,
+        });
 
-        // 削除処理
-        if (removeFromPlaylistIds.length > 0) {
-            const { error: deleteError } = await supabase
-                .from('playlist_items')
-                .delete()
-                .eq('article_id', actualArticleId)
-                .in('playlist_id', removeFromPlaylistIds);
-
-            if (deleteError) {
-                console.error('Supabase delete error:', deleteError);
-                return NextResponse.json(
-                    { error: 'プレイリストからの削除に失敗しました' },
-                    { status: 500 }
-                );
-            }
-            removedCount = removeFromPlaylistIds.length;
+        if (rpcError) {
+            return NextResponse.json(
+                { error: 'Bulk update failed' },
+                { status: 500 }
+            );
         }
 
-        // 追加処理
-        if (addToPlaylistIds.length > 0) {
-            const insertData = addToPlaylistIds.map(playlistId => ({
-                playlist_id: playlistId,
-                article_id: actualArticleId,
-                added_at: new Date().toISOString(),
-            }));
-
-            const { error: insertError } = await supabase
-                .from('playlist_items')
-                .insert(insertData);
-
-            if (insertError) {
-                console.error('Supabase insert error:', insertError);
-                return NextResponse.json(
-                    { error: 'プレイリストへの追加に失敗しました' },
-                    { status: 500 }
-                );
-            }
-            addedCount = addToPlaylistIds.length;
-        }
+        const { added_count, removed_count } = result[0] || { added_count: 0, removed_count: 0 };
 
         return NextResponse.json(
             {
                 message: 'Bulk update completed',
-                addedCount,
-                removedCount,
+                addedCount: added_count,
+                removedCount: removed_count,
             },
             { status: 200 }
         )
     } catch (error) {
-        console.error('Error in POST /api/playlists/bulk_update:', error)
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }

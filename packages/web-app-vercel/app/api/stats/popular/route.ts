@@ -113,8 +113,6 @@ export async function GET(request: NextRequest) {
             );
         }
 
-        console.log('Raw data from article_stats:', data?.slice(0, 1)); // 最初の1つだけログ
-
         // レスポンスの整形
         const articles: PopularArticle[] = (data || []).map((row) => ({
             articleId: row.article_id || row.article_hash,
@@ -130,8 +128,6 @@ export async function GET(request: NextRequest) {
             lastAccessedAt: row.last_accessed_at,
         }));
 
-        console.log('Popular articles response:', articles.slice(0, 2)); // 最初の2つだけログ
-
         const response: PopularArticlesResponse = {
             articles,
             total: articles.length,
@@ -139,7 +135,6 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json(response, { status: 200 });
     } catch (error) {
-        console.error('Popular articles error:', error);
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }
