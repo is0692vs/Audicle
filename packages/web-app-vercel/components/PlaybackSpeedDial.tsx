@@ -95,10 +95,7 @@ export function PlaybackSpeedDial({
     }
 
     const roundedIndex = Math.round(previewIndex);
-    const clampedIndex = Math.max(
-      0,
-      Math.min(speeds.length - 1, roundedIndex)
-    );
+    const clampedIndex = Math.max(0, Math.min(speeds.length - 1, roundedIndex));
     setSelectedIndex(clampedIndex);
     setPreviewIndex(clampedIndex);
     onValueChange(speeds[clampedIndex]);
@@ -152,10 +149,7 @@ export function PlaybackSpeedDial({
   const transformValue =
     totalItemWidth > 0
       ? `translateX(${
-          -(
-            selectedIndex * totalItemWidth +
-            totalItemWidth / 2
-          ) + dragOffset
+          -(selectedIndex * totalItemWidth + totalItemWidth / 2) + dragOffset
         }px)`
       : "translateX(0px)";
 
