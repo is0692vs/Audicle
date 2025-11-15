@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  useLayoutEffect,
+} from "react";
 
 interface PlaybackSpeedDialProps {
   open: boolean;
@@ -20,7 +26,9 @@ export function PlaybackSpeedDial({
   speeds = DEFAULT_SPEEDS,
 }: PlaybackSpeedDialProps) {
   const trackRef = useRef<HTMLDivElement>(null);
+  const itemRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [totalItemWidth, setTotalItemWidth] = useState(64); // 初期値として64pxを設定
   const [selectedIndex, setSelectedIndex] = useState(
     speeds.indexOf(value) !== -1 ? speeds.indexOf(value) : speeds.indexOf(1)
   );
@@ -29,6 +37,18 @@ export function PlaybackSpeedDial({
     const newIndex = speeds.indexOf(value);
     setSelectedIndex(newIndex !== -1 ? newIndex : speeds.indexOf(1));
   }, [value, speeds]);
+
+  // DOMからアイテムの幅を動的に取得
+  useLayoutEffect(() => {
+    if (itemRef.current) {
+      const itemRect = itemRef.current.getBoundingClientRect();
+      const computedStyle = window.getComputedStyle(itemRef.current);
+      const marginLeft = parseFloat(computedStyle.marginLeft);
+      const marginRight = parseFloat(computedStyle.marginRight);
+      const totalWidth = itemRect.width + marginLeft + marginRight;
+      setTotalItemWidth(totalWidth);
+    }
+  }, [open]); // openがtrueになった時に再計算
 
   const updateFromPointer = useCallback(
     (clientX: number) => {
@@ -109,11 +129,6 @@ export function PlaybackSpeedDial({
 
   const currentSpeed = speeds[selectedIndex];
 
-  // 各アイテムの幅（ボタンの幅 + マージン）
-  const itemWidth = 48; // w-12 = 48px
-  const horizontalMargin = 16; // mx-2による左右マージンの合計 (8px * 2)
-  const totalItemWidth = itemWidth + horizontalMargin;
-
   // 中央に配置するためのtransform計算
   const centerOffset = (speeds.length - 1) / 2;
   const transformValue = `translateX(${
@@ -173,6 +188,7 @@ export function PlaybackSpeedDial({
                   return (
                     <div
                       key={speed}
+                      ref={index === 0 ? itemRef : null} // 最初のアイテムにrefを設定
                       onClick={() => onValueChange(speed)}
                       className="flex flex-col items-center justify-center mx-2 transition-all duration-200 cursor-pointer"
                       style={{
