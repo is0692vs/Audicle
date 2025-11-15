@@ -6,7 +6,13 @@ import { useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 
 export default function ProfilePage() {
+  console.log("[PROFILE PAGE] Checking authentication...");
+
   const { data: session, status } = useSession();
+  console.log("[PROFILE PAGE] Session:", session ? "EXISTS" : "NULL");
+  console.log("[PROFILE PAGE] User ID:", session?.user?.id);
+  console.log("[PROFILE PAGE] User email:", session?.user?.email);
+
   const router = useRouter();
 
   useEffect(() => {
