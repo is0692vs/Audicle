@@ -18,9 +18,9 @@ function SignInContent() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-zinc-900 to-black p-4">
       <div className="max-w-md w-full space-y-8 p-8 bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl">
         <div className="text-center">
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-violet-400 to-purple-600 bg-clip-text text-transparent">
-            Audicle
-          </h2>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-400 to-purple-600 bg-clip-text text-transparent">
+            ログイン
+          </h1>
           <p className="mt-2 text-zinc-400">Web記事読み上げアプリ</p>
         </div>
 
@@ -36,6 +36,7 @@ function SignInContent() {
           <button
             type="submit"
             className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-violet-600 hover:bg-violet-700 transition-colors"
+            data-testid="google-signin-button"
           >
             Googleでログイン
           </button>
