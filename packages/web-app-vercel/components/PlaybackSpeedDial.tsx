@@ -111,8 +111,8 @@ export function PlaybackSpeedDial({
 
   // 各アイテムの幅（ボタンの幅 + マージン）
   const itemWidth = 48; // w-12 = 48px
-  const itemMargin = 8; // 適当なマージン
-  const totalItemWidth = itemWidth + itemMargin;
+  const horizontalMargin = 16; // mx-2による左右マージンの合計 (8px * 2)
+  const totalItemWidth = itemWidth + horizontalMargin;
 
   // 中央に配置するためのtransform計算
   const centerOffset = (speeds.length - 1) / 2;
@@ -173,7 +173,8 @@ export function PlaybackSpeedDial({
                   return (
                     <div
                       key={speed}
-                      className="flex flex-col items-center justify-center mx-2 transition-all duration-200"
+                      onClick={() => handleSpeedClick(speed)}
+                      className="flex flex-col items-center justify-center mx-2 transition-all duration-200 cursor-pointer"
                       style={{
                         transform: `scale(${scale})`,
                         opacity,
