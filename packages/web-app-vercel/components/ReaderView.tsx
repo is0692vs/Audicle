@@ -220,7 +220,7 @@ export default function ReaderView({
                 {downloadStatus === "completed" ? (
                   <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-4 py-2 text-sm font-semibold text-emerald-400">
                     <span aria-hidden>✅</span>
-                    <span>オフライン対応完了({chunks.length}チャンク)</span>
+                    <span>オフライン対応完了 ({chunks.length}チャンク) </span>
                   </div>
                 ) : (
                   <button
