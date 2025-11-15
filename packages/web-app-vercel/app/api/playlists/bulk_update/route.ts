@@ -83,7 +83,7 @@ export async function POST(request: Request) {
             );
         }
 
-        const { added_count, removed_count } = result[0] || { added_count: 0, removed_count: 0 };
+        const { added_count, removed_count } = (result && result[0]) || { added_count: 0, removed_count: 0 };
 
         return NextResponse.json(
             {
