@@ -43,13 +43,9 @@ export default defineConfig({
         },
     ],
     webServer: {
-        command: 'npm run dev',
+        command: 'NODE_ENV=test npm run dev',
         url: 'http://localhost:3000',
         reuseExistingServer: !process.env.CI,
         timeout: 120000,
-        env: {
-            NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET!,
-            NODE_ENV: 'test',
-        },
     },
 })
