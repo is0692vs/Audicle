@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Play } from "lucide-react";
+import { Play, ArrowUpDown } from "lucide-react";
 import { logger } from "@/lib/logger";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
 import { usePlaylistPlayback } from "@/contexts/PlaylistPlaybackContext";
@@ -13,7 +13,31 @@ import {
 } from "@/lib/hooks/usePlaylists";
 import { ArticleCard } from "@/components/ArticleCard";
 import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
-import type { PlaylistWithItems } from "@/types/playlist";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type {
+  PlaylistWithItems,
+  PlaylistItemWithArticle,
+} from "@/types/playlist";
+
+type SortOption = "position" | "title" | "added_at" | "url";
+
+const SORT_OPTIONS = {
+  position: "位置順",
+  title: "タイトル順",
+  added_at: "追加日時順",
+  url: "URL順",
+} as const;
+
+// 型ガード関数
+function isSortOption(value: string): value is SortOption {
+  return value in SORT_OPTIONS;
+}
 
 export default function PlaylistDetailPage() {
   const router = useRouter();
@@ -31,14 +55,27 @@ export default function PlaylistDetailPage() {
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const [selectedArticleId, setSelectedArticleId] = useState<string>("");
   const [selectedArticleTitle, setSelectedArticleTitle] = useState<string>("");
+  const [sortOption, setSortOption] = useState<SortOption>("position");
   const { showConfirm, confirmDialog } = useConfirmDialog();
 
   const sortedItems = useMemo(() => {
     if (!playlist?.items) return [];
-    return [...playlist.items].sort(
-      (a, b) => (a.position ?? 0) - (b.position ?? 0)
-    );
-  }, [playlist?.items]);
+
+    return [...playlist.items].sort((a, b) => {
+      switch (sortOption) {
+        case "position":
+          return (a.position ?? 0) - (b.position ?? 0);
+        case "title":
+          return a.article.title.localeCompare(b.article.title);
+        case "added_at":
+          return a.added_at.localeCompare(b.added_at);
+        case "url":
+          return a.article.url.localeCompare(b.article.url);
+        default:
+          return 0;
+      }
+    });
+  }, [playlist?.items, sortOption]);
 
   // playlistが読み込まれたら編集フィールドを初期化
   useEffect(() => {
@@ -206,20 +243,44 @@ export default function PlaylistDetailPage() {
                 </p>
               </div>
               {playlist.items && playlist.items.length > 0 && (
-                <button
-                  onClick={() =>
-                    startPlaylistPlayback(
-                      playlist.id,
-                      playlist.name,
-                      sortedItems,
-                      0
-                    )
-                  }
-                  className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors flex items-center gap-2 whitespace-nowrap"
-                >
-                  <Play className="size-4" />
-                  再生
-                </button>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <ArrowUpDown className="size-4 text-zinc-400" />
+                    <Select
+                      value={sortOption}
+                      onValueChange={(value) => {
+                        if (isSortOption(value)) {
+                          setSortOption(value);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(SORT_OPTIONS).map(([value, label]) => (
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <button
+                    onClick={() =>
+                      startPlaylistPlayback(
+                        playlist.id,
+                        playlist.name,
+                        sortedItems,
+                        0
+                      )
+                    }
+                    className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors flex items-center gap-2 whitespace-nowrap"
+                  >
+                    <Play className="size-4" />
+                    再生
+                  </button>
+                </div>
               )}
             </div>
           </div>
