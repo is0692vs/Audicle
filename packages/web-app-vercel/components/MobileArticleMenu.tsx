@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   MoreVertical,
   ExternalLink,
@@ -21,6 +21,20 @@ export function MobileArticleMenu({
 }: MobileArticleMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showCopiedNotification, setShowCopiedNotification] = useState(false);
+
+  // Escapeキーでメニューを閉じる
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("keydown", handleEscape);
+      return () => document.removeEventListener("keydown", handleEscape);
+    }
+  }, [isOpen]);
 
   const handleCopyUrl = async () => {
     try {
@@ -51,6 +65,8 @@ export function MobileArticleMenu({
         onClick={() => setIsOpen(!isOpen)}
         className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         aria-label="メニューを開く"
+        aria-haspopup="true"
+        aria-expanded={isOpen}
       >
         <MoreVertical className="size-5 text-gray-600 dark:text-gray-400" />
       </button>
@@ -65,11 +81,15 @@ export function MobileArticleMenu({
           />
 
           {/* メニュー本体 */}
-          <div className="absolute right-0 top-full mt-2 w-56 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg z-50">
+          <div
+            className="absolute right-0 top-full mt-2 w-56 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg z-50"
+            role="menu"
+          >
             <div className="py-1">
               <button
                 onClick={handleOpenOriginal}
                 className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-3"
+                role="menuitem"
               >
                 <ExternalLink className="size-4 text-gray-600 dark:text-gray-400" />
                 <span>元記事を開く</span>
@@ -79,6 +99,7 @@ export function MobileArticleMenu({
                 onClick={handleDownload}
                 disabled={isDownloading}
                 className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                role="menuitem"
               >
                 <Download className="size-4 text-gray-600 dark:text-gray-400" />
                 <span>
@@ -89,6 +110,7 @@ export function MobileArticleMenu({
               <button
                 onClick={handleCopyUrl}
                 className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-3"
+                role="menuitem"
               >
                 <LinkIcon className="size-4 text-gray-600 dark:text-gray-400" />
                 <span>URLをコピー</span>

@@ -125,6 +125,12 @@ export default function ReaderPageClient() {
   });
 
   // ダウンロード機能（モバイルメニュー用）はReaderViewに集約されています
+  const { status: downloadStatus, startDownload } = useDownload({
+    articleUrl: url,
+    chunks,
+    voiceModel: settings.voice_model,
+    speed: playbackRate,
+  });
 
   // 記事を読み込んで保存する共通ロジック
   const loadAndSaveArticle = useCallback(
@@ -591,7 +597,7 @@ export default function ReaderPageClient() {
                     }}
                     disabled={currentPlaylistIndex === 0}
                     className="px-2 sm:px-3 py-1 bg-violet-600 text-white rounded hover:bg-violet-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center gap-1 text-xs sm:text-sm"
-                    aria-label="前の記事"
+                    title="前の記事"
                   >
                     <SkipBack className="size-3 sm:size-4" />
                     <span className="hidden sm:inline">前へ</span>
@@ -606,7 +612,7 @@ export default function ReaderPageClient() {
                       currentPlaylistIndex === playlistState.totalCount - 1
                     }
                     className="px-2 sm:px-3 py-1 bg-violet-600 text-white rounded hover:bg-violet-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center gap-1 text-xs sm:text-sm"
-                    aria-label="次の記事"
+                    title="次の記事"
                   >
                     <span className="hidden sm:inline">次へ</span>
                     <SkipForward className="size-3 sm:size-4" />
@@ -624,7 +630,7 @@ export default function ReaderPageClient() {
                   onClick={isPlaying ? pause : play}
                   disabled={isPlaybackLoading}
                   className="px-3 sm:px-4 py-1.5 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-1 sm:gap-2 text-sm"
-                  aria-label={
+                  title={
                     isPlaybackLoading
                       ? "処理中..."
                       : isPlaying
@@ -649,7 +655,7 @@ export default function ReaderPageClient() {
                   onClick={stop}
                   disabled={!isPlaying && !isPlaybackLoading}
                   className="px-3 sm:px-4 py-1.5 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-1 sm:gap-2 text-sm"
-                  aria-label="停止"
+                  title="停止"
                 >
                   <Square className="size-4 sm:size-5" />
                   <span className="hidden sm:inline">停止</span>
