@@ -12,11 +12,11 @@ export default async function ProfilePage() {
   console.log("[PROFILE PAGE] User email:", session?.user?.email);
 
   if (!session) {
-    console.log('[PROFILE PAGE] No session - redirecting to signin')
-    redirect('/auth/signin')
+    console.log("[PROFILE PAGE] No session - redirecting to signin");
+    redirect("/auth/signin");
   }
 
-  console.log('[PROFILE PAGE] Session valid - rendering page')
+  console.log("[PROFILE PAGE] Session valid - rendering page");
 
   return (
     <div className="h-screen bg-black text-white flex flex-col lg:flex-row">
