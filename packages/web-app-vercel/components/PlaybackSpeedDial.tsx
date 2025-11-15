@@ -214,7 +214,7 @@ export function PlaybackSpeedDial({
                 handleSpeedClick(speeds[currentIndex - 1]);
               }
             }}
-            disabled={speeds.indexOf(value) === 0}
+            disabled={speeds.indexOf(value) <= 0}
             className="flex-1 py-3 px-4 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             ゆっくり
@@ -222,11 +222,11 @@ export function PlaybackSpeedDial({
           <button
             onClick={() => {
               const currentIndex = speeds.indexOf(value);
-              if (currentIndex < speeds.length - 1) {
+              if (currentIndex >= 0 && currentIndex < speeds.length - 1) {
                 handleSpeedClick(speeds[currentIndex + 1]);
               }
             }}
-            disabled={speeds.indexOf(value) === speeds.length - 1}
+            disabled={speeds.indexOf(value) < 0 || speeds.indexOf(value) >= speeds.length - 1}
             className="flex-1 py-3 px-4 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             速く
