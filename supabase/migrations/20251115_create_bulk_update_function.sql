@@ -10,7 +10,6 @@ AS $$
 DECLARE
     removed_count_var INTEGER := 0;
     added_count_var INTEGER := 0;
-    playlist_id UUID;
 BEGIN
     -- Remove items from specified playlists
     IF array_length(remove_playlist_ids, 1) > 0 THEN

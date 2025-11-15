@@ -32,8 +32,11 @@ export async function resolveArticleId(articleId: string, userEmail: string): Pr
         .single()
 
     if (error || !data?.articles) {
-        throw new Error('Article not found or not owned by user')
+        throw new Error('Article not found or not owned by user');
     }
-
-    return (data.articles as { id: string }[])[0].id
+    const article = Array.isArray(data.articles) ? data.articles[0] : data.articles;
+    if (!article?.id) {
+        throw new Error('Article not found or not owned by user');
+    }
+    return article.id;
 }
