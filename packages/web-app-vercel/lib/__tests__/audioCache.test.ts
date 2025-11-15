@@ -99,7 +99,7 @@ describe('AudioCache', () => {
             const { synthesizeSpeech } = require('../api');
             const url = await cache.get('test text', 'voice1', 'url1');
             expect(synthesizeSpeech).toHaveBeenCalledTimes(1);
-            expect(synthesizeSpeech).toHaveBeenCalledWith('test text', 'voice1', 'url1');
+            expect(synthesizeSpeech).toHaveBeenCalledWith('test text', undefined, 'voice1', 'url1');
             expect(url).toMatch(/^blob:/);
         });
 
