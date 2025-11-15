@@ -14,6 +14,8 @@ import { extractContent } from "@/lib/api";
 import { usePlayback } from "@/hooks/usePlayback";
 import { articleStorage } from "@/lib/articleStorage";
 import { logger } from "@/lib/logger";
+import { useDownload } from "@/hooks/useDownload";
+import { MobileArticleMenu } from "@/components/MobileArticleMenu";
 import { recordArticleStats } from "@/lib/articleStats";
 import { parseHTMLToParagraphs } from "@/lib/paragraphParser";
 import { UserSettings, DEFAULT_SETTINGS } from "@/types/settings";
@@ -120,6 +122,14 @@ export default function ReaderPageClient() {
         }
       }
     },
+  });
+
+  // ダウンロード機能（モバイルメニュー用）はReaderViewに集約されています
+  const { status: downloadStatus, startDownload } = useDownload({
+    articleUrl: url,
+    chunks,
+    voiceModel: settings.voice_model,
+    speed: playbackRate,
   });
 
   // 記事を読み込んで保存する共通ロジック
@@ -474,87 +484,111 @@ export default function ReaderPageClient() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* ヘッダー: URL入力欄 */}
+      {/* ヘッダー: コンパクト化されたナビゲーションとコントロール */}
       <header className="sticky top-0 z-10 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-        <div className="max-w-4xl mx-auto p-4">
-          <div className="flex items-center gap-4 mb-4">
+        <div className="max-w-4xl mx-auto p-2 sm:p-4">
+          {/* トップバー: ナビゲーションとタイトル */}
+          <div className="flex items-center justify-between gap-2 mb-2">
             <button
-              onClick={() => router.push("/")}
-              className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+              onClick={() => {
+                if (isPlaylistMode && playlistState.playlistId) {
+                  router.push(`/playlists/${playlistState.playlistId}`);
+                } else {
+                  router.push("/");
+                }
+              }}
+              className="px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors shrink-0"
             >
-              ← 記事一覧
+              ← {isPlaylistMode ? "プレイリストに戻る" : "記事一覧"}
             </button>
-            <h1 className="text-2xl font-bold">Audicle</h1>
+            <h1 className="text-lg sm:text-2xl font-bold">Audicle</h1>
+            {/* モバイルメニュー: 640px未満で表示 */}
+            {url && (
+              <div className="sm:hidden">
+                <MobileArticleMenu
+                  articleUrl={url}
+                  onDownload={startDownload}
+                  isDownloading={downloadStatus === "downloading"}
+                />
+              </div>
+            )}
           </div>
+
+          {/* 記事タイトル: ellipsisで1行に省略 */}
           {title && (
-            <h2 className="text-lg text-gray-600 dark:text-gray-400 mb-4">
+            <h2
+              className="text-sm sm:text-lg text-gray-600 dark:text-gray-400 mb-2 truncate"
+              title={title}
+            >
               {title}
             </h2>
           )}
-          <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-            <input
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="記事のURLを入力してください"
-              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
-              disabled={isLoading}
-              required
-            />
 
-            <div className="flex gap-2 items-center">
-              <label className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                追加先:
-              </label>
-              <select
-                value={selectedPlaylistId}
-                onChange={(e) => setSelectedPlaylistId(e.target.value)}
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={isLoading || playlists.length === 0}
-              >
-                {playlists.map((playlist) => (
-                  <option key={playlist.id} value={playlist.id}>
-                    {playlist.is_default ? "📌 " : ""}
-                    {playlist.name}
-                  </option>
-                ))}
-              </select>
-
-              <button
-                type="submit"
+          {/* URL入力フォーム: チャンクがない場合のみ表示 */}
+          {chunks.length === 0 && (
+            <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+              <input
+                type="url"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder="記事のURLを入力してください"
+                className="flex-1 px-3 sm:px-4 py-1.5 sm:py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={isLoading}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-              >
-                {isLoading ? "読込中..." : "読込"}
-              </button>
-            </div>
-          </form>
+                required
+              />
+
+              <div className="flex gap-2 items-center">
+                <label className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                  追加先:
+                </label>
+                <select
+                  value={selectedPlaylistId}
+                  onChange={(e) => setSelectedPlaylistId(e.target.value)}
+                  className="flex-1 px-2 sm:px-4 py-1.5 sm:py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={isLoading || playlists.length === 0}
+                >
+                  {playlists.map((playlist) => (
+                    <option key={playlist.id} value={playlist.id}>
+                      {playlist.is_default ? "📌 " : ""}
+                      {playlist.name}
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="px-4 sm:px-6 py-1.5 sm:py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shrink-0"
+                >
+                  {isLoading ? "読込中" : "読込"}
+                </button>
+              </div>
+            </form>
+          )}
+
           {error && (
-            <div className="mt-2 text-red-600 dark:text-red-400 text-sm">
+            <div className="mt-2 text-red-600 dark:text-red-400 text-xs sm:text-sm">
               {error}
             </div>
           )}
           {playbackError && (
-            <div className="mt-2 text-red-600 dark:text-red-400 text-sm">
+            <div className="mt-2 text-red-600 dark:text-red-400 text-xs sm:text-sm">
               {playbackError}
             </div>
           )}
-          {/* プレイリスト再生情報 */}
+          {/* プレイリスト再生情報: コンパクト化 */}
           {isPlaylistMode && playlistState.isPlaylistMode && (
-            <div className="mt-4 bg-violet-950/30 p-4 rounded-lg border border-violet-900/50">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <p className="text-sm text-zinc-400">
-                    プレイリストから再生中
-                  </p>
-                  <p className="text-lg font-semibold text-violet-300">
+            <div className="mt-2 bg-violet-950/30 p-2 sm:p-3 rounded-lg border border-violet-900/50">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-zinc-400 truncate">
                     {playlistState.playlistName}
                   </p>
-                  <p className="text-sm text-zinc-500">
+                  <p className="text-xs sm:text-sm text-zinc-500">
                     {currentPlaylistIndex + 1} / {playlistState.totalCount}
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-1 sm:gap-2">
                   <button
                     onClick={() => {
                       if (currentPlaylistIndex > 0) {
@@ -562,9 +596,10 @@ export default function ReaderPageClient() {
                       }
                     }}
                     disabled={currentPlaylistIndex === 0}
-                    className="px-3 py-1 bg-violet-600 text-white rounded hover:bg-violet-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center gap-1 text-sm"
+                    className="px-2 sm:px-3 py-1 bg-violet-600 text-white rounded hover:bg-violet-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center gap-1 text-xs sm:text-sm"
+                    title="前の記事"
                   >
-                    <SkipBack className="size-4" />
+                    <SkipBack className="size-3 sm:size-4" />
                     <span className="hidden sm:inline">前へ</span>
                   </button>
                   <button
@@ -576,34 +611,25 @@ export default function ReaderPageClient() {
                     disabled={
                       currentPlaylistIndex === playlistState.totalCount - 1
                     }
-                    className="px-3 py-1 bg-violet-600 text-white rounded hover:bg-violet-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center gap-1 text-sm"
+                    className="px-2 sm:px-3 py-1 bg-violet-600 text-white rounded hover:bg-violet-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center gap-1 text-xs sm:text-sm"
+                    title="次の記事"
                   >
                     <span className="hidden sm:inline">次へ</span>
-                    <SkipForward className="size-4" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (playlistState.playlistId) {
-                        router.push(`/playlists/${playlistState.playlistId}`);
-                      }
-                    }}
-                    className="px-3 py-1 bg-zinc-700 text-white rounded hover:bg-zinc-600 transition-colors text-sm"
-                  >
-                    プレイリストに戻る
+                    <SkipForward className="size-3 sm:size-4" />
                   </button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* 再生コントロール */}
+          {/* 再生コントロール: コンパクト化 */}
           {chunks.length > 0 && (
-            <div className="mt-4 flex flex-col gap-3">
-              <div className="flex items-center gap-2 flex-wrap">
+            <div className="mt-2 flex flex-col gap-2">
+              <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                 <button
                   onClick={isPlaying ? pause : play}
                   disabled={isPlaybackLoading}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 min-w-11"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-1 sm:gap-2 text-sm"
                   title={
                     isPlaybackLoading
                       ? "処理中..."
@@ -613,13 +639,13 @@ export default function ReaderPageClient() {
                   }
                 >
                   {isPlaying ? (
-                    <Pause className="size-5" />
+                    <Pause className="size-4 sm:size-5" />
                   ) : (
-                    <Play className="size-5" />
+                    <Play className="size-4 sm:size-5" />
                   )}
                   <span className="hidden sm:inline">
                     {isPlaybackLoading
-                      ? "処理中..."
+                      ? "処理中"
                       : isPlaying
                       ? "一時停止"
                       : "再生"}
@@ -628,16 +654,16 @@ export default function ReaderPageClient() {
                 <button
                   onClick={stop}
                   disabled={!isPlaying && !isPlaybackLoading}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 min-w-11"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-1 sm:gap-2 text-sm"
                   title="停止"
                 >
-                  <Square className="size-5" />
+                  <Square className="size-4 sm:size-5" />
                   <span className="hidden sm:inline">停止</span>
                 </button>
-                <div className="flex items-center gap-2 ml-auto">
+                <div className="flex items-center gap-1 sm:gap-2 ml-auto">
                   <label
                     htmlFor="playback-rate"
-                    className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap"
+                    className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap"
                   >
                     速度:
                   </label>
@@ -651,9 +677,9 @@ export default function ReaderPageClient() {
                     onChange={(e) =>
                       setPlaybackRate(parseFloat(e.target.value))
                     }
-                    className="w-24 sm:w-32"
+                    className="w-16 sm:w-24"
                   />
-                  <span className="text-sm text-gray-600 dark:text-gray-400 w-12">
+                  <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 w-8 sm:w-12">
                     {playbackRate.toFixed(1)}x
                   </span>
                 </div>
@@ -662,7 +688,7 @@ export default function ReaderPageClient() {
               {articleId && (
                 <button
                   onClick={() => setIsPlaylistModalOpen(true)}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs sm:text-sm"
                   title="プレイリストに追加"
                 >
                   📋 プレイリストに追加
