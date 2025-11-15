@@ -70,10 +70,9 @@ export function PlaybackSpeedDial({
           Math.min(speeds.length - 1, startIndexRef.current - deltaIndex)
         );
         setPreviewIndex(newPreviewIndex);
-        onValueChange(speeds[Math.round(newPreviewIndex)]);
       }
     },
-    [isDragging, totalItemWidth, speeds, onValueChange]
+    [isDragging, totalItemWidth, speeds]
   );
 
   const handlePointerUp = useCallback(() => {
