@@ -35,7 +35,7 @@ export async function resolveArticleId(articleId: string, userEmail: string): Pr
     }
 
     // 2. articles テーブルを検索または作成
-    let { data: article, error: articleError } = await supabase
+    const { data: article, error: articleError } = await supabase
         .from('articles')
         .select('id')
         .eq('url', articleStat.url)
@@ -56,7 +56,25 @@ export async function resolveArticleId(articleId: string, userEmail: string): Pr
             .single()
 
         if (insertError) {
-            throw new Error('Failed to create article record')
+            // レースコンディション対応: 他のリクエストが作成済みの場合
+            if (insertError.code === '23505') {
+                const { data: existingArticle, error: retryError } = await supabase
+                    .from('articles')
+                    .select('id')
+                    .eq('url', articleStat.url)
+                    .eq('owner_email', userEmail)
+                    .single()
+
+                if (retryError || !existingArticle) {
+                    throw new Error('Failed to retrieve article after insert conflict')
+                }
+                return existingArticle.id
+            }
+            throw new Error(`Failed to create article record: ${insertError.message}`)
+        }
+
+        if (!newArticle) {
+            throw new Error('Failed to retrieve new article ID after insert')
         }
         return newArticle.id
     }
