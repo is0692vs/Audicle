@@ -622,9 +622,9 @@ export default function ReaderPageClient() {
             </div>
           )}
 
-          {/* 再生コントロール: コンパクト化 */}
+          {/* 再生コントロール: デスクトップのみ */}
           {chunks.length > 0 && (
-            <div className="mt-2 flex flex-col gap-2">
+            <div className="hidden sm:flex mt-2 flex-col gap-2">
               <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                 <button
                   onClick={isPlaying ? pause : play}
@@ -700,7 +700,7 @@ export default function ReaderPageClient() {
       </header>
 
       {/* メインコンテンツ: リーダービューまたは完了画面 */}
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 overflow-hidden pb-32 sm:pb-0">
         {showCompletionScreen && isPlaylistMode ? (
           <PlaylistCompletionScreen
             playlistId={playlistState.playlistId || ""}
@@ -733,6 +733,75 @@ export default function ReaderPageClient() {
           articleTitle={title}
           onPlaylistsUpdated={async () => {}}
         />
+      )}
+
+      {/* モバイル版再生コントロール: 画面下部 */}
+      {chunks.length > 0 && (
+        <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 shadow-lg">
+          <div className="flex flex-col gap-3">
+            {/* 再生ボタン */}
+            <div className="flex items-center justify-center gap-4">
+              <button
+                onClick={isPlaying ? pause : play}
+                disabled={isPlaybackLoading}
+                className="px-6 py-3 bg-green-600 text-white rounded-full hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-lg"
+                title={
+                  isPlaybackLoading
+                    ? "処理中..."
+                    : isPlaying
+                    ? "一時停止"
+                    : "再生"
+                }
+              >
+                {isPlaying ? (
+                  <Pause className="size-6" />
+                ) : (
+                  <Play className="size-6" />
+                )}
+              </button>
+              <button
+                onClick={stop}
+                disabled={!isPlaying && !isPlaybackLoading}
+                className="px-6 py-3 bg-red-600 text-white rounded-full hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-lg"
+                title="停止"
+              >
+                <Square className="size-6" />
+              </button>
+            </div>
+            {/* 速度コントロール */}
+            <div className="flex items-center justify-center gap-3">
+              <label
+                htmlFor="playback-rate-mobile"
+                className="text-sm text-gray-600 dark:text-gray-400"
+              >
+                速度:
+              </label>
+              <input
+                id="playback-rate-mobile"
+                type="range"
+                min="0.8"
+                max="3.0"
+                step="0.1"
+                value={playbackRate}
+                onChange={(e) => setPlaybackRate(parseFloat(e.target.value))}
+                className="w-32"
+              />
+              <span className="text-sm text-gray-600 dark:text-gray-400 w-12">
+                {playbackRate.toFixed(1)}x
+              </span>
+            </div>
+            {/* プレイリスト追加ボタン */}
+            {articleId && (
+              <button
+                onClick={() => setIsPlaylistModalOpen(true)}
+                className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+                title="プレイリストに追加"
+              >
+                📋 プレイリストに追加
+              </button>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
