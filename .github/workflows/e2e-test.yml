@@ -7,10 +7,9 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  e2e-tests:
+  setup:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       
@@ -25,17 +24,115 @@ jobs:
       
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
-      
-      - name: Run E2E tests
-        env:
-          TEST_SESSION_TOKEN: ${{ secrets.TEST_SESSION_TOKEN }}
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-        run: npm run test:e2e
-      
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
+
+  test-auth:
+    name: 認証フロー
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: packages/web-app-vercel
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          name: playwright-report
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run auth tests
+        env:
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+        run: npx playwright test tests/e2e/auth.spec.ts
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: auth-test-results
           path: playwright-report/
-          retention-days: 7
+
+  test-playlist:
+    name: プレイリスト管理
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: packages/web-app-vercel
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run playlist tests
+        env:
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+        run: npx playwright test tests/e2e/playlist.spec.ts
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playlist-test-results
+          path: playwright-report/
+
+  test-popular:
+    name: 人気記事機能
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: packages/web-app-vercel
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run popular articles tests
+        env:
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+        run: npx playwright test tests/e2e/popular-articles.spec.ts
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: popular-test-results
+          path: playwright-report/
+
+  test-article:
+    name: 記事抽出機能
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: packages/web-app-vercel
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run article playback tests
+        env:
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+        run: npx playwright test tests/e2e/article-playback.spec.ts
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: article-test-results
+          path: playwright-report/
