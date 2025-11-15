@@ -17,6 +17,9 @@ test-results/
 playwright-report/
 *.lcov
 
+# Playwright
+playwright/.auth/
+
 # next.js
 /.next/
 /out/

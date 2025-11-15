@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test';
-import { setupAuthSession } from '../helpers/auth';
 
 test('人気記事一覧の表示', async ({ page }) => {
     await page.goto('/popular');
@@ -20,7 +19,6 @@ test('人気記事一覧の表示', async ({ page }) => {
 })
 
 test('人気記事からの即座再生', async ({ page, context }) => {
-    await setupAuthSession(context);
     await page.goto('/popular');
 
     await page.waitForLoadState('networkidle');

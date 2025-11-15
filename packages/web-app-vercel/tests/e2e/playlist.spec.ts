@@ -1,13 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { setupAuthSession } from '../helpers/auth';
-
-test.beforeEach(async ({ page, context }) => {
-    await setupAuthSession(context);
-    await page.goto('/');
-});
 
 test('プレイリスト作成と記事追加', async ({ page, context }) => {
-    await setupAuthSession(context);
     await page.goto('/playlists');
 
     // 作成ボタンをクリックしてフォームを表示
@@ -25,7 +18,6 @@ test('プレイリスト作成と記事追加', async ({ page, context }) => {
 })
 
 test('プレイリストからの連続再生', async ({ page, context }) => {
-    await setupAuthSession(context);
     await page.goto('/playlists');
 
     await page.waitForLoadState('networkidle');

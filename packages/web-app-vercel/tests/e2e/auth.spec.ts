@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test';
-import { setupAuthSession } from '../helpers/auth';
 
 test('ログインページの表示', async ({ page }) => {
     await page.goto('/auth/signin');
@@ -9,8 +8,6 @@ test('ログインページの表示', async ({ page }) => {
 });
 
 test('認証後のプロフィールアクセス', async ({ page, context }) => {
-    await setupAuthSession(context);
-
     await page.goto('/profile');
 
     // ページ読み込み完了を待機
