@@ -46,9 +46,25 @@ export function MobileArticleMenu({
   useEffect(() => {
     if (isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
+      const menuHeight = 160; // メニューのおおよその高さ
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+
+      let top: number;
+      if (spaceBelow >= menuHeight) {
+        // 下に十分なスペースがある場合
+        top = rect.bottom + 8;
+      } else if (spaceAbove >= menuHeight) {
+        // 上に十分なスペースがある場合
+        top = rect.top - menuHeight - 8;
+      } else {
+        // どちらにもスペースがない場合、画面中央に配置
+        top = (window.innerHeight - menuHeight) / 2;
+      }
+
       setMenuPosition({
-        top: rect.bottom + 8,
-        right: window.innerWidth - rect.right,
+        top: Math.max(8, top), // 画面上端から8px以上
+        right: Math.max(8, window.innerWidth - rect.right), // 画面右端から8px以上
       });
     } else {
       setMenuPosition(null);
