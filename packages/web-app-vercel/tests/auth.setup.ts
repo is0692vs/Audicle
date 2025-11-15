@@ -12,6 +12,11 @@ setup('authenticate', async ({ page }) => {
 
     console.log('[AUTH SETUP] Creating new auth state...')
 
+    // 診断ログ追加
+    console.log('[SETUP DIAGNOSTIC] NODE_ENV:', process.env.NODE_ENV)
+    console.log('[SETUP DIAGNOSTIC] TEST_USER_EMAIL:', process.env.TEST_USER_EMAIL)
+    console.log('[SETUP DIAGNOSTIC] TEST_USER_PASSWORD:', process.env.TEST_USER_PASSWORD ? 'SET' : 'NOT SET')
+
     await page.goto('http://localhost:3000/auth/signin')
 
     // Credentials Providerのフォームを探す
