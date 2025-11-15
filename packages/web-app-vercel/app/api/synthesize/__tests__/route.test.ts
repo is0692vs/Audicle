@@ -86,11 +86,10 @@ describe('/api/synthesize route', () => {
 
         const res = await routeModule.POST(req as any);
         expect(res.status).toBe(200);
-        // Body is on the NextResponse - inspect via any
-        const body = (res as any)._body || (res as any).body || (res as any).json;
-        // We at least ensure cacheStats or audioUrls exist on the JSON response by serializing
-        const text = (res as any).text ? await (res as any).text() : undefined;
-        // If body can't be extracted, just assert status is 200 which indicates success
-        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body).toHaveProperty('audioUrls');
+        expect(Array.isArray(body.audioUrls)).toBe(true);
+        expect(body.audioUrls.length).toBe(1);
+        expect(body.audioUrls[0]).toBe('https://storage.example/audio.mp3');
     });
 });
