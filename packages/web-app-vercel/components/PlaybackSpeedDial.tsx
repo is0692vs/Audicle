@@ -108,7 +108,7 @@ export function PlaybackSpeedDial({
   if (!open) return null;
 
   const currentSpeed = speeds[selectedIndex];
-  const markerPosition = selectedIndex / (speeds.length - 1) * 100;
+  const markerPosition = (selectedIndex / (speeds.length - 1)) * 100;
 
   return (
     <div
@@ -140,7 +140,7 @@ export function PlaybackSpeedDial({
 
             {/* 速度マーカー */}
             {speeds.map((speed, index) => {
-              const position = index / (speeds.length - 1) * 100;
+              const position = (index / (speeds.length - 1)) * 100;
               const isSelected = index === selectedIndex;
 
               return (
