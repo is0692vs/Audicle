@@ -16,7 +16,7 @@ import { RotateCcw } from "lucide-react";
 import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
 import toast from "react-hot-toast";
 
-const POPULAR_CACHE_KEY = "audicle_popular_articles_v1";
+const POPULAR_CACHE_KEY = "audicle_popular_articles_v2";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // limit fetches to once per day
 
 type CachedPopularEntry = {
