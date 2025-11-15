@@ -20,8 +20,7 @@ export default defineConfig({
     use: {
         baseURL: 'http://localhost:3000',
         trace: 'on-first-retry',
-        // 認証状態を全テストで使用
-        storageState: 'playwright/.auth/user.json',
+        // storageStateはここから削除
     },
     projects: [
         // 認証セットアップ（最初に実行）
@@ -35,6 +34,7 @@ export default defineConfig({
             name: 'chromium',
             use: {
                 ...devices['Desktop Chrome'],
+                storageState: 'playwright/.auth/user.json', // ここに移動
             },
             dependencies: ['setup'],
         },
@@ -46,6 +46,7 @@ export default defineConfig({
         timeout: 120000,
         env: {
             NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET!,
+            NODE_ENV: 'test',
         },
     },
 })
