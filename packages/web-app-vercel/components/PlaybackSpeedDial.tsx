@@ -173,7 +173,7 @@ export function PlaybackSpeedDial({
                   return (
                     <div
                       key={speed}
-                      onClick={() => handleSpeedClick(speed)}
+                      onClick={() => onValueChange(speed)}
                       className="flex flex-col items-center justify-center mx-2 transition-all duration-200 cursor-pointer"
                       style={{
                         transform: `scale(${scale})`,
