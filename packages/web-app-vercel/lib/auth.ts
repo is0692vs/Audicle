@@ -65,7 +65,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 await initializeNewUser(user.id, user.email || '');
                 return true
             }
-            
+
             const email = user.email;
             if (!email) {
                 throw new Error('NO_EMAIL: メールアドレスが取得できませんでした');

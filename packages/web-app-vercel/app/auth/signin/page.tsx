@@ -37,6 +37,7 @@ export default function SignIn() {
         <div className="space-y-4">
           <button
             onClick={handleGoogleSignIn}
+            data-testid="google-signin-button"
             className="w-full flex items-center justify-center gap-3 bg-white text-gray-900 px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors"
           >
             Googleでログイン
