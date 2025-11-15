@@ -19,15 +19,41 @@ setup('authenticate', async ({ page }) => {
 
     await page.goto('http://localhost:3000/auth/signin')
 
+    // ネットワークリクエストを監視（ログインボタンクリックの前に設定）
+    page.on('request', request => {
+        if (request.url().includes('/api/auth')) {
+            console.log('[AUTH SETUP] Auth API request:', request.method(), request.url())
+        }
+    })
+
+    page.on('response', async response => {
+        if (response.url().includes('/api/auth')) {
+            console.log('[AUTH SETUP] Auth API response:', response.status(), response.url())
+            const body = await response.text().catch(() => 'Could not read body')
+            console.log('[AUTH SETUP] Response body:', body)
+        }
+    })
+
     // Credentials Providerのフォームを探す
     await page.waitForSelector('input[type="email"]', { timeout: 10000 })
 
     await page.fill('input[type="email"]', process.env.TEST_USER_EMAIL!)
     await page.fill('input[type="password"]', process.env.TEST_USER_PASSWORD!)
 
-    // フォーム内の「ログイン」ボタンをクリック
+    // ログインボタンの状態を確認
+    const loginButton = page.getByRole('button', { name: 'ログイン', exact: true })
+    console.log('[AUTH SETUP] Login button found:', await loginButton.count() > 0)
+    console.log('[AUTH SETUP] Login button is visible:', await loginButton.isVisible())
+    console.log('[AUTH SETUP] Login button is enabled:', await loginButton.isEnabled())
+
+    // ログインボタンをクリック
     console.log('[AUTH SETUP] Clicking login button...')
-    await page.getByRole('button', { name: 'ログイン', exact: true }).click()
+    await loginButton.click()
+
+    // クリック後に少し待つ
+    await page.waitForTimeout(2000)
+
+    console.log('[AUTH SETUP] After click - URL:', page.url())
 
     // ネットワークアイドルを待つ
     console.log('[AUTH SETUP] Waiting for network idle...')
