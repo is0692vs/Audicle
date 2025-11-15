@@ -139,7 +139,9 @@ export function PlaybackSpeedDial({
             <div
               className="absolute inset-0 flex items-center justify-center transition-transform duration-200 ease-out"
               style={{
-                transform: `translateX(${(selectedIndex / (speeds.length - 1) - 0.5) * -100}%)`,
+                transform: `translateX(${
+                  (selectedIndex / (speeds.length - 1) - 0.5) * -100
+                }%)`,
               }}
             >
               <div className="flex items-center space-x-8 px-4">
