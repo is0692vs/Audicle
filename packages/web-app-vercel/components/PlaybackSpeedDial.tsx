@@ -36,10 +36,14 @@ export function PlaybackSpeedDial({
   const MIN_INTERACTION_RADIUS = 40;
   const ANGLE_TOLERANCE = 15;
 
-  const positions = useMemo(() => speeds.map((speed, index) => ({
-    speed,
-    angle: MIN_ANGLE + ANGLE_STEP * index,
-  })), [speeds, ANGLE_STEP]);
+  const positions = useMemo(
+    () =>
+      speeds.map((speed, index) => ({
+        speed,
+        angle: MIN_ANGLE + ANGLE_STEP * index,
+      })),
+    [speeds, ANGLE_STEP]
+  );
 
   const selectByAngle = useCallback(
     (angle: number) => {
@@ -226,7 +230,10 @@ export function PlaybackSpeedDial({
                 handleSpeedClick(speeds[currentIndex + 1]);
               }
             }}
-            disabled={speeds.indexOf(value) < 0 || speeds.indexOf(value) >= speeds.length - 1}
+            disabled={
+              speeds.indexOf(value) < 0 ||
+              speeds.indexOf(value) >= speeds.length - 1
+            }
             className="flex-1 py-3 px-4 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             速く
