@@ -490,10 +490,16 @@ export default function ReaderPageClient() {
           {/* トップバー: ナビゲーションとタイトル */}
           <div className="flex items-center justify-between gap-2 mb-2">
             <button
-              onClick={() => router.push("/")}
+              onClick={() => {
+                if (isPlaylistMode && playlistState.playlistId) {
+                  router.push(`/playlists/${playlistState.playlistId}`);
+                } else {
+                  router.push("/");
+                }
+              }}
               className="px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors shrink-0"
             >
-              ← 記事一覧
+              ← {isPlaylistMode ? "プレイリストに戻る" : "記事一覧"}
             </button>
             <h1 className="text-lg sm:text-2xl font-bold">Audicle</h1>
             {/* モバイルメニュー: 640px未満で表示 */}
