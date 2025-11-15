@@ -40,8 +40,9 @@ export function PlaybackSpeedDial({
   useEffect(() => {
     const newIndex = speeds.indexOf(value);
     const index = newIndex !== -1 ? newIndex : speeds.indexOf(1);
-    setSelectedIndex(index);
-    setPreviewIndex(index);
+    const clampedIndex = Math.max(0, Math.min(speeds.length - 1, index));
+    setSelectedIndex(clampedIndex);
+    setPreviewIndex(clampedIndex);
   }, [value, speeds]);
 
   const handlePointerDown = useCallback(
@@ -51,6 +52,7 @@ export function PlaybackSpeedDial({
       startIndexRef.current = selectedIndex;
       setDragOffset(0);
       e.currentTarget.setPointerCapture(e.pointerId);
+      e.preventDefault();
     },
     [selectedIndex]
   );
@@ -71,6 +73,7 @@ export function PlaybackSpeedDial({
         );
         setPreviewIndex(newPreviewIndex);
       }
+      e.preventDefault();
     },
     [isDragging, totalItemWidth, speeds]
   );
@@ -83,9 +86,16 @@ export function PlaybackSpeedDial({
     }
 
     const roundedIndex = Math.round(previewIndex);
-    setSelectedIndex(roundedIndex);
-    setPreviewIndex(roundedIndex);
-    onValueChange(speeds[roundedIndex]);
+    const centerIndex = Math.floor((speeds.length - 1) / 2);
+    if (roundedIndex < 0 || roundedIndex > speeds.length - 1) {
+      setSelectedIndex(centerIndex);
+      setPreviewIndex(centerIndex);
+      onValueChange(speeds[centerIndex]);
+    } else {
+      setSelectedIndex(roundedIndex);
+      setPreviewIndex(roundedIndex);
+      onValueChange(speeds[roundedIndex]);
+    }
     setDragOffset(0);
   }, [previewIndex, totalItemWidth, speeds, onValueChange]);
 
@@ -101,9 +111,11 @@ export function PlaybackSpeedDial({
   const handleSpeedClick = useCallback(
     (speed: number) => {
       const index = speeds.indexOf(speed);
-      if (index !== -1) setSelectedIndex(index);
-      onValueChange(speed);
-      onOpenChange(false);
+      if (index !== -1 && index >= 0 && index <= speeds.length - 1) {
+        setSelectedIndex(index);
+        onValueChange(speed);
+        onOpenChange(false);
+      }
     },
     [onValueChange, onOpenChange, speeds]
   );
@@ -124,7 +136,11 @@ export function PlaybackSpeedDial({
 
     if (open) {
       document.addEventListener("keydown", handleKeyDown);
-      return () => document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.removeEventListener("keydown", handleKeyDown);
+        document.body.style.overflow = "";
+      };
     }
   }, [open, onOpenChange]);
 
