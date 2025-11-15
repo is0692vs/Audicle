@@ -7,73 +7,64 @@ export interface Article {
     url: string;
     title: string;
     chunks: Chunk[];
-    createdAt: number;
+    createdAt: string;
 }
 
 const STORAGE_KEY = "audicle_articles";
 
+const _readArticles = (): Article[] => {
+    if (typeof window === "undefined") return [];
+    const data = localStorage.getItem(STORAGE_KEY);
+    try {
+        return data ? JSON.parse(data) : [];
+    } catch (e) {
+        console.error("Failed to parse articles from localStorage", e);
+        return [];
+    }
+};
+
+const _writeArticles = (articles: Article[]): void => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(articles));
+};
+
 export const articleStorage = {
     // すべての記事を取得
     getAll: (): Article[] => {
-        if (typeof window === "undefined") return [];
-        const data = localStorage.getItem(STORAGE_KEY);
-        return data ? JSON.parse(data) : [];
+        return _readArticles();
     },
 
     // 記事を追加
-    add: (article: Omit<Article, "id" | "createdAt">): Article => {
+    add: (article: Omit<Article, "id" | "createdAt"> & { id?: string }): Article => {
+        const articles = _readArticles();
         const newArticle: Article = {
             ...article,
-            id: crypto.randomUUID(),
-            createdAt: Date.now(),
+            id: article.id || crypto.randomUUID(),
+            createdAt: new Date().toISOString(),
         };
-        const articles = articleStorage.getAll();
-        articles.unshift(newArticle); // 先頭に追加
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(articles));
+        articles.push(newArticle);
+        _writeArticles(articles);
         return newArticle;
     },
 
-    // 記事をupsert（URLをキーに既存を更新、なければ追加）
-    upsert: (article: Omit<Article, "id" | "createdAt"> & { id?: string }): Article => {
-        const articles = articleStorage.getAll();
-        const existingIndex = articles.findIndex((a) => a.url === article.url);
-
-        if (existingIndex >= 0) {
-            // 既存の記事を更新
-            articles[existingIndex] = {
-                ...articles[existingIndex],
-                ...article,
-                // idが指定されている場合は更新
-                ...(article.id && { id: article.id }),
-            };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(articles));
-            return articles[existingIndex];
-        } else {
-            // 新規追加
-            const newArticle: Article = {
-                ...article,
-                id: article.id || crypto.randomUUID(),
-                createdAt: Date.now(),
-            };
-            articles.unshift(newArticle); // 先頭に追加
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(articles));
-            return newArticle;
-        }
-    },
-
-    // 記事を削除
-    remove: (id: string): void => {
-        const articles = articleStorage.getAll().filter((a) => a.id !== id);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(articles));
+    // 記事を更新
+    update: (id: string, updates: Partial<Omit<Article, "id" | "createdAt">>): Article | null => {
+        const articles = _readArticles();
+        const index = articles.findIndex((a) => a.id === id);
+        if (index === -1) return null;
+        articles[index] = { ...articles[index], ...updates };
+        _writeArticles(articles);
+        return articles[index];
     },
 
     // IDで記事を取得
     getById: (id: string): Article | undefined => {
-        return articleStorage.getAll().find((a) => a.id === id);
+        return _readArticles().find((a) => a.id === id);
     },
 
     // すべてクリア
     clear: (): void => {
+        if (typeof window === "undefined") return;
         localStorage.removeItem(STORAGE_KEY);
     },
 };
