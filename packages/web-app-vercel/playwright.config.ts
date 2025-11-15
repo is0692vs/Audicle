@@ -27,6 +27,9 @@ export default defineConfig({
         {
             name: 'setup',
             testMatch: /.*\.setup\.ts/,
+            use: {
+                baseURL: 'http://localhost:3000',
+            },
         },
 
         // テスト実行（setupの後に実行）
