@@ -1,6 +1,6 @@
 export type Language = 'ja-JP' | 'en-US';
 
-export type VoiceModel = 'ja-JP-Wavenet-B' | 'en-US-Wavenet-C';
+export type VoiceModel = 'ja-JP-Standard-B' | 'en-US-Wavenet-C';
 
 export interface UserSettings {
     playback_speed: number
@@ -37,12 +37,12 @@ export type UpdateSettingsResponse = UpdateSettingsSuccessResponse | UpdateSetti
 
 export const DEFAULT_SETTINGS: UserSettings = {
     playback_speed: 1.0,
-    voice_model: 'ja-JP-Wavenet-B',
+    voice_model: 'ja-JP-Standard-B',
     language: 'ja-JP',
 }
 
 // 利用可能な音声モデル（将来の拡張に対応できる配列）
 export const VOICE_MODELS: { value: VoiceModel; label: string }[] = [
-    { value: 'ja-JP-Wavenet-B', label: '日本語 Wavenet B' },
+    { value: 'ja-JP-Standard-B', label: '日本語 Standard B' },
     { value: 'en-US-Wavenet-C', label: 'English Wavenet C' },
 ];
