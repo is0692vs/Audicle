@@ -41,4 +41,10 @@ setup('authenticate', async ({ page }) => {
     await page.context().storageState({ path: authFile })
 
     console.log('[AUTH SETUP] Authentication state saved to', authFile)
+    
+    // 保存された内容を確認
+    const saved = JSON.parse(fs.readFileSync(authFile, 'utf-8'))
+    console.log('[AUTH SETUP] Saved cookies count:', saved.cookies?.length)
+    console.log('[AUTH SETUP] Saved cookies:', JSON.stringify(saved.cookies, null, 2))
+    console.log('[AUTH SETUP] Saved origins count:', saved.origins?.length)
 })
