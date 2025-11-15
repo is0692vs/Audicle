@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   MoreVertical,
   ExternalLink,
@@ -21,6 +22,7 @@ export function MobileArticleMenu({
 }: MobileArticleMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showCopiedNotification, setShowCopiedNotification] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   // Escapeキーでメニューを閉じる
   useEffect(() => {
@@ -62,6 +64,7 @@ export function MobileArticleMenu({
     <div className="relative">
       {/* メニュートグルボタン */}
       <button
+        ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         aria-label="メニューを開く"
@@ -71,8 +74,8 @@ export function MobileArticleMenu({
         <MoreVertical className="size-5 text-gray-600 dark:text-gray-400" />
       </button>
 
-      {/* ドロップダウンメニュー */}
-      {isOpen && (
+      {/* ドロップダウンメニュー - React Portalでdocument.bodyにレンダリング */}
+      {isOpen && createPortal(
         <>
           {/* 背景オーバーレイ */}
           <div
@@ -82,7 +85,11 @@ export function MobileArticleMenu({
 
           {/* メニュー本体 */}
           <div
-            className="absolute right-0 top-full mt-2 w-56 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg z-50"
+            className="fixed w-56 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg z-50"
+            style={{
+              top: buttonRef.current ? buttonRef.current.getBoundingClientRect().bottom + 8 : 0,
+              right: buttonRef.current ? window.innerWidth - buttonRef.current.getBoundingClientRect().right : 0,
+            }}
             role="menu"
           >
             <div className="py-1">
@@ -117,17 +124,19 @@ export function MobileArticleMenu({
               </button>
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
 
-      {/* コピー完了通知 */}
-      {showCopiedNotification && (
+      {/* コピー完了通知 - React Portalでdocument.bodyにレンダリング */}
+      {showCopiedNotification && createPortal(
         <div
           className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-green-600 text-white text-sm rounded-lg shadow-lg"
           role="status"
         >
           URLをコピーしました
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
