@@ -98,3 +98,7 @@ global.TransformStream = class TransformStream {
     this.writable = new WritableStream();
   }
 };
+
+// URL.createObjectURL のモック（ブラウザAPI）
+global.URL.createObjectURL = jest.fn(() => 'blob:mock-url')
+global.URL.revokeObjectURL = jest.fn()
