@@ -82,29 +82,24 @@ export function PlaybackSpeedDial({
           Math.min(speeds.length - 1, startIndexRef.current - deltaIndex)
         );
         setPreviewIndex(newPreviewIndex);
-        // ライブで再生速度を変更してプレビューする（必要に応じて削除可能）
-        onValueChange(speeds[Math.round(newPreviewIndex)]);
       }
     },
-    [isDragging, totalItemWidth, speeds, onValueChange]
+    [isDragging, totalItemWidth, speeds]
   );
 
   const handlePointerUp = useCallback(() => {
     setIsDragging(false);
-    // スナップ: dragOffset に基づいて一番近いインデックスに
-    const offsetIndex = dragOffset / totalItemWidth;
-    const targetIndex = Math.max(
-      0,
-      Math.min(
-        speeds.length - 1,
-        Math.round(startIndexRef.current - offsetIndex)
-      )
-    );
-    setSelectedIndex(targetIndex);
-    setPreviewIndex(targetIndex);
-    onValueChange(speeds[targetIndex]);
+    if (totalItemWidth <= 0) {
+      setDragOffset(0);
+      return;
+    }
+
+    const roundedIndex = Math.round(previewIndex);
+    setSelectedIndex(roundedIndex);
+    setPreviewIndex(roundedIndex);
+    onValueChange(speeds[roundedIndex]);
     setDragOffset(0);
-  }, [dragOffset, totalItemWidth, speeds, onValueChange]);
+  }, [previewIndex, totalItemWidth, speeds, onValueChange]);
 
   const handleBackdropClick = useCallback(
     (e: React.MouseEvent) => {
@@ -150,10 +145,12 @@ export function PlaybackSpeedDial({
   const currentSpeed = speeds[Math.round(previewIndex)];
 
   // 中央に配置するためのtransform計算
-  const transformValue = `translateX(${-(
-    previewIndex * totalItemWidth +
-    totalItemWidth / 2
-  )}px)`;
+  const transformValue =
+    totalItemWidth > 0
+      ? `translateX(${
+          -(selectedIndex * totalItemWidth + totalItemWidth / 2) + dragOffset
+        }px)`
+      : "translateX(0px)";
 
   return (
     <div
