@@ -32,9 +32,9 @@ export function PlaybackSpeedDial({
   const startXRef = useRef(0);
   const startIndexRef = useRef(0);
   const [dragOffset, setDragOffset] = useState(0);
-  const [selectedIndex, setSelectedIndex] = useState(
-    speeds.indexOf(value) !== -1 ? speeds.indexOf(value) : speeds.indexOf(1)
-  );
+const initialIndex = speeds.indexOf(value) !== -1 ? speeds.indexOf(value) : speeds.indexOf(1);
+const [selectedIndex, setSelectedIndex] = useState(initialIndex);
+const [previewIndex, setPreviewIndex] = useState(initialIndex);
   const [previewIndex, setPreviewIndex] = useState(
     speeds.indexOf(value) !== -1 ? speeds.indexOf(value) : speeds.indexOf(1)
   );
