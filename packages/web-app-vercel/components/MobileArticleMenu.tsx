@@ -75,69 +75,76 @@ export function MobileArticleMenu({
       </button>
 
       {/* ドロップダウンメニュー - React Portalでdocument.bodyにレンダリング */}
-      {isOpen && createPortal(
-        <>
-          {/* 背景オーバーレイ */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
+      {isOpen &&
+        createPortal(
+          <>
+            {/* 背景オーバーレイ */}
+            <div
+              className="fixed inset-0 z-40"
+              onClick={() => setIsOpen(false)}
+            />
 
-          {/* メニュー本体 */}
-          <div
-            className="fixed w-56 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg z-50"
-            style={{
-              top: buttonRef.current ? buttonRef.current.getBoundingClientRect().bottom + 8 : 0,
-              right: buttonRef.current ? window.innerWidth - buttonRef.current.getBoundingClientRect().right : 0,
-            }}
-            role="menu"
-          >
-            <div className="py-1">
-              <button
-                onClick={handleOpenOriginal}
-                className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-3"
-                role="menuitem"
-              >
-                <ExternalLink className="size-4 text-gray-600 dark:text-gray-400" />
-                <span>元記事を開く</span>
-              </button>
+            {/* メニュー本体 */}
+            <div
+              className="fixed w-56 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg z-50"
+              style={{
+                top: buttonRef.current
+                  ? buttonRef.current.getBoundingClientRect().bottom + 8
+                  : 0,
+                right: buttonRef.current
+                  ? window.innerWidth -
+                    buttonRef.current.getBoundingClientRect().right
+                  : 0,
+              }}
+              role="menu"
+            >
+              <div className="py-1">
+                <button
+                  onClick={handleOpenOriginal}
+                  className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-3"
+                  role="menuitem"
+                >
+                  <ExternalLink className="size-4 text-gray-600 dark:text-gray-400" />
+                  <span>元記事を開く</span>
+                </button>
 
-              <button
-                onClick={handleDownload}
-                disabled={isDownloading}
-                className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                role="menuitem"
-              >
-                <Download className="size-4 text-gray-600 dark:text-gray-400" />
-                <span>
-                  {isDownloading ? "ダウンロード中..." : "全文をダウンロード"}
-                </span>
-              </button>
+                <button
+                  onClick={handleDownload}
+                  disabled={isDownloading}
+                  className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                  role="menuitem"
+                >
+                  <Download className="size-4 text-gray-600 dark:text-gray-400" />
+                  <span>
+                    {isDownloading ? "ダウンロード中..." : "全文をダウンロード"}
+                  </span>
+                </button>
 
-              <button
-                onClick={handleCopyUrl}
-                className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-3"
-                role="menuitem"
-              >
-                <LinkIcon className="size-4 text-gray-600 dark:text-gray-400" />
-                <span>URLをコピー</span>
-              </button>
+                <button
+                  onClick={handleCopyUrl}
+                  className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center gap-3"
+                  role="menuitem"
+                >
+                  <LinkIcon className="size-4 text-gray-600 dark:text-gray-400" />
+                  <span>URLをコピー</span>
+                </button>
+              </div>
             </div>
-          </div>
-        </>,
-        document.body
-      )}
+          </>,
+          document.body
+        )}
 
       {/* コピー完了通知 - React Portalでdocument.bodyにレンダリング */}
-      {showCopiedNotification && createPortal(
-        <div
-          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-green-600 text-white text-sm rounded-lg shadow-lg"
-          role="status"
-        >
-          URLをコピーしました
-        </div>,
-        document.body
-      )}
+      {showCopiedNotification &&
+        createPortal(
+          <div
+            className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-green-600 text-white text-sm rounded-lg shadow-lg"
+            role="status"
+          >
+            URLをコピーしました
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
