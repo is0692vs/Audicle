@@ -24,26 +24,16 @@ export async function resolveArticleId(articleId: string, userEmail: string): Pr
     }
 
     // article_hash の場合、article_stats から URL を取得し、articles から UUID を取得
-    const { data: articleStat, error: statError } = await supabase
+    const { data, error } = await supabase
         .from('article_stats')
-        .select('url')
+        .select('articles!inner(id)')
         .eq('article_hash', articleId)
+        .eq('articles.owner_email', userEmail)
         .single()
 
-    if (statError || !articleStat?.url) {
-        throw new Error('Article stats not found')
+    if (error || !data?.articles) {
+        throw new Error('Article not found or not owned by user')
     }
 
-    const { data: article, error: lookupError } = await supabase
-        .from('articles')
-        .select('id')
-        .eq('url', articleStat.url)
-        .eq('owner_email', userEmail)
-        .single()
-
-    if (lookupError || !article) {
-        throw new Error('Article not found in user bookmarks')
-    }
-
-    return article.id
+    return (data.articles as { id: string }).id
 }
