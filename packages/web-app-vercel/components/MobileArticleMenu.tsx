@@ -122,7 +122,7 @@ export function MobileArticleMenu({
 
       {/* コピー完了通知 */}
       {showCopiedNotification && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-green-600 text-white text-sm rounded-lg shadow-lg">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-green-600 text-white text-sm rounded-lg shadow-lg" role="status">
           URLをコピーしました
         </div>
       )}
