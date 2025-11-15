@@ -199,7 +199,7 @@ export function PlaybackSpeedDial({
               >
                 {speeds.map((speed, index) => {
                   const distanceFromCenter = Math.abs(index - previewIndex);
-                  const isSelected = distanceFromCenter < 0.5;
+                  const isSelected = index === Math.round(previewIndex);
                   const scale = isSelected
                     ? 1.2
                     : Math.max(0.8, 1 - distanceFromCenter * 0.1);
