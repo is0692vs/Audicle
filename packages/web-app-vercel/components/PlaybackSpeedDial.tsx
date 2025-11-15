@@ -174,7 +174,6 @@ export function PlaybackSpeedDial({
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
-              onPointerLeave={handlePointerUp}
             >
               {/* 移動する数字リスト */}
               <div
