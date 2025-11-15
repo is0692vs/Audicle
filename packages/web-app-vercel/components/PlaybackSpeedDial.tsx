@@ -25,6 +25,11 @@ export function PlaybackSpeedDial({
     speeds.indexOf(value) !== -1 ? speeds.indexOf(value) : speeds.indexOf(1)
   );
 
+  useEffect(() => {
+    const newIndex = speeds.indexOf(value);
+    setSelectedIndex(newIndex !== -1 ? newIndex : speeds.indexOf(1));
+  }, [value, speeds]);
+
   const MIN_ANGLE = -120;
   const MAX_ANGLE = 120;
   const ANGLE_STEP = (MAX_ANGLE - MIN_ANGLE) / (speeds.length - 1);
