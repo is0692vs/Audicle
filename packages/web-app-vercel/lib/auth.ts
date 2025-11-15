@@ -26,7 +26,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             },
         }),
         // テスト環境でのみ有効
-        ...(process.env.NODE_ENV === 'test'
+        ...(process.env.AUTH_ENV === 'test'
             ? [
                 CredentialsProvider({
                     id: 'test-credentials',
