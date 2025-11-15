@@ -12,6 +12,11 @@ setup('authenticate', async ({ page }) => {
 
     console.log('[AUTH SETUP] Creating new auth state...')
 
+    // 診断ログ追加
+    console.log('[SETUP DIAGNOSTIC] NODE_ENV:', process.env.NODE_ENV)
+    console.log('[SETUP DIAGNOSTIC] TEST_USER_EMAIL:', process.env.TEST_USER_EMAIL)
+    console.log('[SETUP DIAGNOSTIC] TEST_USER_PASSWORD:', process.env.TEST_USER_PASSWORD ? 'SET' : 'NOT SET')
+
     await page.goto('http://localhost:3000/auth/signin')
 
     // Credentials Providerのフォームを探す
@@ -36,4 +41,10 @@ setup('authenticate', async ({ page }) => {
     await page.context().storageState({ path: authFile })
 
     console.log('[AUTH SETUP] Authentication state saved to', authFile)
+    
+    // 保存された内容を確認
+    const saved = JSON.parse(fs.readFileSync(authFile, 'utf-8'))
+    console.log('[AUTH SETUP] Saved cookies count:', saved.cookies?.length)
+    console.log('[AUTH SETUP] Saved cookies:', JSON.stringify(saved.cookies, null, 2))
+    console.log('[AUTH SETUP] Saved origins count:', saved.origins?.length)
 })
