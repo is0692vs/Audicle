@@ -146,9 +146,9 @@ export function PlaybackSpeedDial({
 
   // 中央に配置するためのtransform計算
   const centerOffset = (speeds.length - 1) / 2;
-  const transformValue = `translateX(${(
-    centerOffset - selectedIndex
-  ) * totalItemWidth + dragOffset}px)`;
+  const transformValue = `translateX(${
+    (centerOffset - selectedIndex) * totalItemWidth + dragOffset
+  }px)`;
 
   return (
     <div
@@ -169,7 +169,10 @@ export function PlaybackSpeedDial({
         <div className="relative mb-8">
           <div className="relative h-20 overflow-hidden">
             {/* 中央インジケーター */}
-            <div className="absolute left-1/2 top-0 z-10" style={{transform: `translateX(-50%)`}}>
+            <div
+              className="absolute left-1/2 top-0 z-10"
+              style={{ transform: `translateX(-50%)` }}
+            >
               <div className="w-0 h-0 border-l-4 border-r-4 border-b-6 border-l-transparent border-r-transparent border-b-green-600" />
             </div>
 
