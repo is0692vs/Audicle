@@ -13,7 +13,7 @@ const CACHE_PREFIX = "audio_";
 const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24時間
 const DEFAULT_VOICE = "ja-JP-Wavenet-B";
 
-class AudioCache {
+export class AudioCache {
   private cache = new Map<string, CacheEntry>();
 
   // キャッシュキーを生成（音声モデルと再生速度を含む）

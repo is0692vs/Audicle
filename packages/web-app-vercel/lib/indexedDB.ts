@@ -41,7 +41,7 @@ export interface DownloadedArticle {
 /**
  * キーを生成する
  */
-function generateKey(
+export function generateKey(
     articleUrl: string,
     chunkIndex: number,
     voiceModel?: string

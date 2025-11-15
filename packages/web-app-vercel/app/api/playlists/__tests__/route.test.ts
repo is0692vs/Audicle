@@ -1,0 +1,69 @@
+// @/lib/supabase モックを最初に定義
+jest.mock('@/lib/supabase', () => ({
+    supabase: {
+        from: jest.fn(() => ({
+            select: jest.fn(() => ({
+                eq: jest.fn(() => ({
+                    order: jest.fn(() => ({
+                        order: jest.fn(() => Promise.resolve({
+                            data: [{
+                                id: '1',
+                                name: 'Test Playlist',
+                                owner_email: 'test@example.com',
+                                playlist_items: [{ count: 2 }]
+                            }],
+                            error: null
+                        }))
+                    }))
+                }))
+            })),
+            insert: jest.fn(() => ({
+                select: jest.fn(() => ({
+                    single: jest.fn(() => Promise.resolve({
+                        data: {
+                            id: '1',
+                            name: 'New Playlist',
+                            owner_email: 'test@example.com'
+                        },
+                        error: null
+                    }))
+                }))
+            }))
+        }))
+    }
+}))
+
+// 他のモック
+jest.mock('@/lib/api-auth', () => ({
+    requireAuth: jest.fn(() => Promise.resolve({
+        userEmail: 'test@example.com',
+        response: null
+    }))
+}))
+
+import * as routeModule from '../route'
+
+describe('/api/playlists route', () => {
+    beforeEach(() => {
+        jest.clearAllMocks()
+    })
+
+    it('returns 200 on GET with playlists data', async () => {
+        const res = await routeModule.GET()
+        expect(res.status).toBe(200)
+        const data = await res.json()
+        expect(Array.isArray(data)).toBe(true)
+        expect(data.length).toBeGreaterThan(0)
+        expect(data[0]).toHaveProperty('name', 'Test Playlist')
+    })
+
+    it('returns 400 on POST when name missing', async () => {
+        const mockRequest = new Request('http://localhost:3000/api/playlists', {
+            method: 'POST',
+            body: JSON.stringify({}),
+            headers: { 'Content-Type': 'application/json' }
+        })
+        const res = await routeModule.POST(mockRequest)
+        expect(res.status).toBe(400)
+    })
+})
