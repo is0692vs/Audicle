@@ -36,10 +36,10 @@ export function PlaybackSpeedDial({
   const MIN_INTERACTION_RADIUS = 40;
   const ANGLE_TOLERANCE = 15;
 
-  const positions = speeds.map((speed, index) => ({
+  const positions = useMemo(() => speeds.map((speed, index) => ({
     speed,
     angle: MIN_ANGLE + ANGLE_STEP * index,
-  }));
+  })), [speeds, ANGLE_STEP]);
 
   const selectByAngle = useCallback(
     (angle: number) => {
