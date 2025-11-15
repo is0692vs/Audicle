@@ -23,6 +23,7 @@ export function MobileArticleMenu({
   const [isOpen, setIsOpen] = useState(false);
   const [showCopiedNotification, setShowCopiedNotification] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null);
 
   // Escapeキーでメニューを閉じる
   useEffect(() => {
@@ -35,6 +36,19 @@ export function MobileArticleMenu({
     if (isOpen) {
       document.addEventListener("keydown", handleEscape);
       return () => document.removeEventListener("keydown", handleEscape);
+    }
+  }, [isOpen]);
+
+  // メニュー位置の計算
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom + 8,
+        right: window.innerWidth - rect.right,
+      });
+    } else {
+      setMenuPosition(null);
     }
   }, [isOpen]);
 
@@ -87,15 +101,7 @@ export function MobileArticleMenu({
             {/* メニュー本体 */}
             <div
               className="fixed w-56 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg z-50"
-              style={{
-                top: buttonRef.current
-                  ? buttonRef.current.getBoundingClientRect().bottom + 8
-                  : 0,
-                right: buttonRef.current
-                  ? window.innerWidth -
-                    buttonRef.current.getBoundingClientRect().right
-                  : 0,
-              }}
+              style={menuPosition ? { top: `${menuPosition.top}px`, right: `${menuPosition.right}px` } : {}}
               role="menu"
             >
               <div className="py-1">
