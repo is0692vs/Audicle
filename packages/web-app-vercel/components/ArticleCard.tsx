@@ -24,6 +24,7 @@ export function ArticleCard({
     <Card
       className="bg-zinc-900/50 border-zinc-800 hover:bg-zinc-800/50 transition-colors cursor-pointer"
       onClick={() => onArticleClick(item)}
+      data-testid="playlist-article"
     >
       <CardContent className="p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
