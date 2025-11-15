@@ -201,36 +201,26 @@ export default function ReaderView({
           </div>
         ) : (
           <>
-            <header className="rounded-lg border border-zinc-800 bg-zinc-900 p-4 sm:p-6">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-                    Now reading
-                  </p>
-                  <h1 className="mt-2 line-clamp-2 text-2xl font-semibold leading-snug md:text-3xl">
-                    {articleTitle}
-                  </h1>
-                  {articleUrl && (
-                    <a
-                      href={articleUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-3 inline-flex items-center gap-2 text-sm text-zinc-400 transition-colors hover:text-violet-400"
-                    >
-                      <span className="inline-flex size-6 items-center justify-center rounded-full bg-zinc-800 text-xs">
-                        ↗
-                      </span>
-                      元記事を新しいタブで開く
-                    </a>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-4 sm:mt-5 flex flex-wrap items-center gap-3">
+            {/* デスクトップ用メニューバー: 640px以上で表示 */}
+            <div className="hidden sm:flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 p-4 mb-4">
+              <div className="flex items-center gap-4">
+                {articleUrl && (
+                  <a
+                    href={articleUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 text-sm text-zinc-400 transition-colors hover:text-violet-400"
+                  >
+                    <span className="inline-flex size-6 items-center justify-center rounded-full bg-zinc-800 text-xs">
+                      ↗
+                    </span>
+                    元記事を開く
+                  </a>
+                )}
                 {downloadStatus === "completed" ? (
                   <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-4 py-2 text-sm font-semibold text-emerald-400">
                     <span aria-hidden>✅</span>
-                    <span>オフライン対応完了（{chunks.length}チャンク）</span>
+                    <span>オフライン対応完了({chunks.length}チャンク)</span>
                   </div>
                 ) : (
                   <button
@@ -249,15 +239,16 @@ export default function ReaderView({
                   </button>
                 )}
               </div>
-            </header>
+            </div>
 
             {renderDownloadPanel()}
 
             <section className="relative overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-zinc-900 via-transparent to-transparent" />
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-zinc-900 via-transparent to-transparent" />
-              <div className="relative max-h-[60vh] overflow-y-auto px-6 py-8 sm:max-h-[65vh]">
-                <div className="space-y-4">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-linear-to-b from-zinc-900 via-transparent to-transparent" />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-zinc-900 via-transparent to-transparent" />
+              {/* モバイルでは最大高さを80vhに、デスクトップでは65vhに設定 */}
+              <div className="relative max-h-[80vh] sm:max-h-[65vh] overflow-y-auto px-4 sm:px-6 py-6 sm:py-8">
+                <div className="space-y-3 sm:space-y-4">
                   {chunks.map((chunk) => {
                     const isActive = chunk.id === currentChunkId;
                     const isHeading = /^h[1-6]$/.test(chunk.type);
@@ -291,7 +282,7 @@ export default function ReaderView({
                         data-audicle-id={chunk.id}
                         onClick={() => onChunkClick?.(chunk.id)}
                         className={cn(
-                          "group cursor-pointer rounded-lg border border-transparent bg-zinc-800/50 px-5 py-4 transition-all duration-200 hover:border-violet-500/30 hover:bg-zinc-800",
+                          "group cursor-pointer rounded-lg border border-transparent bg-zinc-800/50 px-4 sm:px-5 py-3 sm:py-4 transition-all duration-200 hover:border-violet-500/30 hover:bg-zinc-800",
                           isActive
                             ? "border-violet-500/60 bg-violet-900/30 ring-2 ring-violet-500/40"
                             : ""
@@ -299,7 +290,7 @@ export default function ReaderView({
                       >
                         <div
                           className={cn(
-                            "whitespace-pre-wrap",
+                            "whitespace-pre-wrap text-base sm:text-lg",
                             typography,
                             isActive && !isHeading ? "font-medium" : undefined
                           )}
