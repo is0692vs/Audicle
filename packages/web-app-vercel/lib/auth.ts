@@ -68,7 +68,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     callbacks: {
         async signIn({ user }) {
             // テスト用ユーザーはホワイトリストチェックをスキップ
-            if (process.env.NODE_ENV === 'test' && user.id === 'test-user-id-123') {
+            if (process.env.AUTH_ENV === 'test' && user.id === 'test-user-id-123') {
                 if (IS_DEBUG) {
                     console.log('[AUTH DEBUG] Test user - skipping whitelist check')
                 }
