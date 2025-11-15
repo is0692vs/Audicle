@@ -7,30 +7,8 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  setup:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: packages/web-app-vercel
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
   test-auth:
     name: 認証フロー
-    needs: setup
     runs-on: ubuntu-latest
     timeout-minutes: 5
     defaults:
@@ -42,6 +20,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: 'packages/web-app-vercel/package-lock.json'
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Run auth tests
@@ -49,16 +28,25 @@ jobs:
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_URL: http://localhost:3000
+          NODE_ENV: test
         run: npx playwright test tests/e2e/auth.spec.ts
+      - name: Upload auth state
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-auth-state
+          path: packages/web-app-vercel/playwright/.auth/
+          retention-days: 1
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
           name: auth-test-results
-          path: playwright-report/
+          path: packages/web-app-vercel/playwright-report/
 
   test-playlist:
     name: プレイリスト管理
-    needs: setup
+    needs: test-auth
     runs-on: ubuntu-latest
     timeout-minutes: 5
     defaults:
@@ -70,23 +58,31 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: 'packages/web-app-vercel/package-lock.json'
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      - name: Download auth state
+        uses: actions/download-artifact@v4
+        with:
+          name: playwright-auth-state
+          path: packages/web-app-vercel/playwright/.auth/
       - name: Run playlist tests
         env:
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_URL: http://localhost:3000
+          NODE_ENV: test
         run: npx playwright test tests/e2e/playlist.spec.ts
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
           name: playlist-test-results
-          path: playwright-report/
+          path: packages/web-app-vercel/playwright-report/
 
   test-popular:
     name: 人気記事機能
-    needs: setup
+    needs: test-auth
     runs-on: ubuntu-latest
     timeout-minutes: 5
     defaults:
@@ -98,23 +94,31 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: 'packages/web-app-vercel/package-lock.json'
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      - name: Download auth state
+        uses: actions/download-artifact@v4
+        with:
+          name: playwright-auth-state
+          path: packages/web-app-vercel/playwright/.auth/
       - name: Run popular articles tests
         env:
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_URL: http://localhost:3000
+          NODE_ENV: test
         run: npx playwright test tests/e2e/popular-articles.spec.ts
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
           name: popular-test-results
-          path: playwright-report/
+          path: packages/web-app-vercel/playwright-report/
 
   test-article:
     name: 記事抽出機能
-    needs: setup
+    needs: test-auth
     runs-on: ubuntu-latest
     timeout-minutes: 5
     defaults:
@@ -126,16 +130,24 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: 'packages/web-app-vercel/package-lock.json'
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      - name: Download auth state
+        uses: actions/download-artifact@v4
+        with:
+          name: playwright-auth-state
+          path: packages/web-app-vercel/playwright/.auth/
       - name: Run article playback tests
         env:
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_URL: http://localhost:3000
+          NODE_ENV: test
         run: npx playwright test tests/e2e/article-playback.spec.ts
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
           name: article-test-results
-          path: playwright-report/
+          path: packages/web-app-vercel/playwright-report/
