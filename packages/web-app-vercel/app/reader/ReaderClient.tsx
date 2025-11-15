@@ -744,7 +744,9 @@ export default function ReaderPageClient() {
 
       {/* モバイル版再生コントロール: 画面下部 - 1行レイアウト */}
       {chunks.length > 0 && (
-        <div className={`sm:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 shadow-lg z-[${zIndex.mobileControls}]`}>
+        <div
+          className={`sm:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 shadow-lg z-[${zIndex.mobileControls}]`}
+        >
           <div className="flex items-center">
             {/* 左側: 再生速度ボタン */}
             <button
