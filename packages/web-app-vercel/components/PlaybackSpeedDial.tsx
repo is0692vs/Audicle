@@ -29,6 +29,8 @@ export function PlaybackSpeedDial({
   const itemRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [totalItemWidth, setTotalItemWidth] = useState(64); // 初期値として64pxを設定
+  const [startX, setStartX] = useState(0);
+  const [startIndex, setStartIndex] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(
     speeds.indexOf(value) !== -1 ? speeds.indexOf(value) : speeds.indexOf(1)
   );
@@ -50,38 +52,29 @@ export function PlaybackSpeedDial({
     }
   }, [open]); // openがtrueになった時に再計算
 
-  const updateFromPointer = useCallback(
-    (clientX: number) => {
-      const track = trackRef.current;
-      if (!track) return;
-
-      const rect = track.getBoundingClientRect();
-      const trackWidth = rect.width;
-      const relativeX = Math.max(0, Math.min(trackWidth, clientX - rect.left));
-      const progress = relativeX / trackWidth;
-      const newIndex = Math.round(progress * (speeds.length - 1));
-
-      setSelectedIndex(newIndex);
-      onValueChange(speeds[newIndex]);
-    },
-    [speeds, onValueChange]
-  );
-
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
       setIsDragging(true);
-      updateFromPointer(e.clientX);
+      setStartX(e.clientX);
+      setStartIndex(selectedIndex);
       e.currentTarget.setPointerCapture(e.pointerId);
     },
-    [updateFromPointer]
+    [selectedIndex]
   );
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
       if (!isDragging) return;
-      updateFromPointer(e.clientX);
+      const deltaX = e.clientX - startX;
+      const deltaIndex = Math.round(deltaX / totalItemWidth);
+      const newIndex = Math.max(
+        0,
+        Math.min(speeds.length - 1, startIndex - deltaIndex)
+      );
+      setSelectedIndex(newIndex);
+      onValueChange(speeds[newIndex]);
     },
-    [isDragging, updateFromPointer]
+    [isDragging, startX, startIndex, totalItemWidth, speeds, onValueChange]
   );
 
   const handlePointerUp = useCallback(() => {
