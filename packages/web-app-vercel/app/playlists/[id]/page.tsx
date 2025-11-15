@@ -63,9 +63,7 @@ export default function PlaylistDetailPage() {
         case "title":
           return a.article.title.localeCompare(b.article.title);
         case "added_at":
-          return (
-            new Date(a.added_at).getTime() - new Date(b.added_at).getTime()
-          );
+          return a.added_at.localeCompare(b.added_at);
         case "url":
           return a.article.url.localeCompare(b.article.url);
         default:
@@ -245,9 +243,7 @@ export default function PlaylistDetailPage() {
                     <ArrowUpDown className="size-4 text-zinc-400" />
                     <Select
                       value={sortOption}
-                      onValueChange={(value: SortOption) =>
-                        setSortOption(value)
-                      }
+                      onValueChange={(value) => setSortOption(value as SortOption)}
                     >
                       <SelectTrigger className="w-32">
                         <SelectValue />
