@@ -136,9 +136,7 @@ export function PlaybackSpeedDial({
   // 中央に配置するためのtransform計算
   const transformValue =
     totalItemWidth > 0
-      ? `translateX(${
-          -(previewIndex * totalItemWidth + totalItemWidth / 2)
-        }px)`
+      ? `translateX(${-(previewIndex * totalItemWidth + totalItemWidth / 2)}px)`
       : "translateX(0px)";
 
   return (
