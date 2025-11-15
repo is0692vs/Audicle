@@ -744,8 +744,8 @@ export default function ReaderPageClient() {
       {/* モバイル版再生コントロール: 画面下部 - 1行レイアウト */}
       {chunks.length > 0 && (
         <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 shadow-lg">
-          <div className="flex items-center justify-between">
-            {/* 再生速度ボタン */}
+          <div className="flex items-center">
+            {/* 左側: 再生速度ボタン */}
             <button
               onClick={() => setIsSpeedModalOpen(true)}
               className="flex items-center gap-1 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
@@ -754,45 +754,48 @@ export default function ReaderPageClient() {
               <span>{playbackRate.toFixed(1)}x</span>
             </button>
 
-            {/* 再生停止ボタン */}
-            <button
-              onClick={isPlaying ? pause : play}
-              disabled={isPlaybackLoading}
-              className="px-6 py-3 bg-green-600 text-white rounded-full hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-lg"
-              title={
-                isPlaybackLoading
-                  ? "処理中..."
-                  : isPlaying
-                  ? "一時停止"
-                  : "再生"
-              }
-            >
-              {isPlaying ? (
-                <Pause className="size-6" />
-              ) : (
-                <Play className="size-6" />
-              )}
-            </button>
-
-            {/* プレイリスト追加ボタン */}
-            {articleId && (
+            {/* 中央: 再生停止ボタン (flex-1で中央を確保) */}
+            <div className="flex-1 flex justify-center">
               <button
-                onClick={() => setIsPlaylistModalOpen(true)}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                title="プレイリストに追加"
+                onClick={isPlaying ? pause : play}
+                disabled={isPlaybackLoading}
+                className="px-6 py-3 bg-green-600 text-white rounded-full hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-lg"
+                title={
+                  isPlaybackLoading
+                    ? "処理中..."
+                    : isPlaying
+                    ? "一時停止"
+                    : "再生"
+                }
               >
-                <Plus className="size-5 text-gray-600 dark:text-gray-400" />
+                {isPlaying ? (
+                  <Pause className="size-6" />
+                ) : (
+                  <Play className="size-6" />
+                )}
               </button>
-            )}
+            </div>
 
-            {/* モバイルメニュー */}
-            {url && (
-              <MobileArticleMenu
-                articleUrl={url}
-                onDownload={startDownload}
-                isDownloading={downloadStatus === "downloading"}
-              />
-            )}
+            {/* 右側: プレイリスト追加ボタンとモバイルメニュー */}
+            <div className="flex items-center gap-2">
+              {articleId && (
+                <button
+                  onClick={() => setIsPlaylistModalOpen(true)}
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  title="プレイリストに追加"
+                >
+                  <Plus className="size-5 text-gray-600 dark:text-gray-400" />
+                </button>
+              )}
+
+              {url && (
+                <MobileArticleMenu
+                  articleUrl={url}
+                  onDownload={startDownload}
+                  isDownloading={downloadStatus === "downloading"}
+                />
+              )}
+            </div>
           </div>
         </div>
       )}

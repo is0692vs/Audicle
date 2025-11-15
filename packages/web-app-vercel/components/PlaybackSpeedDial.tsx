@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 
 interface PlaybackSpeedDialProps {
   open: boolean;
@@ -19,7 +19,7 @@ export function PlaybackSpeedDial({
   onOpenChange,
   speeds = DEFAULT_SPEEDS,
 }: PlaybackSpeedDialProps) {
-  const dialRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(
     speeds.indexOf(value) !== -1 ? speeds.indexOf(value) : speeds.indexOf(1)
@@ -30,68 +30,27 @@ export function PlaybackSpeedDial({
     setSelectedIndex(newIndex !== -1 ? newIndex : speeds.indexOf(1));
   }, [value, speeds]);
 
-  const MIN_ANGLE = -120;
-  const MAX_ANGLE = 120;
-  const ANGLE_STEP = (MAX_ANGLE - MIN_ANGLE) / (speeds.length - 1);
-  const MIN_INTERACTION_RADIUS = 40;
-  const ANGLE_TOLERANCE = 15;
-
-  const positions = useMemo(
-    () =>
-      speeds.map((speed) => ({
-        speed,
-        angle: MIN_ANGLE + ANGLE_STEP * speeds.indexOf(speed),
-      })),
-    [speeds]
-  );
-
-  const selectByAngle = useCallback(
-    (angle: number) => {
-      let closestIndex: number | null = null;
-      let smallestDiff = Number.POSITIVE_INFINITY;
-
-      positions.forEach(({ angle: targetAngle }, index) => {
-        const diff = Math.abs(targetAngle - angle);
-        if (diff < smallestDiff) {
-          smallestDiff = diff;
-          closestIndex = index;
-        }
-      });
-
-      if (closestIndex !== null && smallestDiff <= ANGLE_TOLERANCE) {
-        setSelectedIndex(closestIndex);
-        onValueChange(speeds[closestIndex]);
-      }
-    },
-    [positions, speeds, onValueChange]
-  );
-
   const updateFromPointer = useCallback(
-    (clientX: number, clientY: number) => {
-      const dial = dialRef.current;
-      if (!dial) return;
+    (clientX: number) => {
+      const track = trackRef.current;
+      if (!track) return;
 
-      const rect = dial.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      const deltaX = clientX - centerX;
-      const deltaY = clientY - centerY;
-      const radius = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      const rect = track.getBoundingClientRect();
+      const trackWidth = rect.width;
+      const relativeX = Math.max(0, Math.min(trackWidth, clientX - rect.left));
+      const progress = relativeX / trackWidth;
+      const newIndex = Math.round(progress * (speeds.length - 1));
 
-      if (radius < MIN_INTERACTION_RADIUS) return;
-
-      const angleRadians = Math.atan2(deltaX, -deltaY);
-      const angleDegrees = (angleRadians * 180) / Math.PI;
-
-      selectByAngle(angleDegrees);
+      setSelectedIndex(newIndex);
+      onValueChange(speeds[newIndex]);
     },
-    [selectByAngle]
+    [speeds, onValueChange]
   );
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
       setIsDragging(true);
-      updateFromPointer(e.clientX, e.clientY);
+      updateFromPointer(e.clientX);
       e.currentTarget.setPointerCapture(e.pointerId);
     },
     [updateFromPointer]
@@ -100,7 +59,7 @@ export function PlaybackSpeedDial({
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
       if (!isDragging) return;
-      updateFromPointer(e.clientX, e.clientY);
+      updateFromPointer(e.clientX);
     },
     [isDragging, updateFromPointer]
   );
@@ -126,6 +85,13 @@ export function PlaybackSpeedDial({
     [onValueChange, onOpenChange]
   );
 
+  const handlePresetClick = useCallback(
+    (speed: number) => {
+      onValueChange(speed);
+    },
+    [onValueChange]
+  );
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -141,6 +107,9 @@ export function PlaybackSpeedDial({
 
   if (!open) return null;
 
+  const currentSpeed = speeds[selectedIndex];
+  const markerPosition = (selectedIndex / (speeds.length - 1)) * 100;
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm"
@@ -152,100 +121,80 @@ export function PlaybackSpeedDial({
             再生速度
           </h3>
           <p className="text-2xl font-bold text-green-600 mt-2">
-            {value.toFixed(1)}x
+            {currentSpeed?.toFixed(1)}x
           </p>
         </div>
 
-        <div className="relative h-64 w-64 mx-auto mb-6">
-          {/* 背景円 */}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 shadow-inner" />
-
-          {/* 速度ボタン */}
-          {positions.map(({ speed, angle }, index) => {
-            const isSelected = speeds[selectedIndex] === speed;
-            const radian = (angle * Math.PI) / 180;
-            const radius = 100;
-            const x = Math.sin(radian) * radius;
-            const y = -Math.cos(radian) * radius;
-
-            return (
-              <button
-                key={speed}
-                onClick={() => handleSpeedClick(speed)}
-                className={`absolute w-8 h-8 rounded-full border-2 transition-all duration-200 ${
-                  isSelected
-                    ? "bg-green-600 border-green-600 text-white shadow-lg scale-110"
-                    : "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:scale-105"
-                }`}
-                style={{
-                  left: `calc(50% + ${x}px - 16px)`,
-                  top: `calc(50% + ${y}px - 16px)`,
-                }}
-              >
-                <span className="text-xs font-medium">{speed.toFixed(1)}</span>
-              </button>
-            );
-          })}
-
-          {/* ポインタ */}
-          {selectedIndex !== -1 && (
-            <div
-              className="absolute w-1 h-12 bg-green-600 rounded-full origin-bottom transition-transform duration-200"
-              style={{
-                left: "calc(50% - 2px)",
-                top: "calc(50% - 48px)",
-                transform: `rotate(${positions[selectedIndex]?.angle || 0}deg)`,
-              }}
-            />
-          )}
-
-          {/* 中央の操作エリア */}
+        {/* 水平スライダー */}
+        <div className="relative mb-8">
           <div
-            ref={dialRef}
-            className="absolute inset-0 rounded-full cursor-pointer"
+            ref={trackRef}
+            className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full cursor-pointer"
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerLeave={handlePointerUp}
-          />
+          >
+            {/* トラック背景 */}
+            <div className="absolute inset-0 bg-gray-300 dark:bg-gray-600 rounded-full" />
+
+            {/* 速度マーカー */}
+            {speeds.map((speed, index) => {
+              const position = (index / (speeds.length - 1)) * 100;
+              const isSelected = index === selectedIndex;
+
+              return (
+                <div
+                  key={speed}
+                  className={`absolute w-3 h-3 rounded-full border-2 transition-all duration-200 ${
+                    isSelected
+                      ? "bg-green-600 border-green-600 scale-125"
+                      : "bg-white dark:bg-gray-800 border-gray-400 dark:border-gray-500"
+                  }`}
+                  style={{
+                    left: `${position}%`,
+                    top: "50%",
+                    transform: "translate(-50%, -50%)",
+                  }}
+                  onClick={() => handleSpeedClick(speed)}
+                />
+              );
+            })}
+
+            {/* 緑のマーカー */}
+            <div
+              className="absolute w-4 h-4 bg-green-600 rounded-full border-2 border-white dark:border-gray-900 shadow-lg"
+              style={{
+                left: `${markerPosition}%`,
+                top: "50%",
+                transform: "translate(-50%, -50%)",
+              }}
+            />
+          </div>
+
+          {/* 速度ラベル */}
+          <div className="flex justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
+            <span>{speeds[0]}x</span>
+            <span>{speeds[speeds.length - 1]}x</span>
+          </div>
         </div>
 
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              const currentIndex = speeds.indexOf(value);
-              if (currentIndex > 0) {
-                handleSpeedClick(speeds[currentIndex - 1]);
-              }
-            }}
-            disabled={speeds.indexOf(value) <= 0}
-            className="flex-1 py-3 px-4 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            ゆっくり
-          </button>
-          <button
-            onClick={() => {
-              const currentIndex = speeds.indexOf(value);
-              if (currentIndex >= 0 && currentIndex < speeds.length - 1) {
-                handleSpeedClick(speeds[currentIndex + 1]);
-              }
-            }}
-            disabled={
-              speeds.indexOf(value) < 0 ||
-              speeds.indexOf(value) >= speeds.length - 1
-            }
-            className="flex-1 py-3 px-4 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            速く
-          </button>
+        {/* プリセットボタン */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          {[1, 1.5, 2].map((preset) => (
+            <button
+              key={preset}
+              onClick={() => handlePresetClick(preset)}
+              className={`py-3 px-4 rounded-lg font-medium transition-colors ${
+                Math.abs(currentSpeed - preset) < 0.01
+                  ? "bg-green-600 text-white"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700"
+              }`}
+            >
+              {preset}x
+            </button>
+          ))}
         </div>
-
-        <button
-          onClick={() => onOpenChange(false)}
-          className="w-full mt-4 py-3 px-4 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-        >
-          閉じる
-        </button>
       </div>
     </div>
   );
