@@ -70,10 +70,9 @@ export function PlaybackSpeedDial({
           Math.min(speeds.length - 1, startIndexRef.current - deltaIndex)
         );
         setPreviewIndex(newPreviewIndex);
-        onValueChange(speeds[Math.round(newPreviewIndex)]);
       }
     },
-    [isDragging, totalItemWidth, speeds, onValueChange]
+    [isDragging, totalItemWidth, speeds]
   );
 
   const handlePointerUp = useCallback(() => {
@@ -136,9 +135,7 @@ export function PlaybackSpeedDial({
   // 中央に配置するためのtransform計算
   const transformValue =
     totalItemWidth > 0
-      ? `translateX(${
-          -(previewIndex * totalItemWidth + totalItemWidth / 2)
-        }px)`
+      ? `translateX(${-(previewIndex * totalItemWidth + totalItemWidth / 2)}px)`
       : "translateX(0px)";
 
   return (
@@ -174,7 +171,6 @@ export function PlaybackSpeedDial({
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
-              onPointerLeave={handlePointerUp}
             >
               {/* 移動する数字リスト */}
               <div
