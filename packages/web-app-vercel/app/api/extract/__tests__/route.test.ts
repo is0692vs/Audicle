@@ -33,5 +33,8 @@ describe('/api/extract route', () => {
         })
         const res = await routeModule.POST(mockRequest)
         expect(res.status).toBe(200)
+        const body = await res.json()
+        expect(body).toHaveProperty('content')
+        expect(body.content).toContain('Test content')
     })
 })
