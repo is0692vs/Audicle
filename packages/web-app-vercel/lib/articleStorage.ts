@@ -66,6 +66,40 @@ export const articleStorage = {
         return _readArticles().find((a) => a.id === id);
     },
 
+    // 記事をupsert（URLをキーに既存を更新、なければ追加）
+    upsert: (article: Omit<Article, "id" | "createdAt"> & { id?: string }): Article => {
+        const articles = _readArticles();
+        const existingIndex = articles.findIndex((a) => a.url === article.url);
+
+        if (existingIndex >= 0) {
+            // 既存の記事を更新
+            articles[existingIndex] = {
+                ...articles[existingIndex],
+                ...article,
+                // idが指定されている場合は更新
+                ...(article.id && { id: article.id }),
+            };
+            _writeArticles(articles);
+            return articles[existingIndex];
+        } else {
+            // 新規追加
+            const newArticle: Article = {
+                ...article,
+                id: article.id || crypto.randomUUID(),
+                createdAt: new Date().toISOString(),
+            };
+            articles.unshift(newArticle); // 先頭に追加
+            _writeArticles(articles);
+            return newArticle;
+        }
+    },
+
+    // 記事を削除
+    remove: (id: string): void => {
+        const articles = _readArticles().filter((a) => a.id !== id);
+        _writeArticles(articles);
+    },
+
     // すべてクリア
     clear: (): void => {
         if (typeof window === "undefined") return;
