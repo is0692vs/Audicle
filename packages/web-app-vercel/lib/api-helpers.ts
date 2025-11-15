@@ -35,5 +35,5 @@ export async function resolveArticleId(articleId: string, userEmail: string): Pr
         throw new Error('Article not found or not owned by user')
     }
 
-    return (data.articles as { id: string }).id
+    return (data.articles as { id: string }[])[0].id
 }
