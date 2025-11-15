@@ -35,12 +35,15 @@ export async function resolveArticleId(articleId: string, userEmail: string): Pr
     }
 
     // 2. articles テーブルを検索または作成
-    const { data: article, error: articleError } = await supabase
-        .from('articles')
-        .select('id')
-        .eq('url', articleStat.url)
-        .eq('owner_email', userEmail)
-        .single()
+    const findArticle = () =>
+        supabase
+            .from('articles')
+            .select('id')
+            .eq('url', articleStat.url)
+            .eq('owner_email', userEmail)
+            .single()
+
+    const { data: article, error: articleError } = await findArticle()
 
     if (articleError && articleError.code === 'PGRST116') { // Not found
         // レコードが存在しない場合は作成
@@ -49,8 +52,8 @@ export async function resolveArticleId(articleId: string, userEmail: string): Pr
             .insert({
                 url: articleStat.url,
                 title: articleStat.title,
-                owner_email: userEmail,
-                created_at: new Date().toISOString()
+                owner_email: userEmail
+                // created_at はDBのデフォルト値 (NOW()) を使用
             })
             .select('id')
             .single()
@@ -58,12 +61,7 @@ export async function resolveArticleId(articleId: string, userEmail: string): Pr
         if (insertError) {
             // レースコンディション対応: 他のリクエストが作成済みの場合
             if (insertError.code === '23505') {
-                const { data: existingArticle, error: retryError } = await supabase
-                    .from('articles')
-                    .select('id')
-                    .eq('url', articleStat.url)
-                    .eq('owner_email', userEmail)
-                    .single()
+                const { data: existingArticle, error: retryError } = await findArticle()
 
                 if (retryError || !existingArticle) {
                     throw new Error('Failed to retrieve article after insert conflict')
