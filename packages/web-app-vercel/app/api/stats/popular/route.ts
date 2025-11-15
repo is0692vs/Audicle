@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 
 export interface PopularArticle {
+    articleId: string;
     articleHash: string;
     url: string;
     title: string;
@@ -112,8 +113,11 @@ export async function GET(request: NextRequest) {
             );
         }
 
+        console.log('Raw data from article_stats:', data?.slice(0, 1)); // 最初の1つだけログ
+
         // レスポンスの整形
         const articles: PopularArticle[] = (data || []).map((row) => ({
+            articleId: row.article_id || row.article_hash,
             articleHash: row.article_hash,
             url: row.url,
             title: row.title,
@@ -125,6 +129,8 @@ export async function GET(request: NextRequest) {
             isFullyCached: row.is_fully_cached,
             lastAccessedAt: row.last_accessed_at,
         }));
+
+        console.log('Popular articles response:', articles.slice(0, 2)); // 最初の2つだけログ
 
         const response: PopularArticlesResponse = {
             articles,

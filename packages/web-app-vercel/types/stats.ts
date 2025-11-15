@@ -3,6 +3,7 @@
 export type Period = 'today' | 'week' | 'month' | 'all';
 
 export interface PopularArticle {
+    articleId: string;
     articleHash: string;
     url: string;
     title: string;

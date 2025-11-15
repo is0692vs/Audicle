@@ -52,7 +52,7 @@ export function useUpdateArticlePlaylistsMutation() {
             addToPlaylistIds: string[];
             removeFromPlaylistIds: string[];
         }) => {
-            const response = await fetch("/api/playlists/bulk-update", {
+            const response = await fetch("/api/playlists/bulk_update", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data),

@@ -13,6 +13,7 @@ import type {
   PopularArticle,
 } from "@/types/stats";
 import { RotateCcw } from "lucide-react";
+import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
 
 const POPULAR_CACHE_KEY = "audicle_popular_articles_v1";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // limit fetches to once per day
@@ -65,11 +66,17 @@ export default function PopularPage() {
   const [error, setError] = useState<string | null>(null);
   const [lastFetchedAt, setLastFetchedAt] = useState<number | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
+  const [selectedArticle, setSelectedArticle] = useState<PopularArticle | null>(
+    null
+  );
 
   const fetchPopularArticles = useCallback(async (selectedPeriod: Period) => {
     setIsLoading(true);
     setError(null);
     setNotice(null);
+
+    console.log('fetchPopularArticles called with period:', selectedPeriod);
 
     try {
       const response = await fetch(
@@ -98,27 +105,10 @@ export default function PopularPage() {
   }, []);
 
   useEffect(() => {
-    const cached = getCachedEntry(period);
-    if (cached && isFresh(cached.fetchedAt)) {
-      // 新鮮なキャッシュがあれば表示
-      setArticles(cached.articles);
-      setLastFetchedAt(cached.fetchedAt);
-      setIsLoading(false);
-      setError(null);
-      setNotice(null);
-    } else {
-      // キャッシュがないか古い場合は取得
-      if (cached) {
-        // 古いデータがあれば、取得中にそれを表示
-        setArticles(cached.articles);
-        setLastFetchedAt(cached.fetchedAt);
-      } else {
-        // キャッシュがない場合は、前の期間のデータが表示されるのを防ぐためにリストをクリア
-        setArticles([]);
-        setLastFetchedAt(null);
-      }
-      fetchPopularArticles(period);
-    }
+    // キャッシュを無視して常にAPIを呼ぶ（デバッグ用）
+    setArticles([]);
+    setLastFetchedAt(null);
+    fetchPopularArticles(period);
   }, [period, fetchPopularArticles]);
 
   const handleRead = (url: string) => {
@@ -131,6 +121,12 @@ export default function PopularPage() {
       return;
     }
     fetchPopularArticles(period);
+  };
+
+  const handlePlaylistAdd = (article: PopularArticle) => {
+    console.log('handlePlaylistAdd called with article:', article);
+    setSelectedArticle(article);
+    setIsPlaylistModalOpen(true);
   };
 
   const formattedLastFetchedAt =
@@ -227,6 +223,7 @@ export default function PopularPage() {
                   key={article.articleHash}
                   article={article}
                   onRead={handleRead}
+                  onPlaylistAdd={handlePlaylistAdd}
                 />
               ))}
             </div>
@@ -240,6 +237,21 @@ export default function PopularPage() {
           )}
         </div>
       </main>
+
+      {selectedArticle && (
+        <PlaylistSelectorModal
+          isOpen={isPlaylistModalOpen}
+          onClose={() => {
+            setIsPlaylistModalOpen(false);
+            setSelectedArticle(null);
+          }}
+          articleId={selectedArticle.articleId}
+          articleTitle={selectedArticle.title}
+          onPlaylistsUpdated={async () => {
+            // 必要に応じて更新
+          }}
+        />
+      )}
     </div>
   );
 }
