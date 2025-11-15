@@ -11,7 +11,7 @@ const customJestConfig = {
     "^@/(.*)$": "<rootDir>/$1",
     "^until-async$": "<rootDir>/__mocks__/until-async.js",
   },
-  testPathIgnorePatterns: ["<rootDir>/.next/", "<rootDir>/node_modules/"],
+  testPathIgnorePatterns: ["<rootDir>/.next/", "<rootDir>/node_modules/", "<rootDir>/tests/e2e/"],
   transformIgnorePatterns: [
     "node_modules/(?!(msw|@mswjs|@bundled-es-modules|until-async|strict-event-emitter|@open-draft)/)",
   ],
