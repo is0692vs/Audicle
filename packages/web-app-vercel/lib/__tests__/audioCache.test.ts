@@ -94,7 +94,23 @@ describe('AudioCache', () => {
         });
     });
 
-    // Note: get method testing would require mocking synthesizeSpeech properly,
-    // but since it's async and involves external API, we'll skip for now.
-    // In a real scenario, we'd mock it and test cache hit/miss.
+    describe('get', () => {
+        it('should call synthesizeSpeech on cache miss and return a blob URL', async () => {
+            const { synthesizeSpeech } = require('../api');
+            const url = await cache.get('test text', 'voice1', 'url1');
+            expect(synthesizeSpeech).toHaveBeenCalledTimes(1);
+            expect(synthesizeSpeech).toHaveBeenCalledWith('test text', 'voice1', 'url1');
+            expect(url).toMatch(/^blob:/);
+        });
+
+        it('should not call synthesizeSpeech on cache hit', async () => {
+            const { synthesizeSpeech } = require('../api');
+            // Clear mocks to have a clean slate for this test
+            (synthesizeSpeech as jest.Mock).mockClear();
+
+            await cache.get('test text', 'voice1', 'url1'); // First call, miss
+            await cache.get('test text', 'voice1', 'url1'); // Second call, hit
+            expect(synthesizeSpeech).toHaveBeenCalledTimes(1);
+        });
+    });
 });
