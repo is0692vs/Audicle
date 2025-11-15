@@ -75,12 +75,21 @@ setup('authenticate', async ({ page }) => {
     const cookies = await page.context().cookies()
     console.log('[AUTH SETUP] Current cookies after login:', JSON.stringify(cookies, null, 2))
 
-    // ログイン完了を待機
-    console.log('[AUTH SETUP] Waiting for URL to change from /auth...')
-    await page.waitForURL(/\/(?!auth).*/, { timeout: 10000 })
-    console.log('[AUTH SETUP] URL changed to:', page.url())
+    // ログイン後のURL確認
+    console.log('[AUTH SETUP] Current URL after login:', page.url())
+    console.log('[AUTH SETUP] Page title after login:', await page.title())
 
-    // もう一度ネットワークアイドルを待つ
+    // URL待機を削除（既にリダイレクト済み）
+    // await page.waitForURL(/\/(?!auth).*/, { timeout: 10000 })
+
+    // 代わりに、セッションAPIレスポンスを確認
+    if (page.url().includes('/auth/error')) {
+        throw new Error('[AUTH SETUP] Login failed - redirected to error page')
+    }
+
+    console.log('[AUTH SETUP] Login successful, saving authentication state...')
+
+    // ネットワーク待機
     await page.waitForLoadState('networkidle', { timeout: 10000 })
 
     // 認証状態を保存
