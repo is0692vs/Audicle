@@ -35,7 +35,7 @@ export function MobileArticleMenu({
   };
 
   const handleOpenOriginal = () => {
-    window.open(articleUrl, "_blank", "noreferrer");
+    window.open(articleUrl, "_blank", "noopener,noreferrer");
     setIsOpen(false);
   };
 
