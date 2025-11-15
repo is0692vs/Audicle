@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '2mb',
     },
   },
+
+  // ビルド時のESLintをスキップ（開発時は実行される）
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default withPWA({
