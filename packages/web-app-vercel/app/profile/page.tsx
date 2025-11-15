@@ -1,37 +1,22 @@
-"use client";
-
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 
-export default function ProfilePage() {
+export default async function ProfilePage() {
   console.log("[PROFILE PAGE] Checking authentication...");
 
-  const { data: session, status } = useSession();
+  const session = await getServerSession(authOptions);
   console.log("[PROFILE PAGE] Session:", session ? "EXISTS" : "NULL");
   console.log("[PROFILE PAGE] User ID:", session?.user?.id);
   console.log("[PROFILE PAGE] User email:", session?.user?.email);
 
-  const router = useRouter();
-
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth/signin");
-    }
-  }, [status, router]);
-
-  if (status === "loading") {
-    return (
-      <div className="h-screen bg-black text-white flex items-center justify-center">
-        <p>読み込み中...</p>
-      </div>
-    );
-  }
-
   if (!session) {
-    return null;
+    console.log('[PROFILE PAGE] No session - redirecting to signin')
+    redirect('/auth/signin')
   }
+
+  console.log('[PROFILE PAGE] Session valid - rendering page')
 
   return (
     <div className="h-screen bg-black text-white flex flex-col lg:flex-row">
