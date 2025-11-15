@@ -80,7 +80,7 @@ export async function resolveArticleId(articleId: string, userEmail: string): Pr
     }
 
     if (articleError) {
-        throw new Error('Article lookup failed')
+        throw new Error(`Article lookup failed: ${articleError.message}`)
     }
 
     return article.id
