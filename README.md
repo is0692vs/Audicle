@@ -47,6 +47,75 @@ Audicleは、利用スタイルに合わせて選べる3つの形態で提供さ
 - **再生箇所のハイライト**: どこを読んでいるかが一目でわかります
 - **複数TTSエンジン対応**: 用途に応じて音声合成エンジンを選択可能
 
+## 技術スタック
+
+本プロジェクトは、以下の技術スタックで構築されています。
+
+- **`api-server` (バックエンド)**
+  - **フレームワーク**: FastAPI (Python)
+  - **TTSエンジン**: Google Cloud Text-to-Speech
+  - **デプロイ**: Docker
+
+- **`web-app` / `web-app-vercel` (フロントエンド)**
+  - **フレームワーク**: Next.js, React
+  - **言語**: TypeScript
+  - **UI**: Tailwind CSS
+  - **テスト**: Jest, Playwright
+  - **データベース**: Supabase (Vercel版)
+
+- **`chrome-extension` (ブラウザ拡張機能)**
+  - **言語**: JavaScript
+  - **ライブラリ**: Mozilla Readability.js
+
+## アーキテクチャ概要
+
+Audicleは、モノリポ構成の複数のパッケージから成り立っています。
+
+```
+/packages
+├── api-server/        # 音声合成を行うAPIサーバー
+├── chrome-extension/  # ブラウザ拡張機能
+├── db/                # データベーススキーマ
+└── web-app/           # セルフホスト用Webアプリ
+└── web-app-vercel/    # Vercelホスティング版Webアプリ
+```
+
+- **`chrome-extension`** は、閲覧中のページの本文を抽出し、**`api-server`** に送信して音声データを受け取ります。
+- **`web-app`** は、指定されたURLの記事をサーバーサイドで取得・解析し、音声合成を行います。セルフホスト版はこちらを利用します。
+- **`web-app-vercel`** は、Vercelでのホスティングに最適化されており、ユーザー認証やデータベース連携機能が追加されています。
+
+## APIエンドポイントの例
+
+セルフホスト版の`api-server`は、以下のエンドポイントを提供します。
+
+### テキストを音声合成する
+
+```bash
+curl -X POST "http://localhost:8001/synthesize/simple" \
+-H "Content-Type: application/json" \
+-d '{"text": "これはテストです"}' \
+--output test.mp3
+```
+
+成功すると、`test.mp3`というファイル名で音声データが保存されます。
+
+## トラブルシューティング
+
+### `api-server`が起動しない
+
+- **問題**: `docker-compose up` を実行しても、コンテナが正常に起動しない。
+- **解決策**:
+  - `packages/api-server/credentials` ディレクトリに、Google Cloudの認証情報ファイル (`credentials.json`) が正しく配置されているか確認してください。
+  - Dockerが正常に動作しているか確認してください。
+
+### Chrome拡張機能が動作しない
+
+- **問題**: 拡張機能のアイコンをクリックしても反応がない、または読み上げが開始されない。
+- **解決策**:
+  - `api-server`が正しく起動しているか確認してください。
+  - 拡張機能の設定で、APIサーバーのURLが正しく設定されているか確認してください (`http://localhost:8001`)。
+  - デベロッパーツールのコンソールにエラーメッセージが表示されていないか確認してください。
+
 ## ライセンス
 
 本プロジェクトはMITライセンスです。詳細は[LICENSE](LICENSE)ファイルをご覧ください。
