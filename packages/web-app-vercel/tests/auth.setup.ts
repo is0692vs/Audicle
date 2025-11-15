@@ -26,13 +26,33 @@ setup('authenticate', async ({ page }) => {
     await page.fill('input[type="password"]', process.env.TEST_USER_PASSWORD!)
 
     // フォーム内の「ログイン」ボタンをクリック
+    console.log('[AUTH SETUP] Clicking login button...')
     await page.getByRole('button', { name: 'ログイン', exact: true }).click()
 
     // ネットワークアイドルを待つ
+    console.log('[AUTH SETUP] Waiting for network idle...')
     await page.waitForLoadState('networkidle', { timeout: 10000 })
 
+    // 現在のURLを確認
+    console.log('[AUTH SETUP] Current URL after login:', page.url())
+
+    // ページのタイトルを確認
+    console.log('[AUTH SETUP] Page title after login:', await page.title())
+
+    // エラーメッセージがあるか確認
+    const errorText = await page.locator('text=/エラー|error|失敗|failed/i').textContent().catch(() => null)
+    if (errorText) {
+        console.log('[AUTH SETUP] Error message found:', errorText)
+    }
+
+    // cookieを直接確認
+    const cookies = await page.context().cookies()
+    console.log('[AUTH SETUP] Current cookies after login:', JSON.stringify(cookies, null, 2))
+
     // ログイン完了を待機
+    console.log('[AUTH SETUP] Waiting for URL to change from /auth...')
     await page.waitForURL(/\/(?!auth).*/, { timeout: 10000 })
+    console.log('[AUTH SETUP] URL changed to:', page.url())
 
     // もう一度ネットワークアイドルを待つ
     await page.waitForLoadState('networkidle', { timeout: 10000 })
@@ -41,7 +61,7 @@ setup('authenticate', async ({ page }) => {
     await page.context().storageState({ path: authFile })
 
     console.log('[AUTH SETUP] Authentication state saved to', authFile)
-    
+
     // 保存された内容を確認
     const saved = JSON.parse(fs.readFileSync(authFile, 'utf-8'))
     console.log('[AUTH SETUP] Saved cookies count:', saved.cookies?.length)
