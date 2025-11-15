@@ -483,6 +483,14 @@ export default function ReaderPageClient() {
     [playlistState, router, stop]
   );
 
+  // 再生速度変更ハンドラー（デスクトップ版とモバイル版で共通）
+  const handlePlaybackRateChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setPlaybackRate(parseFloat(e.target.value));
+    },
+    [setPlaybackRate]
+  );
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* ヘッダー: コンパクト化されたナビゲーションとコントロール */}
@@ -667,9 +675,7 @@ export default function ReaderPageClient() {
                     max="3.0"
                     step="0.1"
                     value={playbackRate}
-                    onChange={(e) =>
-                      setPlaybackRate(parseFloat(e.target.value))
-                    }
+                    onChange={handlePlaybackRateChange}
                     className="w-16 sm:w-24"
                   />
                   <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 w-8 sm:w-12">
@@ -768,7 +774,7 @@ export default function ReaderPageClient() {
                 max="3.0"
                 step="0.1"
                 value={playbackRate}
-                onChange={(e) => setPlaybackRate(parseFloat(e.target.value))}
+                onChange={handlePlaybackRateChange}
                 className="w-32"
               />
               <span className="text-sm text-gray-600 dark:text-gray-400 w-12">
