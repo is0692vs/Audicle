@@ -29,7 +29,8 @@ export function PlaybackSpeedDial({
   const itemRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [totalItemWidth, setTotalItemWidth] = useState(64); // 初期値として64pxを設定
-  const [startX, setStartX] = useState(0);
+  const startXRef = useRef(0);
+  const startIndexRef = useRef(0);
   const [dragOffset, setDragOffset] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(
     speeds.indexOf(value) !== -1 ? speeds.indexOf(value) : speeds.indexOf(1)
@@ -52,21 +53,39 @@ export function PlaybackSpeedDial({
     }
   }, [open]); // openがtrueになった時に再計算
 
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    setIsDragging(true);
-    setStartX(e.clientX);
-    setDragOffset(0);
-    e.currentTarget.setPointerCapture(e.pointerId);
-  }, []);
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      setIsDragging(true);
+      startXRef.current = e.clientX;
+      startIndexRef.current = selectedIndex;
+      setDragOffset(0);
+      e.currentTarget.setPointerCapture(e.pointerId);
+    },
+    [selectedIndex]
+  );
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
       if (!isDragging) return;
       const currentX = e.clientX;
-      const totalDeltaX = currentX - startX;
+      const totalDeltaX = currentX - startXRef.current;
       setDragOffset(totalDeltaX);
+
+      // プレビュー選択: 中央に来るアイテムを先にハイライトして見せる
+      if (totalItemWidth > 0) {
+        const deltaIndex = Math.round(totalDeltaX / totalItemWidth);
+        const previewIndex = Math.max(
+          0,
+          Math.min(speeds.length - 1, startIndexRef.current - deltaIndex)
+        );
+        if (previewIndex !== selectedIndex) {
+          setSelectedIndex(previewIndex);
+          // ライブで再生速度を変更してプレビューする（必要に応じて削除可能）
+          onValueChange(speeds[previewIndex]);
+        }
+      }
     },
-    [isDragging, startX]
+    [isDragging, totalItemWidth, speeds, selectedIndex, onValueChange]
   );
 
   const handlePointerUp = useCallback(() => {
@@ -75,12 +94,15 @@ export function PlaybackSpeedDial({
     const offsetIndex = dragOffset / totalItemWidth;
     const targetIndex = Math.max(
       0,
-      Math.min(speeds.length - 1, Math.round(selectedIndex - offsetIndex))
+      Math.min(
+        speeds.length - 1,
+        Math.round(startIndexRef.current - offsetIndex)
+      )
     );
     setSelectedIndex(targetIndex);
     onValueChange(speeds[targetIndex]);
     setDragOffset(0);
-  }, [dragOffset, totalItemWidth, selectedIndex, speeds, onValueChange]);
+  }, [dragOffset, totalItemWidth, speeds, onValueChange]);
 
   const handleBackdropClick = useCallback(
     (e: React.MouseEvent) => {
@@ -93,10 +115,12 @@ export function PlaybackSpeedDial({
 
   const handleSpeedClick = useCallback(
     (speed: number) => {
+      const index = speeds.indexOf(speed);
+      if (index !== -1) setSelectedIndex(index);
       onValueChange(speed);
       onOpenChange(false);
     },
-    [onValueChange, onOpenChange]
+    [onValueChange, onOpenChange, speeds]
   );
 
   const handlePresetClick = useCallback(
@@ -148,7 +172,10 @@ export function PlaybackSpeedDial({
         <div className="relative mb-8">
           <div className="relative h-20 overflow-hidden">
             {/* 中央インジケーター */}
-            <div className="absolute left-1/2 top-0 z-10 transform -translate-x-1/2">
+            <div
+              className="absolute left-1/2 top-0 z-10"
+              style={{ transform: `translateX(-50%)` }}
+            >
               <div className="w-0 h-0 border-l-4 border-r-4 border-b-6 border-l-transparent border-r-transparent border-b-green-600" />
             </div>
 
@@ -163,10 +190,11 @@ export function PlaybackSpeedDial({
             >
               {/* 移動する数字リスト */}
               <div
-                className="absolute top-0 left-1/2 flex items-center transition-transform duration-200 ease-out"
+                className="absolute top-0 left-1/2 flex items-center"
                 style={{
                   transform: transformValue,
                   transformOrigin: "center",
+                  transition: isDragging ? "none" : "transform 0.2s ease-out",
                 }}
               >
                 {speeds.map((speed, index) => {
@@ -183,7 +211,7 @@ export function PlaybackSpeedDial({
                     <div
                       key={speed}
                       ref={index === 0 ? itemRef : null} // 最初のアイテムにrefを設定
-                      onClick={() => onValueChange(speed)}
+                      onClick={() => handleSpeedClick(speed)}
                       className="flex flex-col items-center justify-center mx-2 transition-all duration-200 cursor-pointer"
                       style={{
                         transform: `scale(${scale})`,
