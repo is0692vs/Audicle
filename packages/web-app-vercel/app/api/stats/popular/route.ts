@@ -114,19 +114,27 @@ export async function GET(request: NextRequest) {
         }
 
         // レスポンスの整形
-        const articles: PopularArticle[] = (data || []).map((row) => ({
-            articleId: row.article_id || row.article_hash,
-            articleHash: row.article_hash,
-            url: row.url,
-            title: row.title,
-            domain: row.domain,
-            accessCount: row.access_count,
-            uniqueUsers: row.unique_users,
-            cacheHitRate: parseFloat((row.cache_hit_rate * 100).toFixed(2)),
+        const articles: PopularArticle[] = (data || []).map((row) => {
+            // デバッグログ追加
+            console.log('[DEBUG] row:', JSON.stringify(row));
+            console.log('[DEBUG] row.article_hash:', row.article_hash);
+            console.log('[DEBUG] row.article_id:', row.article_id);
+            console.log('[DEBUG] articleId will be:', row.article_id || row.article_hash);
 
-            isFullyCached: row.is_fully_cached,
-            lastAccessedAt: row.last_accessed_at,
-        }));
+            return {
+                articleId: row.article_id || row.article_hash,
+                articleHash: row.article_hash,
+                url: row.url,
+                title: row.title,
+                domain: row.domain,
+                accessCount: row.access_count,
+                uniqueUsers: row.unique_users,
+                cacheHitRate: parseFloat((row.cache_hit_rate * 100).toFixed(2)),
+
+                isFullyCached: row.is_fully_cached,
+                lastAccessedAt: row.last_accessed_at,
+            };
+        });
 
         const response: PopularArticlesResponse = {
             articles,
