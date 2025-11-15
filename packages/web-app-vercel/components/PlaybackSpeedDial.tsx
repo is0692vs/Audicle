@@ -191,7 +191,7 @@ export function PlaybackSpeedDial({
                 style={{
                   transform: transformValue,
                   transformOrigin: "center",
-                  transition: isDragging ? "none" : undefined,
+                  transition: isDragging ? "none" : "transform 0.2s ease-out",
                 }}
               >
                 {speeds.map((speed, index) => {
