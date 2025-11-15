@@ -30,7 +30,6 @@ export function PlaybackSpeedDial({
   const [isDragging, setIsDragging] = useState(false);
   const [totalItemWidth, setTotalItemWidth] = useState(64); // 初期値として64pxを設定
   const [startX, setStartX] = useState(0);
-  const [startIndex, setStartIndex] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(
     speeds.indexOf(value) !== -1 ? speeds.indexOf(value) : speeds.indexOf(1)
@@ -53,24 +52,19 @@ export function PlaybackSpeedDial({
     }
   }, [open]); // openがtrueになった時に再計算
 
-  const handlePointerDown = useCallback(
-    (e: React.PointerEvent) => {
-      setIsDragging(true);
-      setStartX(e.clientX);
-      setStartIndex(selectedIndex);
-      setDragOffset(0);
-      e.currentTarget.setPointerCapture(e.pointerId);
-    },
-    [selectedIndex]
-  );
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    setIsDragging(true);
+    setStartX(e.clientX);
+    setDragOffset(0);
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }, []);
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
       if (!isDragging) return;
       const currentX = e.clientX;
-      const deltaX = currentX - startX;
-      setStartX(currentX);
-      setDragOffset((prev) => prev + deltaX);
+      const totalDeltaX = currentX - startX;
+      setDragOffset(totalDeltaX);
     },
     [isDragging, startX]
   );
