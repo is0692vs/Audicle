@@ -150,9 +150,8 @@ export function PlaybackSpeedDial({
   const currentSpeed = speeds[previewIndex];
 
   // 中央に配置するためのtransform計算
-  const centerOffset = (speeds.length - 1) / 2;
   const transformValue = `translateX(${
-    (centerOffset - selectedIndex) * totalItemWidth + dragOffset
+    -(previewIndex * totalItemWidth + totalItemWidth / 2) + dragOffset
   }px)`;
 
   return (
@@ -195,7 +194,7 @@ export function PlaybackSpeedDial({
                 className="absolute top-0 left-1/2 flex items-center"
                 style={{
                   transform: transformValue,
-                  transformOrigin: "center",
+                  transformOrigin: "left",
                   transition: isDragging ? "none" : "transform 0.2s ease-out",
                   pointerEvents: "none",
                 }}
