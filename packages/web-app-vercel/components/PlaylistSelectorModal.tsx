@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { logger } from "@/lib/logger";
 import { usePlaylists } from "@/lib/hooks/usePlaylists";
 import {
@@ -43,9 +43,11 @@ export function PlaylistSelectorModal({
   } = useArticlePlaylists(articleId, { enabled: !itemId && !!articleId });
 
   // 結果を安全に選択（デフォルト値付き）
-  const currentPlaylists = itemId
-    ? playlistsByItemId || []
-    : playlistsByArticleId || [];
+  const currentPlaylists = useMemo(
+    () => (itemId ? playlistsByItemId || [] : playlistsByArticleId || []),
+    [itemId, playlistsByItemId, playlistsByArticleId]
+  );
+
   const isLoadingCurrent = itemId ? isLoadingItemId : isLoadingArticleId;
   const currentError = itemId ? errorItemId : errorArticleId;
   const updateMutation = useUpdateArticlePlaylistsMutation();
@@ -67,6 +69,9 @@ export function PlaylistSelectorModal({
       logger.info("プレイリストを読み込み", {
         totalCount: allPlaylists.length,
         selectedCount: currentIds.size,
+        currentPlaylistsLength: currentPlaylists.length,
+        articleId,
+        itemId,
       });
     }
   }, [isOpen, isLoadingCurrent, currentPlaylists, allPlaylists.length]);

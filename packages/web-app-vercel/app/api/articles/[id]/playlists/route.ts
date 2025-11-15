@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { requireAuth } from '@/lib/api-auth'
 import type { Playlist } from '@/types/playlist'
+import { resolveArticleId } from '@/lib/api-helpers'
 
 export async function GET(
     request: Request,
@@ -12,14 +13,24 @@ export async function GET(
         const { userEmail, response } = await requireAuth()
         if (response) return response
 
+        // まずarticle_hashからarticleのURLを取得（article_statsテーブルから）
+        let actualArticleId: string
+        try {
+            actualArticleId = await resolveArticleId(articleId, userEmail)
+        } catch (error) {
+            return NextResponse.json(
+                { error: error instanceof Error ? error.message : 'Article not found' },
+                { status: 404 }
+            )
+        }
+
         // article_id を持つプレイリストアイテムを取得
         const { data: playlistItems, error: playlistItemsError } = await supabase
             .from('playlist_items')
             .select('playlist_id')
-            .eq('article_id', articleId)
+            .eq('article_id', actualArticleId)
 
         if (playlistItemsError) {
-            console.error('Supabase error:', playlistItemsError)
             return NextResponse.json(
                 { error: 'Failed to fetch playlists' },
                 { status: 500 }
@@ -43,7 +54,6 @@ export async function GET(
             .order('created_at', { ascending: false })
 
         if (playlistsError) {
-            console.error('Supabase error:', playlistsError)
             return NextResponse.json(
                 { error: 'Failed to fetch playlists' },
                 { status: 500 }
@@ -52,7 +62,6 @@ export async function GET(
 
         return NextResponse.json(playlists as Playlist[])
     } catch (error) {
-        console.error('Error in GET /api/articles/[id]/playlists:', error)
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }

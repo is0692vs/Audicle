@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { requireAuth } from '@/lib/api-auth'
+import { resolveArticleId } from '@/lib/api-helpers'
 
 interface BulkUpdateRequest {
     articleId: string
@@ -32,17 +33,13 @@ export async function POST(request: Request) {
             )
         }
 
-        // 記事の所有者確認
-        const { data: article, error: articleError } = await supabase
-            .from('articles')
-            .select('id')
-            .eq('id', articleId)
-            .eq('owner_email', userEmail)
-            .single()
-
-        if (articleError || !article) {
+        // articleId が UUID か article_hash かを判定し、必要に応じて変換
+        let actualArticleId: string
+        try {
+            actualArticleId = await resolveArticleId(articleId, userEmail)
+        } catch (error) {
             return NextResponse.json(
-                { error: 'Article not found' },
+                { error: error instanceof Error ? error.message : 'Article resolution failed' },
                 { status: 404 }
             )
         }
@@ -58,7 +55,6 @@ export async function POST(request: Request) {
                 .eq('owner_email', userEmail);
 
             if (playlistError) {
-                console.error('Supabase playlist check error:', playlistError);
                 return NextResponse.json(
                     { error: 'Failed to verify playlists' },
                     { status: 500 }
@@ -73,47 +69,31 @@ export async function POST(request: Request) {
             }
         }
 
-        // バルク更新API呼び出し（トランザクション保証）
-        let addedCount = 0;
-        let removedCount = 0;
+        // バルク更新処理（RPC関数を使用）
+        const { data: result, error: rpcError } = await supabase.rpc('bulk_update_playlist_items', {
+            article_id_param: actualArticleId,
+            add_playlist_ids: addToPlaylistIds,
+            remove_playlist_ids: removeFromPlaylistIds,
+        });
 
-        if (addToPlaylistIds.length > 0 || removeFromPlaylistIds.length > 0) {
-            const { data, error } = await supabase.rpc('bulk_update_playlist_items', {
-                article_id_param: articleId,
-                add_playlist_ids: addToPlaylistIds,
-                remove_playlist_ids: removeFromPlaylistIds
-            })
-
-            if (error) {
-                console.error('Supabase RPC error:', error)
-                return NextResponse.json(
-                    { error: 'プレイリストの更新に失敗しました' },
-                    { status: 500 }
-                )
-            }
-
-            if (data) {
-                addedCount = data.added_count ?? 0;
-                removedCount = data.removed_count ?? 0;
-
-                console.log("プレイリストを更新", {
-                    articleId,
-                    addedCount,
-                    removedCount,
-                });
-            }
+        if (rpcError) {
+            return NextResponse.json(
+                { error: 'Bulk update failed' },
+                { status: 500 }
+            );
         }
+
+        const { added_count, removed_count } = (result && result[0]) || { added_count: 0, removed_count: 0 };
 
         return NextResponse.json(
             {
                 message: 'Bulk update completed',
-                addedCount,
-                removedCount,
+                addedCount: added_count,
+                removedCount: removed_count,
             },
             { status: 200 }
         )
     } catch (error) {
-        console.error('Error in POST /api/playlists/bulk-update:', error)
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }

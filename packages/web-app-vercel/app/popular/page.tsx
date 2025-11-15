@@ -13,6 +13,8 @@ import type {
   PopularArticle,
 } from "@/types/stats";
 import { RotateCcw } from "lucide-react";
+import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
+import toast from "react-hot-toast";
 
 const POPULAR_CACHE_KEY = "audicle_popular_articles_v1";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // limit fetches to once per day
@@ -65,6 +67,10 @@ export default function PopularPage() {
   const [error, setError] = useState<string | null>(null);
   const [lastFetchedAt, setLastFetchedAt] = useState<number | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
+  const [selectedArticle, setSelectedArticle] = useState<PopularArticle | null>(
+    null
+  );
 
   const fetchPopularArticles = useCallback(async (selectedPeriod: Period) => {
     setIsLoading(true);
@@ -91,7 +97,6 @@ export default function PopularPage() {
       setError(
         err instanceof Error ? err.message : "予期しないエラーが発生しました"
       );
-      console.error("Error fetching popular articles:", err);
     } finally {
       setIsLoading(false);
     }
@@ -131,6 +136,11 @@ export default function PopularPage() {
       return;
     }
     fetchPopularArticles(period);
+  };
+
+  const handlePlaylistAdd = (article: PopularArticle) => {
+    setSelectedArticle(article);
+    setIsPlaylistModalOpen(true);
   };
 
   const formattedLastFetchedAt =
@@ -227,6 +237,7 @@ export default function PopularPage() {
                   key={article.articleHash}
                   article={article}
                   onRead={handleRead}
+                  onPlaylistAdd={handlePlaylistAdd}
                 />
               ))}
             </div>
@@ -240,6 +251,21 @@ export default function PopularPage() {
           )}
         </div>
       </main>
+
+      {selectedArticle && (
+        <PlaylistSelectorModal
+          isOpen={isPlaylistModalOpen}
+          onClose={() => {
+            setIsPlaylistModalOpen(false);
+            setSelectedArticle(null);
+          }}
+          articleId={selectedArticle.articleId}
+          articleTitle={selectedArticle.title}
+          onPlaylistsUpdated={async () => {
+            toast.success("プレイリストが更新されました");
+          }}
+        />
+      )}
     </div>
   );
 }

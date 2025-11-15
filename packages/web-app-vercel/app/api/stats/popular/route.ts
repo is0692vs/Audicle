@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 
 export interface PopularArticle {
+    articleId: string;
     articleHash: string;
     url: string;
     title: string;
@@ -114,6 +115,7 @@ export async function GET(request: NextRequest) {
 
         // レスポンスの整形
         const articles: PopularArticle[] = (data || []).map((row) => ({
+            articleId: row.article_id || row.article_hash,
             articleHash: row.article_hash,
             url: row.url,
             title: row.title,
@@ -133,7 +135,6 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json(response, { status: 200 });
     } catch (error) {
-        console.error('Popular articles error:', error);
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }
