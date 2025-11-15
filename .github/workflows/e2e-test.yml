@@ -33,6 +33,17 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         run: npx playwright test --project=setup --project=chromium tests/e2e/auth.spec.ts
+      - name: Debug - Check auth file
+        if: always()
+        run: |
+          echo "=== Current directory ==="
+          pwd
+          echo "=== List playwright directory ==="
+          ls -la playwright/.auth/ || echo "playwright/.auth/ not found in current dir"
+          echo "=== From repo root ==="
+          ls -la ../.. || echo "Cannot access repo root"
+          echo "=== Find user.json ==="
+          find . -name "user.json" 2>/dev/null || echo "user.json not found"
       - name: Upload auth state
         if: success()
         uses: actions/upload-artifact@v4
