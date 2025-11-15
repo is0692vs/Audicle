@@ -35,9 +35,6 @@ export function PlaybackSpeedDial({
 const initialIndex = speeds.indexOf(value) !== -1 ? speeds.indexOf(value) : speeds.indexOf(1);
 const [selectedIndex, setSelectedIndex] = useState(initialIndex);
 const [previewIndex, setPreviewIndex] = useState(initialIndex);
-  const [previewIndex, setPreviewIndex] = useState(
-    speeds.indexOf(value) !== -1 ? speeds.indexOf(value) : speeds.indexOf(1)
-  );
 
   useEffect(() => {
     const newIndex = speeds.indexOf(value);
