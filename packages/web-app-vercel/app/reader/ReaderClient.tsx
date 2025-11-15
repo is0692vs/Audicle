@@ -507,7 +507,7 @@ export default function ReaderPageClient() {
       <header className="sticky top-0 z-10 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
         <div className="max-w-4xl mx-auto p-3 sm:p-6">
           {/* トップバー: ナビゲーションとタイトル */}
-          <div className="flex items-center justify-center gap-2 mb-2">
+          <div className="relative flex items-center justify-center gap-2 mb-2">
             <button
               onClick={() => {
                 stop(); // ページ遷移前に再生を停止
@@ -517,7 +517,7 @@ export default function ReaderPageClient() {
                   router.push("/");
                 }
               }}
-              className="px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors shrink-0"
+              className="absolute left-0 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors shrink-0"
             >
               ← {isPlaylistMode ? "プレイリストに戻る" : "記事一覧"}
             </button>

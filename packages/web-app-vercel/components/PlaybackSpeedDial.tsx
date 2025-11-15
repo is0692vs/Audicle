@@ -125,51 +125,65 @@ export function PlaybackSpeedDial({
           </p>
         </div>
 
-        {/* 水平スライダー */}
+        {/* 水平スライダー - 中央固定針 + 動くメモリ */}
         <div className="relative mb-8">
           <div
             ref={trackRef}
-            className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full cursor-pointer"
+            className="relative h-12 bg-gray-200 dark:bg-gray-700 rounded-full cursor-pointer overflow-hidden"
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerLeave={handlePointerUp}
           >
-            {/* トラック背景 */}
-            <div className="absolute inset-0 bg-gray-300 dark:bg-gray-600 rounded-full" />
-
-            {/* 速度マーカー */}
-            {speeds.map((speed, index) => {
-              const position = (index / (speeds.length - 1)) * 100;
-              const isSelected = index === selectedIndex;
-
-              return (
-                <div
-                  key={speed}
-                  className={`absolute w-3 h-3 rounded-full border-2 transition-all duration-200 ${
-                    isSelected
-                      ? "bg-green-600 border-green-600 scale-125"
-                      : "bg-white dark:bg-gray-800 border-gray-400 dark:border-gray-500"
-                  }`}
-                  style={{
-                    left: `${position}%`,
-                    top: "50%",
-                    transform: "translate(-50%, -50%)",
-                  }}
-                  onClick={() => handleSpeedClick(speed)}
-                />
-              );
-            })}
-
-            {/* 緑のマーカー */}
+            {/* 動くメモリ部分 */}
             <div
-              className="absolute w-4 h-4 bg-green-600 rounded-full border-2 border-white dark:border-gray-900 shadow-lg"
+              className="absolute inset-0 flex items-center justify-center transition-transform duration-200 ease-out"
               style={{
-                left: `${markerPosition}%`,
-                top: "50%",
-                transform: "translate(-50%, -50%)",
+                transform: `translateX(${
+                  (selectedIndex / (speeds.length - 1) - 0.5) * -100
+                }%)`,
               }}
-            />
+            >
+              <div className="flex items-center space-x-8 px-4">
+                {speeds.map((speed, index) => {
+                  const isSelected = index === selectedIndex;
+                  return (
+                    <div
+                      key={speed}
+                      className={`flex flex-col items-center transition-all duration-200 ${
+                        isSelected ? "scale-110" : "scale-100"
+                      }`}
+                      onClick={() => handleSpeedClick(speed)}
+                    >
+                      {/* メモリ線 */}
+                      <div
+                        className={`w-1 h-6 rounded-full transition-colors duration-200 ${
+                          isSelected
+                            ? "bg-green-600"
+                            : "bg-gray-400 dark:bg-gray-500"
+                        }`}
+                      />
+                      {/* 速度値 */}
+                      <span
+                        className={`text-xs font-medium mt-1 transition-colors duration-200 ${
+                          isSelected
+                            ? "text-green-600"
+                            : "text-gray-600 dark:text-gray-400"
+                        }`}
+                      >
+                        {speed.toFixed(1)}x
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 中央固定針 */}
+            <div className="absolute left-1/2 top-0 bottom-0 flex items-center justify-center pointer-events-none">
+              <div className="w-1 h-8 bg-green-600 rounded-full shadow-lg" />
+              <div className="absolute -bottom-1 w-0 h-0 border-l-2 border-r-2 border-t-4 border-l-transparent border-r-transparent border-t-green-600" />
+            </div>
           </div>
 
           {/* 速度ラベル */}

@@ -15,6 +15,10 @@ interface MobileArticleMenuProps {
   isDownloading?: boolean;
 }
 
+// メニューのおおよその高さ（3つのメニュー項目 + パディングを考慮した値）
+// この値はメニューのレイアウト変更時に更新する必要がある
+const APPROX_MENU_HEIGHT = 160;
+
 export function MobileArticleMenu({
   articleUrl,
   onDownload,
@@ -46,7 +50,7 @@ export function MobileArticleMenu({
   useEffect(() => {
     if (isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
-      const menuHeight = 160; // メニューのおおよその高さ
+      const menuHeight = APPROX_MENU_HEIGHT; // メニューのおおよその高さ
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
 
