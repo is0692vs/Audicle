@@ -1,121 +1,123 @@
+[日本語版はこちら](./README.ja.md)
+
 # Audicle
 
-Audicle（Article + Audio）は、ウェブページ上の記事コンテンツを音声で読み上げるプラットフォームです。
+Audicle (Article + Audio) is a platform that reads article content on web pages aloud.
 
-快適な「ながら読書」体験を提供します。
+It provides a comfortable "reading while doing something else" experience.
 
-## プロダクトラインナップ
+## Product Lineup
 
-Audicleは、利用スタイルに合わせて選べる3つの形態で提供されています。
+Audicle is offered in three forms to suit your usage style.
 
-### 1. Vercelホスティング版（招待制）
+### 1. Vercel-Hosted Version (Invitation-Only)
 
-最も手軽に始められる、クラウド版のWebアプリケーションです。
+The easiest way to get started, this is the cloud version of the web application.
 
-- **特徴**:
-  - アカウント作成やサーバー設定が不要
-  - 最新の機能をすぐに利用可能
-  - 高品質な音声を安定して提供
-- **アクセス**:
-  - 現在、招待制で運用しています。利用をご希望の方はお問い合わせください。
+- **Features**:
+  - No need to create an account or configure a server
+  - The latest features are immediately available
+  - Provides high-quality, stable audio
+- **Access**:
+  - Currently operating on an invitation-only basis. Please contact us if you wish to use it.
 
-### 2. セルフホストWebアプリケーション
+### 2. Self-Hosted Web Application
 
-ご自身のサーバー環境でAudicleを運用したい方向けのバージョンです。
+This version is for those who want to run Audicle in their own server environment.
 
-- **特徴**:
-  - 全ての機能を自由にカスタマイズ可能
-  - 外部サービスへの依存が少ない
-  - Docker Composeで簡単にデプロイ可能
-- **セットアップ**:
-  - `packages/web-app` および `packages/api-server` を参照してください。
+- **Features**:
+  - All features are freely customizable
+  - Less dependence on external services
+  - Easy to deploy with Docker Compose
+- **Setup**:
+  - See `packages/web-app` and `packages/api-server`.
 
-### 3. Chrome拡張機能
+### 3. Chrome Extension
 
-ブラウザに直接インストールして、閲覧中の記事をその場で読み上げるための拡張機能です。
+An extension to install directly into your browser to read the article you are currently viewing on the spot.
 
-- **特徴**:
-  - Webサイトを離れることなく、ワンクリックで読み上げを開始
-  - シンプルで直感的な操作
-- **インストール**:
-  - `packages/chrome-extension` を参照し、デベロッパーモードで読み込んでください。
+- **Features**:
+  - Start reading with a single click without leaving the website
+  - Simple and intuitive operation
+- **Installation**:
+  - See `packages/chrome-extension` and load it in developer mode.
 
-## 主な機能
+## Main Features
 
-- **ワンクリック再生**: 読みたい段落をクリックするだけで再生が開始されます
-- **インテリジェントな本文抽出**: 広告などを除去し、本文のみを抽出
-- **再生箇所のハイライト**: どこを読んでいるかが一目でわかります
-- **複数TTSエンジン対応**: 用途に応じて音声合成エンジンを選択可能
+- **One-Click Playback**: Playback starts just by clicking the paragraph you want to read
+- **Intelligent Content Extraction**: Removes ads and extracts only the main text
+- **Playback Highlighting**: You can see at a glance where it's being read
+- **Multiple TTS Engine Support**: You can select a text-to-speech engine according to your needs
 
-## 技術スタック
+## Tech Stack
 
-本プロジェクトは、以下の技術スタックで構築されています。
+This project is built with the following tech stack.
 
-- **`api-server` (バックエンド)**
-  - **フレームワーク**: FastAPI (Python)
-  - **TTSエンジン**: Google Cloud Text-to-Speech
-  - **デプロイ**: Docker
+- **`api-server` (Backend)**
+  - **Framework**: FastAPI (Python)
+  - **TTS Engine**: Google Cloud Text-to-Speech
+  - **Deployment**: Docker
 
-- **`web-app` / `web-app-vercel` (フロントエンド)**
-  - **フレームワーク**: Next.js, React
-  - **言語**: TypeScript
+- **`web-app` / `web-app-vercel` (Frontend)**
+  - **Framework**: Next.js, React
+  - **Language**: TypeScript
   - **UI**: Tailwind CSS
-  - **テスト**: Jest, Playwright
-  - **データベース**: Supabase (Vercel版)
+  - **Testing**: Jest, Playwright
+  - **Database**: Supabase (Vercel version)
 
-- **`chrome-extension` (ブラウザ拡張機能)**
-  - **言語**: JavaScript
-  - **ライブラリ**: Mozilla Readability.js
+- **`chrome-extension` (Browser Extension)**
+  - **Language**: JavaScript
+  - **Library**: Mozilla Readability.js
 
-## アーキテクチャ概要
+## Architecture Overview
 
-Audicleは、モノリポ構成の複数のパッケージから成り立っています。
+Audicle consists of multiple packages in a monorepo configuration.
 
 ```
 /packages
-├── api-server/        # 音声合成を行うAPIサーバー
-├── chrome-extension/  # ブラウザ拡張機能
-├── db/                # データベーススキーマ
-└── web-app/           # セルフホスト用Webアプリ
-└── web-app-vercel/    # Vercelホスティング版Webアプリ
+├── api-server/        # API server for text-to-speech
+├── chrome-extension/  # Browser extension
+├── db/                # Database schema
+└── web-app/           # Self-hosted web app
+└── web-app-vercel/    # Vercel-hosted web app
 ```
 
-- **`chrome-extension`** は、閲覧中のページの本文を抽出し、**`api-server`** に送信して音声データを受け取ります。
-- **`web-app`** は、指定されたURLの記事をサーバーサイドで取得・解析し、音声合成を行います。セルフホスト版はこちらを利用します。
-- **`web-app-vercel`** は、Vercelでのホスティングに最適化されており、ユーザー認証やデータベース連携機能が追加されています。
+- **`chrome-extension`** extracts the body of the currently viewed page and sends it to the **`api-server`** to receive the audio data.
+- **`web-app`** fetches and parses the article at the specified URL on the server side and performs text-to-speech synthesis. The self-hosted version uses this.
+- **`web-app-vercel`** is optimized for hosting on Vercel, with added user authentication and database integration features.
 
-## APIエンドポイントの例
+## API Endpoint Example
 
-セルフホスト版の`api-server`は、以下のエンドポイントを提供します。
+The self-hosted `api-server` provides the following endpoint.
 
-### テキストを音声合成する
+### Synthesize text to speech
 
 ```bash
 curl -X POST "http://localhost:8001/synthesize/simple" \
 -H "Content-Type: application/json" \
--d '{"text": "これはテストです"}' \
+-d '{"text": "This is a test"}' \
 --output test.mp3
 ```
 
-成功すると、`test.mp3`というファイル名で音声データが保存されます。
+On success, the audio data is saved with the filename `test.mp3`.
 
-## トラブルシューティング
+## Troubleshooting
 
-### `api-server`が起動しない
+### `api-server` fails to start
 
-- **問題**: `docker-compose up` を実行しても、コンテナが正常に起動しない。
-- **解決策**:
-  - `packages/api-server/credentials` ディレクトリに、Google Cloudの認証情報ファイル (`credentials.json`) が正しく配置されているか確認してください。
-  - Dockerが正常に動作しているか確認してください。
+- **Problem**: The container does not start normally even after running `docker-compose up`.
+- **Solution**:
+  - Check if the Google Cloud credential file (`credentials.json`) is correctly placed in the `packages/api-server/credentials` directory.
+  - Check if Docker is running correctly.
 
-### Chrome拡張機能が動作しない
+### Chrome extension does not work
 
-- **問題**: 拡張機能のアイコンをクリックしても反応がない、または読み上げが開始されない。
-- **解決策**:
-  - `api-server`が正しく起動しているか確認してください。
-  - 拡張機能の設定で、APIサーバーのURLが正しく設定されているか確認してください (`http://localhost:8001`)。
-  - デベロッパーツールのコンソールにエラーメッセージが表示されていないか確認してください。
+- **Problem**: There is no response when clicking the extension icon, or reading does not start.
+- **Solution**:
+  - Check if the `api-server` is running correctly.
+  - Check if the API server URL is set correctly in the extension settings (`http://localhost:8001`).
+  - Check if any error messages are displayed in the developer tools console.
 
-## ライセンス
+## License
 
-本プロジェクトはMITライセンスです。詳細は[LICENSE](LICENSE)ファイルをご覧ください。
+This project is under the MIT License. See the [LICENSE](LICENSE) file for details.
