@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 
 interface PlaybackSpeedDialProps {
   open: boolean;
@@ -38,11 +38,11 @@ export function PlaybackSpeedDial({
 
   const positions = useMemo(
     () =>
-      speeds.map((speed, index) => ({
+      speeds.map((speed) => ({
         speed,
-        angle: MIN_ANGLE + ANGLE_STEP * index,
+        angle: MIN_ANGLE + ANGLE_STEP * speeds.indexOf(speed),
       })),
-    [speeds, ANGLE_STEP]
+    [speeds]
   );
 
   const selectByAngle = useCallback(
