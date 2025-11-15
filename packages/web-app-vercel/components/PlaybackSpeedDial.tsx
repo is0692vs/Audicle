@@ -169,7 +169,7 @@ export function PlaybackSpeedDial({
 
         {/* 水平スライダー - 中央インジケーター付きピッカー */}
         <div className="relative mb-8">
-          <div className="relative h-20 overflow-hidden">
+          <div className="relative h-24 overflow-hidden">
             {/* 中央インジケーター */}
             <div
               className="absolute left-1/2 top-0 z-10"
@@ -199,7 +199,7 @@ export function PlaybackSpeedDial({
               >
                 {speeds.map((speed, index) => {
                   const distanceFromCenter = Math.abs(index - previewIndex);
-                  const isSelected = index === Math.round(previewIndex);
+                  const isSelected = distanceFromCenter < 0.5;
                   const scale = isSelected
                     ? 1.2
                     : Math.max(0.8, 1 - distanceFromCenter * 0.1);
