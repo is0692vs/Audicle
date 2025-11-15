@@ -32,7 +32,7 @@ jobs:
           NODE_ENV: test
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-        run: npx playwright test tests/e2e/auth.spec.ts
+        run: npx playwright test --project=setup --project=chromium tests/e2e/auth.spec.ts
       - name: Upload auth state
         if: success()
         uses: actions/upload-artifact@v4
