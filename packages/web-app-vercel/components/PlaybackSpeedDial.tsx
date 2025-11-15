@@ -174,8 +174,8 @@ export function PlaybackSpeedDial({
 
           {/* 速度ラベル */}
           <div className="flex justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
-            <span>0.5x</span>
-            <span>3x</span>
+            <span>{speeds[0]}x</span>
+            <span>{speeds[speeds.length - 1]}x</span>
           </div>
         </div>
 
