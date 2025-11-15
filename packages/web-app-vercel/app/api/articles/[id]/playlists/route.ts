@@ -18,7 +18,10 @@ export async function GET(
         try {
             actualArticleId = await resolveArticleId(articleId, userEmail)
         } catch (error) {
-            return NextResponse.json([])
+            return NextResponse.json(
+                { error: error instanceof Error ? error.message : 'Article not found' },
+                { status: 404 }
+            )
         }
 
         // article_id を持つプレイリストアイテムを取得
