@@ -42,7 +42,8 @@
         "donjayamanne.python-extension-pack",
         "cweijan.vscode-mysql-client2",
         "ritwickdey.LiveServer",
-        "ms-vscode.vscode-websearchforcopilot"
+        "ms-vscode.vscode-websearchforcopilot",
+        "Supabase.vscode-supabase-extension"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",
