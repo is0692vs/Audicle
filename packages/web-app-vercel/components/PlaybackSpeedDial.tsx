@@ -76,14 +76,14 @@ export function PlaybackSpeedDial({
 
       // プレビュー選択: 中央に来るアイテムを先にハイライトして見せる
       if (totalItemWidth > 0) {
-        const deltaIndex = Math.round(totalDeltaX / totalItemWidth);
+        const deltaIndex = totalDeltaX / totalItemWidth;
         const newPreviewIndex = Math.max(
           0,
           Math.min(speeds.length - 1, startIndexRef.current - deltaIndex)
         );
         setPreviewIndex(newPreviewIndex);
         // ライブで再生速度を変更してプレビューする（必要に応じて削除可能）
-        onValueChange(speeds[newPreviewIndex]);
+        onValueChange(speeds[Math.round(newPreviewIndex)]);
       }
     },
     [isDragging, totalItemWidth, speeds, onValueChange]
@@ -147,12 +147,13 @@ export function PlaybackSpeedDial({
 
   if (!open) return null;
 
-  const currentSpeed = speeds[previewIndex];
+  const currentSpeed = speeds[Math.round(previewIndex)];
 
   // 中央に配置するためのtransform計算
-  const transformValue = `translateX(${
-    -(previewIndex * totalItemWidth + totalItemWidth / 2) + dragOffset
-  }px)`;
+  const transformValue = `translateX(${-(
+    previewIndex * totalItemWidth +
+    totalItemWidth / 2
+  )}px)`;
 
   return (
     <div
@@ -201,7 +202,7 @@ export function PlaybackSpeedDial({
               >
                 {speeds.map((speed, index) => {
                   const distanceFromCenter = Math.abs(index - previewIndex);
-                  const isSelected = index === previewIndex;
+                  const isSelected = index === Math.round(previewIndex);
                   const scale = isSelected
                     ? 1.2
                     : Math.max(0.8, 1 - distanceFromCenter * 0.1);
