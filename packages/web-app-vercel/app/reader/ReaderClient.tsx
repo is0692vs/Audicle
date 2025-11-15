@@ -529,6 +529,7 @@ export default function ReaderPageClient() {
             <h2
               className="text-sm sm:text-lg text-gray-600 dark:text-gray-400 mb-2 truncate"
               title={title}
+              data-testid="article-title"
             >
               {title}
             </h2>
@@ -545,6 +546,7 @@ export default function ReaderPageClient() {
                 className="flex-1 px-3 sm:px-4 py-1.5 sm:py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={isLoading}
                 required
+                data-testid="url-input"
               />
 
               <div className="flex gap-2 items-center">
@@ -569,6 +571,7 @@ export default function ReaderPageClient() {
                   type="submit"
                   disabled={isLoading}
                   className="px-4 sm:px-6 py-1.5 sm:py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shrink-0"
+                  data-testid="extract-button"
                 >
                   {isLoading ? "読込中" : "読込"}
                 </button>
@@ -634,7 +637,10 @@ export default function ReaderPageClient() {
 
           {/* 再生コントロール: デスクトップのみ */}
           {chunks.length > 0 && (
-            <div className="hidden sm:flex mt-2 flex-col gap-2">
+            <div
+              className="hidden sm:flex mt-2 flex-col gap-2"
+              data-testid="audio-player"
+            >
               <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                 <button
                   onClick={isPlaying ? pause : play}
@@ -647,6 +653,7 @@ export default function ReaderPageClient() {
                       ? "一時停止"
                       : "再生"
                   }
+                  data-testid="play-button"
                 >
                   {isPlaying ? (
                     <Pause className="size-4 sm:size-5" />
@@ -746,6 +753,7 @@ export default function ReaderPageClient() {
       {chunks.length > 0 && (
         <div
           className={`sm:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 shadow-lg z-[${zIndex.mobileControls}]`}
+          data-testid="audio-player"
         >
           <div className="flex items-center">
             {/* 左側: 再生速度ボタン */}

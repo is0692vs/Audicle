@@ -1,94 +1,89 @@
 "use client";
 
-import { Suspense } from "react";
+import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
-import { handleGoogleSignIn } from "./actions";
+import { useState } from "react";
 
-function SignInContent() {
+export default function SignIn() {
   const searchParams = useSearchParams();
-  const error = searchParams.get("error");
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  // ALLOWED_USERS環境変数の値を取得（セキュリティ上、最初の3文字のみ表示）
-  const allowedUsersPreview =
-    process.env.NEXT_PUBLIC_DEBUG_MODE === "true"
-      ? process.env.NEXT_PUBLIC_ALLOWED_USERS_PREVIEW || "Not configured"
-      : "Hidden (enable DEBUG_MODE to view)";
+  const handleGoogleSignIn = () => {
+    signIn("google", { callbackUrl });
+  };
+
+  const handleCredentialsSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await signIn("test-credentials", {
+      email,
+      password,
+      callbackUrl,
+    });
+  };
+
+  const isDevelopment =
+    process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-zinc-900 to-black p-4">
-      <div className="max-w-md w-full space-y-8 p-8 bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl">
+    <div className="flex min-h-screen items-center justify-center bg-linear-to-b from-zinc-900 to-black">
+      <div className="w-full max-w-md space-y-8 px-4">
         <div className="text-center">
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-violet-400 to-purple-600 bg-clip-text text-transparent">
-            Audicle
-          </h2>
-          <p className="mt-2 text-zinc-400">Web記事読み上げアプリ</p>
+          <h1 className="text-4xl font-bold text-white mb-2">ログイン</h1>
+          <p className="text-zinc-400">Web記事読み上げアプリ</p>
         </div>
 
-        {error && (
-          <div className="p-4 bg-red-950/30 border border-red-800 rounded">
-            <p className="text-red-400 text-sm">
-              <strong>エラーが発生しました:</strong> {error}
-            </p>
-          </div>
-        )}
-
-        <form action={handleGoogleSignIn}>
+        <div className="space-y-4">
           <button
-            type="submit"
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-violet-600 hover:bg-violet-700 transition-colors"
+            onClick={handleGoogleSignIn}
+            data-testid="google-signin-button"
+            className="w-full flex items-center justify-center gap-3 bg-white text-gray-900 px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors"
           >
             Googleでログイン
           </button>
-        </form>
 
-        {/* デバッグ情報セクション */}
-        {process.env.NEXT_PUBLIC_DEBUG_MODE === "true" && (
-          <div className="mt-8 pt-8 border-t border-zinc-800">
-            <h3 className="text-sm font-semibold text-zinc-400 mb-4">
-              🔍 デバッグ情報（開発環境）
-            </h3>
-            <div className="bg-zinc-950 p-4 rounded text-left text-xs space-y-2 border border-zinc-800">
-              <div>
-                <p className="text-zinc-400">
-                  <strong>許可されたメール前缀:</strong> {allowedUsersPreview}
-                </p>
+          {isDevelopment && (
+            <>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-zinc-700"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-zinc-900 text-zinc-400">
+                    または（テスト用）
+                  </span>
+                </div>
               </div>
-              <div>
-                <p className="text-zinc-400">
-                  <strong>現在時刻:</strong>{" "}
-                  {new Date().toLocaleString("ja-JP")}
-                </p>
-              </div>
-              <div>
-                <p className="text-zinc-400">
-                  <strong>ユーザーエージェント:</strong>{" "}
-                  {typeof navigator !== "undefined"
-                    ? navigator.userAgent.substring(0, 50) + "..."
-                    : "N/A"}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+
+              <form onSubmit={handleCredentialsSignIn} className="space-y-3">
+                <input
+                  type="email"
+                  placeholder="メールアドレス"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-2 bg-zinc-800 text-white rounded-lg border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+                <input
+                  type="password"
+                  placeholder="パスワード"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-2 bg-zinc-800 text-white rounded-lg border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                >
+                  ログイン
+                </button>
+              </form>
+            </>
+          )}
+        </div>
       </div>
     </div>
-  );
-}
-
-export default function SignIn() {
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-zinc-900 to-black p-4">
-          <div className="max-w-md w-full space-y-8 p-8 bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl">
-            <div className="text-center">
-              <p className="text-zinc-400">読み込み中...</p>
-            </div>
-          </div>
-        </div>
-      }
-    >
-      <SignInContent />
-    </Suspense>
   );
 }

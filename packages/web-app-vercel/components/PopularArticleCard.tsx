@@ -21,6 +21,7 @@ export function PopularArticleCard({
     <Card
       className="bg-zinc-900/50 border-zinc-800 hover:bg-zinc-800/50 transition-colors cursor-pointer"
       onClick={() => onRead(article.url)}
+      data-testid="article-card"
     >
       <CardContent className="p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -40,6 +41,12 @@ export function PopularArticleCard({
               <span className="flex items-center gap-1">
                 <span>👥</span>
                 <span>{article.accessCount}回</span>
+              </span>
+              <span
+                className="px-2 py-0.5 bg-green-600/20 text-green-400 rounded text-xs"
+                data-testid="cache-badge"
+              >
+                キャッシュ済み
               </span>
             </div>
           </div>

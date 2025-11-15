@@ -43,7 +43,8 @@
         "cweijan.vscode-mysql-client2",
         "ritwickdey.LiveServer",
         "ms-vscode.vscode-websearchforcopilot",
-        "Supabase.vscode-supabase-extension"
+        "Supabase.vscode-supabase-extension",
+        "ms-playwright.playwright"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",

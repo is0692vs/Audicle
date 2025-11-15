@@ -161,6 +161,7 @@ export default function PlaylistsPage() {
                       className="bg-zinc-950 border-zinc-700 text-white placeholder:text-zinc-500"
                       required
                       autoFocus
+                      data-testid="playlist-name-input"
                     />
                     <textarea
                       value={newPlaylistDescription}
@@ -176,6 +177,7 @@ export default function PlaylistsPage() {
                         type="submit"
                         disabled={createPlaylistMutation.isPending}
                         className="bg-violet-600 hover:bg-violet-700"
+                        data-testid="save-playlist-button"
                       >
                         {createPlaylistMutation.isPending
                           ? "作成中..."
@@ -223,6 +225,7 @@ export default function PlaylistsPage() {
               <Card
                 className="bg-zinc-900 border-zinc-800 border-dashed hover:bg-zinc-800 transition-colors cursor-pointer"
                 onClick={() => setShowCreateForm(true)}
+                data-testid="create-playlist-button"
               >
                 <CardContent className="p-4 lg:p-6 h-full flex flex-col items-center justify-center text-center min-h-[250px]">
                   <Plus className="size-10 lg:size-12 text-zinc-600 mb-2" />
@@ -235,6 +238,7 @@ export default function PlaylistsPage() {
                   key={playlist.id}
                   className="bg-zinc-900 border-zinc-800 hover:bg-zinc-800 transition-colors cursor-pointer group"
                   onClick={() => router.push(`/playlists/${playlist.id}`)}
+                  data-testid="playlist-item"
                 >
                   <CardContent className="p-4 lg:p-6">
                     <div className="flex items-center gap-2 mb-1">
