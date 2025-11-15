@@ -502,12 +502,12 @@ export default function ReaderPageClient() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="h-screen overflow-hidden flex flex-col">
       {/* ヘッダー: コンパクト化されたナビゲーションとコントロール */}
       <header className="sticky top-0 z-10 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-        <div className="max-w-4xl mx-auto p-2 sm:p-4">
+        <div className="max-w-4xl mx-auto p-3 sm:p-6">
           {/* トップバー: ナビゲーションとタイトル */}
-          <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center justify-center gap-2 mb-2">
             <button
               onClick={() => {
                 stop(); // ページ遷移前に再生を停止
