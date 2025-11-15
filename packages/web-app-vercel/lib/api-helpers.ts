@@ -48,7 +48,7 @@ export async function resolveArticleId(articleId: string, userEmail: string): Pr
             .from('articles')
             .insert({
                 url: articleStat.url,
-                title: articleStat.title,
+                title: articleStat.title ?? '',
                 owner_email: userEmail,
                 created_at: new Date().toISOString()
             })
