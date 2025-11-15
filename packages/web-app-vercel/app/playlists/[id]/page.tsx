@@ -34,6 +34,11 @@ const SORT_OPTIONS = {
   url: "URL順",
 } as const;
 
+// 型ガード関数
+function isSortOption(value: string): value is SortOption {
+  return value in SORT_OPTIONS;
+}
+
 export default function PlaylistDetailPage() {
   const router = useRouter();
   const params = useParams();
@@ -243,7 +248,11 @@ export default function PlaylistDetailPage() {
                     <ArrowUpDown className="size-4 text-zinc-400" />
                     <Select
                       value={sortOption}
-                      onValueChange={(value) => setSortOption(value as SortOption)}
+                      onValueChange={(value) => {
+                        if (isSortOption(value)) {
+                          setSortOption(value);
+                        }
+                      }}
                     >
                       <SelectTrigger className="w-32">
                         <SelectValue />
