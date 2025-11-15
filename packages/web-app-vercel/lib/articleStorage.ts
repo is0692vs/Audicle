@@ -25,7 +25,11 @@ const _readArticles = (): Article[] => {
 
 const _writeArticles = (articles: Article[]): void => {
     if (typeof window === "undefined") return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(articles));
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(articles));
+    } catch (e) {
+        console.error("Failed to write articles to localStorage", e);
+    }
 };
 
 export const articleStorage = {
@@ -42,7 +46,7 @@ export const articleStorage = {
             id: article.id || crypto.randomUUID(),
             createdAt: new Date().toISOString(),
         };
-        articles.push(newArticle);
+        articles.unshift(newArticle);
         _writeArticles(articles);
         return newArticle;
     },
