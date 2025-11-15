@@ -124,13 +124,7 @@ export default function ReaderPageClient() {
     },
   });
 
-  // ダウンロード機能（モバイルメニュー用）
-  const { status: downloadStatus, startDownload } = useDownload({
-    articleUrl: url,
-    chunks,
-    voiceModel: settings.voice_model,
-    speed: playbackRate,
-  });
+  // ダウンロード機能（モバイルメニュー用）はReaderViewに集約されています
 
   // 記事を読み込んで保存する共通ロジック
   const loadAndSaveArticle = useCallback(
