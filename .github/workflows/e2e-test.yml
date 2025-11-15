@@ -10,6 +10,9 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: packages/web-app-vercel
     steps:
       - uses: actions/checkout@v4
       
