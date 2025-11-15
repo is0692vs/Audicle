@@ -16,7 +16,7 @@ interface PlaybackSpeedDialProps {
   speeds?: number[];
 }
 
-const DEFAULT_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3];
+const DEFAULT_SPEEDS = Array.from({ length: 23 }, (_, i) => 0.8 + i * 0.1);
 
 export function PlaybackSpeedDial({
   open,
@@ -28,7 +28,7 @@ export function PlaybackSpeedDial({
   const trackRef = useRef<HTMLDivElement>(null);
   const itemRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [totalItemWidth, setTotalItemWidth] = useState(64); // 初期値として64pxを設定
+  const [totalItemWidth, setTotalItemWidth] = useState(64); // 固定値
   const startXRef = useRef(0);
   const startIndexRef = useRef(0);
   const [dragOffset, setDragOffset] = useState(0);
@@ -43,18 +43,6 @@ export function PlaybackSpeedDial({
     setSelectedIndex(index);
     setPreviewIndex(index);
   }, [value, speeds]);
-
-  // DOMからアイテムの幅を動的に取得
-  useLayoutEffect(() => {
-    if (itemRef.current) {
-      const itemRect = itemRef.current.getBoundingClientRect();
-      const computedStyle = window.getComputedStyle(itemRef.current);
-      const marginLeft = parseFloat(computedStyle.marginLeft);
-      const marginRight = parseFloat(computedStyle.marginRight);
-      const totalWidth = itemRect.width + marginLeft + marginRight;
-      setTotalItemWidth(totalWidth);
-    }
-  }, [open]); // openがtrueになった時に再計算
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
@@ -82,9 +70,10 @@ export function PlaybackSpeedDial({
           Math.min(speeds.length - 1, startIndexRef.current - deltaIndex)
         );
         setPreviewIndex(newPreviewIndex);
+        onValueChange(speeds[Math.round(newPreviewIndex)]);
       }
     },
-    [isDragging, totalItemWidth, speeds]
+    [isDragging, totalItemWidth, speeds, onValueChange]
   );
 
   const handlePointerUp = useCallback(() => {
@@ -148,7 +137,7 @@ export function PlaybackSpeedDial({
   const transformValue =
     totalItemWidth > 0
       ? `translateX(${
-          -(selectedIndex * totalItemWidth + totalItemWidth / 2) + dragOffset
+          -(previewIndex * totalItemWidth + totalItemWidth / 2)
         }px)`
       : "translateX(0px)";
 
@@ -198,15 +187,6 @@ export function PlaybackSpeedDial({
                 }}
               >
                 {speeds.map((speed, index) => {
-                  const distanceFromCenter = Math.abs(index - previewIndex);
-                  const isSelected = index === Math.round(previewIndex);
-                  const scale = isSelected
-                    ? 1.2
-                    : Math.max(0.8, 1 - distanceFromCenter * 0.1);
-                  const opacity = isSelected
-                    ? 1
-                    : Math.max(0.5, 1 - distanceFromCenter * 0.2);
-
                   return (
                     <div
                       key={speed}
@@ -214,18 +194,10 @@ export function PlaybackSpeedDial({
                       onClick={() => handleSpeedClick(speed)}
                       className="flex flex-col items-center justify-center mx-2 transition-all duration-200 cursor-pointer"
                       style={{
-                        transform: `scale(${scale})`,
-                        opacity,
                         pointerEvents: "auto",
                       }}
                     >
-                      <div
-                        className={`flex items-center justify-center w-12 h-12 rounded-full transition-colors duration-200 ${
-                          isSelected
-                            ? "bg-green-600 text-white"
-                            : "bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300"
-                        }`}
-                      >
+                      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300">
                         <span className="text-sm font-medium">
                           {speed.toFixed(1)}x
                         </span>
