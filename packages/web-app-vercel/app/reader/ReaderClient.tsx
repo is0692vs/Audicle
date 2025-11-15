@@ -206,7 +206,7 @@ export default function ReaderPageClient() {
         }
 
         // ローカルストレージに保存（サーバーIDを優先）
-        const newArticle = articleStorage.upsert({
+        const newArticle = articleStorage.add({
           id: newArticleId || undefined, // サーバーIDがあれば使用
           url: articleUrl,
           title: response.title,
