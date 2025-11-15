@@ -53,13 +53,16 @@ export function PlaybackSpeedDial({
     }
   }, [open]); // openがtrueになった時に再計算
 
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    setIsDragging(true);
-    startXRef.current = e.clientX;
-    startIndexRef.current = selectedIndex;
-    setDragOffset(0);
-    e.currentTarget.setPointerCapture(e.pointerId);
-  }, [selectedIndex]);
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      setIsDragging(true);
+      startXRef.current = e.clientX;
+      startIndexRef.current = selectedIndex;
+      setDragOffset(0);
+      e.currentTarget.setPointerCapture(e.pointerId);
+    },
+    [selectedIndex]
+  );
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
