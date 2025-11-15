@@ -59,7 +59,7 @@ export function PlaybackSpeedDial({
     startIndexRef.current = selectedIndex;
     setDragOffset(0);
     e.currentTarget.setPointerCapture(e.pointerId);
-  }, []);
+  }, [selectedIndex]);
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
