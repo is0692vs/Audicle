@@ -20,7 +20,7 @@ import { recordArticleStats } from "@/lib/articleStats";
 import { parseHTMLToParagraphs } from "@/lib/paragraphParser";
 import { UserSettings, DEFAULT_SETTINGS } from "@/types/settings";
 import { createReaderUrl } from "@/lib/urlBuilder";
-import { Play, Pause, Square, SkipBack, SkipForward } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward } from "lucide-react";
 
 function convertParagraphsToChunks(htmlContent: string): Chunk[] {
   // HTML構造を保持して段落を抽出
@@ -468,6 +468,7 @@ export default function ReaderPageClient() {
   // プレイリスト内の特定の記事に遷移するヘルパー関数
   const navigateToPlaylistItem = useCallback(
     (index: number) => {
+      stop(); // ページ遷移前に再生を停止
       const item = playlistState.items[index];
       if (item && playlistState.playlistId) {
         const readerUrl = createReaderUrl({
@@ -479,7 +480,7 @@ export default function ReaderPageClient() {
         router.push(readerUrl);
       }
     },
-    [playlistState, router]
+    [playlistState, router, stop]
   );
 
   return (
@@ -491,6 +492,7 @@ export default function ReaderPageClient() {
           <div className="flex items-center justify-between gap-2 mb-2">
             <button
               onClick={() => {
+                stop(); // ページ遷移前に再生を停止
                 if (isPlaylistMode && playlistState.playlistId) {
                   router.push(`/playlists/${playlistState.playlistId}`);
                 } else {
@@ -651,15 +653,6 @@ export default function ReaderPageClient() {
                       : "再生"}
                   </span>
                 </button>
-                <button
-                  onClick={stop}
-                  disabled={!isPlaying && !isPlaybackLoading}
-                  className="px-3 sm:px-4 py-1.5 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-1 sm:gap-2 text-sm"
-                  title="停止"
-                >
-                  <Square className="size-4 sm:size-5" />
-                  <span className="hidden sm:inline">停止</span>
-                </button>
                 <div className="flex items-center gap-1 sm:gap-2 ml-auto">
                   <label
                     htmlFor="playback-rate"
@@ -758,14 +751,6 @@ export default function ReaderPageClient() {
                 ) : (
                   <Play className="size-6" />
                 )}
-              </button>
-              <button
-                onClick={stop}
-                disabled={!isPlaying && !isPlaybackLoading}
-                className="px-6 py-3 bg-red-600 text-white rounded-full hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-lg"
-                title="停止"
-              >
-                <Square className="size-6" />
               </button>
             </div>
             {/* 速度コントロール */}
