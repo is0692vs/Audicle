@@ -16,80 +16,80 @@ describe('AudioCache', () => {
 
     describe('getCacheKey', () => {
         it('should generate consistent cache key for same inputs', () => {
-            const instance = cache as any;
-            const key1 = instance.getCacheKey('test text', 'voice1', 'url1');
-            const key2 = instance.getCacheKey('test text', 'voice1', 'url1');
+            const instance = cache as unknown;
+            const key1 = (instance as { getCacheKey: (text: string, voiceModel?: string, articleUrl?: string) => string }).getCacheKey('test text', 'voice1', 'url1');
+            const key2 = (instance as { getCacheKey: (text: string, voiceModel?: string, articleUrl?: string) => string }).getCacheKey('test text', 'voice1', 'url1');
             expect(key1).toBe(key2);
         });
 
         it('should generate different keys for different text', () => {
-            const instance = cache as any;
-            const key1 = instance.getCacheKey('text1', 'voice1');
-            const key2 = instance.getCacheKey('text2', 'voice1');
+            const instance = cache as unknown;
+            const key1 = (instance as { getCacheKey: (text: string, voiceModel?: string, articleUrl?: string) => string }).getCacheKey('text1', 'voice1');
+            const key2 = (instance as { getCacheKey: (text: string, voiceModel?: string, articleUrl?: string) => string }).getCacheKey('text2', 'voice1');
             expect(key1).not.toBe(key2);
         });
 
         it('should generate different keys for different voice models', () => {
-            const instance = cache as any;
-            const key1 = instance.getCacheKey('text', 'voice1');
-            const key2 = instance.getCacheKey('text', 'voice2');
+            const instance = cache as unknown;
+            const key1 = (instance as { getCacheKey: (text: string, voiceModel?: string, articleUrl?: string) => string }).getCacheKey('text', 'voice1');
+            const key2 = (instance as { getCacheKey: (text: string, voiceModel?: string, articleUrl?: string) => string }).getCacheKey('text', 'voice2');
             expect(key1).not.toBe(key2);
         });
 
         it('should include articleUrl in key when provided', () => {
-            const instance = cache as any;
-            const key1 = instance.getCacheKey('text', 'voice1');
-            const key2 = instance.getCacheKey('text', 'voice1', 'url1');
+            const instance = cache as unknown;
+            const key1 = (instance as { getCacheKey: (text: string, voiceModel?: string, articleUrl?: string) => string }).getCacheKey('text', 'voice1');
+            const key2 = (instance as { getCacheKey: (text: string, voiceModel?: string, articleUrl?: string) => string }).getCacheKey('text', 'voice1', 'url1');
             expect(key1).not.toBe(key2);
             expect(key2).toContain('url1');
         });
 
         it('should handle empty string', () => {
-            const instance = cache as any;
-            const key = instance.getCacheKey('', 'voice1');
+            const instance = cache as unknown;
+            const key = (instance as { getCacheKey: (text: string, voiceModel?: string, articleUrl?: string) => string }).getCacheKey('', 'voice1');
             expect(typeof key).toBe('string');
             expect(key).toContain('audio_');
         });
 
         it('should handle special characters', () => {
-            const instance = cache as any;
-            const key = instance.getCacheKey('特殊文字: !@#', 'voice1');
+            const instance = cache as unknown;
+            const key = (instance as { getCacheKey: (text: string, voiceModel?: string, articleUrl?: string) => string }).getCacheKey('特殊文字: !@#', 'voice1');
             expect(typeof key).toBe('string');
         });
     });
 
     describe('hashString', () => {
         it('should return a string hash', () => {
-            const instance = cache as any;
-            const hash = instance.hashString('test');
+            const instance = cache as unknown;
+            const hash = (instance as { hashString: (s: string) => string }).hashString('test');
             expect(typeof hash).toBe('string');
             expect(hash.length).toBeGreaterThan(0);
         });
 
         it('should produce consistent results', () => {
-            const instance = cache as any;
-            const hash1 = instance.hashString('test');
-            const hash2 = instance.hashString('test');
+            const instance = cache as unknown;
+            const hash1 = (instance as { hashString: (s: string) => string }).hashString('test');
+            const hash2 = (instance as { hashString: (s: string) => string }).hashString('test');
             expect(hash1).toBe(hash2);
         });
 
         it('should produce different results for different strings', () => {
-            const instance = cache as any;
-            const hash1 = instance.hashString('test1');
-            const hash2 = instance.hashString('test2');
+            const instance = cache as unknown;
+            const hash1 = (instance as { hashString: (s: string) => string }).hashString('test1');
+            const hash2 = (instance as { hashString: (s: string) => string }).hashString('test2');
             expect(hash1).not.toBe(hash2);
         });
 
         it('should handle empty string', () => {
-            const instance = cache as any;
-            const hash = instance.hashString('');
+            const instance = cache as unknown;
+            const hash = (instance as { hashString: (s: string) => string }).hashString('');
             expect(typeof hash).toBe('string');
         });
 
         it('should handle long string', () => {
-            const instance = cache as any;
+            const instance = cache as unknown;
             const longStr = 'a'.repeat(1000);
-            const hash = instance.hashString(longStr);
+            const hash = (instance as { hashString: (s: string) => string }).hashString(longStr);
             expect(typeof hash).toBe('string');
         });
     });
