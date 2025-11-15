@@ -32,13 +32,15 @@ export function PlaybackSpeedDial({
   const startXRef = useRef(0);
   const startIndexRef = useRef(0);
   const [dragOffset, setDragOffset] = useState(0);
-  const [selectedIndex, setSelectedIndex] = useState(
+  const [previewIndex, setPreviewIndex] = useState(
     speeds.indexOf(value) !== -1 ? speeds.indexOf(value) : speeds.indexOf(1)
   );
 
   useEffect(() => {
     const newIndex = speeds.indexOf(value);
-    setSelectedIndex(newIndex !== -1 ? newIndex : speeds.indexOf(1));
+    const index = newIndex !== -1 ? newIndex : speeds.indexOf(1);
+    setSelectedIndex(index);
+    setPreviewIndex(index);
   }, [value, speeds]);
 
   // DOMからアイテムの幅を動的に取得
@@ -74,18 +76,16 @@ export function PlaybackSpeedDial({
       // プレビュー選択: 中央に来るアイテムを先にハイライトして見せる
       if (totalItemWidth > 0) {
         const deltaIndex = Math.round(totalDeltaX / totalItemWidth);
-        const previewIndex = Math.max(
+        const newPreviewIndex = Math.max(
           0,
           Math.min(speeds.length - 1, startIndexRef.current - deltaIndex)
         );
-        if (previewIndex !== selectedIndex) {
-          setSelectedIndex(previewIndex);
-          // ライブで再生速度を変更してプレビューする（必要に応じて削除可能）
-          onValueChange(speeds[previewIndex]);
-        }
+        setPreviewIndex(newPreviewIndex);
+        // ライブで再生速度を変更してプレビューする（必要に応じて削除可能）
+        onValueChange(speeds[newPreviewIndex]);
       }
     },
-    [isDragging, totalItemWidth, speeds, selectedIndex, onValueChange]
+    [isDragging, totalItemWidth, speeds, onValueChange]
   );
 
   const handlePointerUp = useCallback(() => {
@@ -100,6 +100,7 @@ export function PlaybackSpeedDial({
       )
     );
     setSelectedIndex(targetIndex);
+    setPreviewIndex(targetIndex);
     onValueChange(speeds[targetIndex]);
     setDragOffset(0);
   }, [dragOffset, totalItemWidth, speeds, onValueChange]);
@@ -145,7 +146,7 @@ export function PlaybackSpeedDial({
 
   if (!open) return null;
 
-  const currentSpeed = speeds[selectedIndex];
+  const currentSpeed = speeds[previewIndex];
 
   // 中央に配置するためのtransform計算
   const centerOffset = (speeds.length - 1) / 2;
@@ -195,11 +196,12 @@ export function PlaybackSpeedDial({
                   transform: transformValue,
                   transformOrigin: "center",
                   transition: isDragging ? "none" : "transform 0.2s ease-out",
+                  pointerEvents: "none",
                 }}
               >
                 {speeds.map((speed, index) => {
-                  const distanceFromCenter = Math.abs(index - selectedIndex);
-                  const isSelected = index === selectedIndex;
+                  const distanceFromCenter = Math.abs(index - previewIndex);
+                  const isSelected = index === previewIndex;
                   const scale = isSelected
                     ? 1.2
                     : Math.max(0.8, 1 - distanceFromCenter * 0.1);
@@ -216,6 +218,7 @@ export function PlaybackSpeedDial({
                       style={{
                         transform: `scale(${scale})`,
                         opacity,
+                        pointerEvents: "auto",
                       }}
                     >
                       <div
