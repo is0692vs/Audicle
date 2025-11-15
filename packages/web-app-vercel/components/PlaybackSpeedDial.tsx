@@ -31,6 +31,7 @@ export function PlaybackSpeedDial({
   const [totalItemWidth, setTotalItemWidth] = useState(64); // 初期値として64pxを設定
   const [startX, setStartX] = useState(0);
   const [startIndex, setStartIndex] = useState(0);
+  const [dragOffset, setDragOffset] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(
     speeds.indexOf(value) !== -1 ? speeds.indexOf(value) : speeds.indexOf(1)
   );
@@ -57,6 +58,7 @@ export function PlaybackSpeedDial({
       setIsDragging(true);
       setStartX(e.clientX);
       setStartIndex(selectedIndex);
+      setDragOffset(0);
       e.currentTarget.setPointerCapture(e.pointerId);
     },
     [selectedIndex]
@@ -65,21 +67,26 @@ export function PlaybackSpeedDial({
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
       if (!isDragging) return;
-      const deltaX = e.clientX - startX;
-      const deltaIndex = Math.round(deltaX / totalItemWidth);
-      const newIndex = Math.max(
-        0,
-        Math.min(speeds.length - 1, startIndex - deltaIndex)
-      );
-      setSelectedIndex(newIndex);
-      onValueChange(speeds[newIndex]);
+      const currentX = e.clientX;
+      const deltaX = currentX - startX;
+      setStartX(currentX);
+      setDragOffset((prev) => prev + deltaX);
     },
-    [isDragging, startX, startIndex, totalItemWidth, speeds, onValueChange]
+    [isDragging, startX]
   );
 
   const handlePointerUp = useCallback(() => {
     setIsDragging(false);
-  }, []);
+    // スナップ: dragOffset に基づいて一番近いインデックスに
+    const offsetIndex = dragOffset / totalItemWidth;
+    const targetIndex = Math.max(
+      0,
+      Math.min(speeds.length - 1, Math.round(selectedIndex - offsetIndex))
+    );
+    setSelectedIndex(targetIndex);
+    onValueChange(speeds[targetIndex]);
+    setDragOffset(0);
+  }, [dragOffset, totalItemWidth, selectedIndex, speeds, onValueChange]);
 
   const handleBackdropClick = useCallback(
     (e: React.MouseEvent) => {
@@ -125,7 +132,7 @@ export function PlaybackSpeedDial({
   // 中央に配置するためのtransform計算
   const centerOffset = (speeds.length - 1) / 2;
   const transformValue = `translateX(${
-    (centerOffset - selectedIndex) * totalItemWidth
+    (centerOffset - selectedIndex) * totalItemWidth + dragOffset
   }px)`;
 
   return (
