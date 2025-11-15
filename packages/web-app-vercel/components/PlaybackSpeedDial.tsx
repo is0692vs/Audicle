@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  useLayoutEffect,
+} from "react";
 
 interface PlaybackSpeedDialProps {
   open: boolean;
@@ -20,7 +26,11 @@ export function PlaybackSpeedDial({
   speeds = DEFAULT_SPEEDS,
 }: PlaybackSpeedDialProps) {
   const trackRef = useRef<HTMLDivElement>(null);
+  const itemRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [totalItemWidth, setTotalItemWidth] = useState(64); // 初期値として64pxを設定
+  const [startX, setStartX] = useState(0);
+  const [startIndex, setStartIndex] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(
     speeds.indexOf(value) !== -1 ? speeds.indexOf(value) : speeds.indexOf(1)
   );
@@ -30,38 +40,41 @@ export function PlaybackSpeedDial({
     setSelectedIndex(newIndex !== -1 ? newIndex : speeds.indexOf(1));
   }, [value, speeds]);
 
-  const updateFromPointer = useCallback(
-    (clientX: number) => {
-      const track = trackRef.current;
-      if (!track) return;
-
-      const rect = track.getBoundingClientRect();
-      const trackWidth = rect.width;
-      const relativeX = Math.max(0, Math.min(trackWidth, clientX - rect.left));
-      const progress = relativeX / trackWidth;
-      const newIndex = Math.round(progress * (speeds.length - 1));
-
-      setSelectedIndex(newIndex);
-      onValueChange(speeds[newIndex]);
-    },
-    [speeds, onValueChange]
-  );
+  // DOMからアイテムの幅を動的に取得
+  useLayoutEffect(() => {
+    if (itemRef.current) {
+      const itemRect = itemRef.current.getBoundingClientRect();
+      const computedStyle = window.getComputedStyle(itemRef.current);
+      const marginLeft = parseFloat(computedStyle.marginLeft);
+      const marginRight = parseFloat(computedStyle.marginRight);
+      const totalWidth = itemRect.width + marginLeft + marginRight;
+      setTotalItemWidth(totalWidth);
+    }
+  }, [open]); // openがtrueになった時に再計算
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
       setIsDragging(true);
-      updateFromPointer(e.clientX);
+      setStartX(e.clientX);
+      setStartIndex(selectedIndex);
       e.currentTarget.setPointerCapture(e.pointerId);
     },
-    [updateFromPointer]
+    [selectedIndex]
   );
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
       if (!isDragging) return;
-      updateFromPointer(e.clientX);
+      const deltaX = e.clientX - startX;
+      const deltaIndex = Math.round(deltaX / totalItemWidth);
+      const newIndex = Math.max(
+        0,
+        Math.min(speeds.length - 1, startIndex - deltaIndex)
+      );
+      setSelectedIndex(newIndex);
+      onValueChange(speeds[newIndex]);
     },
-    [isDragging, updateFromPointer]
+    [isDragging, startX, startIndex, totalItemWidth, speeds, onValueChange]
   );
 
   const handlePointerUp = useCallback(() => {
@@ -108,7 +121,12 @@ export function PlaybackSpeedDial({
   if (!open) return null;
 
   const currentSpeed = speeds[selectedIndex];
-  const markerPosition = (selectedIndex / (speeds.length - 1)) * 100;
+
+  // 中央に配置するためのtransform計算
+  const centerOffset = (speeds.length - 1) / 2;
+  const transformValue = `translateX(${
+    (centerOffset - selectedIndex) * totalItemWidth
+  }px)`;
 
   return (
     <div
@@ -125,89 +143,75 @@ export function PlaybackSpeedDial({
           </p>
         </div>
 
-        {/* 水平スライダー - 中央固定針 + 動くメモリ */}
+        {/* 水平スライダー - 中央インジケーター付きピッカー */}
         <div className="relative mb-8">
-          <div
-            ref={trackRef}
-            className="relative h-12 bg-gray-200 dark:bg-gray-700 rounded-full cursor-pointer overflow-hidden"
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerLeave={handlePointerUp}
-          >
-            {/* 動くメモリ部分 */}
+          <div className="relative h-20 overflow-hidden">
+            {/* 中央インジケーター */}
+            <div className="absolute left-1/2 top-0 z-10 transform -translate-x-1/2">
+              <div className="w-0 h-0 border-l-4 border-r-4 border-b-6 border-l-transparent border-r-transparent border-b-green-600" />
+            </div>
+
+            {/* ドラッグ可能なトラック */}
             <div
-              className="absolute inset-0 flex items-center justify-center transition-transform duration-200 ease-out"
-              style={{
-                transform: `translateX(${
-                  (selectedIndex / (speeds.length - 1) - 0.5) * -100
-                }%)`,
-              }}
+              ref={trackRef}
+              className="relative h-full cursor-pointer"
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerLeave={handlePointerUp}
             >
-              <div className="flex items-center space-x-8 px-4">
+              {/* 移動する数字リスト */}
+              <div
+                className="absolute top-0 left-1/2 flex items-center transition-transform duration-200 ease-out"
+                style={{
+                  transform: transformValue,
+                  transformOrigin: "center",
+                }}
+              >
                 {speeds.map((speed, index) => {
+                  const distanceFromCenter = Math.abs(index - selectedIndex);
                   const isSelected = index === selectedIndex;
+                  const scale = isSelected
+                    ? 1.2
+                    : Math.max(0.8, 1 - distanceFromCenter * 0.1);
+                  const opacity = isSelected
+                    ? 1
+                    : Math.max(0.5, 1 - distanceFromCenter * 0.2);
+
                   return (
                     <div
                       key={speed}
-                      className={`flex flex-col items-center transition-all duration-200 ${
-                        isSelected ? "scale-110" : "scale-100"
-                      }`}
-                      onClick={() => handleSpeedClick(speed)}
+                      ref={index === 0 ? itemRef : null} // 最初のアイテムにrefを設定
+                      onClick={() => onValueChange(speed)}
+                      className="flex flex-col items-center justify-center mx-2 transition-all duration-200 cursor-pointer"
+                      style={{
+                        transform: `scale(${scale})`,
+                        opacity,
+                      }}
                     >
-                      {/* メモリ線 */}
                       <div
-                        className={`w-1 h-6 rounded-full transition-colors duration-200 ${
+                        className={`flex items-center justify-center w-12 h-12 rounded-full transition-colors duration-200 ${
                           isSelected
-                            ? "bg-green-600"
-                            : "bg-gray-400 dark:bg-gray-500"
-                        }`}
-                      />
-                      {/* 速度値 */}
-                      <span
-                        className={`text-xs font-medium mt-1 transition-colors duration-200 ${
-                          isSelected
-                            ? "text-green-600"
-                            : "text-gray-600 dark:text-gray-400"
+                            ? "bg-green-600 text-white"
+                            : "bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300"
                         }`}
                       >
-                        {speed.toFixed(1)}x
-                      </span>
+                        <span className="text-sm font-medium">
+                          {speed.toFixed(1)}x
+                        </span>
+                      </div>
                     </div>
                   );
                 })}
               </div>
             </div>
-
-            {/* 中央固定針 */}
-            <div className="absolute left-1/2 top-0 bottom-0 flex items-center justify-center pointer-events-none">
-              <div className="w-1 h-8 bg-green-600 rounded-full shadow-lg" />
-              <div className="absolute -bottom-1 w-0 h-0 border-l-2 border-r-2 border-t-4 border-l-transparent border-r-transparent border-t-green-600" />
-            </div>
           </div>
 
-          {/* 速度ラベル */}
+          {/* 速度範囲ラベル */}
           <div className="flex justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
             <span>{speeds[0]}x</span>
             <span>{speeds[speeds.length - 1]}x</span>
           </div>
-        </div>
-
-        {/* プリセットボタン */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          {[1, 1.5, 2].map((preset) => (
-            <button
-              key={preset}
-              onClick={() => handlePresetClick(preset)}
-              className={`py-3 px-4 rounded-lg font-medium transition-colors ${
-                Math.abs(currentSpeed - preset) < 0.01
-                  ? "bg-green-600 text-white"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700"
-              }`}
-            >
-              {preset}x
-            </button>
-          ))}
         </div>
       </div>
     </div>

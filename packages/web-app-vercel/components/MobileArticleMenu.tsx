@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import {
   MoreVertical,
@@ -15,10 +15,6 @@ interface MobileArticleMenuProps {
   isDownloading?: boolean;
 }
 
-// メニューのおおよその高さ（3つのメニュー項目 + パディングを考慮した値）
-// この値はメニューのレイアウト変更時に更新する必要がある
-const APPROX_MENU_HEIGHT = 160;
-
 export function MobileArticleMenu({
   articleUrl,
   onDownload,
@@ -27,6 +23,7 @@ export function MobileArticleMenu({
   const [isOpen, setIsOpen] = useState(false);
   const [showCopiedNotification, setShowCopiedNotification] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [menuPosition, setMenuPosition] = useState<{
     top: number;
     right: number;
@@ -46,11 +43,11 @@ export function MobileArticleMenu({
     }
   }, [isOpen]);
 
-  // メニュー位置の計算
-  useEffect(() => {
-    if (isOpen && buttonRef.current) {
+  // メニュー位置の計算（動的な高さ取得）
+  useLayoutEffect(() => {
+    if (isOpen && buttonRef.current && menuRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
-      const menuHeight = APPROX_MENU_HEIGHT; // メニューのおおよその高さ
+      const menuHeight = menuRef.current.offsetHeight; // 実際のメニュー高さを取得
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
 
@@ -123,6 +120,7 @@ export function MobileArticleMenu({
 
             {/* メニュー本体 */}
             <div
+              ref={menuRef}
               className="fixed w-56 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg z-50"
               style={
                 menuPosition
