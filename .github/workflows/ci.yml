@@ -169,8 +169,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-auth-state
-          path: packages/web-app-vercel/playwright/.auth/
+          # Always point at the workspace absolute path to avoid working-directory problems
+          path: ${{ github.workspace }}/packages/web-app-vercel/playwright/.auth/
           retention-days: 1
+          if-no-files-found: error
 
   e2e-test:
     name: E2E tests (sharded)
@@ -203,7 +205,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: playwright-auth-state
-          path: packages/web-app-vercel/playwright/.auth/
+          path: ${{ github.workspace }}/packages/web-app-vercel/playwright/.auth/
 
       - name: Download build
         uses: actions/download-artifact@v4

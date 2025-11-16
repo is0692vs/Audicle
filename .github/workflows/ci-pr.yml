@@ -116,7 +116,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: playwright-auth-state
-          path: packages/web-app-vercel/playwright/.auth/
+          path: ${{ github.workspace }}/packages/web-app-vercel/playwright/.auth/
       - name: Run e2e (small)
         run: npx playwright test --project=chromium --shard=1/1
         working-directory: packages/web-app-vercel
@@ -180,5 +180,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-auth-state
-          path: packages/web-app-vercel/playwright/.auth/
+          # Use absolute path from workspace root to avoid working-directory issues
+          path: ${{ github.workspace }}/packages/web-app-vercel/playwright/.auth/
           retention-days: 1
+          # Fail the step if no files are found; this catches missing auth state early
+          if-no-files-found: error
