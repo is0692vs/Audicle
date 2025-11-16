@@ -55,6 +55,16 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
         working-directory: packages/web-app-vercel
+      - name: Restore Playwright cache
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+        working-directory: packages/web-app-vercel
       - name: Create auth directory
         run: mkdir -p playwright/.auth
         working-directory: packages/web-app-vercel
