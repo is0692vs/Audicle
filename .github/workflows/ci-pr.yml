@@ -26,6 +26,7 @@ jobs:
 
   lint:
     name: Lint
+    if: ${{ github.actor != 'dependabot[bot]' }}
     needs: setup
     runs-on: ubuntu-latest
     steps:
