@@ -23,6 +23,8 @@ jobs:
           cache-dependency-path: 'packages/web-app-vercel/package-lock.json'
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      - name: Create auth directory
+        run: mkdir -p playwright/.auth
       - name: Run auth tests
         env:
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
@@ -49,8 +51,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-auth-state
-          path: packages/web-app-vercel/playwright/.auth/user.json
+          # Use workspace absolute path (not affected by defaults working-directory)
+          path: ${{ github.workspace }}/packages/web-app-vercel/playwright/.auth/user.json
           retention-days: 1
+          if-no-files-found: error
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -69,6 +73,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
+      
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: 'packages/web-app-vercel/package-lock.json'
@@ -78,7 +83,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: playwright-auth-state
-          path: packages/web-app-vercel/playwright/.auth/
+          path: ${{ github.workspace }}/packages/web-app-vercel/playwright/.auth/
       - name: Run playlist tests
         env:
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
@@ -116,7 +121,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: playwright-auth-state
-          path: packages/web-app-vercel/playwright/.auth/
+          path: ${{ github.workspace }}/packages/web-app-vercel/playwright/.auth/
       - name: Run popular articles tests
         env:
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
@@ -154,7 +159,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: playwright-auth-state
-          path: packages/web-app-vercel/playwright/.auth/
+          path: ${{ github.workspace }}/packages/web-app-vercel/playwright/.auth/
       - name: Run article playback tests
         env:
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}

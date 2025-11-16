@@ -59,6 +59,7 @@ export function PlaylistSelectorModal({
     new Set()
   );
   const [error, setError] = useState<string | null>(null);
+  const [overlayClickable, setOverlayClickable] = useState(false);
 
   // モーダルが開いたときに選択状態を同期
   useEffect(() => {
@@ -96,6 +97,13 @@ export function PlaylistSelectorModal({
       setSelectedPlaylistIds(new Set());
       setInitialSelectedIds(new Set());
       setError(null);
+    }
+    // When the modal opens, disable overlay clicks briefly so a lingering
+    // click from the button which opened the modal cannot immediately close it.
+    if (isOpen) {
+      setOverlayClickable(false);
+      const t = setTimeout(() => setOverlayClickable(true), 100);
+      return () => clearTimeout(t);
     }
   }, [isOpen]);
 
@@ -173,7 +181,12 @@ export function PlaylistSelectorModal({
       {/* オーバーレイ */}
       <div
         className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
-        onClick={onClose}
+        onClick={(e) => {
+          // Guard against overlay being clicked immediately after opening the modal
+          // (close race condition coming from underlying click propagation)
+          if (!overlayClickable) return;
+          onClose();
+        }}
         role="presentation"
       />
 
