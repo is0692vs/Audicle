@@ -1,0 +1,73 @@
+name: CI - PR (small matrix)
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install deps
+        run: npm ci
+        working-directory: packages/web-app-vercel
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+        working-directory: packages/web-app-vercel
+
+  lint:
+    name: Lint
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run lint
+        run: npm run lint
+        working-directory: packages/web-app-vercel
+
+  unit-test:
+    name: Unit Tests
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run unit tests
+        run: npm run test:unit
+        working-directory: packages/web-app-vercel
+        env:
+          NODE_ENV: test
+
+  e2e-pr:
+    name: E2E (PR-small)
+    needs: [setup]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Download auth state (if available)
+        uses: actions/download-artifact@v4
+        with:
+          name: playwright-auth-state
+          path: packages/web-app-vercel/playwright/.auth/
+      - name: Run e2e (small)
+        run: npx playwright test --project=chromium --shard=1/1
+        working-directory: packages/web-app-vercel
+        env:
+          AUTH_ENV: test

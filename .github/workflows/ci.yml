@@ -3,8 +3,6 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -181,6 +179,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        browser: [chromium, firefox]
         shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v4
@@ -213,7 +212,7 @@ jobs:
           path: ./packages/web-app-vercel/.next
 
       - name: Run e2e shard
-        run: npx playwright test --shard=${{ matrix.shard }}/3
+        run: npx playwright test --shard=${{ matrix.shard }}/3 --project=${{ matrix.browser }}
         working-directory: packages/web-app-vercel
         env:
           AUTH_ENV: test

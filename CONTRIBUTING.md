@@ -28,21 +28,27 @@ Audicle プロジェクトへの貢献に興味を持っていただき、あり
 以下の方法で貢献できます：
 
 ### 1. バグ報告
+
 不具合を発見した場合は、[Issue](https://github.com/is0692vs/Audicle/issues) を作成してください。
 
 ### 2. 機能要望
+
 新しい機能のアイデアがある場合も、Issue を作成してください。
 
 ### 3. ドキュメントの改善
+
 README、コメント、ドキュメントの誤字修正や明確化。
 
 ### 4. コードの貢献
+
 バグ修正や新機能の実装。
 
 ### 5. テストの追加
+
 テストカバレッジの向上。
 
 ### 6. 翻訳
+
 ドキュメントの英語翻訳など。
 
 ## 🛠️ 開発環境のセットアップ
@@ -108,6 +114,7 @@ git checkout -b feature/your-feature-name
 ```
 
 ブランチ名の規則：
+
 - `feature/機能名` - 新機能
 - `fix/修正内容` - バグ修正
 - `docs/対象` - ドキュメント更新
@@ -150,27 +157,82 @@ GitHub でプルリクエストを作成してください。
 
 **プルリクエストのテンプレート:**
 
-```markdown
+````markdown
 ## 概要
+
 この PR で何を変更したか簡潔に説明
 
 ## 変更内容
-- 変更点1
-- 変更点2
+
+- 変更点 1
+- 変更点 2
 
 ## テスト方法
-1. 手順1
-2. 手順2
+
+1. 手順 1
+2. 手順 2
 
 ## スクリーンショット（該当する場合）
+
 [画像を添付]
 
 ## チェックリスト
+
 - [ ] テストを実行し、すべて成功した
 - [ ] ドキュメントを更新した（該当する場合）
 - [ ] コーディング規約に従っている
 - [ ] コミットメッセージが適切である
+
+## 🧭 CI / GitHub Actions
+
+Audicle は GitHub Actions を使って自動テストを実行しています。リポジトリ内のワークフローは以下の通りです。
+
+- `ci.yml` — フル CI パイプライン（push に反応）
+- `ci-pr.yml` — PR 向けの簡易 CI（PR に反応、E2E は縮小されたマトリクスで実行）
+
+デフォルトでは、PR (Pull Request) では `ci-pr.yml` が実行され、時間/コストを抑えるために `chromium` のみで E2E を実行します。
+`ci.yml` は push でフルマトリクス（複数ブラウザ、分割シャード）を実行します。PR 時にフルマトリクスを試したい場合は `ci.yml` を使う（手動での実行やマージ後の確認）ことができます。
+
+### CI 実行コマンド（ローカル）
+
+以下は CI 相当のタスクをローカルで実行するコマンド例です。E2E を実行するには Playwright のブラウザが必要です。
+
+```bash
+# 単体テスト（Jest）
+cd packages/web-app-vercel
+npm run test:unit
+
+# 統合テスト
+npm run test:integration
+
+# E2E テスト（Chromium, StorageState 生成）
+npx playwright test --project=setup # 一度だけ認証状態を作る
+npx playwright test --project=chromium
 ```
+````
+
+### マトリクスの小さくするためのヒント
+
+- PR では `ci-pr.yml` を利用してください（`chromium` のみ、シャード 1）。これで GitHub Actions のワーカー数とコストを削減できます。
+- もしマトリクスをさらに縮小したい場合は、`/.github/workflows/ci.yml` 内で `matrix.browser` と `matrix.shard` の数を調整してください。
+
+### 並列化とシャーディングについて
+
+- `ci.yml` は E2E テストを `shard` と `browser` の組み合わせで並列実行します。これにより、テストを高速化できますが、GitHub Actions の実行数は増えます。ルール：
+  - 低コスト、少ないワーカー: `matrix.browser: [chromium]`, `matrix.shard: [1]`
+  - 高速、複数ワーカー: `matrix.browser: [chromium, firefox]`, `matrix.shard: [1,2,3]`
+
+### GitHub Secrets のセットアップ（E2E 用）
+
+`ci.yml` は以下の Secrets を参照します。PR で E2E を実行する場合は、Secrets を設定してください。
+
+- `TEST_USER_EMAIL` / `TEST_USER_PASSWORD` — E2E 認証用テストアカウント
+- `NEXTAUTH_SECRET` — Next.js 認証のため
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase のテスト環境情報
+
+詳細は `.github/workflows/ci.yml` を参照してください。
+
+````
 
 ## 📝 コーディング規約
 
@@ -205,7 +267,7 @@ GitHub でプルリクエストを作成してください。
 async function synthesize(text, options) {
   // 実装
 }
-```
+````
 
 ## 💬 コミットメッセージ規約
 
@@ -251,30 +313,37 @@ Closes #123
 
 ```markdown
 ## バグの説明
+
 バグの内容を簡潔に説明
 
 ## 再現手順
+
 1. '...' に移動
 2. '...' をクリック
 3. '...' まで下にスクロール
 4. エラーを確認
 
 ## 期待される動作
+
 期待される動作を説明
 
 ## 実際の動作
+
 実際に何が起こったか説明
 
 ## スクリーンショット
+
 該当する場合、スクリーンショットを追加
 
 ## 環境
+
 - OS: [例: Windows 10, macOS 13.0, Ubuntu 22.04]
 - ブラウザ: [例: Chrome 120.0]
 - Audicle バージョン: [例: 1.0.0]
 - 使用している TTS エンジン: [例: Google TTS, Edge TTS]
 
 ## 追加情報
+
 その他、関連する情報があれば記載
 ```
 
@@ -286,18 +355,23 @@ Closes #123
 
 ```markdown
 ## 機能の説明
+
 提案する機能を簡潔に説明
 
 ## 動機
+
 なぜこの機能が必要か、どんな問題を解決するか
 
 ## 提案する実装方法
+
 可能であれば、実装方法のアイデアを記載
 
 ## 代替案
+
 検討した代替案があれば記載
 
 ## 追加情報
+
 その他、関連する情報があれば記載
 ```
 
@@ -306,15 +380,18 @@ Closes #123
 Audicle の開発に役立つリソース：
 
 ### Web 技術
+
 - [MDN Web Docs](https://developer.mozilla.org/)
 - [Chrome Extensions Documentation](https://developer.chrome.com/docs/extensions/)
 
 ### API・ライブラリ
+
 - [Mozilla Readability.js](https://github.com/mozilla/readability)
 - [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
 - [Edge TTS](https://github.com/rany2/edge-tts)
 
 ### フレームワーク
+
 - [Next.js Documentation](https://nextjs.org/docs)
 - [React Documentation](https://react.dev/)
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
