@@ -153,7 +153,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: next-build
-          path: packages/web-app-vercel/.next
+          path: ${{ github.workspace }}/packages/web-app-vercel/.next
           retention-days: 1
 
   e2e-auth:
