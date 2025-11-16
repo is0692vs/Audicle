@@ -56,9 +56,24 @@ export function PopularArticleCard({
             size="sm"
             variant="ghost"
             onClick={(e) => {
+              // Prevent parent card click from firing and guard against
+              // double/tripled event propagation (mobile touch/pointer issues)
+              e.preventDefault();
               e.stopPropagation();
+              // stopImmediatePropagation is a stronger guard; use defensively
+              // to prevent other handlers on the same element from running.
+              // This helps stop race conditions that can reopen/close modal
+              // and cause the card click to fire.
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore - stopImmediatePropagation exists in DOM Event
+              if (typeof (e as any).stopImmediatePropagation === "function")
+                (e as any).stopImmediatePropagation();
+
               onPlaylistAdd(article);
             }}
+            // Touch events can trigger additional pointer events on mobile; stop
+            // propagation to avoid hitting the card or overlay under race
+            onTouchStart={(e) => e.stopPropagation()}
             className="text-violet-400 hover:text-violet-300 hover:bg-violet-950/30"
           >
             <Plus className="size-4" />
