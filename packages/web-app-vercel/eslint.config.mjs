@@ -10,10 +10,9 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
-  // NOTE: Temporarily skip 'next/typescript' to avoid circular config errors
-  // with @eslint/eslintrc introduced by some eslint/next combos. This lets
-  // Dependabot bumps pass CI while we determine a more complete fix.
-  ...compat.extends("next/core-web-vitals"),
+  // Re-add 'next/typescript' — this pulls in @typescript-eslint rules required
+  // by our project (we also pin eslint-config-next to avoid circular issues).
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     ignores: [
       "node_modules/**",
