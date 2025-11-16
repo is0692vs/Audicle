@@ -1,15 +1,7 @@
 name: Unit Tests
 
 on:
-  pull_request:
-    paths:
-      - 'packages/web-app-vercel/**'
-      - '.github/workflows/unit-tests.yml'
-  push:
-    branches:
-      - main
-    paths:
-      - 'packages/web-app-vercel/**'
+  workflow_dispatch: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

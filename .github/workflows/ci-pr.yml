@@ -46,28 +46,26 @@ jobs:
         run: npm ci
         working-directory: packages/web-app-vercel
       - name: Restore Playwright cache
-        id: playwright-cache
+        id: playwright-cache-pr
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
+          key: playwright-pr-${{ runner.os }}-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
       - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        if: steps.playwright-cache-pr.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
         working-directory: packages/web-app-vercel
       - name: Restore Playwright cache
-        id: playwright-cache
+        id: playwright-cache-lint
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
       - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        if: steps.playwright-cache-lint.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
         working-directory: packages/web-app-vercel
-      - name: Create auth directory
-        run: mkdir -p playwright/.auth
-        working-directory: packages/web-app-vercel
+      
       - name: Create auth directory
         run: mkdir -p playwright/.auth
         working-directory: packages/web-app-vercel
@@ -102,6 +100,34 @@ jobs:
         env:
           NODE_ENV: test
 
+  build:
+    name: Build
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Restore node_modules
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: packages/web-app-vercel/node_modules
+          key: npm-deps-${{ runner.os }}-node-20-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
+      - name: Install dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: npm ci
+        working-directory: packages/web-app-vercel
+      - name: Build Next.js
+        run: npm run build
+        working-directory: packages/web-app-vercel
+        env:
+          NODE_ENV: production
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+
   e2e-pr:
     name: E2E (PR-small)
     needs: [setup, e2e-auth]
@@ -128,6 +154,16 @@ jobs:
         if: steps.cache-deps.outputs.cache-hit != 'true'
         run: npm ci
         working-directory: packages/web-app-vercel
+      - name: Restore Playwright browsers
+        id: playwright-cache-e2e
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-pr-${{ runner.os }}-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
+      - name: Install Playwright browsers
+        if: steps.playwright-cache-e2e.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+        working-directory: packages/web-app-vercel
       - name: Download auth state (if available)
         uses: actions/download-artifact@v4
         with:
@@ -147,7 +183,7 @@ jobs:
 
   e2e-auth:
     name: E2E Auth Setup
-    needs: setup
+    needs: [setup, build]
     runs-on: ubuntu-latest
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}

@@ -47,5 +47,13 @@ export default defineConfig({
         url: 'http://localhost:3000',
         reuseExistingServer: !process.env.CI,
         timeout: 120000,
+        // Provide runtime environment variables to the Next.js dev server when Playwright starts it
+        env: {
+            NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+            NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+            NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || '',
+            NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'http://localhost:3000',
+            AUTH_ENV: process.env.AUTH_ENV || '',
+        },
     },
 })
