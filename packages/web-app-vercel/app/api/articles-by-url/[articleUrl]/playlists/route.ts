@@ -18,12 +18,12 @@ export async function GET(
         if (response) return response
 
         // article_urlでarticlesテーブルから記事IDを取得
-        const { data: articles, error: articlesError } = await supabase
+        const { data: article, error: articleError } = await supabase
             .from('articles')
             .select('id')
             .eq('url', decodedArticleUrl)
             .eq('owner_email', userEmail)
-            .limit(1)
+            .single()
 
         if (articlesError) {
             return NextResponse.json(
