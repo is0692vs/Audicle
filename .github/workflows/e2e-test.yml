@@ -12,8 +12,8 @@ jobs:
       run:
         working-directory: packages/web-app-vercel
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'npm'
@@ -45,14 +45,14 @@ jobs:
           find . -name "user.json" 2>/dev/null || echo "user.json not found"
       - name: Upload auth state
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: playwright-auth-state
           # Use workspace absolute path (not affected by defaults working-directory)
           path: ${{ github.workspace }}/packages/web-app-vercel/playwright/.auth/user.json
           retention-days: 1
           if-no-files-found: error
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: always()
         with:
           name: auth-test-results
@@ -67,8 +67,8 @@ jobs:
       run:
         working-directory: packages/web-app-vercel
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
         with:
       
           node-version: '20'
@@ -77,7 +77,7 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Download auth state
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: playwright-auth-state
           path: ${{ github.workspace }}/packages/web-app-vercel/playwright/.auth/
@@ -91,7 +91,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         run: npx playwright test tests/e2e/playlist.spec.ts
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: always()
         with:
           name: playlist-test-results
@@ -106,8 +106,8 @@ jobs:
       run:
         working-directory: packages/web-app-vercel
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'npm'
@@ -115,7 +115,7 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Download auth state
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: playwright-auth-state
           path: ${{ github.workspace }}/packages/web-app-vercel/playwright/.auth/
@@ -129,7 +129,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         run: npx playwright test tests/e2e/popular-articles.spec.ts
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: always()
         with:
           name: popular-test-results
@@ -144,8 +144,8 @@ jobs:
       run:
         working-directory: packages/web-app-vercel
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'npm'
@@ -153,7 +153,7 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Download auth state
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: playwright-auth-state
           path: ${{ github.workspace }}/packages/web-app-vercel/playwright/.auth/
@@ -167,7 +167,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         run: npx playwright test tests/e2e/article-playback.spec.ts
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: always()
         with:
           name: article-test-results
