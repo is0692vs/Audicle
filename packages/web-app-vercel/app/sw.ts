@@ -20,15 +20,16 @@ declare const self: ServiceWorkerGlobalScope;
 
 const cacheStrategies: RuntimeCaching[] = [
     {
-        matcher: ({ url }) => url.protocol.startsWith("http") && !url.pathname.startsWith("/api/"),
-        handler: new CacheFirst({
-            cacheName: "staticCache",
+        matcher: ({ request }) => request.mode === "navigate",
+        handler: new NetworkFirst({
+            cacheName: "pages",
             plugins: [
                 new ExpirationPlugin({
                     maxEntries: 60,
                     maxAgeSeconds: 24 * 60 * 60,
                 }),
             ],
+            networkTimeoutSeconds: 5,
         }),
     },
     {
