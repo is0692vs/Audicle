@@ -107,6 +107,7 @@ jobs:
           NODE_ENV: test
 
   build:
+    if: github.actor != 'dependabot[bot]'
     name: Build
     needs: setup
     runs-on: ubuntu-latest
