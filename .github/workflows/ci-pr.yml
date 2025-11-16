@@ -197,8 +197,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-auth-state
-          # Use absolute path from workspace root to avoid working-directory issues
-          path: ${{ github.workspace }}/packages/web-app-vercel/playwright/.auth/
+          # Upload the actual auth file (explicit file path) — safer than directory upload
+          path: ${{ github.workspace }}/packages/web-app-vercel/playwright/.auth/user.json
           retention-days: 1
           # Fail the step if no files are found; this catches missing auth state early
           if-no-files-found: error

@@ -171,8 +171,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-auth-state
-          # Always point at the workspace absolute path to avoid working-directory problems
-          path: ${{ github.workspace }}/packages/web-app-vercel/playwright/.auth/
+          # Upload the actual auth file to mirror e2e-test.yml and avoid empty directory uploads
+          path: ${{ github.workspace }}/packages/web-app-vercel/playwright/.auth/user.json
           retention-days: 1
           if-no-files-found: error
       # Create auth directory (safety) is not needed here after upload — ensure it exists earlier
