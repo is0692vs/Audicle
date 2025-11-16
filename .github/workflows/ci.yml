@@ -51,7 +51,7 @@ jobs:
   lint:
     name: Lint
     needs: setup
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v6
@@ -69,7 +69,7 @@ jobs:
   unit-test:
     name: Unit Tests
     needs: setup
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v6
@@ -89,7 +89,7 @@ jobs:
   integration-test:
     name: Integration Tests
     needs: setup
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v6
