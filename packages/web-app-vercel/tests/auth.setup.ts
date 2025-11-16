@@ -71,10 +71,6 @@ setup('authenticate', async ({ page }) => {
         console.log('[AUTH SETUP] Error message found:', errorText)
     }
 
-    // cookieを直接確認
-    const cookies = await page.context().cookies()
-    console.log('[AUTH SETUP] Current cookies after login:', JSON.stringify(cookies, null, 2))
-
     // ログイン後のURL確認
     console.log('[AUTH SETUP] Current URL after login:', page.url())
     console.log('[AUTH SETUP] Page title after login:', await page.title())
