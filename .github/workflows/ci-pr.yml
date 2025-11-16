@@ -33,6 +33,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Restore npm cache
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: packages/web-app-vercel/node_modules
+          key: npm-deps-${{ runner.os }}-node-20-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
+          restore-keys: |
+            npm-deps-${{ runner.os }}-node-20-
+      - name: Install dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: npm ci
+        working-directory: packages/web-app-vercel
       - name: Run lint
         run: npm run lint
         working-directory: packages/web-app-vercel
@@ -46,6 +58,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Restore npm cache
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: packages/web-app-vercel/node_modules
+          key: npm-deps-${{ runner.os }}-node-20-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
+          restore-keys: |
+            npm-deps-${{ runner.os }}-node-20-
+      - name: Install dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: npm ci
+        working-directory: packages/web-app-vercel
       - name: Run unit tests
         run: npm run test:unit
         working-directory: packages/web-app-vercel
@@ -54,13 +78,25 @@ jobs:
 
   e2e-pr:
     name: E2E (PR-small)
-    needs: [setup]
+    needs: [setup, e2e-auth]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Restore npm cache
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: packages/web-app-vercel/node_modules
+          key: npm-deps-${{ runner.os }}-node-20-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
+          restore-keys: |
+            npm-deps-${{ runner.os }}-node-20-
+      - name: Install dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: npm ci
+        working-directory: packages/web-app-vercel
       - name: Download auth state (if available)
         uses: actions/download-artifact@v4
         with:
@@ -71,3 +107,43 @@ jobs:
         working-directory: packages/web-app-vercel
         env:
           AUTH_ENV: test
+
+  e2e-auth:
+    name: E2E Auth Setup
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Restore npm cache
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: packages/web-app-vercel/node_modules
+          key: npm-deps-${{ runner.os }}-node-20-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
+          restore-keys: |
+            npm-deps-${{ runner.os }}-node-20-
+      - name: Install dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: npm ci
+        working-directory: packages/web-app-vercel
+      - name: Restore Playwright cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
+      - name: Setup Playwright auth
+        run: npx playwright test --project=setup
+        working-directory: packages/web-app-vercel
+        env:
+          AUTH_ENV: test
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+      - name: Upload auth state
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-auth-state
+          path: packages/web-app-vercel/playwright/.auth/
+          retention-days: 1
