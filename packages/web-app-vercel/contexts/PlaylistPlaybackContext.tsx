@@ -33,6 +33,9 @@ export interface PlaylistPlaybackContextType {
   playPrevious: () => void;
   stopPlaylistPlayback: () => void;
   onArticleEnd: () => void;
+  initializeFromArticle: (articleUrl: string) => Promise<void>;
+  canMovePrevious: boolean;
+  canMoveNext: boolean;
 }
 
 const PlaylistPlaybackContext = createContext<
@@ -288,6 +291,89 @@ export function PlaylistPlaybackProvider({
     });
   }, [router]);
 
+  /**
+   * 記事URLからプレイリストを自動検出して初期化
+   */
+  const initializeFromArticle = useCallback(
+    async (articleUrl: string) => {
+      try {
+        logger.info("記事からプレイリストを検出", { articleUrl });
+
+        // 記事が属するプレイリスト一覧を取得
+        const response = await fetch(
+          `/api/articles-by-url/${encodeURIComponent(articleUrl)}/playlists`
+        );
+
+        if (!response.ok) {
+          logger.warn("プレイリストの取得に失敗", { status: response.status });
+          return;
+        }
+
+        const playlists = await response.json();
+
+        if (!Array.isArray(playlists) || playlists.length === 0) {
+          logger.info("記事が属するプレイリストなし");
+          return;
+        }
+
+        // デフォルトプレイリストを優先、なければ最初のプレイリスト
+        const targetPlaylist = playlists.find((p) => p.is_default) || playlists[0];
+
+        logger.info("プレイリストを選択", {
+          playlistId: targetPlaylist.id,
+          playlistName: targetPlaylist.name,
+          isDefault: targetPlaylist.is_default,
+        });
+
+        // プレイリスト内のアイテムを取得
+        const itemsResponse = await fetch(
+          `/api/playlists/${targetPlaylist.id}/items`
+        );
+
+        if (!itemsResponse.ok) {
+          logger.warn("プレイリストアイテムの取得に失敗", {
+            status: itemsResponse.status,
+          });
+          return;
+        }
+
+        const items: PlaylistItemWithArticle[] = await itemsResponse.json();
+
+        // 現在の記事のインデックスを特定
+        const currentIndex = items.findIndex(
+          (item) => item.article.url === articleUrl
+        );
+
+        if (currentIndex === -1) {
+          logger.warn("プレイリスト内に記事が見つからない", { articleUrl });
+          return;
+        }
+
+        logger.success("プレイリストコンテキストを初期化", {
+          playlistId: targetPlaylist.id,
+          currentIndex,
+          totalCount: items.length,
+        });
+
+        // プレイリストコンテキストを初期化（ページ遷移なし）
+        setState({
+          playlistId: targetPlaylist.id,
+          playlistName: targetPlaylist.name,
+          currentIndex,
+          items,
+          totalCount: items.length,
+          isPlaylistMode: true,
+        });
+      } catch (error) {
+        logger.error("プレイリスト初期化エラー", error);
+      }
+    },
+    []
+  );
+
+  const canMovePrevious = state.currentIndex > 0;
+  const canMoveNext = state.currentIndex < state.items.length - 1;
+
   const value: PlaylistPlaybackContextType = {
     state,
     startPlaylistPlayback,
@@ -295,6 +381,9 @@ export function PlaylistPlaybackProvider({
     playPrevious,
     stopPlaylistPlayback,
     onArticleEnd,
+    initializeFromArticle,
+    canMovePrevious,
+    canMoveNext,
   };
 
   return (

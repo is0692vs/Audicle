@@ -57,7 +57,13 @@ export default function ReaderPageClient() {
   const userEmail = session?.user?.email;
 
   // プレイリスト再生コンテキスト
-  const { state: playlistState, onArticleEnd } = usePlaylistPlayback();
+  const { 
+    state: playlistState, 
+    onArticleEnd,
+    initializeFromArticle,
+    canMovePrevious,
+    canMoveNext,
+  } = usePlaylistPlayback();
 
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -475,6 +481,15 @@ export default function ReaderPageClient() {
     play,
   ]);
 
+  // 記事URLが読み込まれた際に、プレイリストコンテキストが無い場合は自動検出
+  useEffect(() => {
+    // プレイリストモードではない かつ 記事URLがある かつ playlistIdFromQueryがない
+    if (url && !playlistState.isPlaylistMode && !playlistIdFromQuery) {
+      logger.info("プレイリストコンテキストなし、自動検出を試行", { url });
+      initializeFromArticle(url);
+    }
+  }, [url, playlistState.isPlaylistMode, playlistIdFromQuery, initializeFromArticle]);
+
   // プレイリスト内の特定の記事に遷移するヘルパー関数
   const navigateToPlaylistItem = useCallback(
     (index: number) => {
@@ -590,7 +605,7 @@ export default function ReaderPageClient() {
             </div>
           )}
           {/* プレイリスト再生情報: コンパクト化 */}
-          {isPlaylistMode && playlistState.isPlaylistMode && (
+          {playlistState.isPlaylistMode && (
             <div className="mt-2 bg-violet-950/30 p-2 sm:p-3 rounded-lg border border-violet-900/50">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="min-w-0 flex-1">
@@ -598,34 +613,34 @@ export default function ReaderPageClient() {
                     {playlistState.playlistName}
                   </p>
                   <p className="text-xs sm:text-sm text-zinc-500">
-                    {currentPlaylistIndex + 1} / {playlistState.totalCount}
+                    {playlistState.currentIndex + 1} / {playlistState.totalCount}
                   </p>
                 </div>
                 <div className="flex gap-1 sm:gap-2">
                   <button
                     onClick={() => {
-                      if (currentPlaylistIndex > 0) {
-                        navigateToPlaylistItem(currentPlaylistIndex - 1);
+                      if (canMovePrevious) {
+                        navigateToPlaylistItem(playlistState.currentIndex - 1);
                       }
                     }}
-                    disabled={currentPlaylistIndex === 0}
+                    disabled={!canMovePrevious}
                     className="px-2 sm:px-3 py-1 bg-violet-600 text-white rounded hover:bg-violet-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center gap-1 text-xs sm:text-sm"
                     title="前の記事"
+                    aria-label="前の記事"
                   >
                     <SkipBack className="size-3 sm:size-4" />
                     <span className="hidden sm:inline">前へ</span>
                   </button>
                   <button
                     onClick={() => {
-                      if (currentPlaylistIndex < playlistState.totalCount - 1) {
-                        navigateToPlaylistItem(currentPlaylistIndex + 1);
+                      if (canMoveNext) {
+                        navigateToPlaylistItem(playlistState.currentIndex + 1);
                       }
                     }}
-                    disabled={
-                      currentPlaylistIndex === playlistState.totalCount - 1
-                    }
+                    disabled={!canMoveNext}
                     className="px-2 sm:px-3 py-1 bg-violet-600 text-white rounded hover:bg-violet-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center gap-1 text-xs sm:text-sm"
                     title="次の記事"
+                    aria-label="次の記事"
                   >
                     <span className="hidden sm:inline">次へ</span>
                     <SkipForward className="size-3 sm:size-4" />
@@ -634,6 +649,7 @@ export default function ReaderPageClient() {
               </div>
             </div>
           )}
+
 
           {/* 再生コントロール: デスクトップのみ */}
           {chunks.length > 0 && (
