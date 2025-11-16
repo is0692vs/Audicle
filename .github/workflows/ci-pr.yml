@@ -46,6 +46,17 @@ jobs:
         run: npm ci
         working-directory: packages/web-app-vercel
       - name: Restore Playwright cache
+        id: playwright-cache-e2e-pr
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-e2e-pr-${{ runner.os }}-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache-e2e-pr.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+        working-directory: packages/web-app-vercel
+      - name: Restore Playwright cache
         id: playwright-cache-pr
         uses: actions/cache@v4
         with:
@@ -100,6 +111,36 @@ jobs:
         env:
           NODE_ENV: test
 
+  build:
+    name: Build
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Restore npm cache
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: packages/web-app-vercel/node_modules
+          key: npm-deps-${{ runner.os }}-node-20-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
+          restore-keys: |
+            npm-deps-${{ runner.os }}-node-20-
+      - name: Install dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: npm ci
+        working-directory: packages/web-app-vercel
+      - name: Build Next.js
+        run: npm run build
+        working-directory: packages/web-app-vercel
+        env:
+          NODE_ENV: production
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+
   e2e-pr:
     name: E2E (PR-small)
     needs: [setup, e2e-auth]
@@ -145,7 +186,7 @@ jobs:
 
   e2e-auth:
     name: E2E Auth Setup
-    needs: setup
+    needs: [setup, build]
     runs-on: ubuntu-latest
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
