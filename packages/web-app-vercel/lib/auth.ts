@@ -3,6 +3,15 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { initializeNewUser } from "./user-initialization";
 
+// デバッグログは開発/テスト環境のみ
+const IS_DEBUG = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test'
+
+// 診断ログ
+console.log('[AUTH DIAGNOSTIC] NODE_ENV:', process.env.NODE_ENV)
+console.log('[AUTH DIAGNOSTIC] IS_DEBUG:', IS_DEBUG)
+console.log('[AUTH DIAGNOSTIC] TEST_USER_EMAIL:', process.env.TEST_USER_EMAIL ? 'SET' : 'NOT SET')
+console.log('[AUTH DIAGNOSTIC] TEST_USER_PASSWORD:', process.env.TEST_USER_PASSWORD ? 'SET' : 'NOT SET')
+
 const allowedUsers = process.env.ALLOWED_USERS?.split(',').map(email => email.trim()) || [];
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -17,7 +26,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             },
         }),
         // テスト環境でのみ有効
-        ...(process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development'
+        ...(process.env.AUTH_ENV === 'test'
             ? [
                 CredentialsProvider({
                     id: 'test-credentials',
@@ -27,29 +36,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                         password: { label: "Password", type: "password" }
                     },
                     async authorize(credentials) {
-                        console.log('[AUTH DEBUG] Authorize called')
-                        console.log('[AUTH DEBUG] Credentials:', {
-                            email: credentials?.email,
-                            hasPassword: !!credentials?.password
-                        })
-                        console.log('[AUTH DEBUG] Expected:', {
-                            email: process.env.TEST_USER_EMAIL,
-                            hasPassword: !!process.env.TEST_USER_PASSWORD
-                        })
+                        if (IS_DEBUG) {
+                            console.log('[AUTH DEBUG] Test credentials provider called')
+                            console.log('[AUTH DEBUG] Credentials Provider check')
+                            console.log('[AUTH DEBUG] NODE_ENV === "test":', process.env.NODE_ENV === 'test')
+                        }
 
                         // テスト用の固定認証
                         if (
                             credentials?.email === process.env.TEST_USER_EMAIL &&
                             credentials?.password === process.env.TEST_USER_PASSWORD
                         ) {
-                            console.log('[AUTH DEBUG] Login SUCCESS')
+                            if (IS_DEBUG) {
+                                console.log('[AUTH DEBUG] Login SUCCESS')
+                            }
                             return {
                                 id: 'test-user-id-123',
                                 name: 'Test User',
                                 email: process.env.TEST_USER_EMAIL,
                             }
                         }
-                        console.log('[AUTH DEBUG] Login FAILED')
+                        if (IS_DEBUG) {
+                            console.log('[AUTH DEBUG] Login FAILED')
+                        }
                         return null
                     }
                 })
@@ -59,8 +68,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     callbacks: {
         async signIn({ user }) {
             // テスト用ユーザーはホワイトリストチェックをスキップ
-            if (user.id === 'test-user-id-123') {
-                console.log('[AUTH DEBUG] Test user - skipping whitelist check')
+            if (process.env.AUTH_ENV === 'test' && user.id === 'test-user-id-123') {
+                if (IS_DEBUG) {
+                    console.log('[AUTH DEBUG] Test user - skipping whitelist check')
+                }
                 // テスト用ユーザーの初期化処理
                 await initializeNewUser(user.id, user.email || '');
                 return true
@@ -71,7 +82,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 throw new Error('NO_EMAIL: メールアドレスが取得できませんでした');
             }
             const isAllowed = allowedUsers.includes(email);
-            console.log('SignIn attempt:', email, 'Allowed:', isAllowed, 'AllowedUsers:', allowedUsers);
+            if (IS_DEBUG) {
+                console.log('[AUTH DEBUG] SignIn attempt:', email, 'Allowed:', isAllowed)
+            }
 
             if (!isAllowed) {
                 // エラーメッセージをURLパラメータで渡す

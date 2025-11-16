@@ -27,6 +27,9 @@ export default defineConfig({
         {
             name: 'setup',
             testMatch: /.*\.setup\.ts/,
+            use: {
+                baseURL: 'http://localhost:3000',
+            },
         },
 
         // テスト実行（setupの後に実行）
@@ -40,13 +43,9 @@ export default defineConfig({
         },
     ],
     webServer: {
-        command: 'npm run dev',
+        command: 'AUTH_ENV=test npm run dev',
         url: 'http://localhost:3000',
         reuseExistingServer: !process.env.CI,
         timeout: 120000,
-        env: {
-            NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET!,
-            NODE_ENV: 'test',
-        },
     },
 })
