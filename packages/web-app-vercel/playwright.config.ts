@@ -41,6 +41,15 @@ export default defineConfig({
             },
             dependencies: ['setup'],
         },
+        // Firefox project: same settings as Chromium but using Desktop Firefox
+        {
+            name: 'firefox',
+            use: {
+                ...devices['Desktop Firefox'],
+                storageState: 'playwright/.auth/user.json',
+            },
+            dependencies: ['setup'],
+        },
     ],
     webServer: {
         command: 'AUTH_ENV=test npm run dev',
