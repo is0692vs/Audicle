@@ -154,6 +154,7 @@ jobs:
         with:
           name: next-build
           path: ${{ github.workspace }}/packages/web-app-vercel/.next
+          include-hidden-files: true
           retention-days: 1
 
   e2e-auth:
