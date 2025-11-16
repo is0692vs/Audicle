@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DomainBadge } from "@/components/DomainBadge";
 import { Plus } from "lucide-react";
-import type { MouseEvent, TouchEvent } from 'react';
+import type { MouseEvent, TouchEvent } from "react";
 import type { PopularArticle } from "@/types/stats";
 
 interface PopularArticleCardProps {
@@ -66,9 +66,11 @@ export function PopularArticleCard({
               // This helps stop race conditions that can reopen/close modal
               // and cause the card click to fire.
               // stopImmediatePropagation is available on the native event
-              type NativeWithStop = Event & { stopImmediatePropagation?: () => void };
+              type NativeWithStop = Event & {
+                stopImmediatePropagation?: () => void;
+              };
               const nativeEvt = e.nativeEvent as NativeWithStop;
-              if (typeof nativeEvt.stopImmediatePropagation === 'function') {
+              if (typeof nativeEvt.stopImmediatePropagation === "function") {
                 nativeEvt.stopImmediatePropagation();
               }
 
@@ -76,7 +78,9 @@ export function PopularArticleCard({
             }}
             // Touch events can trigger additional pointer events on mobile; stop
             // propagation to avoid hitting the card or overlay under race
-            onTouchStart={(e: TouchEvent<HTMLButtonElement>) => e.stopPropagation()}
+            onTouchStart={(e: TouchEvent<HTMLButtonElement>) =>
+              e.stopPropagation()
+            }
             className="text-violet-400 hover:text-violet-300 hover:bg-violet-950/30"
           >
             <Plus className="size-4" />
