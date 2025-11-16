@@ -108,6 +108,9 @@ jobs:
 
   build:
     name: Build
+    defaults:
+      run:
+        working-directory: packages/web-app-vercel
     needs: setup
     runs-on: ubuntu-latest
     steps:
