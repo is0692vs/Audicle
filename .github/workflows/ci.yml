@@ -155,6 +155,8 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
+      - name: Create auth directory
+        run: mkdir -p packages/web-app-vercel/playwright/.auth/
       - name: Run Playwright auth setup
         run: npx playwright test --project=setup
         working-directory: packages/web-app-vercel
@@ -173,6 +175,7 @@ jobs:
           path: ${{ github.workspace }}/packages/web-app-vercel/playwright/.auth/
           retention-days: 1
           if-no-files-found: error
+      # Create auth directory (safety) is not needed here after upload — ensure it exists earlier
 
   e2e-test:
     name: E2E tests (sharded)
