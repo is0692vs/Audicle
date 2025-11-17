@@ -3,24 +3,19 @@ import { mockArticles } from '../helpers/testData';
 
 test.describe('Reader - Playlist related navigation', () => {
     test('Playlist detail -> reader contains playlist query and prev/next visible', async ({ page }) => {
-        // create a playlist and add two articles
-        const created = await page.evaluate(async (articles) => {
-            const createResp = await fetch('/api/playlists', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: `E2E Reader Playlist ${Date.now()}` }),
-            });
-            if (!createResp.ok) return null;
-            const playlist = await createResp.json();
-            for (const article of articles) {
-                await fetch(`/api/playlists/${playlist.id}/items`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ article_url: article.url, article_title: article.title, thumbnail_url: null, last_read_position: 0 }),
+        // create a playlist and add two articles via page.request
+        const createResp = await page.request.post('/api/playlists', {
+            data: { name: `E2E Reader Playlist ${Date.now()}` },
+        });
+        let created = null;
+        if (createResp.ok()) {
+            created = await createResp.json();
+            for (const article of [mockArticles[0], mockArticles[1]]) {
+                await page.request.post(`/api/playlists/${created.id}/items`, {
+                    data: { article_url: article.url, article_title: article.title, thumbnail_url: null, last_read_position: 0 },
                 });
             }
-            return playlist;
-        }, [mockArticles[0], mockArticles[1]]);
+        }
 
         expect(created).toBeTruthy();
         if (!created) return;
@@ -46,35 +41,28 @@ test.describe('Reader - Playlist related navigation', () => {
         await expect(next).toBeVisible();
 
         // cleanup
-        await page.evaluate(async (id) => {
-            await fetch(`/api/playlists/${id}`, { method: 'DELETE' });
-        }, created.id);
+        await page.request.delete(`/api/playlists/${created.id}`);
     });
 
     test('Home -> reader uses default playlist and prev/next visible', async ({ page }) => {
         // create a playlist and set as default
-        const created = await page.evaluate(async (articles) => {
-            const createResp = await fetch('/api/playlists', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: `E2E Default Playlist ${Date.now()}` }),
-            });
-            if (!createResp.ok) return null;
-            const playlist = await createResp.json();
-            for (const article of articles) {
-                await fetch(`/api/playlists/${playlist.id}/items`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ article_url: article.url, article_title: article.title, thumbnail_url: null, last_read_position: 0 }),
+        const createResp2 = await page.request.post('/api/playlists', {
+            data: { name: `E2E Default Playlist ${Date.now()}` },
+        });
+        let created2 = null;
+        if (createResp2.ok()) {
+            created2 = await createResp2.json();
+            for (const article of [mockArticles[0], mockArticles[1]]) {
+                await page.request.post(`/api/playlists/${created2.id}/items`, {
+                    data: { article_url: article.url, article_title: article.title, thumbnail_url: null, last_read_position: 0 },
                 });
             }
             // set default
-            await fetch(`/api/playlists/${playlist.id}/set-default`, { method: 'PUT' });
-            return playlist;
-        }, [mockArticles[0], mockArticles[1]]);
+            await page.request.put(`/api/playlists/${created2.id}/set-default`);
+        }
 
-        expect(created).toBeTruthy();
-        if (!created) return;
+        expect(created2).toBeTruthy();
+        if (!created2) return;
 
         // Open home and click first article (home shows default playlist items)
         await page.goto('/');
@@ -91,36 +79,29 @@ test.describe('Reader - Playlist related navigation', () => {
         await expect(next).toBeVisible();
 
         // cleanup
-        await page.evaluate(async (id) => {
-            await fetch(`/api/playlists/${id}`, { method: 'DELETE' });
-        }, created.id);
+        await page.request.delete(`/api/playlists/${created2.id}`);
     });
 
     test('Prev/Next transitions within playlist navigate correctly', async ({ page }) => {
         // create playlist with at least 2 articles
-        const created = await page.evaluate(async (articles) => {
-            const createResp = await fetch('/api/playlists', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: `E2E Transition Playlist ${Date.now()}` }),
-            });
-            if (!createResp.ok) return null;
-            const playlist = await createResp.json();
-            for (const article of articles) {
-                await fetch(`/api/playlists/${playlist.id}/items`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ article_url: article.url, article_title: article.title, thumbnail_url: null, last_read_position: 0 }),
+        const createResp3 = await page.request.post('/api/playlists', {
+            data: { name: `E2E Transition Playlist ${Date.now()}` },
+        });
+        let created3 = null;
+        if (createResp3.ok()) {
+            created3 = await createResp3.json();
+            for (const article of [mockArticles[0], mockArticles[1]]) {
+                await page.request.post(`/api/playlists/${created3.id}/items`, {
+                    data: { article_url: article.url, article_title: article.title, thumbnail_url: null, last_read_position: 0 },
                 });
             }
-            return playlist;
-        }, [mockArticles[0], mockArticles[1]]);
+        }
 
-        expect(created).toBeTruthy();
-        if (!created) return;
+        expect(created3).toBeTruthy();
+        if (!created3) return;
 
         // Go to playlist page and open first article
-        await page.goto(`/playlists/${created.id}`);
+        await page.goto(`/playlists/${created3.id}`);
         await page.waitForSelector('a[data-testid="playlist-article"]', { state: 'visible', timeout: 20000 });
         const firstLink = page.locator('a[data-testid="playlist-article"]').first();
         const href = await firstLink.getAttribute('href');
@@ -149,9 +130,7 @@ test.describe('Reader - Playlist related navigation', () => {
         expect(afterPrevUrl).not.toBe(afterNextUrl);
 
         // cleanup
-        await page.evaluate(async (id) => {
-            await fetch(`/api/playlists/${id}`, { method: 'DELETE' });
-        }, created.id);
+        await page.request.delete(`/api/playlists/${created3.id}`);
     });
 });
 

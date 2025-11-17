@@ -101,32 +101,18 @@ test.describe('Reader layout and controls', () => {
     test('Desktop: Prev/Next presence when in playlist context and download button works', async ({ page }) => {
         // Create a test playlist with at least 2 articles via API (authenticated via page context)
         await page.goto('/playlists');
-        const created = await page.evaluate(async (articles) => {
-            // Create playlist
-            const createResp = await fetch('/api/playlists', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: `E2E Test Playlist ${Date.now()}` }),
-            });
-            if (!createResp.ok) return null;
-            const playlist = await createResp.json();
-
-            // Add items to playlist
-            for (const article of articles) {
-                await fetch(`/api/playlists/${playlist.id}/items`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        article_url: article.url,
-                        article_title: article.title,
-                        thumbnail_url: null,
-                        last_read_position: 0,
-                    }),
+        const createResp = await page.request.post('/api/playlists', {
+            data: { name: `E2E Test Playlist ${Date.now()}` },
+        });
+        let created = null;
+        if (createResp.ok()) {
+            created = await createResp.json();
+            for (const article of [mockArticles[0], mockArticles[1]]) {
+                await page.request.post(`/api/playlists/${created.id}/items`, {
+                    data: { article_url: article.url, article_title: article.title, thumbnail_url: null, last_read_position: 0 },
                 });
             }
-
-            return playlist;
-        }, [mockArticles[0], mockArticles[1]]);
+        }
         expect(created).toBeTruthy();
         if (!created) return;
 
@@ -158,8 +144,6 @@ test.describe('Reader layout and controls', () => {
         // After clicking a short wait to allow download to initiate
         await page.waitForTimeout(500);
         // Clean up: delete the playlist we created
-        await page.evaluate(async (id) => {
-            await fetch(`/api/playlists/${id}`, { method: 'DELETE' });
-        }, created.id);
+        await page.request.delete(`/api/playlists/${created.id}`);
     });
 });
