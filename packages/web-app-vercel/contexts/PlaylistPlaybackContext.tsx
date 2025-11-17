@@ -34,6 +34,10 @@ export interface PlaylistPlaybackContextType {
   stopPlaylistPlayback: () => void;
   onArticleEnd: () => void;
   initializeFromArticle: (articleUrl: string) => Promise<void>;
+  initializeFromPlaylist: (
+    playlistId: string,
+    startIndex?: number
+  ) => Promise<void>;
   canMovePrevious: boolean;
   canMoveNext: boolean;
 }
@@ -145,11 +149,7 @@ export function PlaylistPlaybackProvider({
 
   const playNext = useCallback(() => {
     setState((prevState) => {
-      if (
-        !prevState.isPlaylistMode ||
-        prevState.items.length === 0 ||
-        prevState.currentIndex >= prevState.items.length - 1
-      ) {
+      if (!prevState.isPlaylistMode || prevState.items.length === 0) {
         logger.warn(
           "playNext: プレイリストの最後またはプレイリストモードではない",
           {
@@ -160,8 +160,8 @@ export function PlaylistPlaybackProvider({
         );
         return prevState;
       }
-
-      const nextIndex = prevState.currentIndex + 1;
+      // wrap-around to support circular navigation
+      const nextIndex = (prevState.currentIndex + 1) % prevState.items.length;
       const nextItem = prevState.items[nextIndex];
 
       logger.info("次の記事へ移動", {
@@ -192,7 +192,7 @@ export function PlaylistPlaybackProvider({
 
   const playPrevious = useCallback(() => {
     setState((prevState) => {
-      if (!prevState.isPlaylistMode || prevState.currentIndex === 0) {
+      if (!prevState.isPlaylistMode || prevState.items.length === 0) {
         logger.warn(
           "playPrevious: プレイリストの最初またはプレイリストモードではない",
           {
@@ -202,8 +202,10 @@ export function PlaylistPlaybackProvider({
         );
         return prevState;
       }
-
-      const prevIndex = prevState.currentIndex - 1;
+      // wrap-around to support circular navigation
+      const prevIndex =
+        (prevState.currentIndex - 1 + prevState.items.length) %
+        prevState.items.length;
       const prevItem = prevState.items[prevIndex];
 
       logger.info("前の記事へ移動", {
@@ -256,9 +258,9 @@ export function PlaylistPlaybackProvider({
         itemsCount: prevState.items.length,
       });
 
-      if (prevState.currentIndex < prevState.items.length - 1) {
-        // 次の記事に自動遷移（自動再生フラグ付き）
-        const nextIndex = prevState.currentIndex + 1;
+      if (prevState.items.length > 0) {
+        // Circular next on end
+        const nextIndex = (prevState.currentIndex + 1) % prevState.items.length;
         const nextItem = prevState.items[nextIndex];
 
         logger.info("自動的に次の記事へ遷移", {
@@ -277,10 +279,7 @@ export function PlaylistPlaybackProvider({
           router.push(nextUrl);
         }
 
-        return {
-          ...prevState,
-          currentIndex: nextIndex,
-        };
+        return { ...prevState, currentIndex: nextIndex };
       }
 
       // プレイリストの最後に到達
@@ -294,85 +293,123 @@ export function PlaylistPlaybackProvider({
   /**
    * 記事URLからプレイリストを自動検出して初期化
    */
-  const initializeFromArticle = useCallback(
-    async (articleUrl: string) => {
-      try {
-        logger.info("記事からプレイリストを検出", { articleUrl });
+  const initializeFromArticle = useCallback(async (articleUrl: string) => {
+    try {
+      logger.info("記事からプレイリストを検出", { articleUrl });
 
-        // 記事が属するプレイリスト一覧を取得
-        const response = await fetch(
-          `/api/articles-by-url/${encodeURIComponent(articleUrl)}/playlists`
-        );
+      // 記事が属するプレイリスト一覧を取得
+      const response = await fetch(
+        `/api/articles-by-url/${encodeURIComponent(articleUrl)}/playlists`
+      );
 
-        if (!response.ok) {
-          logger.warn("プレイリストの取得に失敗", { status: response.status });
-          return;
-        }
+      if (!response.ok) {
+        logger.warn("プレイリストの取得に失敗", { status: response.status });
+        return;
+      }
 
-        const playlists = await response.json();
+      const playlists = await response.json();
 
-        if (!Array.isArray(playlists) || playlists.length === 0) {
-          logger.info("記事が属するプレイリストなし");
-          return;
-        }
+      if (!Array.isArray(playlists) || playlists.length === 0) {
+        logger.info("記事が属するプレイリストなし");
+        return;
+      }
 
-        // デフォルトプレイリストを優先、なければ最初のプレイリスト
-        const targetPlaylist = playlists.find((p) => p.is_default) || playlists[0];
+      // デフォルトプレイリストを優先、なければ最初のプレイリスト
+      const targetPlaylist =
+        playlists.find((p) => p.is_default) || playlists[0];
 
-        logger.info("プレイリストを選択", {
-          playlistId: targetPlaylist.id,
-          playlistName: targetPlaylist.name,
-          isDefault: targetPlaylist.is_default,
+      logger.info("プレイリストを選択", {
+        playlistId: targetPlaylist.id,
+        playlistName: targetPlaylist.name,
+        isDefault: targetPlaylist.is_default,
+      });
+
+      // プレイリスト内のアイテムを取得
+      const itemsResponse = await fetch(
+        `/api/playlists/${targetPlaylist.id}/items`
+      );
+
+      if (!itemsResponse.ok) {
+        logger.warn("プレイリストアイテムの取得に失敗", {
+          status: itemsResponse.status,
         });
+        return;
+      }
 
-        // プレイリスト内のアイテムを取得
-        const itemsResponse = await fetch(
-          `/api/playlists/${targetPlaylist.id}/items`
-        );
+      const items: PlaylistItemWithArticle[] = await itemsResponse.json();
 
-        if (!itemsResponse.ok) {
-          logger.warn("プレイリストアイテムの取得に失敗", {
-            status: itemsResponse.status,
+      // 現在の記事のインデックスを特定
+      const currentIndex = items.findIndex(
+        (item) => item.article.url === articleUrl
+      );
+
+      if (currentIndex === -1) {
+        logger.warn("プレイリスト内に記事が見つからない", { articleUrl });
+        return;
+      }
+
+      logger.success("プレイリストコンテキストを初期化", {
+        playlistId: targetPlaylist.id,
+        currentIndex,
+        totalCount: items.length,
+      });
+
+      // プレイリストコンテキストを初期化（ページ遷移なし）
+      setState({
+        playlistId: targetPlaylist.id,
+        playlistName: targetPlaylist.name,
+        currentIndex,
+        items,
+        totalCount: items.length,
+        isPlaylistMode: true,
+      });
+    } catch (error) {
+      logger.error("プレイリスト初期化エラー", error);
+    }
+  }, []);
+
+  const initializeFromPlaylist = useCallback(
+    async (playlistId: string, startIndex: number = 0) => {
+      try {
+        logger.info("プレイリストをIDから初期化", { playlistId });
+        const res = await fetch(`/api/playlists/${playlistId}`);
+        if (!res.ok) {
+          logger.warn("プレイリスト取得失敗", {
+            playlistId,
+            status: res.status,
           });
           return;
         }
 
-        const items: PlaylistItemWithArticle[] = await itemsResponse.json();
+        const playlistData = await res.json();
+        const items: PlaylistItemWithArticle[] = playlistData.items || [];
 
-        // 現在の記事のインデックスを特定
-        const currentIndex = items.findIndex(
-          (item) => item.article.url === articleUrl
-        );
-
-        if (currentIndex === -1) {
-          logger.warn("プレイリスト内に記事が見つからない", { articleUrl });
+        if (!Array.isArray(items) || items.length === 0) {
+          logger.info("プレイリストにアイテムがないため初期化しない", {
+            playlistId,
+          });
           return;
         }
 
-        logger.success("プレイリストコンテキストを初期化", {
-          playlistId: targetPlaylist.id,
-          currentIndex,
-          totalCount: items.length,
-        });
-
-        // プレイリストコンテキストを初期化（ページ遷移なし）
+        const index = Math.max(0, Math.min(startIndex, items.length - 1));
         setState({
-          playlistId: targetPlaylist.id,
-          playlistName: targetPlaylist.name,
-          currentIndex,
+          playlistId: playlistData.id,
+          playlistName: playlistData.name,
+          currentIndex: index,
           items,
           totalCount: items.length,
           isPlaylistMode: true,
         });
       } catch (error) {
-        logger.error("プレイリスト初期化エラー", error);
+        logger.error("initializeFromPlaylist error", error);
       }
     },
     []
   );
 
-  const canMovePrevious = state.currentIndex > 0;
-  const canMoveNext = state.currentIndex < state.items.length - 1;
+  // With circular navigation enabled, Prev/Next are available as long as items exist
+  const canMovePrevious = state.items.length > 0;
+  const canMoveNext = state.items.length > 0;
 
   const value: PlaylistPlaybackContextType = {
     state,
@@ -382,6 +419,7 @@ export function PlaylistPlaybackProvider({
     stopPlaylistPlayback,
     onArticleEnd,
     initializeFromArticle,
+    initializeFromPlaylist,
     canMovePrevious,
     canMoveNext,
   };

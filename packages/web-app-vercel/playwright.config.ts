@@ -55,7 +55,10 @@ export default defineConfig({
         command: 'AUTH_ENV=test npm run dev',
         url: 'http://localhost:3000',
         reuseExistingServer: !process.env.CI,
-        timeout: 120000,
+        // Increase timeout to allow the Next.js dev server (and turbopack) to
+        // finish compilation and bind to the port in CI environments.
+        // 5 minutes gives the build enough time for cold-starts.
+        timeout: 300000,
         // Provide runtime environment variables to the Next.js dev server when Playwright starts it
         env: {
             NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '',

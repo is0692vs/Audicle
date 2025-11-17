@@ -54,6 +54,7 @@ export default function ReaderPageClient() {
     state: playlistState,
     onArticleEnd,
     initializeFromArticle,
+    initializeFromPlaylist,
     canMovePrevious,
     canMoveNext,
   } = usePlaylistPlayback();
@@ -496,6 +497,32 @@ export default function ReaderPageClient() {
     session,
   ]);
 
+  // If the reader was opened with a `playlist` param, ensure the playback context
+  // is seeded from that playlist so the Prev/Next UI works deterministically.
+  useEffect(() => {
+    if (
+      playlistIdFromQuery &&
+      !playlistState.isPlaylistMode &&
+      session?.user?.email
+    ) {
+      logger.info("Reader opened with playlist query, initializing playlist", {
+        playlistId: playlistIdFromQuery,
+        index: indexFromQuery,
+      });
+
+      const startIndex = indexFromQuery ? parseInt(indexFromQuery, 10) : 0;
+      initializeFromPlaylist(playlistIdFromQuery, startIndex).catch((err) =>
+        logger.error("Failed to initialize playlist from query", err)
+      );
+    }
+  }, [
+    playlistIdFromQuery,
+    playlistState.isPlaylistMode,
+    initializeFromPlaylist,
+    indexFromQuery,
+    session,
+  ]);
+
   // プレイリスト内の特定の記事に遷移するヘルパー関数
   const navigateToPlaylistItem = useCallback(
     (index: number) => {
@@ -512,6 +539,16 @@ export default function ReaderPageClient() {
       }
     },
     [playlistState, router, stop]
+  );
+
+  // プレイリストのインデックスを循環させるユーティリティ
+  const wrapIndex = useCallback(
+    (index: number) => {
+      const len = playlistState.items.length;
+      if (len === 0) return 0;
+      return ((index % len) + len) % len;
+    },
+    [playlistState.items.length]
   );
 
   // 再生速度変更ハンドラー（デスクトップ版とモバイル版で共通）
@@ -627,7 +664,9 @@ export default function ReaderPageClient() {
                   <button
                     onClick={() => {
                       if (canMovePrevious) {
-                        navigateToPlaylistItem(playlistState.currentIndex - 1);
+                        navigateToPlaylistItem(
+                          wrapIndex(playlistState.currentIndex - 1)
+                        );
                       }
                     }}
                     disabled={!canMovePrevious}
@@ -641,7 +680,9 @@ export default function ReaderPageClient() {
                   <button
                     onClick={() => {
                       if (canMoveNext) {
-                        navigateToPlaylistItem(playlistState.currentIndex + 1);
+                        navigateToPlaylistItem(
+                          wrapIndex(playlistState.currentIndex + 1)
+                        );
                       }
                     }}
                     disabled={!canMoveNext}
@@ -813,7 +854,9 @@ export default function ReaderPageClient() {
                   <button
                     onClick={() => {
                       if (canMovePrevious) {
-                        navigateToPlaylistItem(playlistState.currentIndex - 1);
+                        navigateToPlaylistItem(
+                          wrapIndex(playlistState.currentIndex - 1)
+                        );
                       }
                     }}
                     disabled={!canMovePrevious}
@@ -826,7 +869,9 @@ export default function ReaderPageClient() {
                   <button
                     onClick={() => {
                       if (canMoveNext) {
-                        navigateToPlaylistItem(playlistState.currentIndex + 1);
+                        navigateToPlaylistItem(
+                          wrapIndex(playlistState.currentIndex + 1)
+                        );
                       }
                     }}
                     disabled={!canMoveNext}
@@ -846,7 +891,9 @@ export default function ReaderPageClient() {
                 <button
                   onClick={() => {
                     if (canMovePrevious) {
-                      navigateToPlaylistItem(playlistState.currentIndex - 1);
+                      navigateToPlaylistItem(
+                        wrapIndex(playlistState.currentIndex - 1)
+                      );
                     }
                   }}
                   disabled={!canMovePrevious}
@@ -859,7 +906,9 @@ export default function ReaderPageClient() {
                 <button
                   onClick={() => {
                     if (canMoveNext) {
-                      navigateToPlaylistItem(playlistState.currentIndex + 1);
+                      navigateToPlaylistItem(
+                        wrapIndex(playlistState.currentIndex + 1)
+                      );
                     }
                   }}
                   disabled={!canMoveNext}
