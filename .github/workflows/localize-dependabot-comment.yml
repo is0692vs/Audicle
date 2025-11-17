@@ -1,0 +1,52 @@
+name: Localize Dependabot PR - Add Japanese Comment
+
+# Use pull_request_target to get write token on PRs from Dependabot (forked PRs are treated similar)
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  add_localized_comment:
+    runs-on: ubuntu-latest
+    # run if the PR author login starts with 'dependabot' (covers dependabot[bot], dependabot-preview[bot], etc.)
+    if: startsWith(github.event.pull_request.user.login, 'dependabot')
+    steps:
+      - name: Checkout base branch (secure)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+      - name: Render template variables
+        id: render_vars
+        uses: chuhlomin/render-template@v1.4
+        with:
+          template: .github/dependabot-templates/jp-dependabot-comment.md
+          vars: |
+            title: "${{ github.event.pull_request.title }}"
+            pr_url: "${{ github.event.pull_request.html_url }}"
+            # package_list: 依存更新の詳細は PR 本文に記載されます。ここでは本文をそのまま埋め込みます。
+            package_list: "${{ github.event.pull_request.body }}"
+        # render-template runs from the repo default branch, which is secure
+
+      - name: Find existing localization comment
+        id: find_comment
+        uses: peter-evans/find-comment@v3
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: '依存関係の更新（自動）'
+
+      - name: Create localized comment
+        if: steps.find_comment.outputs.comment-id == ''
+        uses: peter-evans/create-or-update-comment@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: ${{ steps.render_vars.outputs.result }}
+
+      - name: Skip if Japanese comment exists
+        if: steps.find_comment.outputs.comment-id != ''
+        run: echo "A Japanese localization comment already exists. Skipping." 
