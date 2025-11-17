@@ -16,5 +16,5 @@
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
-  "postCreateCommand": "npm install && npx playwright install --with-deps chromium"
+  "postCreateCommand": "npm install && npx playwright install --with-deps chromium firefox"
 }

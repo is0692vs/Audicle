@@ -156,10 +156,10 @@ export function PlaybackSpeedDial({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm"
       onClick={handleBackdropClick}
     >
-      <div className="relative w-full max-w-sm rounded-t-3xl bg-white dark:bg-gray-900 p-6 shadow-2xl transform transition-transform duration-300 ease-out">
+      <div className="relative w-full sm:w-[500px] sm:max-w-2xl rounded-t-3xl bg-white dark:bg-gray-900 p-6 shadow-2xl transform transition-transform duration-300 ease-out">
         <div className="text-center mb-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             再生速度
