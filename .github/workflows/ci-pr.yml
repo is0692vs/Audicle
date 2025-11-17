@@ -100,6 +100,33 @@ jobs:
         env:
           NODE_ENV: test
 
+  integration:
+    name: Integration Tests
+    needs: setup
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+      - name: Restore npm cache
+        id: cache-deps-integration
+        uses: actions/cache@v4
+        with:
+          path: packages/web-app-vercel/node_modules
+          key: npm-deps-${{ runner.os }}-node-20-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
+          restore-keys: |
+            npm-deps-${{ runner.os }}-node-20-
+      - name: Install dependencies
+        if: steps.cache-deps-integration.outputs.cache-hit != 'true'
+        run: npm ci
+        working-directory: packages/web-app-vercel
+      - name: Run integration tests
+        run: npm run test:integration
+        working-directory: packages/web-app-vercel
+        env:
+          NODE_ENV: test
+
   build:
     name: Build
     needs: setup

@@ -87,6 +87,8 @@ jobs:
     permissions:
       contents: "read"
       issues: "write"
+      id-token: "write"
+      pull-requests: "read"
     with:
       additional_context: "Scheduled triage run"
       issues_to_triage: "${{ needs.triage.outputs.issues_to_triage }}"

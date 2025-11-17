@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Play, ArrowUpDown } from "lucide-react";
+import { createReaderUrl } from "@/lib/urlBuilder";
 import { logger } from "@/lib/logger";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
 import { usePlaylistPlayback } from "@/contexts/PlaylistPlaybackContext";
@@ -267,14 +268,25 @@ export default function PlaylistDetailPage() {
                     </Select>
                   </div>
                   <button
-                    onClick={() =>
-                      startPlaylistPlayback(
-                        playlist.id,
-                        playlist.name,
-                        sortedItems,
-                        0
-                      )
-                    }
+                    onClick={() => {
+                      // If the playlist has items, open the reader at the first
+                      // item's article URL so that the Reader can initialize the
+                      // playlist context deterministically. Otherwise fall back to
+                      // opening Reader with playlist ID only.
+                      const firstArticleUrl =
+                        playlist.items && playlist.items.length > 0
+                          ? playlist.items[0].article.url
+                          : undefined;
+
+                      router.push(
+                        createReaderUrl({
+                          articleUrl: firstArticleUrl,
+                          playlistId: playlist.id,
+                          playlistIndex: 0,
+                          autoplay: true,
+                        })
+                      );
+                    }}
                     className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors flex items-center gap-2 whitespace-nowrap"
                   >
                     <Play className="size-4" />

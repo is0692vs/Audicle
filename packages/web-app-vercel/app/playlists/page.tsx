@@ -10,6 +10,7 @@ import {
   useSetDefaultPlaylistMutation,
 } from "@/lib/hooks/usePlaylists";
 import { Card, CardContent } from "@/components/ui/card";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -116,7 +117,7 @@ export default function PlaylistsPage() {
     <div className="h-screen bg-black text-white flex flex-col lg:flex-row">
       <Sidebar />
 
-      <main className="flex-1 overflow-y-auto bg-gradient-to-b from-zinc-900 to-black">
+      <main className="flex-1 overflow-y-auto bg-linear-to-b from-zinc-900 to-black">
         <div className="p-4 sm:p-6 lg:p-8">
           {confirmDialog}
 
@@ -234,79 +235,84 @@ export default function PlaylistsPage() {
               </Card>
 
               {sortedPlaylists.map((playlist) => (
-                <Card
+                <Link
                   key={playlist.id}
-                  className="bg-zinc-900 border-zinc-800 hover:bg-zinc-800 transition-colors cursor-pointer group"
-                  onClick={() => router.push(`/playlists/${playlist.id}`)}
+                  href={`/playlists/${playlist.id}`}
+                  className="group"
                   data-testid="playlist-item"
                 >
-                  <CardContent className="p-4 lg:p-6">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold text-base lg:text-lg truncate flex-1">
-                        {playlist.name}
-                      </h3>
-                      {playlist.is_default && (
-                        <span className="px-2 py-0.5 text-xs bg-blue-600/20 text-blue-400 rounded shrink-0">
-                          デフォルト
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-zinc-400">
-                      {playlist.item_count || 0} 件の記事
-                    </p>
-                    {playlist.description && (
-                      <p className="text-xs text-zinc-500 mt-2 line-clamp-2">
-                        {playlist.description}
+                  <Card className="bg-zinc-900 border-zinc-800 hover:bg-zinc-800 transition-colors cursor-pointer">
+                    <CardContent className="p-4 lg:p-6">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-bold text-base lg:text-lg truncate flex-1">
+                          {playlist.name}
+                        </h3>
+                        {playlist.is_default && (
+                          <span className="px-2 py-0.5 text-xs bg-blue-600/20 text-blue-400 rounded shrink-0">
+                            デフォルト
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-zinc-400">
+                        {playlist.item_count || 0} 件の記事
                       </p>
-                    )}
+                      {playlist.description && (
+                        <p className="text-xs text-zinc-500 mt-2 line-clamp-2">
+                          {playlist.description}
+                        </p>
+                      )}
 
-                    {/* Action Buttons */}
-                    <div className="flex gap-2 mt-3">
-                      {!playlist.is_default && (
-                        <>
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 mt-3">
+                        {!playlist.is_default && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) =>
+                                handleSetDefaultPlaylist(
+                                  e,
+                                  playlist.id,
+                                  playlist.name
+                                )
+                              }
+                              disabled={setDefaultPlaylistMutation.isPending}
+                              className="flex-1 text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-950/30"
+                            >
+                              {setDefaultPlaylistMutation.isPending
+                                ? "設定中..."
+                                : "デフォルトに設定"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeletePlaylist(
+                                  playlist.id,
+                                  playlist.name
+                                );
+                              }}
+                              className="flex-1 text-xs text-red-400 hover:text-red-300 hover:bg-red-950/30"
+                            >
+                              削除
+                            </Button>
+                          </>
+                        )}
+                        {playlist.is_default && (
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={(e) =>
-                              handleSetDefaultPlaylist(
-                                e,
-                                playlist.id,
-                                playlist.name
-                              )
-                            }
-                            disabled={setDefaultPlaylistMutation.isPending}
-                            className="flex-1 text-xs text-blue-400 hover:text-blue-300 hover:bg-blue-950/30"
+                            disabled
+                            className="w-full text-xs text-zinc-500 hover:bg-transparent"
                           >
-                            {setDefaultPlaylistMutation.isPending
-                              ? "設定中..."
-                              : "デフォルトに設定"}
+                            デフォルト設定済み
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeletePlaylist(playlist.id, playlist.name);
-                            }}
-                            className="flex-1 text-xs text-red-400 hover:text-red-300 hover:bg-red-950/30"
-                          >
-                            削除
-                          </Button>
-                        </>
-                      )}
-                      {playlist.is_default && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          disabled
-                          className="w-full text-xs text-zinc-500 hover:bg-transparent"
-                        >
-                          デフォルト設定済み
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           )}

@@ -113,7 +113,10 @@ ALLOWED_EMAILS=user1@example.com,user2@example.com
    - [Google Cloud Console](https://console.cloud.google.com/)でプロジェクト作成
    - Text-to-Speech API を有効化
    - サービスアカウントを作成して JSON キーをダウンロード
-   - JSON の内容を 1 行に圧縮して`GOOGLE_APPLICATION_CREDENTIALS_JSON`に設定
+   - JSON の内容を 1 行に圧縮して`GOOGLE_APPLICATION_CREDENTIALS_JSON`に設定（推奨）
+   - もし JSON が複数行で管理されている場合は base64 化して 1 行で設定できます:
+     `export GOOGLE_APPLICATION_CREDENTIALS_JSON=$(cat /path/to/key.json | base64 -w 0)`
+   - もしくは標準のファイルパス環境変数 `GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json` を使用する方法もサポートします。
 
 2. **Google OAuth**
 

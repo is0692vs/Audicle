@@ -18,3 +18,6 @@ packages/web-app/public/sw.js
 packages/web-app/public/workbox-*.js
 packages/web-app/public/worker-*.js
 packages/web-app/public/*.map
+
+
+playwright/.auth/user.json
