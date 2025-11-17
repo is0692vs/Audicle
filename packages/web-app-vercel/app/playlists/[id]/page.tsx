@@ -13,6 +13,7 @@ import {
   useRemoveFromPlaylistMutation,
 } from "@/lib/hooks/usePlaylists";
 import { ArticleCard } from "@/components/ArticleCard";
+import { createReaderUrl } from "@/lib/urlBuilder";
 import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
 import {
   Select,
@@ -307,17 +308,25 @@ export default function PlaylistDetailPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8">
-            {sortedItems.map((item) => (
+            {sortedItems.map((item, index) => (
               <ArticleCard
                 key={item.id}
                 item={item}
                 onArticleClick={(playlistItem) =>
                   router.push(
-                    `/reader?url=${encodeURIComponent(
-                      playlistItem.article.url
-                    )}`
+                    createReaderUrl({
+                      articleUrl: playlistItem.article.url,
+                      playlistId: playlist.id,
+                      playlistIndex: index,
+                      autoplay: true,
+                    })
                   )
                 }
+                href={createReaderUrl({
+                  articleUrl: item.article.url,
+                  playlistId: playlist.id,
+                  playlistIndex: index,
+                })}
                 onPlaylistAdd={handlePlaylistAdd}
                 onRemove={(id) =>
                   handleRemoveFromPlaylist(id, item.article.title)
