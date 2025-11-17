@@ -7,9 +7,6 @@ on:
   pull_request_review:
     types:
       - "submitted"
-  pull_request:
-    types:
-      - "opened"
   issues:
     types:
       - "opened"
@@ -43,14 +40,10 @@ jobs:
           env | grep '^DEBUG_'
 
   dispatch:
-    # For PRs: only if not from a fork
     # For comments: only if user types @gemini-cli and is OWNER/MEMBER/COLLABORATOR
     # For issues: only on open/reopen
     if: |-
       (
-        github.event_name == 'pull_request' &&
-        github.event.pull_request.head.repo.fork == false
-      ) || (
         github.event.sender.type == 'User' &&
         startsWith(github.event.comment.body || github.event.review.body || github.event.issue.body, '@gemini-cli') &&
         contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association || github.event.review.author_association || github.event.issue.author_association)
@@ -91,8 +84,6 @@ jobs:
               core.setOutput('command', 'invoke');
               const additionalContext = request.replace(/^@gemini-cli/, '').trim();
               core.setOutput('additional_context', additionalContext);
-            } else if (eventType === 'pull_request.opened') {
-              core.setOutput('command', 'review');
             } else if (['issues.opened', 'issues.reopened'].includes(eventType)) {
               core.setOutput('command', 'triage');
             } else {
@@ -149,12 +140,13 @@ jobs:
     with:
       additional_context: "${{ needs.dispatch.outputs.additional_context }}"
       language: "ja"
+      gemini_model: "gemini-2.5-flash-lite"
     secrets: "inherit"
 
   invoke:
     needs: "dispatch"
     if: |-
-      ${{ needs.dispatch.outputs.command == 'invoke' }}
+      ${{ false && needs.dispatch.outputs.command == 'invoke' }}
     uses: "./.github/workflows/gemini-invoke.yml"
     permissions:
       contents: "read"
@@ -172,7 +164,7 @@ jobs:
       - "triage"
       - "invoke"
     if: |-
-      ${{ always() && !cancelled() && (failure() || needs.dispatch.outputs.command == 'fallthrough') }}
+      ${{ false && always() && !cancelled() && (failure() || needs.dispatch.outputs.command == 'fallthrough') }}
     runs-on: "ubuntu-latest"
     permissions:
       contents: "read"
