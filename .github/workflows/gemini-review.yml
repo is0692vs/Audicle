@@ -33,18 +33,6 @@ jobs:
       issues: "write"
       pull-requests: "write"
     steps:
-      - name: "Mint identity token"
-        id: "mint_identity_token"
-        if: |-
-          ${{ vars.APP_ID }}
-        uses: "actions/create-github-app-token@v2"
-        with:
-          app-id: "${{ vars.APP_ID }}"
-          private-key: "${{ secrets.APP_PRIVATE_KEY }}"
-          permission-contents: "read"
-          permission-issues: "write"
-          permission-pull-requests: "write"
-
       - name: "Checkout repository"
         uses: "actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8" # ratchet:actions/checkout@v5
 

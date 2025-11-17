@@ -59,8 +59,6 @@ on:
     secrets:
       GEMINI_API_KEY:
         required: false
-      GOOGLE_API_KEY:
-        required: false
 
 concurrency:
   group: "${{ github.workflow }}-triage-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.issue.number }}"
@@ -124,7 +122,6 @@ jobs:
         env:
           GITHUB_TOKEN: "" # Do NOT pass any auth tokens here since this runs on untrusted inputs
           GEMINI_API_KEY: "${{ secrets.GEMINI_API_KEY }}"
-          GOOGLE_API_KEY: "${{ secrets.GOOGLE_API_KEY }}"
           ISSUE_TITLE: "${{ github.event.issue.title }}"
           ISSUE_BODY: "${{ github.event.issue.body }}"
           AVAILABLE_LABELS: "${{ steps.get_labels.outputs.available_labels }}"
@@ -137,7 +134,6 @@ jobs:
           gemini_cli_version: "${{ inputs.gemini_cli_version || vars.GEMINI_CLI_VERSION || '' }}"
           gemini_debug: "${{ fromJSON(inputs.gemini_debug || vars.DEBUG || vars.ACTIONS_STEP_DEBUG || 'false') }}"
           gemini_model: "${{ inputs.gemini_model || vars.GEMINI_MODEL || '' }}"
-          google_api_key: "${{ secrets.GOOGLE_API_KEY }}"
           use_gemini_code_assist: "${{ inputs.use_gemini_code_assist || vars.GOOGLE_GENAI_USE_GCA || '' }}"
           use_vertex_ai: "${{ inputs.use_vertex_ai || vars.GOOGLE_GENAI_USE_VERTEXAI || '' }}"
           settings: |-
@@ -252,18 +248,6 @@ jobs:
       issues: "write"
       pull-requests: "write"
     steps:
-      - name: "Mint identity token"
-        id: "mint_identity_token"
-        if: |-
-          ${{ vars.APP_ID }}
-        uses: "actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b" # ratchet:actions/create-github-app-token@v2
-        with:
-          app-id: "${{ vars.APP_ID }}"
-          private-key: "${{ secrets.APP_PRIVATE_KEY }}"
-          permission-contents: "read"
-          permission-issues: "write"
-          permission-pull-requests: "write"
-
       - name: "Apply labels"
         env:
           ISSUE_NUMBER: "${{ github.event.issue.number }}"
