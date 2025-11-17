@@ -33,7 +33,7 @@ jobs:
       - name: Run tests with coverage
         run: |
           cd packages/web-app-vercel
-          npm test -- --coverage --json --outputFile=coverage.json
+          npm test -- --coverage --coverageReporters=json-summary
         continue-on-error: true
 
       - name: Generate PROJECT_HEALTH.md
@@ -111,9 +111,9 @@ jobs:
             echo ""
             echo "## 🚀 Recent CI/CD Runs"
             echo ""
-            echo "<!-- Auto-generated workflow status -->"
-            echo ""
-            echo "__WORKFLOWS_PLACEHOLDER__"
+            echo "```json"
+            echo "$WORKFLOWS"
+            echo "```"
             echo ""
             echo "---"
             echo ""
@@ -121,12 +121,7 @@ jobs:
             echo "*Last workflow run: [View Details]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions)*"
           } > docs/PROJECT_HEALTH.md
 
-          # ワークフローをコードブロックとして追記
-          printf "\n\`\`\`json\n%s\n\`\`\`\n" "$WORKFLOWS" >> docs/PROJECT_HEALTH.md
-          sed -i "s/__WORKFLOWS_PLACEHOLDER__//g" docs/PROJECT_HEALTH.md          # Workflowsをコードブロックとして追記
-          printf "\n\`\`\`json\n%s\n\`\`\`\n" "$WORKFLOWS" >> docs/PROJECT_HEALTH.md
-          printf "\n\`\`\`json\n%s\n\`\`\`\n" "$WORKFLOWS" >> docs/PROJECT_HEALTH.md
-          sed -i "s/__WORKFLOWS_PLACEHOLDER__//g" docs/PROJECT_HEALTH.md
+          # Workflows JSON already included above once, so do nothing more here.
 
       - name: Commit changes
         env:
