@@ -1,0 +1,157 @@
+name: Update Project Health Report
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 0 * * 5'  # 毎週金曜日 9時（JST）
+  workflow_dispatch:
+
+jobs:
+  update-health:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies for script
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Install dependencies
+        run: |
+          cd packages/web-app-vercel
+          npm ci
+
+      - name: Run tests with coverage
+        run: |
+          cd packages/web-app-vercel
+          npm test -- --coverage --json --outputFile=coverage.json
+        continue-on-error: true
+
+      - name: Generate PROJECT_HEALTH.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+        run: |
+          mkdir -p docs
+
+          # タイムスタンプ
+          TIMESTAMP=$(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M:%S JST')
+
+          # カバレッジデータ取得
+          if [ -f packages/web-app-vercel/coverage/coverage-summary.json ]; then
+            STMT=$(jq -r '.total.statements.pct' packages/web-app-vercel/coverage/coverage-summary.json)
+            BRANCH=$(jq -r '.total.branches.pct' packages/web-app-vercel/coverage/coverage-summary.json)
+            FUNC=$(jq -r '.total.functions.pct' packages/web-app-vercel/coverage/coverage-summary.json)
+            LINES=$(jq -r '.total.lines.pct' packages/web-app-vercel/coverage/coverage-summary.json)
+          else
+            STMT="N/A"
+            BRANCH="N/A"
+            FUNC="N/A"
+            LINES="N/A"
+          fi
+
+          # パッケージバージョン取得
+          NEXT=$(jq -r '.dependencies.next // "N/A"' packages/web-app-vercel/package.json)
+          REACT=$(jq -r '.dependencies.react // "N/A"' packages/web-app-vercel/package.json)
+          TS=$(jq -r '.devDependencies.typescript // "N/A"' packages/web-app-vercel/package.json)
+
+          # GitHub統計取得 via API
+          API_URL="https://api.github.com/repos/$GITHUB_REPOSITORY"
+          REPO_JSON=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "$API_URL")
+          STARS=$(echo "$REPO_JSON" | jq -r '.stargazers_count // "0"')
+          ISSUES=$(echo "$REPO_JSON" | jq -r '.open_issues_count // "0"')
+
+          # PRとコミット数取得
+          PRS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "$API_URL/pulls?state=open" | jq 'length')
+          COMMITS=$(git log --since="30 days ago" --oneline | wc -l | tr -d '[:space:]')
+
+          # ワークフロー状態取得
+          WORKFLOW_JSON=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "$API_URL/actions/runs?per_page=3")
+          WORKFLOWS=$(echo "$WORKFLOW_JSON" | jq -c '[.workflow_runs[] | {name: .name, status: .conclusion, updated: .updated_at}]')
+
+# PROJECT_HEALTH.md生成
+          cat > docs/PROJECT_HEALTH.md << 'EOF'
+# 📊 Audicle - Project Health Report
+
+Last Updated: $TIMESTAMP (Auto-generated)
+
+## 🧪 Test Coverage
+
+| Category | Coverage |
+|----------|----------|
+| Statements | ${STMT}% |
+| Branches | ${BRANCH}% |
+| Functions | ${FUNC}% |
+| Lines | ${LINES}% |
+
+## 📦 Technology Stack
+
+| Package | Version |
+|---------|---------|
+| Next.js | ${NEXT} |
+| React | ${REACT} |
+| TypeScript | ${TS} |
+
+## 📈 Repository Stats
+
+- ⭐ Stars: ${STARS}
+- 🐛 Open Issues: ${ISSUES}
+- 🔀 Open PRs: ${PRS}
+- 📝 Commits (30 days): ${COMMITS}
+
+## 🚀 Recent CI/CD Runs
+
+<!-- Auto-generated workflow status -->
+
+# __WORKFLOWS_PLACEHOLDER__
+
+---
+
+*This report is automatically updated by GitHub Actions.*
+*Last workflow run: [View Details]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions)*
+EOF
+
+          # 環境変数を実際の値に置換 (エスケープは sed のデフォルト使用)
+          sed -i "s/\$TIMESTAMP/$TIMESTAMP/g" docs/PROJECT_HEALTH.md
+          sed -i "s/\${STMT}/$STMT/g" docs/PROJECT_HEALTH.md
+          sed -i "s/\${BRANCH}/$BRANCH/g" docs/PROJECT_HEALTH.md
+          sed -i "s/\${FUNC}/$FUNC/g" docs/PROJECT_HEALTH.md
+          sed -i "s/\${LINES}/$LINES/g" docs/PROJECT_HEALTH.md
+          sed -i "s/\${NEXT}/$NEXT/g" docs/PROJECT_HEALTH.md
+          sed -i "s/\${REACT}/$REACT/g" docs/PROJECT_HEALTH.md
+          sed -i "s/\${TS}/$TS/g" docs/PROJECT_HEALTH.md
+          sed -i "s/\${STARS}/$STARS/g" docs/PROJECT_HEALTH.md
+          sed -i "s/\${ISSUES}/$ISSUES/g" docs/PROJECT_HEALTH.md
+          sed -i "s/\${PRS}/$PRS/g" docs/PROJECT_HEALTH.md
+          sed -i "s/\${COMMITS}/$COMMITS/g" docs/PROJECT_HEALTH.md
+          sed -i "s|\$GITHUB_SERVER_URL/\$GITHUB_REPOSITORY|$GITHUB_SERVER_URL/$GITHUB_REPOSITORY|g" docs/PROJECT_HEALTH.md
+
+          # Workflowsをコードブロックとして追記
+          printf "\n\`\`\`json\n%s\n\`\`\`\n" "$WORKFLOWS" >> docs/PROJECT_HEALTH.md
+          sed -i "s/__WORKFLOWS_PLACEHOLDER__//g" docs/PROJECT_HEALTH.md
+
+      - name: Commit changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet; then
+            echo "No changes to docs/PROJECT_HEALTH.md"
+            exit 0
+          fi
+
+          git add docs/PROJECT_HEALTH.md
+          git commit -m "docs: update PROJECT_HEALTH.md [skip ci]" || echo "Commit failed"
+          git push
