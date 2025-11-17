@@ -71,7 +71,7 @@ jobs:
 
           # PRとコミット数取得
           PRS=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "$API_URL/pulls?state=open" | jq 'length')
-          COMMITS=$(git log --since="30 days ago" --oneline | wc -l | tr -d '[:space:]')
+          COMMITS=$(git log --since="30 days ago" --oneline -- packages/web-app-vercel | wc -l | tr -d '[:space:]')
 
           # ワークフロー状態取得
           WORKFLOW_JSON=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "$API_URL/actions/runs?per_page=3")
@@ -82,6 +82,8 @@ jobs:
             echo "# 📊 Audicle - Project Health Report"
             echo ""
             echo "Last Updated: $TIMESTAMP (Auto-generated)"
+            echo ""
+            echo "This report focuses on the web-app-vercel package only."
             echo ""
             echo "## 🧪 Test Coverage"
             echo ""
