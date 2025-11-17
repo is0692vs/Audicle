@@ -13,7 +13,6 @@ import {
   useRemoveFromPlaylistMutation,
 } from "@/lib/hooks/usePlaylists";
 import { ArticleCard } from "@/components/ArticleCard";
-import { createReaderUrl } from "@/lib/urlBuilder";
 import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
 import {
   Select,
