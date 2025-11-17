@@ -79,64 +79,52 @@ jobs:
           WORKFLOW_JSON=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "$API_URL/actions/runs?per_page=3")
           WORKFLOWS=$(echo "$WORKFLOW_JSON" | jq -c '[.workflow_runs[] | {name: .name, status: .conclusion, updated: .updated_at}]')
 
-# PROJECT_HEALTH.md生成
-          cat > docs/PROJECT_HEALTH.md << 'EOF'
-# 📊 Audicle - Project Health Report
+          # PROJECT_HEALTH.md生成
+          {
+            echo "# 📊 Audicle - Project Health Report"
+            echo ""
+            echo "Last Updated: $TIMESTAMP (Auto-generated)"
+            echo ""
+            echo "## 🧪 Test Coverage"
+            echo ""
+            echo "| Category | Coverage |"
+            echo "|----------|----------|"
+            echo "| Statements | ${STMT}% |"
+            echo "| Branches | ${BRANCH}% |"
+            echo "| Functions | ${FUNC}% |"
+            echo "| Lines | ${LINES}% |"
+            echo ""
+            echo "## 📦 Technology Stack"
+            echo ""
+            echo "| Package | Version |"
+            echo "|---------|---------|"
+            echo "| Next.js | ${NEXT} |"
+            echo "| React | ${REACT} |"
+            echo "| TypeScript | ${TS} |"
+            echo ""
+            echo "## 📈 Repository Stats"
+            echo ""
+            echo "- ⭐ Stars: ${STARS}"
+            echo "- 🐛 Open Issues: ${ISSUES}"
+            echo "- 🔀 Open PRs: ${PRS}"
+            echo "- 📝 Commits (30 days): ${COMMITS}"
+            echo ""
+            echo "## 🚀 Recent CI/CD Runs"
+            echo ""
+            echo "<!-- Auto-generated workflow status -->"
+            echo ""
+            echo "__WORKFLOWS_PLACEHOLDER__"
+            echo ""
+            echo "---"
+            echo ""
+            echo "*This report is automatically updated by GitHub Actions.*"
+            echo "*Last workflow run: [View Details]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions)*"
+          } > docs/PROJECT_HEALTH.md
 
-Last Updated: $TIMESTAMP (Auto-generated)
-
-## 🧪 Test Coverage
-
-| Category | Coverage |
-|----------|----------|
-| Statements | ${STMT}% |
-| Branches | ${BRANCH}% |
-| Functions | ${FUNC}% |
-| Lines | ${LINES}% |
-
-## 📦 Technology Stack
-
-| Package | Version |
-|---------|---------|
-| Next.js | ${NEXT} |
-| React | ${REACT} |
-| TypeScript | ${TS} |
-
-## 📈 Repository Stats
-
-- ⭐ Stars: ${STARS}
-- 🐛 Open Issues: ${ISSUES}
-- 🔀 Open PRs: ${PRS}
-- 📝 Commits (30 days): ${COMMITS}
-
-## 🚀 Recent CI/CD Runs
-
-<!-- Auto-generated workflow status -->
-
-# __WORKFLOWS_PLACEHOLDER__
-
----
-
-*This report is automatically updated by GitHub Actions.*
-*Last workflow run: [View Details]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions)*
-EOF
-
-          # 環境変数を実際の値に置換 (エスケープは sed のデフォルト使用)
-          sed -i "s/\$TIMESTAMP/$TIMESTAMP/g" docs/PROJECT_HEALTH.md
-          sed -i "s/\${STMT}/$STMT/g" docs/PROJECT_HEALTH.md
-          sed -i "s/\${BRANCH}/$BRANCH/g" docs/PROJECT_HEALTH.md
-          sed -i "s/\${FUNC}/$FUNC/g" docs/PROJECT_HEALTH.md
-          sed -i "s/\${LINES}/$LINES/g" docs/PROJECT_HEALTH.md
-          sed -i "s/\${NEXT}/$NEXT/g" docs/PROJECT_HEALTH.md
-          sed -i "s/\${REACT}/$REACT/g" docs/PROJECT_HEALTH.md
-          sed -i "s/\${TS}/$TS/g" docs/PROJECT_HEALTH.md
-          sed -i "s/\${STARS}/$STARS/g" docs/PROJECT_HEALTH.md
-          sed -i "s/\${ISSUES}/$ISSUES/g" docs/PROJECT_HEALTH.md
-          sed -i "s/\${PRS}/$PRS/g" docs/PROJECT_HEALTH.md
-          sed -i "s/\${COMMITS}/$COMMITS/g" docs/PROJECT_HEALTH.md
-          sed -i "s|\$GITHUB_SERVER_URL/\$GITHUB_REPOSITORY|$GITHUB_SERVER_URL/$GITHUB_REPOSITORY|g" docs/PROJECT_HEALTH.md
-
-          # Workflowsをコードブロックとして追記
+          # ワークフローをコードブロックとして追記
+          printf "\n\`\`\`json\n%s\n\`\`\`\n" "$WORKFLOWS" >> docs/PROJECT_HEALTH.md
+          sed -i "s/__WORKFLOWS_PLACEHOLDER__//g" docs/PROJECT_HEALTH.md          # Workflowsをコードブロックとして追記
+          printf "\n\`\`\`json\n%s\n\`\`\`\n" "$WORKFLOWS" >> docs/PROJECT_HEALTH.md
           printf "\n\`\`\`json\n%s\n\`\`\`\n" "$WORKFLOWS" >> docs/PROJECT_HEALTH.md
           sed -i "s/__WORKFLOWS_PLACEHOLDER__//g" docs/PROJECT_HEALTH.md
 
