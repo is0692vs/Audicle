@@ -46,7 +46,7 @@ export default function ReaderView({
   return (
     <div
       ref={containerRef}
-      className="h-full overflow-y-auto bg-gray-50 dark:bg-gray-950"
+      className="h-full max-h-[80vh] sm:max-h-[calc(100vh-8rem-5rem)] overflow-y-auto bg-gray-50 dark:bg-gray-950"
     >
       <div className="max-w-3xl mx-auto px-4 py-8">
         {chunks.length === 0 ? (
