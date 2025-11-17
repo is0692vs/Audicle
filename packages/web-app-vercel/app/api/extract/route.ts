@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Readability } from '@mozilla/readability';
+import { normalizeArticleText } from '@/lib/parseArticle';
 import { parseHTML } from 'linkedom';
 import { ExtractResponse } from '@/types/api';
 
@@ -64,8 +65,8 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // テキストコンテンツの取得
-        const textContent = article.textContent || '';
+        // テキストコンテンツの取得（重複やUIテキスト混入を防ぐため normalizeArticleText を利用）
+        const textContent = normalizeArticleText(article.content || '') || (article.textContent || '');
 
         const response: ExtractResponse = {
             title: article.title || '',
