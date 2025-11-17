@@ -72,7 +72,7 @@ function getTTSClient(): TextToSpeechClient {
             if (credentials) {
                 console.log('[INFO] GOOGLE_APPLICATION_CREDENTIALS_JSON was loaded from an escaped JSON string');
             }
-        } catch (_) {}
+        } catch (_) { }
     }
 
     // 2) If base64 encoded JSON

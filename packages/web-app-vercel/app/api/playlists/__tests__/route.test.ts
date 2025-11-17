@@ -20,12 +20,37 @@ jest.mock('@/lib/supabase', () => ({
                                         ],
                                         error: null
                                     }))
+                                })),
+                                order: jest.fn(() => ({
+                                    order: jest.fn(() => Promise.resolve({
+                                        data: [
+                                            {
+                                                id: '1',
+                                                name: 'Test Playlist',
+                                                owner_email: 'test@example.com',
+                                                playlist_items: [{ count: 2 }]
+                                            }
+                                        ], error: null
+                                    }))
                                 }))
                             })),
                             // Single owner check
                             single: jest.fn(() => Promise.resolve({
                                 data: { id: '1', owner_email: 'test@example.com' },
                                 error: null
+                            })),
+                            order: jest.fn(() => ({
+                                order: jest.fn(() => Promise.resolve({
+                                    data: [
+                                        {
+                                            id: '1',
+                                            name: 'Test Playlist',
+                                            owner_email: 'test@example.com',
+                                            playlist_items: [{ count: 2 }]
+                                        }
+                                    ],
+                                    error: null,
+                                }))
                             }))
                         }))
                     })),
