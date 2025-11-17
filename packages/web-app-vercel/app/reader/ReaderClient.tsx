@@ -71,6 +71,7 @@ export default function ReaderPageClient() {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>("");
   const [arePlaylistsLoaded, setArePlaylistsLoaded] = useState(false);
+  // NOTE: Playlist selection should be deterministic via query params or default playlist.
   const [hasLoadedFromQuery, setHasLoadedFromQuery] = useState(false);
   const [isSpeedModalOpen, setIsSpeedModalOpen] = useState(false);
 
@@ -312,8 +313,63 @@ export default function ReaderPageClient() {
         // 新しい記事が読み込まれたら、自動再生フラグをリセット
         hasInitiatedAutoplayRef.current = false;
       } else {
-        logger.warn("記事が見つかりません", { id: articleIdFromQuery });
-        setError("記事が見つかりませんでした");
+        logger.warn("localStorageに記事が見つかりません。サーバーから取得を試みます", {
+          id: articleIdFromQuery,
+        });
+        (async () => {
+          setIsLoading(true);
+          try {
+            const res = await fetch(`/api/articles/${articleIdFromQuery}`);
+            if (!res.ok) {
+              logger.warn("記事取得APIに失敗しました", { status: res.status });
+              setError("記事が見つかりませんでした");
+              return;
+            }
+            const articleData = await res.json();
+            if (!articleData || !articleData.url) {
+              setError("記事情報が不完全です");
+              return;
+            }
+            // 抽出APIでチャンクを取得
+            const extractRes = await fetch('/api/extract', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url: articleData.url }),
+            });
+            if (!extractRes.ok) {
+              logger.error('抽出APIに失敗しました', { status: extractRes.status });
+              setError('記事の読み込みに失敗しました');
+              return;
+            }
+            const data = await extractRes.json();
+            const chunksWithId = convertParagraphsToChunks(data.content);
+            setTitle(data.title || articleData.title || '');
+            setChunks(chunksWithId);
+            setUrl(articleData.url);
+            setArticleId(articleIdFromQuery);
+            // 保存
+            try {
+              articleStorage.upsert({
+                id: articleIdFromQuery,
+                url: articleData.url,
+                title: data.title || articleData.title || '',
+                chunks: chunksWithId,
+              });
+            } catch (e) {
+              logger.error('localStorageへの保存に失敗しました', e);
+            }
+          } catch (err) {
+            logger.error('サーバーから記事取得に失敗', err);
+            setError('記事が見つかりませんでした');
+            setTitle('');
+            setChunks([]);
+            setUrl('');
+            setArticleId(null);
+          }
+          finally {
+            setIsLoading(false);
+          }
+        })();
       }
     }
   }, [articleIdFromQuery, stop]);
@@ -344,7 +400,7 @@ export default function ReaderPageClient() {
           // 前の再生状態をクリア
           stop();
 
-          // 記事をlocalStorageから読み込む
+          // 記事をlocalStorageから読み込む。なければサーバーからフェッチ（/api/extract経由）
           const article = articleStorage.getById(item.article_id);
           if (article) {
             setTitle(article.title);
@@ -359,15 +415,63 @@ export default function ReaderPageClient() {
               chunkCount: article.chunks.length,
             });
           } else {
-            logger.warn("記事がlocalStorageに見つかりません", {
+            logger.warn("記事がlocalStorageに見つかりません。サーバーからフェッチします", {
               articleId: item.article_id,
             });
-            setError("記事が見つかりませんでした");
-            // 以前の記事情報をクリア
-            setTitle("");
-            setChunks([]);
-            setUrl("");
-            setArticleId(null);
+
+            // fetch article content from server via /api/extract
+            (async () => {
+              setIsLoading(true);
+              try {
+                const extractResponse = await fetch("/api/extract", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ url: item.article.url }),
+                });
+                if (!extractResponse.ok) {
+                  const text = await extractResponse.text();
+                  logger.error("記事抽出APIに失敗しました", { status: extractResponse.status, body: text });
+                  setError("記事の読み込みに失敗しました");
+                  setTitle("");
+                  setChunks([]);
+                  setUrl("");
+                  setArticleId(null);
+                  return;
+                }
+
+                const data = await extractResponse.json();
+                const chunksWithId = convertParagraphsToChunks(data.content);
+
+                setChunks(chunksWithId);
+                setTitle(data.title || item.article.title || "");
+                setUrl(item.article.url);
+                setArticleId(item.article_id);
+                hasInitiatedAutoplayRef.current = false;
+
+                // persist into localStorage so subsequent navigations don't re-extract
+                try {
+                  articleStorage.upsert({
+                    id: item.article_id,
+                    url: item.article.url,
+                    title: data.title || item.article.title || "",
+                    chunks: chunksWithId,
+                  });
+                  logger.success("記事をlocalStorageに保存しました", { id: item.article_id });
+                } catch (err) {
+                  logger.error("localStorageへの保存に失敗しました", err);
+                }
+                } catch (err) {
+                logger.error("サーバーから記事を読み込めませんでした", err);
+                setError(err instanceof Error ? err.message : "記事の読み込みに失敗しました");
+                setTitle("");
+                setChunks([]);
+                setUrl("");
+                setArticleId(null);
+              }
+              finally {
+                setIsLoading(false);
+              }
+            })();
           }
         } else {
           logger.error("プレイリストにインデックスが存在しません", {
@@ -443,6 +547,8 @@ export default function ReaderPageClient() {
     loadAndSaveArticle(url);
   };
 
+  // (removed) handleSelectPlaylist - playback initialization is deterministic
+
   // autoplay パラメータが指定されている場合、チャンクが読み込まれたら自動再生
   useEffect(() => {
     if (
@@ -496,6 +602,11 @@ export default function ReaderPageClient() {
     initializeFromArticle,
     session,
   ]);
+
+  // NOTE: We intentionally do not prompt the user to select a playlist. Instead,
+  // prefer `playlist` query param when present, otherwise prefer a default playlist
+  // as determined by `initializeFromArticle`. If neither applies, fallback to
+  // the first available playlist returned by the API.
 
   // If the reader was opened with a `playlist` param, ensure the playback context
   // is seeded from that playlist so the Prev/Next UI works deterministically.
@@ -852,6 +963,9 @@ export default function ReaderPageClient() {
           onPlaylistsUpdated={async () => {}}
         />
       )}
+
+      {/* プレイリスト選択モーダル（記事が複数プレイリストに含まれる場合） */}
+      {/* PlaylistChoiceModal removed: playlist selection should be deterministic */}
 
       {/* 再生速度調整モーダル */}
       <PlaybackSpeedDial
