@@ -31,7 +31,6 @@ jobs:
     timeout-minutes: 7
     permissions:
       contents: "read"
-      id-token: "write"
       issues: "read"
       pull-requests: "read"
     outputs:
@@ -64,7 +63,7 @@ jobs:
         id: "find_issues"
         env:
           GITHUB_REPOSITORY: "${{ github.repository }}"
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN || github.token }}"
+          GITHUB_TOKEN: "${{ github.token }}"
         run: |-
           echo '🔍 Finding unlabeled issues and issues marked for triage...'
           ISSUES="$(gh issue list \
@@ -87,7 +86,6 @@ jobs:
     permissions:
       contents: "read"
       issues: "write"
-      id-token: "write"
       pull-requests: "read"
     with:
       additional_context: "Scheduled triage run"
@@ -129,7 +127,7 @@ jobs:
         with:
           # Use the provided token so that the "gemini-cli" is the actor in the
           # log for what changed the labels.
-          github-token: "${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}"
+          github-token: "${{ github.token }}"
           script: |-
             // Parse the available labels
             const availableLabels = (process.env.AVAILABLE_LABELS || '').split(',')
