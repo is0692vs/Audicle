@@ -2,4 +2,4 @@
 
 Last Updated: Pending first run
 
-This file will be automatically updated by GitHub Actions.
+This file is automatically updated by a GitHub Actions workflow.
