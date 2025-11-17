@@ -254,7 +254,7 @@ function DesktopAudioControls({
               isPlaybackLoading ? "処理中..." : isPlaying ? "一時停止" : "再生"
             }
           >
-            {isPlaying ? "⏸" : "▶️"}
+{isPlaying ? <Pause className="size-5" /> : <Play className="size-5" />}
           </button>
         </div>
 
