@@ -1,4 +1,4 @@
-import { JSDOM } from 'jsdom';
+import { parseHTML } from 'linkedom';
 
 /**
  * article.content をパースしてプレーンテキスト化する
@@ -7,22 +7,21 @@ import { JSDOM } from 'jsdom';
 export function normalizeArticleText(content: string): string {
     if (!content) return '';
 
-    const dom = new JSDOM(content);
-    const doc = dom.window.document;
+    const { document } = parseHTML(content);
 
     // はてなブログなどにあるボタンやUI要素を削除
-    doc.querySelectorAll('button, .requote-button, .js-requote-button, nav, aside, footer').forEach(e => e.remove());
+    document.querySelectorAll('button, .requote-button, .js-requote-button, nav, aside, footer').forEach(e => e.remove());
 
     const paragraphs: string[] = [];
 
     // blockquote内の<p>だけは内部の<br><br>で段落分割する
-    const blockquoteParagraphs = doc.querySelectorAll('blockquote p');
+    const blockquoteParagraphs = document.querySelectorAll('blockquote p');
     blockquoteParagraphs.forEach(p => {
         // <br><br> をパラグラフ区切りとして扱う
         const html = p.innerHTML || '';
         const parts = html.split(/<br\s*\/?>(?:\s*<br\s*\/?>)+/i);
         parts.forEach(part => {
-            const text = dom.window.document.createElement('div');
+            const text = document.createElement('div');
             text.innerHTML = part;
             const t = text.textContent?.trim();
             if (t) paragraphs.push(t);
@@ -33,7 +32,7 @@ export function normalizeArticleText(content: string): string {
 
     // 通常のブロック要素からテキストを抽出
     const selectors = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'li'];
-    const elements = doc.querySelectorAll(selectors.join(','));
+    const elements = document.querySelectorAll(selectors.join(','));
     elements.forEach(elem => {
         const text = elem.textContent?.trim();
         if (text) paragraphs.push(text);
