@@ -99,3 +99,50 @@ export async function POST(
         )
     }
 }
+
+// GET: プレイリストアイテムの一覧取得（読み取り用）
+export async function GET(
+    request: Request,
+    context: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { id } = await context.params
+        const { userEmail, response } = await requireAuth()
+        if (response) return response
+
+        // プレイリストの所有権を確認
+        const { data: playlist, error: playlistError } = await supabase
+            .from('playlists')
+            .select('owner_email')
+            .eq('id', id)
+            .single()
+
+        if (playlistError || !playlist) {
+            return NextResponse.json({ error: 'Playlist not found' }, { status: 404 })
+        }
+
+        if (playlist.owner_email !== userEmail) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+        }
+
+        // プレイリストアイテム（関連する記事情報付き）を取得
+        const { data: items, error } = await supabase
+            .from('playlist_items')
+            .select('id, playlist_id, article_id, position, added_at, article:articles(*)')
+            .eq('playlist_id', id)
+            .order('position', { ascending: true })
+
+        if (error) {
+            console.error('Supabase error:', error)
+            return NextResponse.json({ error: 'Failed to fetch playlist items' }, { status: 500 })
+        }
+
+        return NextResponse.json(items || [])
+    } catch (error) {
+        console.error('Error in GET /api/playlists/[id]/items:', error)
+        return NextResponse.json(
+            { error: error instanceof Error ? error.message : 'Internal server error' },
+            { status: 500 }
+        )
+    }
+}

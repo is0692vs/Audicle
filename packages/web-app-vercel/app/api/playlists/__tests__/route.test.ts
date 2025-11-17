@@ -66,4 +66,19 @@ describe('/api/playlists route', () => {
         const res = await routeModule.POST(mockRequest)
         expect(res.status).toBe(400)
     })
+
+    it('GET /items returns playlist items', async () => {
+        // Prepare a mock for select(). This relies on the earlier jest.mock / chain
+        // The route expects `requireAuth` to return `test@example.com` as above.
+        // Call the GET handler for playlist items
+        const mockRequest = new Request('http://localhost:3000/api/playlists/1/items')
+        // Import the items route directly
+        const itemsModule = require('../[id]/items/route')
+        const res = await itemsModule.GET(mockRequest, { params: Promise.resolve({ id: '1' }) })
+        expect(res.status).toBe(200)
+        const data = await res.json()
+        expect(Array.isArray(data)).toBe(true)
+        // because our supabase mock returns playlist_items in the parent route mock,
+        // here we assume the items array is returned (mock stub may vary)
+    })
 })

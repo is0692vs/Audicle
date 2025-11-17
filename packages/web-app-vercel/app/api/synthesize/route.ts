@@ -514,9 +514,13 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        return NextResponse.json(
-            { error: 'Failed to synthesize speech' },
-            { status: 500, headers: corsHeaders }
-        );
+        // When not in production, include the original error message for easier
+        // debugging. Do not include sensitive details in production.
+        const responseBody: any = { error: 'Failed to synthesize speech' };
+        if (process.env.NODE_ENV !== 'production' && error instanceof Error) {
+            responseBody.detail = error.message;
+        }
+
+        return NextResponse.json(responseBody, { status: 500, headers: corsHeaders });
     }
 }
