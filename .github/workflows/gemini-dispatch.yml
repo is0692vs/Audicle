@@ -152,8 +152,8 @@ jobs:
   triage:
     needs: "dispatch"
     if: |-
-      ${{ needs.dispatch.outputs.command == 'triage' }}
-    uses: "./.github/workflows/gemini-triage.yml"
+      $ needs.dispatch.outputs.command == 'triage' && github.event.issue 
+    uses: "./.github/workflows/gemini-triage.yml" 
     permissions:
       contents: "read"
       issues: "write"
