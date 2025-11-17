@@ -717,63 +717,65 @@ export default function ReaderPageClient() {
                 </button>
 
                 {/* 中央: 再生/一時停止 (flex-1で中央) */}
-                <div className="flex-1 flex items-center justify-center relative">
-                  {isPlaylistMode && playlistState.isPlaylistMode && (
-                    <button
-                      onClick={() => {
-                        if (canMovePrevious) {
-                          navigateToPlaylistItem(
-                            wrapIndex(playlistState.currentIndex - 1)
-                          );
-                        }
-                      }}
-                      disabled={!canMovePrevious}
-                      className="absolute left-0 px-2 py-1 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-1 text-xs sm:text-sm"
-                      data-testid="desktop-prev-button"
-                      title="前の記事"
-                      aria-label="前の記事"
-                    >
-                      <SkipBack className="size-4" />
-                    </button>
-                  )}
-
-                  <button
-                    onClick={isPlaying ? pause : play}
-                    disabled={isPlaybackLoading}
-                    className="mx-auto w-12 h-12 p-0 bg-green-600 text-white rounded-full hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center text-2xl"
-                    title={
-                      isPlaybackLoading
-                        ? "処理中..."
-                        : isPlaying
-                          ? "一時停止"
-                          : "再生"
-                    }
-                  >
-                    {isPlaying ? (
-                      <Pause className="size-5" />
-                    ) : (
-                      <Play className="size-5" />
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    {playlistState.isPlaylistMode && (
+                      <button
+                        onClick={() => {
+                          if (canMovePrevious) {
+                            navigateToPlaylistItem(
+                              wrapIndex(playlistState.currentIndex - 1)
+                            );
+                          }
+                        }}
+                        disabled={!canMovePrevious}
+                        className="px-2 py-1 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-1 text-xs sm:text-sm"
+                        data-testid="desktop-prev-button"
+                        title="前の記事"
+                        aria-label="前の記事"
+                      >
+                        <SkipBack className="size-4" />
+                      </button>
                     )}
-                  </button>
 
-                  {isPlaylistMode && playlistState.isPlaylistMode && (
                     <button
-                      onClick={() => {
-                        if (canMoveNext) {
-                          navigateToPlaylistItem(
-                            wrapIndex(playlistState.currentIndex + 1)
-                          );
-                        }
-                      }}
-                      disabled={!canMoveNext}
-                      className="absolute right-0 px-2 py-1 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-1 text-xs sm:text-sm"
-                      data-testid="desktop-next-button"
-                      title="次の記事"
-                      aria-label="次の記事"
+                      onClick={isPlaying ? pause : play}
+                      disabled={isPlaybackLoading}
+                      className="w-12 h-12 p-0 bg-green-600 text-white rounded-full hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center text-2xl"
+                      title={
+                        isPlaybackLoading
+                          ? "処理中..."
+                          : isPlaying
+                            ? "一時停止"
+                            : "再生"
+                      }
                     >
-                      <SkipForward className="size-4" />
+                      {isPlaying ? (
+                        <Pause className="size-5" />
+                      ) : (
+                        <Play className="size-5" />
+                      )}
                     </button>
-                  )}
+
+                    {playlistState.isPlaylistMode && (
+                      <button
+                        onClick={() => {
+                          if (canMoveNext) {
+                            navigateToPlaylistItem(
+                              wrapIndex(playlistState.currentIndex + 1)
+                            );
+                          }
+                        }}
+                        disabled={!canMoveNext}
+                        className="px-2 py-1 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-1 text-xs sm:text-sm"
+                        data-testid="desktop-next-button"
+                        title="次の記事"
+                        aria-label="次の記事"
+                      >
+                        <SkipForward className="size-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* 右側: プレイリスト追加 + 元記事リンク・ダウンロード（テキスト） */}
@@ -878,7 +880,7 @@ export default function ReaderPageClient() {
             {/* 中央: 再生停止ボタン (flex-1で中央を確保) */}
             <div className="flex-1 flex justify-center items-center">
               {/* Prev - Play - Next (center aligned) */}
-              {isPlaylistMode && playlistState.isPlaylistMode && (
+              {playlistState.isPlaylistMode && (
                 <button
                   onClick={() => {
                     if (canMovePrevious) {
@@ -915,7 +917,7 @@ export default function ReaderPageClient() {
                 )}
               </button>
 
-              {isPlaylistMode && playlistState.isPlaylistMode && (
+              {playlistState.isPlaylistMode && (
                 <button
                   onClick={() => {
                     if (canMoveNext) {
