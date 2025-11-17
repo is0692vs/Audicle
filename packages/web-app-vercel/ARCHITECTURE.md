@@ -67,7 +67,10 @@ export async function POST(request: NextRequest) {
 
 **環境変数**:
 
-- `GOOGLE_APPLICATION_CREDENTIALS_JSON`: サービスアカウントの認証情報（JSON 文字列）
+- `GOOGLE_APPLICATION_CREDENTIALS_JSON`: サービスアカウントの認証情報（JSON 文字列）。
+  - JSON を 1 行に圧縮して設定するのが推奨です。
+  - または base64 化した JSON を設定することもサポートします（例: `export GOOGLE_APPLICATION_CREDENTIALS_JSON=$(cat key.json | base64 -w0)`）。
+  - あるいはファイルパスを設定し、`GOOGLE_APPLICATION_CREDENTIALS_JSON=/path/to/key.json` のように指定することもできます。
 - `ALLOWED_EMAILS`: 許可するユーザーのメールアドレス（カンマ区切り）
 
 ## クライアント側の実装

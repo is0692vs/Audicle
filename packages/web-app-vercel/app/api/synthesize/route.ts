@@ -4,6 +4,7 @@ import { getKv } from '@/lib/kv';
 import { parseArticleMetadata, serializeArticleMetadata } from '@/lib/kv-helpers';
 import { CacheStats, SynthesizeChunk } from '@/types/api';
 import { TextToSpeechClient, protos } from '@google-cloud/text-to-speech';
+import fs from 'fs';
 import { getCacheIndex, addCachedChunk, isCachedInIndex } from '@/lib/db/cacheIndex';
 import { calculateTextHash } from '@/lib/textHash';
 import { getStorageProvider } from '@/lib/storage';
@@ -39,15 +40,56 @@ function getTTSClient(): TextToSpeechClient {
         throw new Error('GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable is not set');
     }
 
-    try {
-        const credentials = JSON.parse(credentialsJson);
-        ttsCLient = new TextToSpeechClient({
-            credentials,
-        });
-        return ttsCLient;
-    } catch {
-        throw new Error('Failed to parse GOOGLE_APPLICATION_CREDENTIALS_JSON');
+    // Try parsing the env var as JSON, but be tolerant of base64-encoded or
+    // file-path variants. This helps when people paste multi-line JSON into
+    // env files; we prefer single-line JSON, but fall back to base64.
+
+    const tryParseJson = (s: string): any | null => {
+        try {
+            return JSON.parse(s);
+        } catch (e) {
+            return null;
+        }
+    };
+
+    // 1) If plain JSON
+    let credentials = tryParseJson(credentialsJson);
+
+    // 2) If base64 encoded JSON
+    if (!credentials) {
+        try {
+            const decoded = Buffer.from(credentialsJson, 'base64').toString('utf8');
+            credentials = tryParseJson(decoded);
+            if (credentials) {
+                console.log('[INFO] GOOGLE_APPLICATION_CREDENTIALS_JSON was loaded from base64');
+            }
+        } catch {
+            // ignore decode errors
+        }
     }
+
+    // 3) If it's a path to a JSON file (e.g., set by developer), prefer keyFilename
+    if (!credentials) {
+        try {
+            const trimmed = credentialsJson.trim();
+            if ((trimmed.startsWith('/') || trimmed.endsWith('.json') || trimmed.includes('.json')) && fs.existsSync(trimmed)) {
+                ttsCLient = new TextToSpeechClient({ keyFilename: trimmed });
+                console.log('[INFO] GOOGLE_APPLICATION_CREDENTIALS_JSON used as keyFilename');
+                return ttsCLient;
+            }
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    if (!credentials) {
+        throw new Error('Failed to parse GOOGLE_APPLICATION_CREDENTIALS_JSON (expected JSON or base64-encoded JSON, or a path to a keyfile)');
+    }
+
+    ttsCLient = new TextToSpeechClient({
+        credentials,
+    });
+    return ttsCLient;
 }
 
 async function synthesizeToBuffer(text: string, voice: string, speakingRate: number = 2.0): Promise<Buffer> {

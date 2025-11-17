@@ -9,10 +9,10 @@ import type { Playlist } from '@/types/playlist'
  */
 export async function GET(
     request: Request,
-    context: { params: Promise<{ articleUrl: string }> }
+    { params }: { params: { articleUrl: string } }
 ) {
     try {
-        const { articleUrl } = await context.params
+        const { articleUrl } = params
         const decodedArticleUrl = decodeURIComponent(articleUrl)
         const { userEmail, response } = await requireAuth()
         if (response) return response
@@ -24,20 +24,23 @@ export async function GET(
             .eq('url', decodedArticleUrl)
             .eq('owner_email', userEmail)
             .single()
-
-        if (articlesError) {
+        // PostgREST returns an error when .single() finds 0 rows. Handle that case
+        // explicitly: return empty list if not found, otherwise 500 for other errors.
+        if (articleError) {
+            // When there are no rows, supabase/postgrest uses PGRST116
+            if (articleError.code === 'PGRST116') {
+                return NextResponse.json([])
+            }
             return NextResponse.json(
                 { error: 'Failed to fetch article' },
                 { status: 500 }
             )
         }
-
-        if (!articles || articles.length === 0) {
-            // 記事が見つからない場合は空配列を返す
+        if (!article) {
             return NextResponse.json([])
         }
 
-        const articleId = articles[0].id
+        const articleId = article.id
 
         // article_id を持つプレイリストアイテムを取得
         const { data: playlistItems, error: playlistItemsError } = await supabase
