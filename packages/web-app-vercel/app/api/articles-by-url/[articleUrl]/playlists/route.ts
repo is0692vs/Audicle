@@ -9,10 +9,10 @@ import type { Playlist } from '@/types/playlist'
  */
 export async function GET(
     request: Request,
-    { params }: { params: { articleUrl: string } }
+    context: { params: Promise<{ articleUrl: string }> }
 ) {
     try {
-        const { articleUrl } = params
+        const { articleUrl } = await context.params
         const decodedArticleUrl = decodeURIComponent(articleUrl)
         const { userEmail, response } = await requireAuth()
         if (response) return response
@@ -79,7 +79,7 @@ export async function GET(
         }
 
         return NextResponse.json(playlists as Playlist[])
-    } catch (error) {
+    } catch (_error) {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }

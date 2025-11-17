@@ -35,6 +35,14 @@ function getTTSClient(): TextToSpeechClient {
         return ttsCLient;
     }
 
+    // try common env var first (standard for Google client libraries)
+    const googleKeyFileEnv = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    if (googleKeyFileEnv && fs.existsSync(googleKeyFileEnv)) {
+        ttsCLient = new TextToSpeechClient({ keyFilename: googleKeyFileEnv });
+        console.log('[INFO] GOOGLE_APPLICATION_CREDENTIALS used as keyFilename');
+        return ttsCLient;
+    }
+
     const credentialsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
     if (!credentialsJson) {
         throw new Error('GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable is not set');
@@ -44,7 +52,7 @@ function getTTSClient(): TextToSpeechClient {
     // file-path variants. This helps when people paste multi-line JSON into
     // env files; we prefer single-line JSON, but fall back to base64.
 
-    const tryParseJson = (s: string): any | null => {
+    const tryParseJson = (s: string): unknown | null => {
         try {
             return JSON.parse(s);
         } catch (e) {
@@ -52,8 +60,20 @@ function getTTSClient(): TextToSpeechClient {
         }
     };
 
-    // 1) If plain JSON
+    // 1) If plain JSON — try raw first
     let credentials = tryParseJson(credentialsJson);
+
+    // 1b) If it looks like a quoted string from a .env that escaped newlines
+    // (e.g., "{\n  \"type\": ...\n}"), unescape and try again
+    if (!credentials) {
+        try {
+            const unescaped = credentialsJson.replace(/\\n/g, '\n').replace(/^"|"$/g, '');
+            credentials = tryParseJson(unescaped);
+            if (credentials) {
+                console.log('[INFO] GOOGLE_APPLICATION_CREDENTIALS_JSON was loaded from an escaped JSON string');
+            }
+        } catch (_) {}
+    }
 
     // 2) If base64 encoded JSON
     if (!credentials) {
@@ -77,7 +97,7 @@ function getTTSClient(): TextToSpeechClient {
                 console.log('[INFO] GOOGLE_APPLICATION_CREDENTIALS_JSON used as keyFilename');
                 return ttsCLient;
             }
-        } catch (e) {
+        } catch (_e) {
             // ignore
         }
     }
@@ -86,8 +106,12 @@ function getTTSClient(): TextToSpeechClient {
         throw new Error('Failed to parse GOOGLE_APPLICATION_CREDENTIALS_JSON (expected JSON or base64-encoded JSON, or a path to a keyfile)');
     }
 
+    // `credentials` is unknown type from tryParseJson; the TextToSpeechClient
+    // expects a credential-like object. We'll pass it as `credentials` after a
+    // best-effort cast.
     ttsCLient = new TextToSpeechClient({
-        credentials,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        credentials: credentials as any,
     });
     return ttsCLient;
 }
@@ -122,9 +146,9 @@ async function synthesizeToBuffer(text: string, voice: string, speakingRate: num
         }
 
         return Buffer.isBuffer(audioContent) ? audioContent : Buffer.from(audioContent);
-    } catch (error) {
-        console.error('Google Cloud TTS API error:', error);
-        throw new Error(`TTS synthesis failed: ${error instanceof Error ? error.message : String(error)}`);
+    } catch (synthError) {
+        console.error('Google Cloud TTS API error:', synthError);
+        throw new Error(`TTS synthesis failed: ${synthError instanceof Error ? synthError.message : String(synthError)}`);
     }
 }
 
