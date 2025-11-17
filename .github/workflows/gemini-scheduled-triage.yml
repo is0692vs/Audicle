@@ -27,7 +27,7 @@ defaults:
 
 jobs:
   triage:
-    runs-on: "ubuntu-latest"
+    runs-on: "ubuntu-slim"
     timeout-minutes: 7
     permissions:
       contents: "read"
@@ -91,10 +91,11 @@ jobs:
       additional_context: "Scheduled triage run"
       issues_to_triage: "${{ needs.triage.outputs.issues_to_triage }}"
       language: "ja"
+      gemini_model: "gemini-2.5-flash-lite"
     secrets: "inherit"
 
   label:
-    runs-on: "ubuntu-latest"
+    runs-on: "ubuntu-slim"
     needs:
       - "call_triage"
     if: |-

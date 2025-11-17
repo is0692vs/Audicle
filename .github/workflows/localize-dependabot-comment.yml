@@ -13,7 +13,7 @@ jobs:
   add_localized_comment:
     runs-on: ubuntu-latest
     # run if the PR author login starts with 'dependabot' (covers dependabot[bot], dependabot-preview[bot], etc.)
-    if: startsWith(github.event.pull_request.user.login, 'dependabot')
+    if: false && startsWith(github.event.pull_request.user.login, 'dependabot')
     steps:
       - name: Checkout base branch (secure)
         uses: actions/checkout@v4

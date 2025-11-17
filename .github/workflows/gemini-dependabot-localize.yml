@@ -1,0 +1,106 @@
+name: "🌐 Gemini Dependabot Localization"
+
+on:
+  pull_request_target:
+    types:
+      - "opened"
+
+concurrency:
+  group: "${{ github.workflow }}-localize-${{ github.event.pull_request.number }}"
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: "bash"
+
+jobs:
+  localize:
+    if: |-
+      ${{ startsWith(github.event.pull_request.user.login, 'dependabot') }}
+    runs-on: "ubuntu-slim"
+    timeout-minutes: 7
+    permissions:
+      contents: "read"
+      issues: "write"
+      pull-requests: "write"
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v4"
+
+      - name: "Run Gemini localization"
+        uses: "google-github-actions/run-gemini-cli@v0" # ratchet:exclude
+        id: "gemini_localize"
+        continue-on-error: true
+        env:
+          GEMINI_API_KEY: "${{ secrets.GEMINI_API_KEY }}"
+          GITHUB_TOKEN: "${{ github.token }}"
+          PR_TITLE: "${{ github.event.pull_request.title }}"
+          PR_BODY: "${{ github.event.pull_request.body }}"
+          PR_NUMBER: "${{ github.event.pull_request.number }}"
+          REPOSITORY: "${{ github.repository }}"
+        with:
+          # No GCP fields - using API key only
+          gemini_api_key: "${{ secrets.GEMINI_API_KEY }}"
+          settings: |-
+            {
+              "model": {
+                "model": "gemini-2.5-flash-lite",
+                "maxSessionTurns": 25
+              },
+              "telemetry": {
+                "enabled": false
+              },
+              "mcpServers": {
+                "github": {
+                  "command": "docker",
+                    "args": [
+                    "run",
+                    "-i",
+                    "--rm",
+                    "-e",
+                    "GITHUB_PERSONAL_ACCESS_TOKEN",
+                    "ghcr.io/github/github-mcp-server:v0.18.0"
+                  ],
+                  "includeTools": [
+                    "add_issue_comment",
+                    "issue_read"
+                  ],
+                  "env": {
+                    "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+                  }
+                }
+              }
+            }
+          prompt: |-
+            出力は必ず日本語で行ってください。
+            ## Role
+
+            You are a localization assistant for Dependabot pull requests. Your task is to translate the PR title and body into Japanese and post a comment with the localized version.
+
+            ## Input Data
+
+            - **PR Title**: ${{ env.PR_TITLE }}
+            - **PR Body**: ${{ env.PR_BODY }}
+            - **PR Number**: ${{ env.PR_NUMBER }}
+            - **Repository**: ${{ env.REPOSITORY }}
+
+            ## Steps
+
+            1. Translate the PR title into natural Japanese.
+            2. Translate the PR body into natural Japanese, keeping technical terms appropriate.
+            3. Format the comment as:
+
+               ## 🌐 日本語訳
+
+               ### タイトル
+               [Translated Title]
+
+               ### 本文
+               [Translated Body]
+
+            4. Post the comment to the PR using the add_issue_comment tool. Do not use any other tools.
+
+            ## Constraints
+
+            - Only output the comment content through the tool.
+            - Do not add extra text or explanations.
