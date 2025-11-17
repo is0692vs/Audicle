@@ -207,6 +207,7 @@ export default function ReaderPageClient() {
         // ローカルストレージに保存（サーバーIDを優先）
         const newArticle = articleStorage.add({
           id: newArticleId || undefined, // サーバーIDがあれば使用
+  
           url: articleUrl,
           title: response.title,
           chunks: chunksWithId,
@@ -241,6 +242,83 @@ export default function ReaderPageClient() {
     },
     [router, selectedPlaylistId, queryClient, userEmail, playlists]
   );
+
+    // サーバーから記事（IDまたはURLで指定）を取得してステートにセットし、localStorageに保存するヘルパー
+    const fetchArticleAndSetState = useCallback(
+      async ({ id, url: maybeUrl, titleFallback }: { id?: string; url?: string; titleFallback?: string }) => {
+        setIsLoading(true);
+        setError("");
+        try {
+          let resolvedUrl = maybeUrl;
+          let resolvedTitle = titleFallback || "";
+          const resolvedId = id || null;
+
+          // もしURLがなければ、IDからメタ情報を取得
+          if (!resolvedUrl && id) {
+            const res = await fetch(`/api/articles/${id}`);
+            if (!res.ok) {
+              logger.warn("記事取得APIに失敗しました", { status: res.status });
+              setError("記事が見つかりませんでした");
+              return;
+            }
+            const articleData = await res.json();
+            if (!articleData || !articleData.url) {
+              setError("記事情報が不完全です");
+              return;
+            }
+            resolvedUrl = articleData.url;
+            resolvedTitle = articleData.title || resolvedTitle;
+          }
+
+          if (!resolvedUrl) {
+            setError("記事のURLが不明です");
+            return;
+          }
+
+          // 抽出APIでチャンクを取得
+          const extractRes = await fetch('/api/extract', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: resolvedUrl }),
+          });
+          if (!extractRes.ok) {
+            logger.error('抽出APIに失敗しました', { status: extractRes.status });
+            setError('記事の読み込みに失敗しました');
+            return;
+          }
+          const data = await extractRes.json();
+          const chunksWithId = convertParagraphsToChunks(data.content);
+
+          setTitle(data.title || resolvedTitle || '');
+          setChunks(chunksWithId);
+          setUrl(resolvedUrl);
+          setArticleId(resolvedId);
+          hasInitiatedAutoplayRef.current = false;
+
+          // 保存
+          try {
+            articleStorage.upsert({
+              id: resolvedId ? resolvedId : undefined,
+              url: resolvedUrl,
+              title: data.title || resolvedTitle || '',
+              chunks: chunksWithId,
+            });
+          } catch (e) {
+            logger.error('localStorageへの保存に失敗しました', e);
+          }
+        } catch (err) {
+          logger.error('サーバーから記事取得に失敗', err);
+          setError('記事が見つかりませんでした');
+          setTitle('');
+          setChunks([]);
+          setUrl('');
+          setArticleId(null);
+        } finally {
+          setIsLoading(false);
+        }
+      },
+      []
+    );
 
   // ユーザー設定を読み込む
   useEffect(() => {
@@ -316,63 +394,11 @@ export default function ReaderPageClient() {
         logger.warn("localStorageに記事が見つかりません。サーバーから取得を試みます", {
           id: articleIdFromQuery,
         });
-        (async () => {
-          setIsLoading(true);
-          try {
-            const res = await fetch(`/api/articles/${articleIdFromQuery}`);
-            if (!res.ok) {
-              logger.warn("記事取得APIに失敗しました", { status: res.status });
-              setError("記事が見つかりませんでした");
-              return;
-            }
-            const articleData = await res.json();
-            if (!articleData || !articleData.url) {
-              setError("記事情報が不完全です");
-              return;
-            }
-            // 抽出APIでチャンクを取得
-            const extractRes = await fetch('/api/extract', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ url: articleData.url }),
-            });
-            if (!extractRes.ok) {
-              logger.error('抽出APIに失敗しました', { status: extractRes.status });
-              setError('記事の読み込みに失敗しました');
-              return;
-            }
-            const data = await extractRes.json();
-            const chunksWithId = convertParagraphsToChunks(data.content);
-            setTitle(data.title || articleData.title || '');
-            setChunks(chunksWithId);
-            setUrl(articleData.url);
-            setArticleId(articleIdFromQuery);
-            // 保存
-            try {
-              articleStorage.upsert({
-                id: articleIdFromQuery,
-                url: articleData.url,
-                title: data.title || articleData.title || '',
-                chunks: chunksWithId,
-              });
-            } catch (e) {
-              logger.error('localStorageへの保存に失敗しました', e);
-            }
-          } catch (err) {
-            logger.error('サーバーから記事取得に失敗', err);
-            setError('記事が見つかりませんでした');
-            setTitle('');
-            setChunks([]);
-            setUrl('');
-            setArticleId(null);
-          }
-          finally {
-            setIsLoading(false);
-          }
-        })();
+        // localStorageに記事が見つからない場合、サーバーから取得してstateにセット
+        fetchArticleAndSetState({ id: articleIdFromQuery });
       }
     }
-  }, [articleIdFromQuery, stop]);
+  }, [articleIdFromQuery, stop, fetchArticleAndSetState]);
 
   // インデックスパラメータが変わったときに該当記事を読み込む
   useEffect(() => {
@@ -419,59 +445,8 @@ export default function ReaderPageClient() {
               articleId: item.article_id,
             });
 
-            // fetch article content from server via /api/extract
-            (async () => {
-              setIsLoading(true);
-              try {
-                const extractResponse = await fetch("/api/extract", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ url: item.article.url }),
-                });
-                if (!extractResponse.ok) {
-                  const text = await extractResponse.text();
-                  logger.error("記事抽出APIに失敗しました", { status: extractResponse.status, body: text });
-                  setError("記事の読み込みに失敗しました");
-                  setTitle("");
-                  setChunks([]);
-                  setUrl("");
-                  setArticleId(null);
-                  return;
-                }
-
-                const data = await extractResponse.json();
-                const chunksWithId = convertParagraphsToChunks(data.content);
-
-                setChunks(chunksWithId);
-                setTitle(data.title || item.article.title || "");
-                setUrl(item.article.url);
-                setArticleId(item.article_id);
-                hasInitiatedAutoplayRef.current = false;
-
-                // persist into localStorage so subsequent navigations don't re-extract
-                try {
-                  articleStorage.upsert({
-                    id: item.article_id,
-                    url: item.article.url,
-                    title: data.title || item.article.title || "",
-                    chunks: chunksWithId,
-                  });
-                  logger.success("記事をlocalStorageに保存しました", { id: item.article_id });
-                } catch (err) {
-                  logger.error("localStorageへの保存に失敗しました", err);
-                }
-                } catch (err) {
-                logger.error("サーバーから記事を読み込めませんでした", err);
-                setError(err instanceof Error ? err.message : "記事の読み込みに失敗しました");
-                setTitle("");
-                setChunks([]);
-                setUrl("");
-                setArticleId(null);
-              }
-              finally {
-                setIsLoading(false);
-              }
-            })();
+            // localStorageに記事が見つからない場合、サーバーから取得してstateにセット
+            fetchArticleAndSetState({ id: item.article_id, url: item.article.url, titleFallback: item.article.title });
           }
         } else {
           logger.error("プレイリストにインデックスが存在しません", {
@@ -494,6 +469,7 @@ export default function ReaderPageClient() {
     currentPlaylistIndex,
     chunks.length,
     stop,
+    fetchArticleAndSetState,
   ]); // URLクエリパラメータが指定されている場合は記事を自動取得
   useEffect(() => {
     // プレイリスト読み込みが完了してから記事を読み込む
