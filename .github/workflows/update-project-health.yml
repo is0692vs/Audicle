@@ -125,6 +125,7 @@ jobs:
           printf "\n\`\`\`json\n%s\n\`\`\`\n" "$WORKFLOWS" >> docs/PROJECT_HEALTH.md
           sed -i "s/__WORKFLOWS_PLACEHOLDER__//g" docs/PROJECT_HEALTH.md          # Workflowsをコードブロックとして追記
           printf "\n\`\`\`json\n%s\n\`\`\`\n" "$WORKFLOWS" >> docs/PROJECT_HEALTH.md
+          printf "\n\`\`\`json\n%s\n\`\`\`\n" "$WORKFLOWS" >> docs/PROJECT_HEALTH.md
           sed -i "s/__WORKFLOWS_PLACEHOLDER__//g" docs/PROJECT_HEALTH.md
 
       - name: Commit changes
