@@ -1,15 +1,15 @@
 # 📊 Audicle - Project Health Report
 
-Last Updated: 2025-11-17 20:22:55 JST (Auto-generated)
+Last Updated: 2025-11-17 21:03:07 JST (Auto-generated)
 
 ## 🧪 Test Coverage
 
 | Category | Coverage |
 |----------|----------|
-| Statements | N/A% |
-| Branches | N/A% |
-| Functions | N/A% |
-| Lines | N/A% |
+| Statements | 12.5% |
+| Branches | 9.12% |
+| Functions | 7.88% |
+| Lines | 12.76% |
 
 ## 📦 Technology Stack
 
@@ -24,11 +24,9 @@ Last Updated: 2025-11-17 20:22:55 JST (Auto-generated)
 - ⭐ Stars: 1
 - 🐛 Open Issues: 7
 - 🔀 Open PRs: 0
-- 📝 Commits (30 days): 817
+- 📝 Commits (30 days): 821
 
 ## 🚀 Recent CI/CD Runs
-
-<!-- Auto-generated workflow status -->
 
 
 
@@ -36,15 +34,3 @@ Last Updated: 2025-11-17 20:22:55 JST (Auto-generated)
 
 *This report is automatically updated by GitHub Actions.*
 *Last workflow run: [View Details](https://github.com/is0692vs/Audicle/actions)*
-
-```json
-[{"name":"CI/CD Pipeline","status":null,"updated":"2025-11-17T11:22:55Z"},{"name":"Update Project Health Report","status":null,"updated":"2025-11-17T11:22:17Z"},{"name":"CI - PR (small matrix)","status":"success","updated":"2025-11-17T11:21:20Z"}]
-```
-
-```json
-[{"name":"CI/CD Pipeline","status":null,"updated":"2025-11-17T11:22:55Z"},{"name":"Update Project Health Report","status":null,"updated":"2025-11-17T11:22:17Z"},{"name":"CI - PR (small matrix)","status":"success","updated":"2025-11-17T11:21:20Z"}]
-```
-
-```json
-[{"name":"CI/CD Pipeline","status":null,"updated":"2025-11-17T11:22:55Z"},{"name":"Update Project Health Report","status":null,"updated":"2025-11-17T11:22:17Z"},{"name":"CI - PR (small matrix)","status":"success","updated":"2025-11-17T11:21:20Z"}]
-```
