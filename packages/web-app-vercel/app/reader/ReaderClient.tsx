@@ -207,7 +207,7 @@ export default function ReaderPageClient() {
         // ローカルストレージに保存（サーバーIDを優先）
         const newArticle = articleStorage.add({
           id: newArticleId || undefined, // サーバーIDがあれば使用
-  
+
           url: articleUrl,
           title: response.title,
           chunks: chunksWithId,
@@ -243,82 +243,90 @@ export default function ReaderPageClient() {
     [router, selectedPlaylistId, queryClient, userEmail, playlists]
   );
 
-    // サーバーから記事（IDまたはURLで指定）を取得してステートにセットし、localStorageに保存するヘルパー
-    const fetchArticleAndSetState = useCallback(
-      async ({ id, url: maybeUrl, titleFallback }: { id?: string; url?: string; titleFallback?: string }) => {
-        setIsLoading(true);
-        setError("");
-        try {
-          let resolvedUrl = maybeUrl;
-          let resolvedTitle = titleFallback || "";
-          const resolvedId = id || null;
+  // サーバーから記事（IDまたはURLで指定）を取得してステートにセットし、localStorageに保存するヘルパー
+  const fetchArticleAndSetState = useCallback(
+    async ({
+      id,
+      url: maybeUrl,
+      titleFallback,
+    }: {
+      id?: string;
+      url?: string;
+      titleFallback?: string;
+    }) => {
+      setIsLoading(true);
+      setError("");
+      try {
+        let resolvedUrl = maybeUrl;
+        let resolvedTitle = titleFallback || "";
+        const resolvedId = id || null;
 
-          // もしURLがなければ、IDからメタ情報を取得
-          if (!resolvedUrl && id) {
-            const res = await fetch(`/api/articles/${id}`);
-            if (!res.ok) {
-              logger.warn("記事取得APIに失敗しました", { status: res.status });
-              setError("記事が見つかりませんでした");
-              return;
-            }
-            const articleData = await res.json();
-            if (!articleData || !articleData.url) {
-              setError("記事情報が不完全です");
-              return;
-            }
-            resolvedUrl = articleData.url;
-            resolvedTitle = articleData.title || resolvedTitle;
-          }
-
-          if (!resolvedUrl) {
-            setError("記事のURLが不明です");
+        // もしURLがなければ、IDからメタ情報を取得
+        if (!resolvedUrl && id) {
+          const res = await fetch(`/api/articles/${id}`);
+          if (!res.ok) {
+            logger.warn("記事取得APIに失敗しました", { status: res.status });
+            setError("記事が見つかりませんでした");
             return;
           }
-
-          // 抽出APIでチャンクを取得
-          const extractRes = await fetch('/api/extract', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: resolvedUrl }),
-          });
-          if (!extractRes.ok) {
-            logger.error('抽出APIに失敗しました', { status: extractRes.status });
-            setError('記事の読み込みに失敗しました');
+          const articleData = await res.json();
+          if (!articleData || !articleData.url) {
+            setError("記事情報が不完全です");
             return;
           }
-          const data = await extractRes.json();
-          const chunksWithId = convertParagraphsToChunks(data.content);
-
-          setTitle(data.title || resolvedTitle || '');
-          setChunks(chunksWithId);
-          setUrl(resolvedUrl);
-          setArticleId(resolvedId);
-          hasInitiatedAutoplayRef.current = false;
-
-          // 保存
-          try {
-            articleStorage.upsert({
-              id: resolvedId ? resolvedId : undefined,
-              url: resolvedUrl,
-              title: data.title || resolvedTitle || '',
-              chunks: chunksWithId,
-            });
-          } catch (e) {
-            logger.error('localStorageへの保存に失敗しました', e);
-          }
-        } catch (err) {
-          logger.error('サーバーから記事取得に失敗', err);
-          setError('記事が見つかりませんでした');
-          setTitle('');
-          setChunks([]);
-          setUrl('');
-          setArticleId(null);
-        } finally {
-          setIsLoading(false);
+          resolvedUrl = articleData.url;
+          resolvedTitle = articleData.title || resolvedTitle;
         }
-      },
-      []
-    );
+
+        if (!resolvedUrl) {
+          setError("記事のURLが不明です");
+          return;
+        }
+
+        // 抽出APIでチャンクを取得
+        const extractRes = await fetch("/api/extract", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: resolvedUrl }),
+        });
+        if (!extractRes.ok) {
+          logger.error("抽出APIに失敗しました", { status: extractRes.status });
+          setError("記事の読み込みに失敗しました");
+          return;
+        }
+        const data = await extractRes.json();
+        const chunksWithId = convertParagraphsToChunks(data.content);
+
+        setTitle(data.title || resolvedTitle || "");
+        setChunks(chunksWithId);
+        setUrl(resolvedUrl);
+        setArticleId(resolvedId);
+        hasInitiatedAutoplayRef.current = false;
+
+        // 保存
+        try {
+          articleStorage.upsert({
+            id: resolvedId ? resolvedId : undefined,
+            url: resolvedUrl,
+            title: data.title || resolvedTitle || "",
+            chunks: chunksWithId,
+          });
+        } catch (e) {
+          logger.error("localStorageへの保存に失敗しました", e);
+        }
+      } catch (err) {
+        logger.error("サーバーから記事取得に失敗", err);
+        setError("記事が見つかりませんでした");
+        setTitle("");
+        setChunks([]);
+        setUrl("");
+        setArticleId(null);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
 
   // ユーザー設定を読み込む
   useEffect(() => {
@@ -391,9 +399,12 @@ export default function ReaderPageClient() {
         // 新しい記事が読み込まれたら、自動再生フラグをリセット
         hasInitiatedAutoplayRef.current = false;
       } else {
-        logger.warn("localStorageに記事が見つかりません。サーバーから取得を試みます", {
-          id: articleIdFromQuery,
-        });
+        logger.warn(
+          "localStorageに記事が見つかりません。サーバーから取得を試みます",
+          {
+            id: articleIdFromQuery,
+          }
+        );
         // localStorageに記事が見つからない場合、サーバーから取得してstateにセット
         fetchArticleAndSetState({ id: articleIdFromQuery });
       }
@@ -441,12 +452,19 @@ export default function ReaderPageClient() {
               chunkCount: article.chunks.length,
             });
           } else {
-            logger.warn("記事がlocalStorageに見つかりません。サーバーからフェッチします", {
-              articleId: item.article_id,
-            });
+            logger.warn(
+              "記事がlocalStorageに見つかりません。サーバーからフェッチします",
+              {
+                articleId: item.article_id,
+              }
+            );
 
             // localStorageに記事が見つからない場合、サーバーから取得してstateにセット
-            fetchArticleAndSetState({ id: item.article_id, url: item.article.url, titleFallback: item.article.title });
+            fetchArticleAndSetState({
+              id: item.article_id,
+              url: item.article.url,
+              titleFallback: item.article.title,
+            });
           }
         } else {
           logger.error("プレイリストにインデックスが存在しません", {
