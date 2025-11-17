@@ -1,35 +1,90 @@
 // @/lib/supabase モックを最初に定義
 jest.mock('@/lib/supabase', () => ({
     supabase: {
-        from: jest.fn(() => ({
-            select: jest.fn(() => ({
-                eq: jest.fn(() => ({
-                    order: jest.fn(() => ({
-                        order: jest.fn(() => Promise.resolve({
-                            data: [{
-                                id: '1',
-                                name: 'Test Playlist',
-                                owner_email: 'test@example.com',
-                                playlist_items: [{ count: 2 }]
-                            }],
-                            error: null
+        from: jest.fn((table: string) => {
+            // Mock different table call patterns
+            if (table === 'playlists') {
+                return {
+                    select: jest.fn(() => ({
+                        eq: jest.fn(() => ({
+                            in: jest.fn(() => ({
+                                order: jest.fn(() => ({
+                                    order: jest.fn(() => Promise.resolve({
+                                        data: [
+                                            {
+                                                id: '1',
+                                                name: 'Test Playlist',
+                                                owner_email: 'test@example.com',
+                                                playlist_items: [{ count: 2 }]
+                                            }
+                                        ],
+                                        error: null
+                                    }))
+                                }))
+                            })),
+                            // Single owner check
+                            single: jest.fn(() => Promise.resolve({
+                                data: { id: '1', owner_email: 'test@example.com' },
+                                error: null
+                            }))
+                        }))
+                    })),
+                    // For ownership check single()
+                    selectOwner: jest.fn(),
+                    // For playList update/insert
+                    insert: jest.fn(() => ({
+                        select: jest.fn(() => ({
+                            single: jest.fn(() => Promise.resolve({
+                                data: {
+                                    id: '1',
+                                    name: 'New Playlist',
+                                    owner_email: 'test@example.com'
+                                },
+                                error: null
+                            }))
+                        }))
+                    })),
+                }
+            }
+
+            if (table === 'playlist_items') {
+                return {
+                    select: jest.fn(() => ({
+                        eq: jest.fn(() => ({
+                            order: jest.fn(() => Promise.resolve({
+                                data: [
+                                    {
+                                        id: 'i1',
+                                        playlist_id: '1',
+                                        article_id: 'a1',
+                                        position: 1,
+                                        added_at: '2025-01-01T00:00:00Z',
+                                        article: { url: 'https://example.com' }
+                                    }
+                                ],
+                                error: null
+                            }))
                         }))
                     }))
-                }))
-            })),
-            insert: jest.fn(() => ({
+                }
+            }
+
+            // Default fallback for other calls
+            return {
                 select: jest.fn(() => ({
-                    single: jest.fn(() => Promise.resolve({
-                        data: {
-                            id: '1',
-                            name: 'New Playlist',
-                            owner_email: 'test@example.com'
-                        },
-                        error: null
+                    eq: jest.fn(() => ({
+                        order: jest.fn(() => ({
+                            order: jest.fn(() => Promise.resolve({ data: [], error: null }))
+                        }))
+                    }))
+                })),
+                insert: jest.fn(() => ({
+                    select: jest.fn(() => ({
+                        single: jest.fn(() => Promise.resolve({ data: null, error: null }))
                     }))
                 }))
-            }))
-        }))
+            }
+        })
     }
 }))
 
