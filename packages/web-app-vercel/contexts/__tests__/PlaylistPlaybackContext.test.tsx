@@ -79,10 +79,10 @@ describe("PlaylistPlaybackContext circular behavior", () => {
       await window.__test__.playNext();
     });
 
-    // Expect push to be called with playlistIndex=0
+    // Expect push to be called with index=0
     expect(pushMock).toHaveBeenCalled();
     const lastCall = pushMock.mock.calls[pushMock.mock.calls.length - 1][0];
-    expect(lastCall).toContain("playlistIndex=0");
+    expect(lastCall).toContain("index=0");
   });
 
   test("playPrevious wraps around to last item when at first index", async () => {
@@ -105,9 +105,9 @@ describe("PlaylistPlaybackContext circular behavior", () => {
       await window.__test__.playPrevious();
     });
 
-    // Expect push to be called with playlistIndex=2
+    // Expect push to be called with index=2
     expect(pushMock).toHaveBeenCalled();
     const lastCall = pushMock.mock.calls[pushMock.mock.calls.length - 1][0];
-    expect(lastCall).toContain("playlistIndex=2");
+    expect(lastCall).toContain("index=2");
   });
 });
