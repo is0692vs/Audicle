@@ -50,6 +50,7 @@
     "tailwind-merge": "^2.5.4"
   },
   "devDependencies": {
+    "prettier": "^3.6.2",
     "@eslint/eslintrc": "^3",
     "@playwright/test": "^1.45.0",
     "@serwist/next": "^10.0.0-preview.14",
