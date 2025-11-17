@@ -113,7 +113,7 @@ jobs:
 
       - name: "Acknowledge request"
         env:
-          GITHUB_TOKEN: "${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}"
+          GITHUB_TOKEN: "${{ github.token }}"
           ISSUE_NUMBER: "${{ github.event.pull_request.number || github.event.issue.number }}"
           REPOSITORY: "${{ github.repository }}"
         run: |-
@@ -142,7 +142,6 @@ jobs:
     uses: "./.github/workflows/gemini-review.yml"
     permissions:
       contents: "read"
-      id-token: "write"
       issues: "write"
       pull-requests: "write"
     with:
@@ -153,11 +152,10 @@ jobs:
   triage:
     needs: "dispatch"
     if: |-
-      ${{ needs.dispatch.outputs.command == 'triage' }}
-    uses: "./.github/workflows/gemini-triage.yml"
+      $ needs.dispatch.outputs.command == 'triage' && github.event.issue 
+    uses: "./.github/workflows/gemini-triage.yml" 
     permissions:
       contents: "read"
-      id-token: "write"
       issues: "write"
       pull-requests: "write"
     with:
@@ -172,7 +170,6 @@ jobs:
     uses: "./.github/workflows/gemini-invoke.yml"
     permissions:
       contents: "read"
-      id-token: "write"
       issues: "write"
       pull-requests: "write"
     with:
@@ -208,7 +205,7 @@ jobs:
 
       - name: "Send failure comment"
         env:
-          GITHUB_TOKEN: "${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}"
+          GITHUB_TOKEN: "${{ github.token }}"
           ISSUE_NUMBER: "${{ github.event.pull_request.number || github.event.issue.number }}"
           REPOSITORY: "${{ github.repository }}"
         run: |-

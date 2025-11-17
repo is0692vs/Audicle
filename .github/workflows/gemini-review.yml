@@ -30,7 +30,6 @@ jobs:
     timeout-minutes: 7
     permissions:
       contents: "read"
-      id-token: "write"
       issues: "write"
       pull-requests: "write"
     steps:
@@ -54,7 +53,7 @@ jobs:
         id: "gemini_pr_review"
         env:
           GEMINI_API_KEY: "${{ secrets.GEMINI_API_KEY }}"
-          GITHUB_TOKEN: "${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}"
+          GITHUB_TOKEN: "${{ github.token }}"
           ISSUE_TITLE: "${{ github.event.pull_request.title || github.event.issue.title }}"
           ISSUE_BODY: "${{ github.event.pull_request.body || github.event.issue.body }}"
           PULL_REQUEST_NUMBER: "${{ github.event.pull_request.number || github.event.issue.number }}"
