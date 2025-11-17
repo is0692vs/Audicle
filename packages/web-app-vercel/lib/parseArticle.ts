@@ -66,4 +66,4 @@ export function normalizeArticleText(content: string): string {
     return paragraphs.join('\n\n');
 }
 
-export default normalizeArticleText;
+// removed default export in favor of named export
