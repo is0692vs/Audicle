@@ -137,7 +137,7 @@ test.describe('Reader - Playlist related navigation', () => {
         // Click next and verify URL index increments and content changes
         const initialUrl = page.url();
         await next.click();
-        await page.waitForTimeout(500); // small pause for navigation
+        await page.waitForURL((url) => url.toString() !== initialUrl);
         const afterNextUrl = page.url();
         expect(afterNextUrl).not.toBe(initialUrl);
         expect(afterNextUrl).toContain('playlistIndex=');
