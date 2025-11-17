@@ -516,7 +516,12 @@ export async function POST(request: NextRequest) {
 
         // When not in production, include the original error message for easier
         // debugging. Do not include sensitive details in production.
-        const responseBody: any = { error: 'Failed to synthesize speech' };
+        interface SynthesizeErrorResponse {
+            error: string;
+            detail?: string;
+        }
+
+        const responseBody: SynthesizeErrorResponse = { error: 'Failed to synthesize speech' };
         if (process.env.NODE_ENV !== 'production' && error instanceof Error) {
             responseBody.detail = error.message;
         }
