@@ -12,7 +12,7 @@ jest.mock("next/navigation", () => ({ useRouter: () => ({ push: pushMock }) }));
 const TestComponent = () => {
   const ctx = usePlaylistPlayback();
   // Expose methods on window for test access
-  // @ts-ignore
+  // @ts-expect-error intentionally exposing internals for tests
   window.__test__ = ctx;
   return null;
 };
@@ -42,7 +42,7 @@ describe("PlaylistPlaybackContext circular behavior", () => {
 
     // initialize
     await act(async () => {
-      // @ts-ignore
+      // @ts-expect-error test harness: calling internal helper
       await window.__test__.startPlaylistPlayback(
         "pl-1",
         "My Playlist",
@@ -51,7 +51,7 @@ describe("PlaylistPlaybackContext circular behavior", () => {
       );
     });
 
-    // @ts-ignore
+    // @ts-expect-error test harness: reading internal flags
     const { canMovePrevious, canMoveNext, state } = window.__test__;
 
     expect(state.items.length).toBe(3);
@@ -68,14 +68,14 @@ describe("PlaylistPlaybackContext circular behavior", () => {
 
     await act(async () => {
       // start at last index
-      // @ts-ignore
+      // @ts-expect-error test harness: calling internal helper
       await window.__test__.startPlaylistPlayback(
         "pl-1",
         "My Playlist",
         sampleItems,
         2
       );
-      // @ts-ignore
+      // @ts-expect-error test harness: calling internal helper
       await window.__test__.playNext();
     });
 
@@ -94,14 +94,14 @@ describe("PlaylistPlaybackContext circular behavior", () => {
 
     await act(async () => {
       // start at first index
-      // @ts-ignore
+      // @ts-expect-error test harness: calling internal helper
       await window.__test__.startPlaylistPlayback(
         "pl-1",
         "My Playlist",
         sampleItems,
         0
       );
-      // @ts-ignore
+      // @ts-expect-error test harness: calling internal helper
       await window.__test__.playPrevious();
     });
 
