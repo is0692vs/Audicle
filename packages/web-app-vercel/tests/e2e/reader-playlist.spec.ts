@@ -144,7 +144,7 @@ test.describe('Reader - Playlist related navigation', () => {
 
         // Click previous and ensure we go back (circular behavior)
         await prev.click();
-        await page.waitForTimeout(500);
+        await page.waitForURL((url) => url.toString() !== afterNextUrl);
         const afterPrevUrl = page.url();
         expect(afterPrevUrl).not.toBe(afterNextUrl);
 
