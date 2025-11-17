@@ -55,22 +55,11 @@ export function normalizeArticleText(content: string): string {
             return;
         }
 
-        if (elem.matches('pre')) {
-            const codeText = elem.textContent?.trim();
-            if (codeText) paragraphs.push(codeText);
-            return;
+        // その他の要素は textContent を抽出
+        const text = elem.textContent?.trim();
+        if (text) {
+            paragraphs.push(text);
         }
-
-        // td / th はテーブルセルの中身を個別に抽出
-        if (elem.matches('td') || elem.matches('th') || elem.matches('figcaption') || elem.matches('li') || elem.matches('h1') || elem.matches('h2') || elem.matches('h3') || elem.matches('h4') || elem.matches('h5') || elem.matches('h6')) {
-            const text = elem.textContent?.trim();
-            if (text) paragraphs.push(text);
-            return;
-        }
-
-        // デフォルト（p 等）
-        const fallbackText = elem.textContent?.trim();
-        if (fallbackText) paragraphs.push(fallbackText);
     });
 
     // 段落間に空行を挿入
