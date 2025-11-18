@@ -25,7 +25,7 @@ import Sidebar from "@/components/Sidebar";
 type ArticleSortBy = "newest" | "oldest" | "title";
 
 // 追加: localStorage key定義
-const HOME_SORT_KEY = 'audicle-home-sort';
+const HOME_SORT_KEY = "audicle-home-sort";
 
 export default function Home() {
   const router = useRouter();
@@ -34,9 +34,11 @@ export default function Home() {
   const removeFromPlaylistMutation = useRemoveFromPlaylistMutation();
 
   const [sortBy, setSortBy] = useState<ArticleSortBy>(() => {
-    if (typeof window === 'undefined') return 'newest';
+    if (typeof window === "undefined") return "newest";
     const saved = localStorage.getItem(HOME_SORT_KEY);
-    return saved && ['newest', 'oldest', 'title'].includes(saved) ? saved as ArticleSortBy : 'newest';
+    return saved && ["newest", "oldest", "title"].includes(saved)
+      ? (saved as ArticleSortBy)
+      : "newest";
   });
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
@@ -64,7 +66,7 @@ export default function Home() {
 
   // 追加: sortBy変更時にlocalStorageに保存
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     localStorage.setItem(HOME_SORT_KEY, sortBy);
   }, [sortBy]);
 

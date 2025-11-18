@@ -20,7 +20,7 @@ export interface PlaylistPlaybackState {
   totalCount: number;
   isPlaylistMode: boolean;
   sortField: string | null;
-  sortOrder: 'asc' | 'desc' | null;
+  sortOrder: "asc" | "desc" | null;
 }
 
 export interface PlaylistPlaybackContextType {
@@ -53,17 +53,24 @@ const STORAGE_KEY = "audicle-playlist-playback";
 /**
  * SortOptionをfieldとorderにパース
  */
-function parseSortOption(sortOption: string | null): { field: string | null; order: 'asc' | 'desc' | null } {
+function parseSortOption(sortOption: string | null): {
+  field: string | null;
+  order: "asc" | "desc" | null;
+} {
   if (!sortOption) {
     return { field: null, order: null };
   }
   try {
     const parsed = JSON.parse(sortOption);
-    if (parsed && typeof parsed.field === 'string' && (parsed.order === 'asc' || parsed.order === 'desc')) {
+    if (
+      parsed &&
+      typeof parsed.field === "string" &&
+      (parsed.order === "asc" || parsed.order === "desc")
+    ) {
       return { field: parsed.field, order: parsed.order };
     }
   } catch (error) {
-    console.error('Failed to parse sort option:', error);
+    console.error("Failed to parse sort option:", error);
   }
   return { field: null, order: null };
 }
@@ -71,29 +78,33 @@ function parseSortOption(sortOption: string | null): { field: string | null; ord
 /**
  * アイテムをソート
  */
-function sortItems(items: PlaylistItemWithArticle[], field: string | null, order: 'asc' | 'desc' | null): PlaylistItemWithArticle[] {
+function sortItems(
+  items: PlaylistItemWithArticle[],
+  field: string | null,
+  order: "asc" | "desc" | null
+): PlaylistItemWithArticle[] {
   if (!field || !order) {
     return items;
   }
   return [...items].sort((a, b) => {
     let aValue: any, bValue: any;
-    if (field === 'title') {
+    if (field === "title") {
       aValue = a.article.title.toLowerCase();
       bValue = b.article.title.toLowerCase();
-    } else if (field === 'created_at') {
+    } else if (field === "created_at") {
       aValue = new Date(a.article.created_at).getTime();
       bValue = new Date(b.article.created_at).getTime();
-    } else if (field === 'updated_at') {
+    } else if (field === "updated_at") {
       aValue = new Date(a.article.updated_at).getTime();
       bValue = new Date(b.article.updated_at).getTime();
-    } else if (field === 'position') {
+    } else if (field === "position") {
       aValue = a.position;
       bValue = b.position;
     } else {
       return 0;
     }
-    if (aValue < bValue) return order === 'asc' ? -1 : 1;
-    if (aValue > bValue) return order === 'asc' ? 1 : -1;
+    if (aValue < bValue) return order === "asc" ? -1 : 1;
+    if (aValue > bValue) return order === "asc" ? 1 : -1;
     return 0;
   });
 }
@@ -431,16 +442,18 @@ export function PlaylistPlaybackProvider({
 
         // localStorageからsortオプションを読み込み
         const sortKey = `playlist-sort-${playlistId}`;
-        const savedSortOption = typeof window !== 'undefined' ? localStorage.getItem(sortKey) : null;
-        const { field: sortField, order: sortOrder } = parseSortOption(savedSortOption);
+        const savedSortOption =
+          typeof window !== "undefined" ? localStorage.getItem(sortKey) : null;
+        const { field: sortField, order: sortOrder } =
+          parseSortOption(savedSortOption);
 
         // APIにソートパラメータを渡す
         const queryParams = new URLSearchParams();
         if (sortField && sortOrder) {
-          queryParams.set('sortField', sortField);
-          queryParams.set('sortOrder', sortOrder);
+          queryParams.set("sortField", sortField);
+          queryParams.set("sortOrder", sortOrder);
         }
-        const apiUrl = `/api/playlists/${playlistId}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+        const apiUrl = `/api/playlists/${playlistId}${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
         const res = await fetch(apiUrl);
         if (!res.ok) {
