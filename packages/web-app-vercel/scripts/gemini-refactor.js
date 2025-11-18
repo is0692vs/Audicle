@@ -22,9 +22,14 @@ function getChangedFiles() {
     .map((line) => {
       const match = line.trim().match(/^(\d+)\s+(.+)$/);
       if (match) {
+        let filePath = match[2];
+        // working-directoryがpackages/web-app-vercelなので、プレフィックスを削除
+        if (filePath.startsWith('packages/web-app-vercel/')) {
+          filePath = filePath.replace('packages/web-app-vercel/', '');
+        }
         return {
           count: parseInt(match[1], 10),
-          path: match[2],
+          path: filePath,
         };
       }
       return null;
