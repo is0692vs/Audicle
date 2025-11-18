@@ -123,11 +123,11 @@ test.describe('Reader - Playlist related navigation', () => {
         expect(afterNextUrl).not.toBe(initialUrl);
         expect(afterNextUrl).toContain('index=');
 
-        // Click previous and ensure we go back (circular behavior)
+        // Click previous and ensure we go back to the initial article
         await prev.click();
         await page.waitForURL((url) => url.toString() !== afterNextUrl);
         const afterPrevUrl = page.url();
-        expect(afterPrevUrl).not.toBe(afterNextUrl);
+        expect(afterPrevUrl).toBe(initialUrl);
 
         // cleanup
         await page.request.delete(`/api/playlists/${created3.id}`);
