@@ -19,6 +19,8 @@ export interface PlaylistPlaybackState {
   items: PlaylistItemWithArticle[];
   totalCount: number;
   isPlaylistMode: boolean;
+  sortField: string | null;
+  sortOrder: 'asc' | 'desc' | null;
 }
 
 export interface PlaylistPlaybackContextType {
@@ -49,8 +51,52 @@ const PlaylistPlaybackContext = createContext<
 const STORAGE_KEY = "audicle-playlist-playback";
 
 /**
- * プレイリスト再生状態をlocalStorageに保存
+ * SortOptionをfieldとorderにパース
  */
+function parseSortOption(sortOption: string | null): { field: string | null; order: 'asc' | 'desc' | null } {
+  if (!sortOption) {
+    return { field: null, order: null };
+  }
+  try {
+    const parsed = JSON.parse(sortOption);
+    if (parsed && typeof parsed.field === 'string' && (parsed.order === 'asc' || parsed.order === 'desc')) {
+      return { field: parsed.field, order: parsed.order };
+    }
+  } catch (error) {
+    console.error('Failed to parse sort option:', error);
+  }
+  return { field: null, order: null };
+}
+
+/**
+ * アイテムをソート
+ */
+function sortItems(items: PlaylistItemWithArticle[], field: string | null, order: 'asc' | 'desc' | null): PlaylistItemWithArticle[] {
+  if (!field || !order) {
+    return items;
+  }
+  return [...items].sort((a, b) => {
+    let aValue: any, bValue: any;
+    if (field === 'title') {
+      aValue = a.article.title.toLowerCase();
+      bValue = b.article.title.toLowerCase();
+    } else if (field === 'created_at') {
+      aValue = new Date(a.article.created_at).getTime();
+      bValue = new Date(b.article.created_at).getTime();
+    } else if (field === 'updated_at') {
+      aValue = new Date(a.article.updated_at).getTime();
+      bValue = new Date(b.article.updated_at).getTime();
+    } else if (field === 'position') {
+      aValue = a.position;
+      bValue = b.position;
+    } else {
+      return 0;
+    }
+    if (aValue < bValue) return order === 'asc' ? -1 : 1;
+    if (aValue > bValue) return order === 'asc' ? 1 : -1;
+    return 0;
+  });
+}
 function savePlaybackState(state: PlaylistPlaybackState): void {
   if (typeof window !== "undefined") {
     try {
@@ -63,6 +109,8 @@ function savePlaybackState(state: PlaylistPlaybackState): void {
           items: state.items,
           totalCount: state.totalCount,
           isPlaylistMode: state.isPlaylistMode,
+          sortField: state.sortField,
+          sortOrder: state.sortOrder,
         })
       );
     } catch (error) {
@@ -102,6 +150,8 @@ export function PlaylistPlaybackProvider({
       items: saved?.items || [],
       totalCount: saved?.totalCount || 0,
       isPlaylistMode: saved?.isPlaylistMode || false,
+      sortField: saved?.sortField || null,
+      sortOrder: saved?.sortOrder || null,
     };
   });
 
@@ -130,6 +180,8 @@ export function PlaylistPlaybackProvider({
         items,
         totalCount: items.length,
         isPlaylistMode: true,
+        sortField: null,
+        sortOrder: null,
       });
 
       // 最初の記事に遷移（自動再生フラグ付き）
@@ -242,6 +294,8 @@ export function PlaylistPlaybackProvider({
       items: [],
       totalCount: 0,
       isPlaylistMode: false,
+      sortField: null,
+      sortOrder: null,
     });
   }, []);
 
@@ -362,6 +416,8 @@ export function PlaylistPlaybackProvider({
         items,
         totalCount: items.length,
         isPlaylistMode: true,
+        sortField: null,
+        sortOrder: null,
       });
     } catch (error) {
       logger.error("プレイリスト初期化エラー", error);
@@ -372,7 +428,21 @@ export function PlaylistPlaybackProvider({
     async (playlistId: string, startIndex: number = 0) => {
       try {
         logger.info("プレイリストをIDから初期化", { playlistId });
-        const res = await fetch(`/api/playlists/${playlistId}`);
+
+        // localStorageからsortオプションを読み込み
+        const sortKey = `playlist-sort-${playlistId}`;
+        const savedSortOption = typeof window !== 'undefined' ? localStorage.getItem(sortKey) : null;
+        const { field: sortField, order: sortOrder } = parseSortOption(savedSortOption);
+
+        // APIにソートパラメータを渡す
+        const queryParams = new URLSearchParams();
+        if (sortField && sortOrder) {
+          queryParams.set('sortField', sortField);
+          queryParams.set('sortOrder', sortOrder);
+        }
+        const apiUrl = `/api/playlists/${playlistId}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+
+        const res = await fetch(apiUrl);
         if (!res.ok) {
           logger.warn("プレイリスト取得失敗", {
             playlistId,
@@ -399,6 +469,8 @@ export function PlaylistPlaybackProvider({
           items,
           totalCount: items.length,
           isPlaylistMode: true,
+          sortField,
+          sortOrder,
         });
       } catch (error) {
         logger.error("initializeFromPlaylist error", error);

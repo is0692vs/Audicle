@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { logger } from "@/lib/logger";
@@ -24,13 +24,20 @@ import Sidebar from "@/components/Sidebar";
 
 type ArticleSortBy = "newest" | "oldest" | "title";
 
+// 追加: localStorage key定義
+const HOME_SORT_KEY = 'audicle-home-sort';
+
 export default function Home() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: playlistData, isLoading, error } = useDefaultPlaylistItems();
   const removeFromPlaylistMutation = useRemoveFromPlaylistMutation();
 
-  const [sortBy, setSortBy] = useState<ArticleSortBy>("newest");
+  const [sortBy, setSortBy] = useState<ArticleSortBy>(() => {
+    if (typeof window === 'undefined') return 'newest';
+    const saved = localStorage.getItem(HOME_SORT_KEY);
+    return saved && ['newest', 'oldest', 'title'].includes(saved) ? saved as ArticleSortBy : 'newest';
+  });
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
 
@@ -54,6 +61,12 @@ export default function Home() {
       }
     });
   }, [items, sortBy]);
+
+  // 追加: sortBy変更時にlocalStorageに保存
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(HOME_SORT_KEY, sortBy);
+  }, [sortBy]);
 
   const selectedItem = useMemo(
     () => items.find((item) => item.article_id === selectedItemId),

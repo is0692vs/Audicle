@@ -1,7 +1,12 @@
 import { test, expect } from '@playwright/test';
 import { mockArticles } from '../helpers/testData';
+import { clearLocalStorage } from '../helpers/testSetup';
 
 test.describe('Reader - Playlist related navigation', () => {
+  // 各テスト前にlocalStorageをクリア
+  test.beforeEach(async ({ page }) => {
+    await clearLocalStorage(page);
+  });
     test('Playlist detail -> reader contains playlist query and prev/next visible', async ({ page }) => {
         // create a playlist and add two articles via page.request
         const createResp = await page.request.post('/api/playlists', {
