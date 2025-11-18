@@ -3,10 +3,6 @@ import { mockArticles } from '../helpers/testData';
 import { clearLocalStorage } from '../helpers/testSetup';
 
 test.describe('Reader layout and controls', () => {
-    // 各テスト前にlocalStorageをクリア
-    test.beforeEach(async ({ page }) => {
-        await clearLocalStorage(page);
-    });
     test('Desktop: bottom-fixed controls and PlaybackSpeedDial modal', async ({ page }) => {
         await page.goto('/reader');
 

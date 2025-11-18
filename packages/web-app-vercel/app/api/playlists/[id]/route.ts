@@ -16,7 +16,7 @@ export async function GET(
         const sortOrder = searchParams.get('sortOrder')
 
         // ソートパラメータの検証
-        const validSortFields = ['position', 'title', 'created_at', 'updated_at']
+        const validSortFields = ['position', 'title', 'created_at', 'updated_at', 'added_at']
         const validSortOrders = ['asc', 'desc']
         const field = validSortFields.includes(sortField || '') ? sortField : 'position'
         const order = validSortOrders.includes(sortOrder || '') ? sortOrder as 'asc' | 'desc' : 'asc'
@@ -47,6 +47,8 @@ export async function GET(
             query.order('created_at', { foreignTable: 'playlist_items.article', ascending: order === 'asc' })
         } else if (field === 'updated_at') {
             query.order('updated_at', { foreignTable: 'playlist_items.article', ascending: order === 'asc' })
+        } else if (field === 'added_at') {
+            query.order('added_at', { foreignTable: 'playlist_items', ascending: order === 'asc' })
         }
 
         const { data: playlist, error: playlistError } = await query.single()
