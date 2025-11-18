@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { mockArticles } from '../helpers/testData';
+import { clearLocalStorage } from '../helpers/testSetup';
 
 test.describe('Reader - Playlist related navigation', () => {
     test('Playlist detail -> reader contains playlist query and prev/next visible', async ({ page }) => {

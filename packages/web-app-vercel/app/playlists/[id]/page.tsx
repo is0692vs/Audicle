@@ -35,6 +35,9 @@ const SORT_OPTIONS = {
   url: "URL順",
 } as const;
 
+// 追加: localStorage key定義
+const PLAYLIST_SORT_KEY = "audicle-playlist-sort";
+
 // 型ガード関数
 function isSortOption(value: string): value is SortOption {
   return value in SORT_OPTIONS;
@@ -56,7 +59,12 @@ export default function PlaylistDetailPage() {
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const [selectedArticleId, setSelectedArticleId] = useState<string>("");
   const [selectedArticleTitle, setSelectedArticleTitle] = useState<string>("");
-  const [sortOption, setSortOption] = useState<SortOption>("position");
+  // 追加: 初期値をlocalStorageから復元
+  const [sortOption, setSortOption] = useState<SortOption>(() => {
+    if (typeof window === "undefined") return "position";
+    const saved = localStorage.getItem(`${PLAYLIST_SORT_KEY}-${playlistId}`);
+    return saved && isSortOption(saved) ? saved : "position";
+  });
   const { showConfirm, confirmDialog } = useConfirmDialog();
 
   const sortedItems = useMemo(() => {
@@ -85,6 +93,12 @@ export default function PlaylistDetailPage() {
       setEditDescription(playlist.description || "");
     }
   }, [playlist, isEditing]);
+
+  // 追加: sortOption変更時にlocalStorageに保存
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(`${PLAYLIST_SORT_KEY}-${playlistId}`, sortOption);
+  }, [sortOption, playlistId]);
 
   const handleSave = async () => {
     if (!playlist) return;

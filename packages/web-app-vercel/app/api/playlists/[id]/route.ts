@@ -11,9 +11,18 @@ export async function GET(
         const { userEmail, response } = await requireAuth()
         if (response) return response
         const { id } = await params
+        const { searchParams } = new URL(request.url)
+        const sortField = searchParams.get('sortField')
+        const sortOrder = searchParams.get('sortOrder')
+
+        // ソートパラメータの検証
+        const validSortFields = ['position', 'title', 'created_at', 'updated_at', 'added_at']
+        const validSortOrders = ['asc', 'desc']
+        const field = validSortFields.includes(sortField || '') ? sortField : 'position'
+        const order = validSortOrders.includes(sortOrder || '') ? sortOrder as 'asc' | 'desc' : 'asc'
 
         // プレイリスト情報とアイテムを1つのクエリで取得
-        const { data: playlist, error: playlistError } = await supabase
+        const query = supabase
             .from('playlists')
             .select(`
         *,
@@ -28,8 +37,21 @@ export async function GET(
       `)
             .eq('id', id)
             .eq('owner_email', userEmail)
-            .order('position', { foreignTable: 'playlist_items', ascending: true })
-            .single()
+
+        // ソート適用
+        if (field === 'position') {
+            query.order('position', { foreignTable: 'playlist_items', ascending: order === 'asc' })
+        } else if (field === 'title') {
+            query.order('title', { foreignTable: 'playlist_items.article', ascending: order === 'asc' })
+        } else if (field === 'created_at') {
+            query.order('created_at', { foreignTable: 'playlist_items.article', ascending: order === 'asc' })
+        } else if (field === 'updated_at') {
+            query.order('updated_at', { foreignTable: 'playlist_items.article', ascending: order === 'asc' })
+        } else if (field === 'added_at') {
+            query.order('added_at', { foreignTable: 'playlist_items', ascending: order === 'asc' })
+        }
+
+        const { data: playlist, error: playlistError } = await query.single()
 
         if (playlistError) {
             console.error('Supabase error:', playlistError)
