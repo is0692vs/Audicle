@@ -57,7 +57,24 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: refactor/gemini-vercel-${{ github.run_number }}
           title: "🤖 週次リファクタリング提案（Gemini AI - Vercel版）"
-          body-path: packages/web-app-vercel/refactor-suggestions.md
+          body: |
+            ## 📊 Gemini AIによるリファクタリング提案
+
+            詳細な提案内容は以下のファイルをご確認ください：
+            - `packages/web-app-vercel/refactor-suggestions.md`
+
+            ### 分析対象
+            - 直近1週間で変更があったファイル
+            - 複雑度スコアが高い上位ファイル
+
+            ### 確認方法
+
+            ```bash
+            cat packages/web-app-vercel/refactor-suggestions.md
+            ```
+
+            ---
+            自動生成 by Gemini 1.5 Flash
           commit-message: "refactor(vercel): apply Gemini suggestions"
           labels: refactoring, automated, vercel
           base: main
