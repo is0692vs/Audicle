@@ -60,54 +60,22 @@ function parseSortOption(sortOption: string | null): {
   if (!sortOption) {
     return { field: null, order: null };
   }
-  try {
-    const parsed = JSON.parse(sortOption);
-    if (
-      parsed &&
-      typeof parsed.field === "string" &&
-      (parsed.order === "asc" || parsed.order === "desc")
-    ) {
-      return { field: parsed.field, order: parsed.order };
-    }
-  } catch (error) {
-    console.error("Failed to parse sort option:", error);
+  
+  // 文字列形式に対応
+  switch (sortOption) {
+    case 'position':
+      return { field: 'position', order: 'asc' };
+    case 'title':
+      return { field: 'title', order: 'asc' };
+    case 'added_at':
+      return { field: 'added_at', order: 'desc' };
+    case 'url':
+      return { field: 'url', order: 'asc' };
+    default:
+      return { field: null, order: null };
   }
-  return { field: null, order: null };
 }
 
-/**
- * アイテムをソート
- */
-function sortItems(
-  items: PlaylistItemWithArticle[],
-  field: string | null,
-  order: "asc" | "desc" | null
-): PlaylistItemWithArticle[] {
-  if (!field || !order) {
-    return items;
-  }
-  return [...items].sort((a, b) => {
-    let aValue: any, bValue: any;
-    if (field === "title") {
-      aValue = a.article.title.toLowerCase();
-      bValue = b.article.title.toLowerCase();
-    } else if (field === "created_at") {
-      aValue = new Date(a.article.created_at).getTime();
-      bValue = new Date(b.article.created_at).getTime();
-    } else if (field === "updated_at") {
-      aValue = new Date(a.article.updated_at).getTime();
-      bValue = new Date(b.article.updated_at).getTime();
-    } else if (field === "position") {
-      aValue = a.position;
-      bValue = b.position;
-    } else {
-      return 0;
-    }
-    if (aValue < bValue) return order === "asc" ? -1 : 1;
-    if (aValue > bValue) return order === "asc" ? 1 : -1;
-    return 0;
-  });
-}
 function savePlaybackState(state: PlaylistPlaybackState): void {
   if (typeof window !== "undefined") {
     try {
@@ -441,7 +409,7 @@ export function PlaylistPlaybackProvider({
         logger.info("プレイリストをIDから初期化", { playlistId });
 
         // localStorageからsortオプションを読み込み
-        const sortKey = `playlist-sort-${playlistId}`;
+        const sortKey = `audicle-playlist-sort-${playlistId}`;
         const savedSortOption =
           typeof window !== "undefined" ? localStorage.getItem(sortKey) : null;
         const { field: sortField, order: sortOrder } =

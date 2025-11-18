@@ -4,6 +4,8 @@ import { Page } from '@playwright/test';
  * localStorageをクリアする
  */
 export async function clearLocalStorage(page: Page) {
+    // ページがロードされるまで待機
+    await page.goto('about:blank');
     await page.evaluate(() => localStorage.clear());
 }
 
