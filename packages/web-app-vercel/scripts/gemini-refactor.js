@@ -88,6 +88,8 @@ function calculateCyclomaticComplexity(sourceFile) {
       kind === ts.SyntaxKind.DoStatement ||
       kind === ts.SyntaxKind.CatchClause ||
       (kind === ts.SyntaxKind.BinaryExpression &&
+        node.getOperatorToken &&
+        typeof node.getOperatorToken === 'function' &&
         (node.getOperatorToken().getKind() ===
           ts.SyntaxKind.AmpersandAmpersandToken ||
           node.getOperatorToken().getKind() === ts.SyntaxKind.BarBarToken))
@@ -107,7 +109,7 @@ async function generateRefactoringSuggestions(files, maxFiles) {
 
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash-exp",
+    model: "gemini-1.5-flash", // 安定版に変更
   });
 
   const topFiles = files.slice(0, Math.min(maxFiles, files.length));
