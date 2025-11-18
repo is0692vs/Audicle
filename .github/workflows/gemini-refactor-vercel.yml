@@ -1,0 +1,63 @@
+name: Gemini Refactoring Suggestions (Vercel版)
+
+on:
+  schedule:
+    - cron: '0 1 * * 1'  # 毎週月曜10時（JST = UTC+9なので01:00 UTC）
+  workflow_dispatch:  # 手動実行も可能
+    inputs:
+      max_files:
+        description: '最大ファイル数'
+        required: false
+        default: '15'
+
+jobs:
+  refactor-suggest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: packages/web-app-vercel
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 全Git履歴を取得（git logで1週間分の履歴が必要）
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: packages/web-app-vercel/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Gemini refactoring analysis
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          MAX_FILES: ${{ github.event.inputs.max_files || '15' }}
+        run: |
+          node scripts/gemini-refactor.js
+
+      - name: Check if suggestions exist
+        id: check
+        run: |
+          if [ -f refactor-suggestions.md ]; then
+            echo "has_suggestions=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_suggestions=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.check.outputs.has_suggestions == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: refactor/gemini-vercel-${{ github.run_number }}
+          title: "🤖 週次リファクタリング提案（Gemini AI - Vercel版）"
+          body-path: packages/web-app-vercel/refactor-suggestions.md
+          commit-message: "refactor(vercel): apply Gemini suggestions"
+          labels: refactoring, automated, vercel
+          base: main
