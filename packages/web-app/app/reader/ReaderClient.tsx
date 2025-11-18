@@ -80,8 +80,8 @@ export default function ReaderPageClient() {
         title: newArticle.title,
       });
 
-      // URLに記事IDを追加
-      router.push(`/reader?id=${newArticle.id}`);
+      // URLに記事URLを追加（idではなくurlを使う）
+      router.push(`/reader?url=${encodeURIComponent(newArticle.url)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "エラーが発生しました");
       logger.error("記事の抽出に失敗", err);
@@ -254,7 +254,11 @@ function DesktopAudioControls({
               isPlaybackLoading ? "処理中..." : isPlaying ? "一時停止" : "再生"
             }
           >
-{isPlaying ? <Pause className="size-5" /> : <Play className="size-5" />}
+            {isPlaying ? (
+              <Pause className="size-5" />
+            ) : (
+              <Play className="size-5" />
+            )}
           </button>
         </div>
 

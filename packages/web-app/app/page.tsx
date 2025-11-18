@@ -77,7 +77,11 @@ export default function Home() {
                 <div className="flex items-start justify-between gap-4">
                   <div
                     className="flex-1 cursor-pointer"
-                    onClick={() => router.push(`/reader?id=${article.id}`)}
+                    onClick={() =>
+                      router.push(
+                        `/reader?url=${encodeURIComponent(article.url)}`
+                      )
+                    }
                   >
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                       {article.title}
