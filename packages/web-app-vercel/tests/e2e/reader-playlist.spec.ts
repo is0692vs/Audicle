@@ -121,7 +121,7 @@ test.describe('Reader - Playlist related navigation', () => {
         await page.waitForURL((url) => url.toString() !== initialUrl);
         const afterNextUrl = page.url();
         expect(afterNextUrl).not.toBe(initialUrl);
-        expect(afterNextUrl).toContain('playlistIndex=');
+        expect(afterNextUrl).toContain('index=');
 
         // Click previous and ensure we go back (circular behavior)
         await prev.click();
