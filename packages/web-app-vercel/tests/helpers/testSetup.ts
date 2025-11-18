@@ -4,12 +4,12 @@ import { Page } from '@playwright/test';
  * localStorageをクリアする（ページ遷移後に呼び出す）
  */
 export async function clearLocalStorage(page: Page) {
-  try {
-    await page.evaluate(() => localStorage.clear());
-  } catch (error) {
-    // localStorageアクセスできない場合は無視（デフォルト値が使われる）
-    console.warn('localStorage clear failed:', error);
-  }
+    try {
+        await page.evaluate(() => localStorage.clear());
+    } catch (error) {
+        // localStorageアクセスできない場合は無視（デフォルト値が使われる）
+        console.warn('localStorage clear failed:', error);
+    }
 }
 
 /**
