@@ -234,9 +234,11 @@ export default function ReaderPageClient() {
         // URLに記事IDを追加（サーバーIDがあればそれを優先）
         // プレイリスト周りのクエリがある場合は維持しておく
         const redirectUrl = createReaderUrl({
-          articleId: newArticleId || newArticle.id,
+          articleUrl: articleUrl,
           playlistId: playlistIdFromQuery || selectedPlaylistId || undefined,
-          playlistIndex: indexFromQuery ? parseInt(indexFromQuery, 10) : undefined,
+          playlistIndex: indexFromQuery
+            ? parseInt(indexFromQuery, 10)
+            : undefined,
           autoplay: autoplayFromQuery,
         });
         router.push(redirectUrl);
@@ -516,7 +518,7 @@ export default function ReaderPageClient() {
         setArticleId(existingArticle.id);
         // URLSearchParamsを使用して安全にURLを生成
         const readerUrl = createReaderUrl({
-          articleId: existingArticle.id,
+          articleUrl: existingArticle.url,
           playlistId: playlistIdFromQuery || undefined,
           playlistIndex: indexFromQuery
             ? parseInt(indexFromQuery, 10)
