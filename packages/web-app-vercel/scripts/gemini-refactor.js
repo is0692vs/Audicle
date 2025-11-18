@@ -24,8 +24,8 @@ function getChangedFiles() {
       if (match) {
         let filePath = match[2];
         // working-directoryがpackages/web-app-vercelなので、プレフィックスを削除
-        if (filePath.startsWith('packages/web-app-vercel/')) {
-          filePath = filePath.replace('packages/web-app-vercel/', '');
+        if (filePath.startsWith("packages/web-app-vercel/")) {
+          filePath = filePath.replace("packages/web-app-vercel/", "");
         }
         return {
           count: parseInt(match[1], 10),
@@ -89,7 +89,7 @@ function calculateCyclomaticComplexity(sourceFile) {
       kind === ts.SyntaxKind.CatchClause ||
       (kind === ts.SyntaxKind.BinaryExpression &&
         node.getOperatorToken &&
-        typeof node.getOperatorToken === 'function' &&
+        typeof node.getOperatorToken === "function" &&
         (node.getOperatorToken().getKind() ===
           ts.SyntaxKind.AmpersandAmpersandToken ||
           node.getOperatorToken().getKind() === ts.SyntaxKind.BarBarToken))
@@ -109,7 +109,7 @@ async function generateRefactoringSuggestions(files, maxFiles) {
 
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   const model = genAI.getGenerativeModel({
-    model: "gemini-1.5-flash", // 安定版に変更
+    model: "gemini-2.5-flash", // 安定版に変更
   });
 
   const topFiles = files.slice(0, Math.min(maxFiles, files.length));
