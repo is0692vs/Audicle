@@ -231,8 +231,15 @@ export default function ReaderPageClient() {
           logger.success("ホームのキャッシュを無効化しました");
         }
 
-        // URLに記事IDを追加（サーバーIDを優先）
-        router.push(`/reader?id=${newArticleId || newArticle.id}`);
+        // URLに記事IDを追加（サーバーIDがあればそれを優先）
+        // プレイリスト周りのクエリがある場合は維持しておく
+        const redirectUrl = createReaderUrl({
+          articleId: newArticleId || newArticle.id,
+          playlistId: playlistIdFromQuery || selectedPlaylistId || undefined,
+          playlistIndex: indexFromQuery ? parseInt(indexFromQuery, 10) : undefined,
+          autoplay: autoplayFromQuery,
+        });
+        router.push(redirectUrl);
       } catch (err) {
         setError(err instanceof Error ? err.message : "エラーが発生しました");
         logger.error("記事の抽出に失敗", err);
