@@ -7,7 +7,7 @@ const ts = require("typescript");
 
 function getChangedFiles() {
   const gitCommand = `
-    git log --since="1 week ago" --name-only --pretty=format: -- packages/web-app-vercel/ |
+    git log --since="1 week ago" --name-only --pretty=format: -- . |
     grep -E '\\.tsx?$' |
     grep -v -E '\\.(test|spec)\\.tsx?$' |
     sort | uniq -c | sort -rn
