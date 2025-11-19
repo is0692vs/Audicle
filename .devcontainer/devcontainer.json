@@ -44,7 +44,8 @@
         "ritwickdey.LiveServer",
         "ms-vscode.vscode-websearchforcopilot",
         "Supabase.vscode-supabase-extension",
-        "ms-playwright.playwright"
+        "ms-playwright.playwright",
+        "HirokiMukai.jules-extension"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",

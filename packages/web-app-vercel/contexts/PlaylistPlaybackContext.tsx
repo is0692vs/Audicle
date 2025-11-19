@@ -10,6 +10,7 @@ import React, {
 import { useRouter } from "next/navigation";
 import { createReaderUrl } from "@/lib/urlBuilder";
 import { STORAGE_KEYS } from "@/lib/constants";
+import { logger } from "@/lib/logger";
 
 export interface PlaylistPlaybackState {
   playlistId: string | null;
@@ -406,7 +407,7 @@ export function PlaylistPlaybackProvider({
         logger.info("プレイリストをIDから初期化", { playlistId });
 
         // localStorageからsortオプションを読み込み
-        const sortKey = `audicle-playlist-sort-${playlistId}`;
+        const sortKey = `${STORAGE_KEYS.PLAYLIST_SORT_PREFIX}${playlistId}`;
         const savedSortOption =
           typeof window !== "undefined" ? localStorage.getItem(sortKey) : null;
         const { field: sortField, order: sortOrder } =

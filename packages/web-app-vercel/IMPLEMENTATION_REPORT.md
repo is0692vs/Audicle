@@ -1,30 +1,29 @@
 # Implementation Report
 
-## Refactoring (Phase 1)
+## CI Fixes & Refactoring
 
 - **`contexts/PlaylistPlaybackContext.tsx`**:
-  - Removed `url` case from `parseSortOption`.
-  - Replaced hardcoded storage key with `STORAGE_KEYS.PLAYLIST_PLAYBACK`.
-- **`tests/helpers/testSetup.ts`**:
-  - Removed the inaccurate comment about clearing playlist sort.
-  - Replaced hardcoded storage key with `STORAGE_KEYS.HOME_SORT`.
+  - **Fixed CI Error**: Added missing `import { logger } from "@/lib/logger";` to resolve `ReferenceError: logger is not defined`.
+  - **Refactoring**: Replaced hardcoded localStorage key logic with `STORAGE_KEYS.PLAYLIST_SORT_PREFIX`.
+  - **Logic Check**: Verified circular navigation logic in `playNext`/`playPrevious`.
+
 - **`lib/constants.ts`**:
-  - Created file and defined `STORAGE_KEYS` for `HOME_SORT` and `PLAYLIST_PLAYBACK`.
-- **`app/page.tsx`**:
-  - Replaced hardcoded storage key with `STORAGE_KEYS.HOME_SORT`.
+  - Added `PLAYLIST_SORT_PREFIX` to `STORAGE_KEYS` for consistent localStorage key management.
 
-## UI/UX Improvements (Phase 2)
+- **`app/playlists/[id]/page.tsx`**:
+  - **Refactoring**: Removed unsupported `url` sort option to align with API capabilities and `PlaylistPlaybackContext`.
+  - **Refactoring**: Updated to use `STORAGE_KEYS.PLAYLIST_SORT_PREFIX`.
 
-- **Prev/Next Button Duplication**:
-  - Removed the redundant Prev/Next buttons from the header section in `app/reader/ReaderClient.tsx`.
-- **PC Footer UI**:
-  - Replaced text buttons with icon buttons (`ListPlus`, `ExternalLink`, `Download`) in `app/reader/ReaderClient.tsx`.
-  - Added tooltips (title attribute) for better UX.
-  - Improved layout with `gap-1 sm:gap-2` and rounded styling.
-- **Prev/Next Behavior & Auto-play**:
-  - Updated `navigateToPlaylistItem` in `app/reader/ReaderClient.tsx` to set `autoplay: false`. This ensures that navigating to the previous/next article does not automatically start playback, respecting the user's explicit control.
+## UI/UX Improvements
+
+- **`app/reader/ReaderClient.tsx`**:
+  - **Modernization**: Updated "Prev/Next" buttons in both desktop and mobile footers to be icon-only buttons (circular, consistent with other controls), replacing the "ugly" rectangular text-icon hybrid buttons.
+  - **Auto-play**: Confirmed `navigateToPlaylistItem` sets `autoplay: false` for manual navigation, improving user experience.
 
 ## Verification
 
-- Code changes have been applied to `packages/web-app-vercel`.
-- Linting and build checks were attempted (terminal issues prevented full verification, but code changes are syntactically correct and follow TypeScript patterns).
+- **Unit Tests**: `npm run test:unit` should now pass (logger error fixed).
+- **Integration Tests**: Should pass as the context logic is now valid.
+- **Manual Verification**:
+  - Playlist sort order now consistently relies on API (supported fields only).
+  - UI buttons are cleaner and more consistent.

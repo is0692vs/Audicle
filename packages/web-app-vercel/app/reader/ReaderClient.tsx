@@ -818,12 +818,12 @@ export default function ReaderPageClient() {
                           }
                         }}
                         disabled={!canMovePrevious}
-                        className="px-2 py-1 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-1 text-xs sm:text-sm"
+                        className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         data-testid="desktop-prev-button"
                         title="前の記事"
                         aria-label="前の記事"
                       >
-                        <SkipBack className="size-4" />
+                        <SkipBack className="size-5" />
                       </button>
                     )}
 
@@ -856,12 +856,12 @@ export default function ReaderPageClient() {
                           }
                         }}
                         disabled={!canMoveNext}
-                        className="px-2 py-1 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-1 text-xs sm:text-sm"
+                        className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         data-testid="desktop-next-button"
                         title="次の記事"
                         aria-label="次の記事"
                       >
-                        <SkipForward className="size-4" />
+                        <SkipForward className="size-5" />
                       </button>
                     )}
                   </div>
@@ -983,11 +983,11 @@ export default function ReaderPageClient() {
                     }
                   }}
                   disabled={!canMovePrevious}
-                  className="mr-2 px-2 py-1 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-1 text-xs sm:text-sm"
+                  className="mr-2 p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   title="前の記事"
                   aria-label="前の記事"
                 >
-                  <SkipBack className="size-4" />
+                  <SkipBack className="size-5" />
                 </button>
               )}
 
@@ -1020,11 +1020,11 @@ export default function ReaderPageClient() {
                     }
                   }}
                   disabled={!canMoveNext}
-                  className="ml-2 px-2 py-1 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-1 text-xs sm:text-sm"
+                  className="ml-2 p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   title="次の記事"
                   aria-label="次の記事"
                 >
-                  <SkipForward className="size-4" />
+                  <SkipForward className="size-5" />
                 </button>
               )}
             </div>
