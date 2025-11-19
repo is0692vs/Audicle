@@ -10,7 +10,7 @@ This document explains how to contribute to Audicle.
 - [How to Contribute](#how-to-contribute)
 - [Development Environment Setup](#development-environment-setup)
 - [Pull Request Process](#pull-request-process)
-- [Coding Conventions](#coding-conventions)
+We expect all contributors to treat each other with respect in this project.
 - [Commit Message Conventions](#commit-message-conventions)
 - [Bug Reports](#bug-reports)
 - [Feature Requests](#feature-requests)
