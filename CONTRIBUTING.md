@@ -266,7 +266,14 @@ See `.github/workflows/ci.yml` for details.
  */
 async function synthesize(text, options) {
   // Implementation
-}
+-feat(chrome-extension): Add 2x playback speed feature
+- 
+-Implemented 2x playback speed using the Google TTS API.
+-Can be enabled in config.json.
+-
+ ### Frameworks
+ 
+ - [Next.js Documentation](https://nextjs.org/docs)
 ````
 
 ## 💬 Commit Message Conventions
