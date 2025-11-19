@@ -317,7 +317,9 @@ export default function ReaderPageClient() {
         const data = await extractRes.json();
         const chunksWithId = convertParagraphsToChunks(data.content);
 
-        setTitle(isPlaylistMode ? resolvedTitle : (data.title || resolvedTitle || ""));
+        setTitle(
+          isPlaylistMode ? resolvedTitle : data.title || resolvedTitle || ""
+        );
         setChunks(chunksWithId);
         setUrl(resolvedUrl);
         setArticleId(resolvedId);
