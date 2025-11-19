@@ -265,7 +265,10 @@ See `.github/workflows/ci.yml` for details.
  * @returns {Promise<Blob>} The audio data.
  */
 async function synthesize(text, options) {
+ }
+async function synthesize(text, options) {
   // Implementation
+}
 -feat(chrome-extension): Add 2x playback speed feature
 - 
 -Implemented 2x playback speed using the Google TTS API.
