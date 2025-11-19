@@ -51,7 +51,25 @@ export async function GET(
             query.order('added_at', { foreignTable: 'playlist_items', ascending: order === 'asc' })
         }
 
-        const { data: playlist, error: playlistError } = await query.single()
+        let playlist: any = null
+        let playlistError: any = null
+
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+            try {
+                const sortField = field === 'title' ? 'title' : field === 'added_at' ? 'added_at' : 'position';
+                const sortOrder = order as 'asc' | 'desc'
+                playlist = await supabaseLocal.getPlaylistWithItems(userEmail, id, { field: sortField, order: sortOrder })
+                if (!playlist) {
+                    playlistError = { code: 'PGRST116' }
+                }
+            } catch (e) {
+                playlistError = e
+            }
+        } else {
+            const resp = await query.single()
+            playlist = resp.data
+            playlistError = resp.error
+        }
 
         if (playlistError) {
             console.error('Supabase error:', playlistError)
@@ -96,6 +114,14 @@ export async function PATCH(
                 { error: 'Name is required' },
                 { status: 400 }
             )
+        }
+
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+            const updated = await supabaseLocal.updatePlaylist(id, userEmail, { name, description })
+            if (!updated) {
+                return NextResponse.json({ error: 'Playlist not found or permission denied' }, { status: 404 })
+            }
+            return NextResponse.json(updated)
         }
 
         const { data, error } = await supabase
@@ -144,6 +170,21 @@ export async function DELETE(
         const { id } = await params
 
         // デフォルトプレイリストかどうかを確認
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+            const found = (await supabaseLocal.getPlaylistsForOwner(userEmail)).find(p => p.id === id)
+            if (!found) {
+                return NextResponse.json({ error: 'Playlist not found' }, { status: 404 })
+            }
+            if (found.is_default) {
+                return NextResponse.json({ error: 'Cannot delete default playlist' }, { status: 400 })
+            }
+            const deleted = await supabaseLocal.deletePlaylistById(userEmail, id)
+            if (!deleted) {
+                return NextResponse.json({ error: 'Failed to delete playlist' }, { status: 500 })
+            }
+            return NextResponse.json({ message: 'Playlist deleted' })
+        }
+
         const { data: playlistToDelete, error: fetchError } = await supabase
             .from('playlists')
             .select('is_default')

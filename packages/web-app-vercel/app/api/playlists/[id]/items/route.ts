@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import * as supabaseLocal from '@/lib/supabaseLocal'
 import { requireAuth } from '@/lib/api-auth'
 
 export async function POST(
@@ -38,7 +39,36 @@ export async function POST(
         }
 
         // 記事を作成または既存のものを取得
-        const { data: article, error: articleError } = await supabase
+        let article: any = null
+        let articleError: any = null
+
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+            try {
+                article = await supabaseLocal.upsertArticle(userEmail, article_url, article_title, thumbnail_url, last_read_position)
+            } catch (e) {
+                articleError = e
+            }
+        } else {
+            const resp = await supabase
+                .from('articles')
+                .upsert(
+                    {
+                        owner_email: userEmail,
+                        url: article_url,
+                        title: article_title,
+                        thumbnail_url: thumbnail_url || null,
+                        last_read_position: last_read_position || 0,
+                    },
+                    {
+                        onConflict: 'owner_email,url',
+                        ignoreDuplicates: false,
+                    }
+                )
+                .select()
+                .single()
+            article = resp.data
+            articleError = resp.error
+        }
             .from('articles')
             .upsert(
                 {
@@ -64,7 +94,33 @@ export async function POST(
         }
 
         // playlist_itemsにupsert（既に存在する場合は更新扱い）
-        const { data: playlistItem, error: itemError } = await supabase
+        let playlistItem: any = null
+        let itemError: any = null
+
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+            try {
+                playlistItem = await supabaseLocal.addPlaylistItem(created.id, article.id)
+            } catch (e) {
+                itemError = e
+            }
+        } else {
+            const resp2 = await supabase
+                .from('playlist_items')
+                .upsert(
+                    {
+                        playlist_id: id,
+                        article_id: article.id,
+                    },
+                    {
+                        onConflict: 'playlist_id,article_id',
+                        ignoreDuplicates: false,
+                    }
+                )
+                .select()
+                .single()
+            playlistItem = resp2.data
+            itemError = resp2.error
+        }
             .from('playlist_items')
             .upsert(
                 {

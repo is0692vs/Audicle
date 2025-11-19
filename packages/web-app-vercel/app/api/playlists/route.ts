@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import * as supabaseLocal from '@/lib/supabaseLocal'
 import { requireAuth } from '@/lib/api-auth'
 import type { Playlist } from '@/types/playlist'
 
@@ -9,7 +10,27 @@ export async function GET() {
         const { userEmail, response } = await requireAuth()
         if (response) return response
 
-        const { data, error } = await supabase
+        let data: any = null
+        let error: any = null
+
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+            // Local fallback for tests (no Supabase configured)
+            try {
+                const playlists = await supabaseLocal.getPlaylistsForOwner(userEmail)
+                data = playlists
+            } catch (e) {
+                error = e
+            }
+        } else {
+            const resp = await supabase
+                .from('playlists')
+                .select('*, playlist_items(count)')
+                .eq('owner_email', userEmail)
+                .order('is_default', { ascending: false })
+                .order('created_at', { ascending: false })
+            data = resp.data
+            error = resp.error
+        }
             .from('playlists')
             .select('*, playlist_items(count)')
             .eq('owner_email', userEmail)
@@ -57,9 +78,21 @@ export async function POST(request: Request) {
             )
         }
 
-        const { data, error } = await supabase
-            .from('playlists')
-            .insert({
+        const body = await request.json()
+        const { name, description } = body
+
+        let insertData: any = null
+        let insertError: any = null
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+            try {
+                insertData = await supabaseLocal.createPlaylist(userEmail, name, description)
+            } catch (e) {
+                insertError = e
+            }
+        } else {
+            const resp = await supabase
+                .from('playlists')
+                .insert({
                 owner_email: userEmail,
                 name,
                 description: description || null,
@@ -67,10 +100,12 @@ export async function POST(request: Request) {
                 is_default: false,
                 allow_fork: true,
             })
-            .select()
-            .single()
+                .select()
+                .single()
+            insertData = resp.data
+            insertError = resp.error
 
-        if (error) {
+        if (insertError) {
             console.error('Supabase error:', error)
             return NextResponse.json(
                 { error: 'Failed to create playlist' },
@@ -78,7 +113,7 @@ export async function POST(request: Request) {
             )
         }
 
-        return NextResponse.json(data as Playlist, { status: 201 })
+        return NextResponse.json(insertData as Playlist, { status: 201 })
     } catch (error) {
         console.error('Error in POST /api/playlists:', error)
         return NextResponse.json(
