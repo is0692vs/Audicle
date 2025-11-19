@@ -23,7 +23,8 @@ import { Plus, RotateCcw } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import { STORAGE_KEYS } from "@/lib/constants";
 
-type ArticleSortBy = "newest" | "oldest" | "title" | "title-desc";
+const ARTICLE_SORT_BY_OPTIONS = ["newest", "oldest", "title", "title-desc"] as const;
+type ArticleSortBy = typeof ARTICLE_SORT_BY_OPTIONS[number];
 
 // 追加: localStorage key定義
 const HOME_SORT_KEY = STORAGE_KEYS.HOME_SORT;
@@ -37,7 +38,7 @@ export default function Home() {
   const [sortBy, setSortBy] = useState<ArticleSortBy>(() => {
     if (typeof window === "undefined") return "newest";
     const saved = localStorage.getItem(HOME_SORT_KEY);
-    return saved && ["newest", "oldest", "title", "title-desc"].includes(saved)
+    return saved && (ARTICLE_SORT_BY_OPTIONS as readonly string[]).includes(saved)
       ? (saved as ArticleSortBy)
       : "newest";
   });

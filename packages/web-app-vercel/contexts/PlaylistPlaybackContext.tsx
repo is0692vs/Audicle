@@ -62,22 +62,15 @@ function parseSortOption(sortOption: string | null): {
     return { field: "position", order: "asc" };
   }
 
-  const [field, orderSuffix] = sortOption.split('-');
-  let order: "asc" | "desc" = orderSuffix === 'desc' ? 'desc' : 'asc';
-
-  // added_at のデフォルトは desc (古い順)
-  if (field === 'added_at' && !orderSuffix) {
-    order = 'desc';
-  }
+  const [field, orderSuffix] = sortOption.split("-");
+  const order: "asc" | "desc" = orderSuffix === "desc" ? "desc" : "asc";
 
   const validFields = ["position", "title", "added_at"];
   if (validFields.includes(field)) {
     return { field, order };
   }
 
-  logger.warn(
-    `Unsupported sort option found in localStorage: ${sortOption}`
-  );
+  logger.warn(`Unsupported sort option found in localStorage: ${sortOption}`);
   return { field: "position", order: "asc" };
 }
 
