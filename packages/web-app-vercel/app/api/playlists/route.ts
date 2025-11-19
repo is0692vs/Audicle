@@ -75,30 +75,29 @@ export async function POST(request: Request) {
 
         let insertData: any = null
         let insertError: any = null
-        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-            try {
-                insertData = await supabaseLocal.createPlaylist(userEmail, name, description)
-            } catch (e) {
-                insertError = e
-            }
-        } else {
-            const resp = await supabase
-                .from('playlists')
-                .insert({
-                    owner_email: userEmail,
-                    name,
-                    description: description || null,
-                    visibility: 'private',
-                    is_default: false,
-                    allow_fork: true,
-                })
-                .select()
-                .single()
-            insertData = resp.data
-            insertError = resp.error
 
-            if (insertError) {
-                console.error('Supabase error:', error)
+        try {
+            if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+                insertData = await supabaseLocal.createPlaylist(userEmail, name, description)
+            } else {
+                const resp = await supabase
+                    .from('playlists')
+                    .insert({
+                        owner_email: userEmail,
+                        name,
+                        description: description || null,
+                        visibility: 'private',
+                        is_default: false,
+                        allow_fork: true,
+                    })
+                    .select()
+                    .single()
+                insertData = resp.data
+                insertError = resp.error
+            }
+
+            if (insertError || !insertData) {
+                console.error('Supabase/Local error:', insertError)
                 return NextResponse.json(
                     { error: 'Failed to create playlist' },
                     { status: 500 }
@@ -113,4 +112,10 @@ export async function POST(request: Request) {
                 { status: 500 }
             )
         }
+    } catch (error) {
+        console.error('Error in POST /api/playlists:', error)
+        return NextResponse.json(
+            { error: 'Internal server error' },
+            { status: 500 }
+        )
     }

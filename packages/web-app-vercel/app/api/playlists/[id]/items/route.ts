@@ -83,7 +83,7 @@ export async function POST(
 
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
             try {
-                playlistItem = await supabaseLocal.addPlaylistItem(created.id, article.id)
+                playlistItem = await supabaseLocal.addPlaylistItem(id, article.id)
             } catch (e) {
                 itemError = e
             }

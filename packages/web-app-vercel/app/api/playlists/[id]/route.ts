@@ -27,9 +27,7 @@ export async function GET(
 
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
             try {
-                const sortField = field === 'title' ? 'title' : field === 'added_at' ? 'added_at' : 'position';
-                const sortOrder = order as 'asc' | 'desc'
-                playlist = await supabaseLocal.getPlaylistWithItems(userEmail, id, { field: sortField, order: sortOrder })
+                playlist = await supabaseLocal.getPlaylistWithItems(userEmail, id, { field, order })
                 if (!playlist) {
                     playlistError = { code: 'PGRST116' }
                 }

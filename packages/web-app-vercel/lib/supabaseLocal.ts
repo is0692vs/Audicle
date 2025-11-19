@@ -12,7 +12,8 @@ interface Article {
     title: string;
     thumbnail_url?: string | null;
     last_read_position?: number;
-    created_at?: string;
+    created_at: string;
+    updated_at: string;
 }
 
 interface Playlist {
@@ -85,6 +86,7 @@ export async function deletePlaylistById(ownerEmail: string | null, id: string) 
 
 export async function upsertArticle(ownerEmail: string | null, url: string, title: string, thumbnail_url?: string | null, last_read_position?: number) {
     let article = inMemoryDB.articles.find(a => a.owner_email === ownerEmail && a.url === url);
+    const now = new Date().toISOString();
     if (!article) {
         article = {
             id: randomUUID(),
@@ -93,13 +95,15 @@ export async function upsertArticle(ownerEmail: string | null, url: string, titl
             title,
             thumbnail_url: thumbnail_url || null,
             last_read_position: last_read_position || 0,
-            created_at: new Date().toISOString(),
+            created_at: now,
+            updated_at: now,
         };
         inMemoryDB.articles.push(article);
     } else {
         // update title & thumbnail if provided
         article.title = title || article.title;
         article.thumbnail_url = thumbnail_url || article.thumbnail_url || null;
+        article.updated_at = now;
     }
     return article;
 }
@@ -141,52 +145,44 @@ export async function getPlaylistWithItems(ownerEmail: string | null, id: string
 
     // Basic sorting
     let sorted = items;
-    if (sort?.field === 'title') {
+    const sortField = sort?.field || 'position';
+    const sortOrder = sort?.order || 'asc';
+
+    const sortFn = (a: any, b: any) => {
+        const aVal = sortField.includes('at') ? (a.article?.[sortField] || '') : (a.article?.title || '');
+        const bVal = sortField.includes('at') ? (b.article?.[sortField] || '') : (b.article?.title || '');
+        
+        if (sortField === 'position') {
+            return (a.position ?? 0) - (b.position ?? 0);
+        }
+
+        if (sortOrder === 'desc') {
+            return bVal.localeCompare(aVal);
+        }
+        return aVal.localeCompare(bVal);
+    };
+
+    if (sortField === 'title') {
         sorted = [...items].sort((a, b) => {
             const at = a.article?.title || '';
             const bt = b.article?.title || '';
-            if (sort.order === 'desc') return bt.localeCompare(at);
+            if (sortOrder === 'desc') return bt.localeCompare(at);
             return at.localeCompare(bt);
         });
-    } else if (sort?.field === 'added_at') {
+    } else if (['added_at', 'created_at', 'updated_at'].includes(sortField)) {
         sorted = [...items].sort((a, b) => {
-            if (sort.order === 'desc') return b.added_at.localeCompare(a.added_at);
-            return a.added_at.localeCompare(b.added_at);
+            const aDate = sortField === 'added_at' ? a.added_at : a.article?.[sortField] || '';
+            const bDate = sortField === 'added_at' ? b.added_at : b.article?.[sortField] || '';
+            if (sortOrder === 'desc') return bDate.localeCompare(aDate);
+            return aDate.localeCompare(bDate);
         });
-    } else {
-        // default: position
+    } else { // position
         sorted = [...items].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
-        if (sort?.order === 'desc') sorted = sorted.reverse();
+        if (sortOrder === 'desc') sorted = sorted.reverse();
     }
+
 
     return {
         ...playlist,
         playlist_items: sorted,
     };
-}
-
-export async function setDefaultPlaylist(ownerEmail: string | null, id: string) {
-    // clear current default
-    inMemoryDB.playlists.forEach(p => {
-        if (p.owner_email === ownerEmail) p.is_default = false;
-    });
-    const target = inMemoryDB.playlists.find(p => p.id === id && p.owner_email === ownerEmail);
-    if (!target) return null;
-    target.is_default = true;
-    return target;
-}
-
-export async function removePlaylistItem(playlistId: string, itemId: string) {
-    const idx = inMemoryDB.playlist_items.findIndex(i => i.id === itemId && i.playlist_id === playlistId);
-    if (idx === -1) return false;
-    inMemoryDB.playlist_items.splice(idx, 1);
-    return true;
-}
-
-export async function updatePlaylist(playlistId: string, ownerEmail: string | null, data: { name: string; description?: string | null }) {
-    const target = inMemoryDB.playlists.find(p => p.id === playlistId && p.owner_email === ownerEmail);
-    if (!target) return null;
-    target.name = data.name;
-    target.description = data.description || null;
-    return target;
-}
