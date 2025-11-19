@@ -147,9 +147,9 @@ test.describe('Reader - Playlist related navigation', () => {
         // Article B: "Banana"
         // Article C: "Cherry"
         const articles = [
-            { url: 'https://example.com/a', title: 'Apple' },
-            { url: 'https://example.com/b', title: 'Banana' },
-            { url: 'https://example.com/c', title: 'Cherry' }
+            { url: 'https://httpbin.org/html?a=1', title: 'Apple' },
+            { url: 'https://httpbin.org/html?b=2', title: 'Banana' },
+            { url: 'https://httpbin.org/html?c=3', title: 'Cherry' }
         ];
 
         for (const article of articles) {
