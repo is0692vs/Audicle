@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 import { createReaderUrl } from "@/lib/urlBuilder";
+import { STORAGE_KEYS } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import type { PlaylistItemWithArticle } from "@/types/playlist";
 
@@ -48,7 +49,7 @@ const PlaylistPlaybackContext = createContext<
   PlaylistPlaybackContextType | undefined
 >(undefined);
 
-const STORAGE_KEY = "audicle-playlist-playback";
+const STORAGE_KEY = STORAGE_KEYS.PLAYLIST_PLAYBACK;
 
 /**
  * SortOptionをfieldとorderにパース
@@ -60,18 +61,19 @@ function parseSortOption(sortOption: string | null): {
   if (!sortOption) {
     return { field: null, order: null };
   }
-  
+
   // 文字列形式に対応
   switch (sortOption) {
-    case 'position':
-      return { field: 'position', order: 'asc' };
-    case 'title':
-      return { field: 'title', order: 'asc' };
-    case 'added_at':
-      return { field: 'added_at', order: 'desc' };
-    case 'url':
-      return { field: 'url', order: 'asc' };
+    case "position":
+      return { field: "position", order: "asc" };
+    case "title":
+      return { field: "title", order: "asc" };
+    case "added_at":
+      return { field: "added_at", order: "desc" };
     default:
+      logger.warn(
+        `Unsupported sort option found in localStorage: ${sortOption}`
+      );
       return { field: null, order: null };
   }
 }
@@ -409,7 +411,7 @@ export function PlaylistPlaybackProvider({
         logger.info("プレイリストをIDから初期化", { playlistId });
 
         // localStorageからsortオプションを読み込み
-        const sortKey = `audicle-playlist-sort-${playlistId}`;
+        const sortKey = `${STORAGE_KEYS.PLAYLIST_SORT_PREFIX}${playlistId}`;
         const savedSortOption =
           typeof window !== "undefined" ? localStorage.getItem(sortKey) : null;
         const { field: sortField, order: sortOrder } =

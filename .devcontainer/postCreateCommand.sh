@@ -11,8 +11,16 @@ echo "=== Installing uv (Python package manager) ==="
 curl -LsSf https://astral.sh/uv/install.sh | sh || true
 
 echo "=== Installing GitKraken CLI ==="
+
+# アーキテクチャ判定を追加
+ARCH="amd64"
+if [ "$(uname -m)" = "aarch64" ]; then
+  ARCH="arm64"
+fi
+
+# 判定したアーキテクチャを使用
 # Try multiple asset names in order of preference
-for name in gk-linux-amd64 gk-linux-amd64.tar.gz gk; do
+for name in gk-linux-$ARCH gk-linux-$ARCH.tar.gz gk; do
   url="https://github.com/gitkraken/gk-cli/releases/latest/download/$name"
   echo "Trying: $url"
   

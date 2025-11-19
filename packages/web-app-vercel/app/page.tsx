@@ -21,11 +21,12 @@ import {
 } from "@/components/ui/select";
 import { Plus, RotateCcw } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
+import { STORAGE_KEYS } from "@/lib/constants";
 
 type ArticleSortBy = "newest" | "oldest" | "title";
 
 // 追加: localStorage key定義
-const HOME_SORT_KEY = "audicle-home-sort";
+const HOME_SORT_KEY = STORAGE_KEYS.HOME_SORT;
 
 export default function Home() {
   const router = useRouter();

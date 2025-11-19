@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { Play, ArrowUpDown } from "lucide-react";
 import { createReaderUrl } from "@/lib/urlBuilder";
 import { logger } from "@/lib/logger";
+import { STORAGE_KEYS } from "@/lib/constants";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
 import { usePlaylistPlayback } from "@/contexts/PlaylistPlaybackContext";
 import {
@@ -26,17 +27,13 @@ import type {
   PlaylistItemWithArticle,
 } from "@/types/playlist";
 
-type SortOption = "position" | "title" | "added_at" | "url";
+type SortOption = "position" | "title" | "added_at";
 
 const SORT_OPTIONS = {
   position: "位置順",
   title: "タイトル順",
   added_at: "追加日時順",
-  url: "URL順",
 } as const;
-
-// 追加: localStorage key定義
-const PLAYLIST_SORT_KEY = "audicle-playlist-sort";
 
 // 型ガード関数
 function isSortOption(value: string): value is SortOption {
@@ -62,7 +59,9 @@ export default function PlaylistDetailPage() {
   // 追加: 初期値をlocalStorageから復元
   const [sortOption, setSortOption] = useState<SortOption>(() => {
     if (typeof window === "undefined") return "position";
-    const saved = localStorage.getItem(`${PLAYLIST_SORT_KEY}-${playlistId}`);
+    const saved = localStorage.getItem(
+      `${STORAGE_KEYS.PLAYLIST_SORT_PREFIX}${playlistId}`
+    );
     return saved && isSortOption(saved) ? saved : "position";
   });
   const { showConfirm, confirmDialog } = useConfirmDialog();
@@ -78,8 +77,6 @@ export default function PlaylistDetailPage() {
           return a.article.title.localeCompare(b.article.title);
         case "added_at":
           return a.added_at.localeCompare(b.added_at);
-        case "url":
-          return a.article.url.localeCompare(b.article.url);
         default:
           return 0;
       }
@@ -97,7 +94,10 @@ export default function PlaylistDetailPage() {
   // 追加: sortOption変更時にlocalStorageに保存
   useEffect(() => {
     if (typeof window === "undefined") return;
-    localStorage.setItem(`${PLAYLIST_SORT_KEY}-${playlistId}`, sortOption);
+    localStorage.setItem(
+      `${STORAGE_KEYS.PLAYLIST_SORT_PREFIX}${playlistId}`,
+      sortOption
+    );
   }, [sortOption, playlistId]);
 
   const handleSave = async () => {
