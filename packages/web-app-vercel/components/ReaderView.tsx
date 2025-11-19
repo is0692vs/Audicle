@@ -201,46 +201,6 @@ export default function ReaderView({
           </div>
         ) : (
           <>
-            {/* デスクトップ用メニューバー: 640px以上で表示 */}
-            <div className="hidden sm:flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 p-4 mb-4">
-              <div className="flex items-center gap-4">
-                {articleUrl && (
-                  <a
-                    href={articleUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 text-sm text-zinc-400 transition-colors hover:text-violet-400"
-                  >
-                    <span className="inline-flex size-6 items-center justify-center rounded-full bg-zinc-800 text-xs">
-                      ↗
-                    </span>
-                    元記事を開く
-                  </a>
-                )}
-                {downloadStatus === "completed" ? (
-                  <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-4 py-2 text-sm font-semibold text-emerald-400">
-                    <span aria-hidden>✅</span>
-                    <span>オフライン対応完了 ({chunks.length}チャンク) </span>
-                  </div>
-                ) : (
-                  <button
-                    onClick={startDownload}
-                    disabled={downloadStatus === "downloading"}
-                    className="inline-flex items-center gap-2 rounded-full bg-violet-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-violet-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 disabled:cursor-not-allowed disabled:bg-zinc-700"
-                  >
-                    {downloadStatus === "downloading" ? (
-                      <span className="inline-flex size-4 items-center justify-center">
-                        <span className="inline-flex size-4 animate-spin rounded-full border-[3px] border-white/40 border-t-white" />
-                      </span>
-                    ) : (
-                      <span aria-hidden>⬇️</span>
-                    )}
-                    <span>{downloadButtonLabel}</span>
-                  </button>
-                )}
-              </div>
-            </div>
-
             {renderDownloadPanel()}
 
             <section className="relative overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900">

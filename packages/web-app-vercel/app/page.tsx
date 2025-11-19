@@ -23,7 +23,7 @@ import { Plus, RotateCcw } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import { STORAGE_KEYS } from "@/lib/constants";
 
-type ArticleSortBy = "newest" | "oldest" | "title";
+type ArticleSortBy = "newest" | "oldest" | "title" | "title-desc";
 
 // 追加: localStorage key定義
 const HOME_SORT_KEY = STORAGE_KEYS.HOME_SORT;
@@ -37,7 +37,7 @@ export default function Home() {
   const [sortBy, setSortBy] = useState<ArticleSortBy>(() => {
     if (typeof window === "undefined") return "newest";
     const saved = localStorage.getItem(HOME_SORT_KEY);
-    return saved && ["newest", "oldest", "title"].includes(saved)
+    return saved && ["newest", "oldest", "title", "title-desc"].includes(saved)
       ? (saved as ArticleSortBy)
       : "newest";
   });
@@ -59,6 +59,8 @@ export default function Home() {
           );
         case "title":
           return a.article.title.localeCompare(b.article.title);
+        case "title-desc":
+          return b.article.title.localeCompare(a.article.title);
         default:
           return 0;
       }
@@ -155,7 +157,8 @@ export default function Home() {
                   <SelectContent>
                     <SelectItem value="newest">新しい順</SelectItem>
                     <SelectItem value="oldest">古い順</SelectItem>
-                    <SelectItem value="title">タイトル順</SelectItem>
+                    <SelectItem value="title">タイトル順 (A-Z)</SelectItem>
+                    <SelectItem value="title-desc">タイトル順 (Z-A)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

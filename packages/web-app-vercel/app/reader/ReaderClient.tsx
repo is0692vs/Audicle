@@ -778,10 +778,6 @@ export default function ReaderPageClient() {
                   <p className="text-xs text-zinc-400 truncate">
                     {playlistState.playlistName}
                   </p>
-                  <p className="text-xs sm:text-sm text-zinc-500">
-                    {playlistState.currentIndex + 1} /{" "}
-                    {playlistState.totalCount}
-                  </p>
                 </div>
               </div>
             </div>

@@ -27,12 +27,19 @@ import type {
   PlaylistItemWithArticle,
 } from "@/types/playlist";
 
-type SortOption = "position" | "title" | "added_at";
+type SortOption =
+  | "position"
+  | "title"
+  | "title-desc"
+  | "added_at"
+  | "added_at-desc";
 
 const SORT_OPTIONS = {
   position: "位置順",
-  title: "タイトル順",
-  added_at: "追加日時順",
+  title: "タイトル順 (A-Z)",
+  "title-desc": "タイトル順 (Z-A)",
+  added_at: "追加日時順 (古い順)",
+  "added_at-desc": "追加日時順 (新しい順)",
 } as const;
 
 // 型ガード関数
@@ -75,8 +82,12 @@ export default function PlaylistDetailPage() {
           return (a.position ?? 0) - (b.position ?? 0);
         case "title":
           return a.article.title.localeCompare(b.article.title);
+        case "title-desc":
+          return b.article.title.localeCompare(a.article.title);
         case "added_at":
           return a.added_at.localeCompare(b.added_at);
+        case "added_at-desc":
+          return b.added_at.localeCompare(a.added_at);
         default:
           return 0;
       }

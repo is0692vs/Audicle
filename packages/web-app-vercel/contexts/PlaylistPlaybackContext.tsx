@@ -359,10 +359,23 @@ export function PlaylistPlaybackProvider({
         isDefault: targetPlaylist.is_default,
       });
 
+      // localStorageからsortオプションを読み込み
+      const sortKey = `${STORAGE_KEYS.PLAYLIST_SORT_PREFIX}${targetPlaylist.id}`;
+      const savedSortOption =
+        typeof window !== "undefined" ? localStorage.getItem(sortKey) : null;
+      const { field: sortField, order: sortOrder } =
+        parseSortOption(savedSortOption);
+
+      // APIにソートパラメータを渡す
+      const queryParams = new URLSearchParams();
+      if (sortField && sortOrder) {
+        queryParams.set("sortField", sortField);
+        queryParams.set("sortOrder", sortOrder);
+      }
+      const apiUrl = `/api/playlists/${targetPlaylist.id}${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+
       // プレイリスト内のアイテムを取得
-      const itemsResponse = await fetch(
-        `/api/playlists/${targetPlaylist.id}/items`
-      );
+      const itemsResponse = await fetch(apiUrl);
 
       if (!itemsResponse.ok) {
         logger.warn("プレイリストアイテムの取得に失敗", {
@@ -371,7 +384,8 @@ export function PlaylistPlaybackProvider({
         return;
       }
 
-      const items: PlaylistItemWithArticle[] = await itemsResponse.json();
+      const playlistData = await itemsResponse.json();
+      const items: PlaylistItemWithArticle[] = playlistData.items || [];
 
       // 現在の記事のインデックスを特定
       const currentIndex = items.findIndex(
@@ -397,8 +411,8 @@ export function PlaylistPlaybackProvider({
         items,
         totalCount: items.length,
         isPlaylistMode: true,
-        sortField: null,
-        sortOrder: null,
+        sortField,
+        sortOrder,
       });
     } catch (error) {
       logger.error("プレイリスト初期化エラー", error);
