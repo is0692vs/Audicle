@@ -119,7 +119,7 @@ On success, the audio data is saved with the filename `test.mp3`.
   - Check if any error messages are displayed in the developer tools console.
 
 ## Contributing
-
+Contributions are welcome! Please see the [Contribution Guidelines (English Version)](CONTRIBUTING.md) or [Contribution Guidelines (Japanese Version)](CONTRIBUTING.ja.md) for details.
 Contributions are welcome! Please see the [Contribution Guidelines (English)](CONTRIBUTING.md) or [Contribution Guidelines (Japanese)](CONTRIBUTING.ja.md) for details.
 
 ## License
