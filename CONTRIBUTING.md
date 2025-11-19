@@ -275,7 +275,8 @@ async function synthesize(text, options) {
  
  - [Next.js Documentation](https://nextjs.org/docs)
 ````
-
+  // Implementation
+}
 ## 💬 Commit Message Conventions
 
 We recommend the [Conventional Commits](https://www.conventionalcommits.org/) format.
