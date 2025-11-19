@@ -375,17 +375,12 @@ Closes #123
 その他、関連する情報があれば記載
 ```
 
-## 🎓 学習リソース
 
-Audicle の開発に役立つリソース：
+### フレームワーク
 
-### Web 技術
-
-- [MDN Web Docs](https://developer.mozilla.org/)
-- [Chrome Extensions Documentation](https://developer.chrome.com/docs/extensions/)
-
-### API・ライブラリ
-
+- [Next.js Documentation](https://nextjs.org/docs)
+- [React Documentation](https://react.dev/)
+- [FastAPI Documentation](https://fastapi.tiangolo.com/]
 - [Mozilla Readability.js](https://github.com/mozilla/readability)
 - [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
 - [Edge TTS](https://github.com/rany2/edge-tts)
