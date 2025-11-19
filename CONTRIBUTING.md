@@ -342,7 +342,12 @@ Describe what actually happened.
 ## Screenshots
 
 Add screenshots if applicable.
-
+-feat(chrome-extension): Add 2x playback speed feature
+ 
+-Implemented 2x playback speed using the Google TTS API.
+-Can be enabled in config.json.
+-
+-## Alternatives
 ## Environment
 
 - OS: [e.g., Windows 10, macOS 13.0, Ubuntu 22.04]
