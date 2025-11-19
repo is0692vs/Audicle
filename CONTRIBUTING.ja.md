@@ -365,7 +365,7 @@ Closes #123
 ## 提案する実装方法
 
 可能であれば、実装方法のアイデアを記載
- * @returns {Promise<Blob>} 音声データ
+
 ## 代替案
 
 検討した代替案があれば記載
@@ -375,12 +375,17 @@ Closes #123
 その他、関連する情報があれば記載
 ```
 
+## 🎓 学習リソース
 
-### フレームワーク
+Audicle の開発に役立つリソース：
 
-- [Next.js Documentation](https://nextjs.org/docs)
-- [React Documentation](https://react.dev/)
-- [FastAPI Documentation](https://fastapi.tiangolo.com/]
+### Web 技術
+
+- [MDN Web Docs](https://developer.mozilla.org/)
+- [Chrome Extensions Documentation](https://developer.chrome.com/docs/extensions/)
+
+### API・ライブラリ
+
 - [Mozilla Readability.js](https://github.com/mozilla/readability)
 - [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
 - [Edge TTS](https://github.com/rany2/edge-tts)
@@ -391,7 +396,7 @@ Closes #123
 - [React Documentation](https://react.dev/)
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 
-可能であれば、実装方法のアイデアを記載
+## ❓ 質問やサポート
 
 質問がある場合は、以下の方法でお問い合わせください：
 

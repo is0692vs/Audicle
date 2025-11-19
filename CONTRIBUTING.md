@@ -10,7 +10,7 @@ This document explains how to contribute to Audicle.
 - [How to Contribute](#how-to-contribute)
 - [Development Environment Setup](#development-environment-setup)
 - [Pull Request Process](#pull-request-process)
-We expect all contributors to treat each other with respect in this project.
+- [Coding Conventions](#coding-conventions)
 - [Commit Message Conventions](#commit-message-conventions)
 - [Bug Reports](#bug-reports)
 - [Feature Requests](#feature-requests)
@@ -46,7 +46,7 @@ Fixing bugs or implementing new features.
 ### 5. Adding Tests
 
 Improving test coverage.
-Fixing typos or clarifying README files, comments, and documents.
+
 ### 6. Translation
 
 Translating documents into English, etc.
@@ -265,25 +265,10 @@ See `.github/workflows/ci.yml` for details.
  * @returns {Promise<Blob>} The audio data.
  */
 async function synthesize(text, options) {
- }
-async function synthesize(text, options) {
   // Implementation
 }
--feat(chrome-extension): Add 2x playback speed feature
-- 
--Implemented 2x playback speed using the Google TTS API.
-### Frameworks
- 
- - [Next.js Documentation](https://nextjs.org/docs)
- - [React Documentation](https://react.dev/)
- - [FastAPI Documentation](https://fastapi.tiangolo.com/)
--
--## Alternatives
- 
- - [Next.js Documentation](https://nextjs.org/docs)
 ````
-  // Implementation
-}
+
 ## 💬 Commit Message Conventions
 
 We recommend the [Conventional Commits](https://www.conventionalcommits.org/) format.
@@ -310,9 +295,9 @@ We recommend the [Conventional Commits](https://www.conventionalcommits.org/) fo
 - `chore`: Changes to the build process or auxiliary tools
 
 ### Example
-2. Click on '...'
-Closes #123
-3. Scroll down to '...'
+
+```
+feat(chrome-extension): Add 2x playback speed feature
 
 Implemented 2x playback speed using the Google TTS API.
 Can be enabled in config.json.
@@ -349,12 +334,7 @@ Describe what actually happened.
 ## Screenshots
 
 Add screenshots if applicable.
--feat(chrome-extension): Add 2x playback speed feature
- 
--Implemented 2x playback speed using the Google TTS API.
--Can be enabled in config.json.
--
--## Alternatives
+
 ## Environment
 
 - OS: [e.g., Windows 10, macOS 13.0, Ubuntu 22.04]
@@ -406,10 +386,10 @@ Resources to help with Audicle development:
 
 ### APIs/Libraries
 
-feat(chrome-extension): Add 2x playback speed feature
+- [Mozilla Readability.js](https://github.com/mozilla/readability)
+- [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
+- [Edge TTS](https://github.com/rany2/edge-tts)
 
-Implemented 2x playback speed using the Google TTS API.
-## Alternatives
 ### Frameworks
 
 - [Next.js Documentation](https://nextjs.org/docs)
