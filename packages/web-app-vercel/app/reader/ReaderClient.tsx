@@ -873,6 +873,7 @@ export default function ReaderPageClient() {
                     <button
                       onClick={() => setIsPlaylistModalOpen(true)}
                       className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                      data-testid="playlist-add-button"
                       title="プレイリストに追加"
                     >
                       <ListPlus className="size-5" />
@@ -1037,6 +1038,7 @@ export default function ReaderPageClient() {
                 <button
                   onClick={() => setIsPlaylistModalOpen(true)}
                   className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  data-testid="playlist-add-button"
                   title="プレイリストに追加"
                 >
                   <Plus className="size-5 text-gray-600 dark:text-gray-400" />

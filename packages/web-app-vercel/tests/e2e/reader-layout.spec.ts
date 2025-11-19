@@ -28,7 +28,7 @@ test.describe('Reader layout and controls', () => {
         // Check buttons: Playback speed, Play/Pause, Playlist add
         const speedButton = desktopBar.locator('button[title="再生速度を変更"]');
         const playButton = desktopBar.locator('button[title="再生"]');
-        const playlistButton = desktopBar.locator('button:has-text("プレイリストに追加")');
+        const playlistButton = desktopBar.locator('[data-testid="playlist-add-button"]');
         const downloadButton = desktopBar.locator('button[data-testid="download-button"]');
 
         // Some elements may be visible with other titles; ensure generic checks for button presence
