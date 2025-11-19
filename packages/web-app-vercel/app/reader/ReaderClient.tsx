@@ -267,10 +267,12 @@ export default function ReaderPageClient() {
       id,
       url: maybeUrl,
       titleFallback,
+      isPlaylistMode = false,
     }: {
       id?: string;
       url?: string;
       titleFallback?: string;
+      isPlaylistMode?: boolean;
     }) => {
       setIsLoading(true);
       setError("");
@@ -315,7 +317,7 @@ export default function ReaderPageClient() {
         const data = await extractRes.json();
         const chunksWithId = convertParagraphsToChunks(data.content);
 
-        setTitle(data.title || resolvedTitle || "");
+        setTitle(isPlaylistMode ? resolvedTitle : (data.title || resolvedTitle || ""));
         setChunks(chunksWithId);
         setUrl(resolvedUrl);
         setArticleId(resolvedId);
@@ -482,6 +484,7 @@ export default function ReaderPageClient() {
               id: item.article_id,
               url: item.article.url,
               titleFallback: item.article.title,
+              isPlaylistMode: true,
             });
           }
         } else {

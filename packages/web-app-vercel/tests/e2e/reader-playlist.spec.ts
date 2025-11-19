@@ -135,6 +135,7 @@ test.describe('Reader - Playlist related navigation', () => {
     });
 
     test('Playlist sort order is respected in Prev/Next navigation', async ({ page }) => {
+        await clearLocalStorage(page);
         // Create playlist
         const createResp = await page.request.post('/api/playlists', {
             data: { name: `E2E Sort Playlist ${Date.now()}` },
@@ -147,9 +148,9 @@ test.describe('Reader - Playlist related navigation', () => {
         // Article B: "Banana"
         // Article C: "Cherry"
         const articles = [
-            { url: 'https://httpbin.org/html?a=1', title: 'Apple' },
-            { url: 'https://httpbin.org/html?b=2', title: 'Banana' },
-            { url: 'https://httpbin.org/html?c=3', title: 'Cherry' }
+            { url: 'https://example.com?a=1', title: 'Apple' },
+            { url: 'https://example.com?b=2', title: 'Banana' },
+            { url: 'https://example.com?c=3', title: 'Cherry' }
         ];
 
         for (const article of articles) {

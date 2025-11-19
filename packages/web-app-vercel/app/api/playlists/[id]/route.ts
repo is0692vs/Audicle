@@ -42,11 +42,11 @@ export async function GET(
         if (field === 'position') {
             query.order('position', { foreignTable: 'playlist_items', ascending: order === 'asc' })
         } else if (field === 'title') {
-            query.order('title', { foreignTable: 'playlist_items.article', ascending: order === 'asc' })
+            query.order('title', { foreignTable: 'articles', ascending: order === 'asc' })
         } else if (field === 'created_at') {
-            query.order('created_at', { foreignTable: 'playlist_items.article', ascending: order === 'asc' })
+            query.order('created_at', { foreignTable: 'articles', ascending: order === 'asc' })
         } else if (field === 'updated_at') {
-            query.order('updated_at', { foreignTable: 'playlist_items.article', ascending: order === 'asc' })
+            query.order('updated_at', { foreignTable: 'articles', ascending: order === 'asc' })
         } else if (field === 'added_at') {
             query.order('added_at', { foreignTable: 'playlist_items', ascending: order === 'asc' })
         }

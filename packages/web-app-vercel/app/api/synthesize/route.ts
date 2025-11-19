@@ -30,7 +30,7 @@ function calculateArticleHash(chunks: string[]): string {
 // Google Cloud TTS クライアント
 let ttsCLient: TextToSpeechClient | null = null;
 
-function getTTSClient(): TextToSpeechClient {
+function getTTSClient(): TextToSpeechClient | null {
     if (ttsCLient) {
         return ttsCLient;
     }
@@ -45,6 +45,11 @@ function getTTSClient(): TextToSpeechClient {
 
     const credentialsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
     if (!credentialsJson) {
+        // In test environments, return null to allow fallback behavior
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('[INFO] GOOGLE_APPLICATION_CREDENTIALS_JSON not set, using fallback for test environment');
+            return null;
+        }
         throw new Error('GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable is not set');
     }
 
