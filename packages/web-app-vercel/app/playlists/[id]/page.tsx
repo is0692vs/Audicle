@@ -27,13 +27,6 @@ import type {
   PlaylistItemWithArticle,
 } from "@/types/playlist";
 
-type SortOption =
-  | "position"
-  | "title"
-  | "title-desc"
-  | "added_at"
-  | "added_at-desc";
-
 const SORT_OPTIONS = {
   position: "位置順",
   title: "タイトル順 (A-Z)",
@@ -41,6 +34,8 @@ const SORT_OPTIONS = {
   added_at: "追加日時順 (古い順)",
   "added_at-desc": "追加日時順 (新しい順)",
 } as const;
+
+type SortOption = keyof typeof SORT_OPTIONS;
 
 // 型ガード関数
 function isSortOption(value: string): value is SortOption {

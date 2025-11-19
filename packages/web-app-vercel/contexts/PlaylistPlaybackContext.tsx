@@ -59,23 +59,26 @@ function parseSortOption(sortOption: string | null): {
   order: "asc" | "desc" | null;
 } {
   if (!sortOption) {
-    return { field: null, order: null };
+    return { field: "position", order: "asc" };
   }
 
-  // 文字列形式に対応
-  switch (sortOption) {
-    case "position":
-      return { field: "position", order: "asc" };
-    case "title":
-      return { field: "title", order: "asc" };
-    case "added_at":
-      return { field: "added_at", order: "desc" };
-    default:
-      logger.warn(
-        `Unsupported sort option found in localStorage: ${sortOption}`
-      );
-      return { field: null, order: null };
+  const [field, orderSuffix] = sortOption.split('-');
+  let order: "asc" | "desc" = orderSuffix === 'desc' ? 'desc' : 'asc';
+
+  // added_at のデフォルトは desc (古い順)
+  if (field === 'added_at' && !orderSuffix) {
+    order = 'desc';
   }
+
+  const validFields = ["position", "title", "added_at"];
+  if (validFields.includes(field)) {
+    return { field, order };
+  }
+
+  logger.warn(
+    `Unsupported sort option found in localStorage: ${sortOption}`
+  );
+  return { field: "position", order: "asc" };
 }
 
 function savePlaybackState(state: PlaylistPlaybackState): void {
