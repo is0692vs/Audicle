@@ -65,11 +65,6 @@ export async function DELETE(
             itemToDelete = resp.data
             fetchError = resp.error
         }
-            .from('playlist_items')
-            .select('article_id')
-            .eq('id', itemId)
-            .eq('playlist_id', playlistId)
-            .single()
 
         if (fetchError || !itemToDelete) {
             console.error('Supabase error:', fetchError)
@@ -94,11 +89,6 @@ export async function DELETE(
                 .single()
             deleteError = resp.error
         }
-            .from('playlist_items')
-            .delete()
-            .eq('id', itemId)
-            .eq('playlist_id', playlistId)
-            .single()
 
         if (deleteError) {
             // PGRST116は「No rows found」エラーコード
@@ -141,22 +131,6 @@ export async function DELETE(
                     console.error('Failed to delete article:', articleDeleteError)
                     // 記事削除の失敗は致命的ではないので、エラーを返さない
                 }
-            }
-        }
-            .from('playlist_items')
-            .select('*', { count: 'exact', head: true })
-            .eq('article_id', itemToDelete.article_id)
-
-        // 他のプレイリストに存在しない場合、articlesからも削除
-        if (!checkError && count === 0) {
-            const { error: articleDeleteError } = await supabase
-                .from('articles')
-                .delete()
-                .eq('id', itemToDelete.article_id)
-
-            if (articleDeleteError) {
-                console.error('Failed to delete article:', articleDeleteError)
-                // 記事削除の失敗は致命的ではないので、エラーを返さない
             }
         }
 

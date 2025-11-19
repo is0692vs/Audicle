@@ -69,8 +69,6 @@ export async function POST(
             article = resp.data
             articleError = resp.error
         }
-            .select()
-            .single()
 
         if (articleError) {
             return NextResponse.json(
@@ -107,19 +105,6 @@ export async function POST(
             playlistItem = resp2.data
             itemError = resp2.error
         }
-            .from('playlist_items')
-            .upsert(
-                {
-                    playlist_id: id,
-                    article_id: article.id,
-                },
-                {
-                    onConflict: 'playlist_id,article_id',
-                    ignoreDuplicates: false,
-                }
-            )
-            .select()
-            .single()
 
         if (itemError) {
             console.error('Supabase error:', itemError)
