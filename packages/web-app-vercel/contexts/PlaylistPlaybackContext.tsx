@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { createReaderUrl } from "@/lib/urlBuilder";
 import { STORAGE_KEYS } from "@/lib/constants";
 import { logger } from "@/lib/logger";
+import type { PlaylistItemWithArticle } from "@/types/playlist";
 
 export interface PlaylistPlaybackState {
   playlistId: string | null;
