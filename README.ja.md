@@ -118,6 +118,10 @@ curl -X POST "http://localhost:8001/synthesize/simple" \
   - 拡張機能の設定で、APIサーバーのURLが正しく設定されているか確認してください (`http://localhost:8001`)。
   - デベロッパーツールのコンソールにエラーメッセージが表示されていないか確認してください。
 
+## 貢献
+
+貢献を歓迎します！詳細は[貢献ガイドライン（日本語）](CONTRIBUTING.ja.md)または[貢献ガイドライン（英語）](CONTRIBUTING.md)をご覧ください。
+
 ## ライセンス
 
 本プロジェクトはMITライセンスです。詳細は[LICENSE](LICENSE)ファイルをご覧ください。
