@@ -386,10 +386,10 @@ Resources to help with Audicle development:
 
 ### APIs/Libraries
 
-- [Mozilla Readability.js](https://github.com/mozilla/readability)
-- [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
-- [Edge TTS](https://github.com/rany2/edge-tts)
+feat(chrome-extension): Add 2x playback speed feature
 
+Implemented 2x playback speed using the Google TTS API.
+Can be enabled in config.json.
 ### Frameworks
 
 - [Next.js Documentation](https://nextjs.org/docs)
