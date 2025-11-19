@@ -206,7 +206,7 @@ jobs:
           name: playwright-auth-state
           path: ${{ github.workspace }}/packages/web-app-vercel/playwright/.auth/
       - name: Download build
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v5
         with:
           name: next-build
           path: ./packages/web-app-vercel/.next
