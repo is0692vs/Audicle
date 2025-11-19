@@ -271,7 +271,7 @@ async function synthesize(text, options) {
 -Implemented 2x playback speed using the Google TTS API.
 -Can be enabled in config.json.
 -
- ### Frameworks
+-## Alternatives
  
  - [Next.js Documentation](https://nextjs.org/docs)
 ````
