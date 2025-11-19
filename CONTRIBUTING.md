@@ -302,7 +302,7 @@ We recommend the [Conventional Commits](https://www.conventionalcommits.org/) fo
 - `chore`: Changes to the build process or auxiliary tools
 
 ### Example
-
+2. Click on '...'
 ```
 3. Scroll down to '...'
 
