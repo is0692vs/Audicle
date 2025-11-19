@@ -46,7 +46,7 @@ Fixing bugs or implementing new features.
 ### 5. Adding Tests
 
 Improving test coverage.
-
+Fixing typos or clarifying README files, comments, and documents.
 ### 6. Translation
 
 Translating documents into English, etc.
