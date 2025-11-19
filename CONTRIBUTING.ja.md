@@ -396,7 +396,7 @@ Audicle の開発に役立つリソース：
 - [React Documentation](https://react.dev/)
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 
-## ❓ 質問やサポート
+可能であれば、実装方法のアイデアを記載
 
 質問がある場合は、以下の方法でお問い合わせください：
 
