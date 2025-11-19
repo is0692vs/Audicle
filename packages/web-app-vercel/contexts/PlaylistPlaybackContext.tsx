@@ -72,9 +72,11 @@ function parseSortOption(sortOption: string | null): {
       return { field: "added_at", order: "desc" };
     default:
       logger.warn(`Unsupported sort option found in localStorage: ${sortOption}`);
-      return { field: null, order: null };
-  }
-      return { field: null, order: null };
+     default:
++      logger.warn(`Unsupported sort option found in localStorage: ${sortOption}`);
+       return { field: null, order: null };
+   }
+ }
   }
 }
 
