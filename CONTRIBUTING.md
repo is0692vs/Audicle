@@ -304,7 +304,7 @@ We recommend the [Conventional Commits](https://www.conventionalcommits.org/) fo
 
 ### Example
 2. Click on '...'
-```
+Closes #123
 3. Scroll down to '...'
 
 Implemented 2x playback speed using the Google TTS API.
