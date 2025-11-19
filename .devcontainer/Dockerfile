@@ -1,5 +1,5 @@
 # Use the official dev container base image which includes Python, Git, and essential tools
-FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
+FROM mcr.microsoft.com/devcontainers/base:ubuntu-22.04
 
 # Install Node.js via NodeSource repository (more reliable than nvm in containers)
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
