@@ -38,11 +38,6 @@ export async function PUT(
             targetPlaylist = resp.data
             fetchError = resp.error
         }
-            .from('playlists')
-            .select('id, owner_email, is_default')
-            .eq('id', id)
-            .eq('owner_email', userEmail)
-            .single()
 
         if (fetchError || !targetPlaylist) {
             return NextResponse.json(

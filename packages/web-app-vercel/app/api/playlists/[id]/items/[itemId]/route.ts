@@ -31,10 +31,6 @@ export async function DELETE(
             playlist = resp.data
             playlistError = resp.error
         }
-            .from('playlists')
-            .select('owner_email')
-            .eq('id', playlistId)
-            .single()
 
         if (playlistError || !playlist) {
             console.error('Supabase error:', playlistError)

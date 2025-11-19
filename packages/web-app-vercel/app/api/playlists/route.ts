@@ -31,11 +31,6 @@ export async function GET() {
             data = resp.data
             error = resp.error
         }
-            .from('playlists')
-            .select('*, playlist_items(count)')
-            .eq('owner_email', userEmail)
-            .order('is_default', { ascending: false })
-            .order('created_at', { ascending: false })
 
         if (error) {
             console.error('Supabase error:', error)
@@ -78,9 +73,6 @@ export async function POST(request: Request) {
             )
         }
 
-        const body = await request.json()
-        const { name, description } = body
-
         let insertData: any = null
         let insertError: any = null
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
@@ -93,32 +85,32 @@ export async function POST(request: Request) {
             const resp = await supabase
                 .from('playlists')
                 .insert({
-                owner_email: userEmail,
-                name,
-                description: description || null,
-                visibility: 'private',
-                is_default: false,
-                allow_fork: true,
-            })
+                    owner_email: userEmail,
+                    name,
+                    description: description || null,
+                    visibility: 'private',
+                    is_default: false,
+                    allow_fork: true,
+                })
                 .select()
                 .single()
             insertData = resp.data
             insertError = resp.error
 
-        if (insertError) {
-            console.error('Supabase error:', error)
+            if (insertError) {
+                console.error('Supabase error:', error)
+                return NextResponse.json(
+                    { error: 'Failed to create playlist' },
+                    { status: 500 }
+                )
+            }
+
+            return NextResponse.json(insertData as Playlist, { status: 201 })
+        } catch (error) {
+            console.error('Error in POST /api/playlists:', error)
             return NextResponse.json(
-                { error: 'Failed to create playlist' },
+                { error: 'Internal server error' },
                 { status: 500 }
             )
         }
-
-        return NextResponse.json(insertData as Playlist, { status: 201 })
-    } catch (error) {
-        console.error('Error in POST /api/playlists:', error)
-        return NextResponse.json(
-            { error: 'Internal server error' },
-            { status: 500 }
-        )
     }
-}

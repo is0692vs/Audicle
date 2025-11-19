@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import * as supabaseLocal from '@/lib/supabaseLocal'
 import { requireAuth } from '@/lib/api-auth'
 
 // GET: プレイリスト詳細取得（ブックマーク含む）
@@ -21,36 +22,6 @@ export async function GET(
         const field = validSortFields.includes(sortField || '') ? sortField : 'position'
         const order = validSortOrders.includes(sortOrder || '') ? sortOrder as 'asc' | 'desc' : 'asc'
 
-        // プレイリスト情報とアイテムを1つのクエリで取得
-        const query = supabase
-            .from('playlists')
-            .select(`
-        *,
-        playlist_items(
-          id,
-          playlist_id,
-          article_id,
-          position,
-          added_at,
-          article:articles(*)
-        )
-      `)
-            .eq('id', id)
-            .eq('owner_email', userEmail)
-
-        // ソート適用
-        if (field === 'position') {
-            query.order('position', { foreignTable: 'playlist_items', ascending: order === 'asc' })
-        } else if (field === 'title') {
-            query.order('title', { foreignTable: 'articles', ascending: order === 'asc' })
-        } else if (field === 'created_at') {
-            query.order('created_at', { foreignTable: 'articles', ascending: order === 'asc' })
-        } else if (field === 'updated_at') {
-            query.order('updated_at', { foreignTable: 'articles', ascending: order === 'asc' })
-        } else if (field === 'added_at') {
-            query.order('added_at', { foreignTable: 'playlist_items', ascending: order === 'asc' })
-        }
-
         let playlist: any = null
         let playlistError: any = null
 
@@ -66,6 +37,36 @@ export async function GET(
                 playlistError = e
             }
         } else {
+            // プレイリスト情報とアイテムを1つのクエリで取得
+            const query = supabase
+                .from('playlists')
+                .select(`
+        *,
+        playlist_items(
+          id,
+          playlist_id,
+          article_id,
+          position,
+          added_at,
+          article:articles(*)
+        )
+      `)
+                .eq('id', id)
+                .eq('owner_email', userEmail)
+
+            // ソート適用
+            if (field === 'position') {
+                query.order('position', { foreignTable: 'playlist_items', ascending: order === 'asc' })
+            } else if (field === 'title') {
+                query.order('title', { foreignTable: 'articles', ascending: order === 'asc' })
+            } else if (field === 'created_at') {
+                query.order('created_at', { foreignTable: 'articles', ascending: order === 'asc' })
+            } else if (field === 'updated_at') {
+                query.order('updated_at', { foreignTable: 'articles', ascending: order === 'asc' })
+            } else if (field === 'added_at') {
+                query.order('added_at', { foreignTable: 'playlist_items', ascending: order === 'asc' })
+            }
+
             const resp = await query.single()
             playlist = resp.data
             playlistError = resp.error

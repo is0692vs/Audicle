@@ -69,20 +69,6 @@ export async function POST(
             article = resp.data
             articleError = resp.error
         }
-            .from('articles')
-            .upsert(
-                {
-                    owner_email: userEmail,
-                    url: article_url,
-                    title: article_title,
-                    thumbnail_url: thumbnail_url || null,
-                    last_read_position: last_read_position || 0,
-                },
-                {
-                    onConflict: 'owner_email,url',
-                    ignoreDuplicates: false,
-                }
-            )
             .select()
             .single()
 
