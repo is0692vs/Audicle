@@ -9,8 +9,7 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 import { createReaderUrl } from "@/lib/urlBuilder";
-import { logger } from "@/lib/logger";
-import type { PlaylistItemWithArticle } from "@/types/playlist";
+import { STORAGE_KEYS } from "@/lib/constants";
 
 export interface PlaylistPlaybackState {
   playlistId: string | null;
@@ -48,7 +47,7 @@ const PlaylistPlaybackContext = createContext<
   PlaylistPlaybackContextType | undefined
 >(undefined);
 
-const STORAGE_KEY = "audicle-playlist-playback";
+const STORAGE_KEY = STORAGE_KEYS.PLAYLIST_PLAYBACK;
 
 /**
  * SortOptionをfieldとorderにパース
@@ -60,17 +59,15 @@ function parseSortOption(sortOption: string | null): {
   if (!sortOption) {
     return { field: null, order: null };
   }
-  
+
   // 文字列形式に対応
   switch (sortOption) {
-    case 'position':
-      return { field: 'position', order: 'asc' };
-    case 'title':
-      return { field: 'title', order: 'asc' };
-    case 'added_at':
-      return { field: 'added_at', order: 'desc' };
-    case 'url':
-      return { field: 'url', order: 'asc' };
+    case "position":
+      return { field: "position", order: "asc" };
+    case "title":
+      return { field: "title", order: "asc" };
+    case "added_at":
+      return { field: "added_at", order: "desc" };
     default:
       return { field: null, order: null };
   }
