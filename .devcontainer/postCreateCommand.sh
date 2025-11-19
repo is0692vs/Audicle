@@ -80,3 +80,7 @@ echo "     - gh auth login"
 echo "     - vercel login"
 echo "     - gk auth login"
 echo "  2. See .devcontainer/CLI_CREDENTIALS.md for token setup options"
+
+echo ""
+echo "=== Installing Playwright browsers ==="
+npx playwright install --with-deps chromium firefox webkit
