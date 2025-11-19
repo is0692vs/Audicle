@@ -304,7 +304,7 @@ We recommend the [Conventional Commits](https://www.conventionalcommits.org/) fo
 ### Example
 
 ```
-feat(chrome-extension): Add 2x playback speed feature
+3. Scroll down to '...'
 
 Implemented 2x playback speed using the Google TTS API.
 Can be enabled in config.json.
