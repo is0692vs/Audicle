@@ -169,22 +169,11 @@ export async function getPlaylistWithItems(ownerEmail: string | null, id: string
 
     // Basic sorting
     let sorted = items;
+    // Basic sorting
+    let sorted = items;
     const sortField = sort?.field || 'position';
     const sortOrder = sort?.order || 'asc';
 
-    const sortFn = (a: PlaylistItemWithArticle, b: PlaylistItemWithArticle) => {
-        const sField = sortField as keyof Article;
-        const aVal = sortField.includes('at') ? ((a.article?.[sField] as string) || '') : (a.article?.title || '');
-        const bVal = sortField.includes('at') ? ((b.article?.[sField] as string) || '') : (b.article?.title || '');
-
-        if (sortField === 'position') {
-            return (a.position ?? 0) - (b.position ?? 0);
-        }
-
-        if (sortOrder === 'desc') {
-            return bVal.localeCompare(aVal);
-        }
-        return aVal.localeCompare(bVal);
     };
 
     if (sortField === 'title') {
