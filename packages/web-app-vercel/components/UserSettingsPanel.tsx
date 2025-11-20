@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
 import { useDebounce } from "use-debounce";
@@ -33,7 +33,16 @@ export default function UserSettingsPanel() {
 
   // Debounce the theme for saving (1000ms delay)
   const [debouncedTheme] = useDebounce(previewTheme, 1000);
-  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Keep refs to the latest values for unmount flush
+  const latestPreviewRef = useRef(previewTheme);
+  const latestSettingsRef = useRef(settings);
+  useEffect(() => {
+    latestPreviewRef.current = previewTheme;
+  }, [previewTheme]);
+  useEffect(() => {
+    latestSettingsRef.current = settings;
+  }, [settings]);
 
   // originalSettingsが変わったら、ローカル変更がない場合は同期
   useEffect(() => {
@@ -119,6 +128,37 @@ export default function UserSettingsPanel() {
 
     saveTheme();
   }, [debouncedTheme, session, hasChanged]);
+
+  // On unmount: flush any unsaved theme changes immediately
+  useEffect(() => {
+    return () => {
+      if (!hasChanged) return;
+      const finalPreview = latestPreviewRef.current;
+      const finalSettings = latestSettingsRef.current;
+      if (finalPreview !== finalSettings.color_theme) {
+        // Fire and forget; it's fine to call async from cleanup
+        (async () => {
+          try {
+            if (session?.user?.email) {
+              await updateSettingsMutation.mutateAsync({
+                ...finalSettings,
+                color_theme: finalPreview,
+              });
+            } else {
+              localStorage.setItem(
+                "audicle-user-settings",
+                JSON.stringify({ ...finalSettings, color_theme: finalPreview })
+              );
+              localStorage.setItem("audicle-color-theme", finalPreview);
+            }
+          } catch (e) {
+            console.error("Failed to flush theme on unmount:", e);
+          }
+        })();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSave = async () => {
     try {
