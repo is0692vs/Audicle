@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import * as supabaseLocal from '@/lib/supabaseLocal'
 import { requireAuth } from '@/lib/api-auth'
+import { Playlist } from '@/types/playlist'
 
 // PUT: デフォルトプレイリストを変更
 export async function PUT(
@@ -20,12 +22,24 @@ export async function PUT(
         }
 
         // 指定されたプレイリストがユーザーに属しているか確認
-        const { data: targetPlaylist, error: fetchError } = await supabase
-            .from('playlists')
-            .select('id, owner_email, is_default')
-            .eq('id', id)
-            .eq('owner_email', userEmail)
-            .single()
+        let targetPlaylist: Partial<Playlist> | null = null
+        let fetchError: { code: string } | null = null
+
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+            const playlists = await supabaseLocal.getPlaylistsForOwner(userEmail)
+            const found = playlists.find(p => p.id === id)
+            targetPlaylist = found || null
+            if (!targetPlaylist) fetchError = { code: 'PGRST116' }
+        } else {
+            const resp = await supabase
+                .from('playlists')
+                .select('id, owner_email, is_default')
+                .eq('id', id)
+                .eq('owner_email', userEmail)
+                .single()
+            targetPlaylist = resp.data
+            fetchError = resp.error
+        }
 
         if (fetchError || !targetPlaylist) {
             return NextResponse.json(
@@ -43,6 +57,11 @@ export async function PUT(
         }
 
         // Supabase RPC関数 set_default_playlist を呼び出し
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+            await supabaseLocal.setDefaultPlaylist(userEmail, id)
+            return NextResponse.json({ success: true, message: 'デフォルトプレイリストを更新しました' })
+        }
+
         const { data, error } = await supabase.rpc('set_default_playlist', {
             p_playlist_id: id,
             p_user_email: userEmail,

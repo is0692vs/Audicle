@@ -154,16 +154,29 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: next-build
+          path: packages/web-app-vercel/.next
+          include-hidden-files: true
+          retention-days: 1
 
   e2e-pr:
     name: E2E (PR-small)
-    needs: [setup, e2e-auth]
+    needs: [setup, build, e2e-auth]
     runs-on: ubuntu-latest
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
       NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+      KV_REST_API_URL: ${{ secrets.KV_REST_API_URL }}
+      KV_REST_API_TOKEN: ${{ secrets.KV_REST_API_TOKEN }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v6
@@ -196,6 +209,11 @@ jobs:
         with:
           name: playwright-auth-state
           path: ${{ github.workspace }}/packages/web-app-vercel/playwright/.auth/
+      - name: Download build
+        uses: actions/download-artifact@v6
+        with:
+          name: next-build
+          path: packages/web-app-vercel/.next
       - name: Run e2e (small)
         run: npx playwright test --project=chromium --shard=1/1
         working-directory: packages/web-app-vercel
@@ -207,6 +225,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          CI_WEB_SERVER_COMMAND: npm run start
 
   e2e-auth:
     name: E2E Auth Setup

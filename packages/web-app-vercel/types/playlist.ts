@@ -31,11 +31,12 @@ export interface PlaylistItem {
 }
 
 export interface PlaylistItemWithArticle extends PlaylistItem {
-    article: Article;
+    article?: Article;
 }
 
 export interface PlaylistWithItems extends Playlist {
     items?: PlaylistItemWithArticle[];
+    playlist_items?: PlaylistItemWithArticle[];
     item_count?: number;
 }
 

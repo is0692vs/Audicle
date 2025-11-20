@@ -23,7 +23,13 @@ import { Plus, RotateCcw } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import { STORAGE_KEYS } from "@/lib/constants";
 
-type ArticleSortBy = "newest" | "oldest" | "title";
+const ARTICLE_SORT_BY_OPTIONS = [
+  "newest",
+  "oldest",
+  "title",
+  "title-desc",
+] as const;
+type ArticleSortBy = (typeof ARTICLE_SORT_BY_OPTIONS)[number];
 
 // 追加: localStorage key定義
 const HOME_SORT_KEY = STORAGE_KEYS.HOME_SORT;
@@ -37,7 +43,8 @@ export default function Home() {
   const [sortBy, setSortBy] = useState<ArticleSortBy>(() => {
     if (typeof window === "undefined") return "newest";
     const saved = localStorage.getItem(HOME_SORT_KEY);
-    return saved && ["newest", "oldest", "title"].includes(saved)
+    return saved &&
+      (ARTICLE_SORT_BY_OPTIONS as readonly string[]).includes(saved)
       ? (saved as ArticleSortBy)
       : "newest";
   });
@@ -58,7 +65,9 @@ export default function Home() {
             new Date(a.added_at).getTime() - new Date(b.added_at).getTime()
           );
         case "title":
-          return a.article.title.localeCompare(b.article.title);
+          return (a.article?.title || "").localeCompare(b.article?.title || "");
+        case "title-desc":
+          return (b.article?.title || "").localeCompare(a.article?.title || "");
         default:
           return 0;
       }
@@ -90,7 +99,7 @@ export default function Home() {
 
     const confirmed = await showConfirm({
       title: "ホームから除く",
-      message: `「${item.article.title}」をホームから除きますか?\n\n他のプレイリストには残ります。`,
+      message: `「${item.article?.title}」をホームから除きますか?\n\n他のプレイリストには残ります。`,
       confirmText: "除く",
       cancelText: "キャンセル",
       isDangerous: false,
@@ -104,7 +113,7 @@ export default function Home() {
         });
         logger.success("アイテムを削除", {
           itemId,
-          title: item.article.title,
+          title: item.article?.title || "",
         });
       } catch (error) {
         logger.error("アイテムの削除に失敗", error);
@@ -113,7 +122,7 @@ export default function Home() {
   };
 
   const handleArticleClick = (item: (typeof items)[0]) => {
-    router.push(`/reader?url=${encodeURIComponent(item.article.url)}`);
+    router.push(`/reader?url=${encodeURIComponent(item.article!.url)}`);
   };
 
   return (
@@ -133,7 +142,7 @@ export default function Home() {
               }}
               itemId={undefined}
               articleId={selectedItem.article_id}
-              articleTitle={selectedItem.article.title}
+              articleTitle={selectedItem.article?.title || ""}
               onPlaylistsUpdated={async () => {
                 handleRefresh();
               }}
@@ -149,13 +158,17 @@ export default function Home() {
                   value={sortBy}
                   onValueChange={(value) => setSortBy(value as ArticleSortBy)}
                 >
-                  <SelectTrigger className="w-[140px]">
+                  <SelectTrigger
+                    data-testid="home-sort-select"
+                    className="w-[140px]"
+                  >
                     <SelectValue placeholder="ソート" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="newest">新しい順</SelectItem>
                     <SelectItem value="oldest">古い順</SelectItem>
-                    <SelectItem value="title">タイトル順</SelectItem>
+                    <SelectItem value="title">タイトル順 (A-Z)</SelectItem>
+                    <SelectItem value="title-desc">タイトル順 (Z-A)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

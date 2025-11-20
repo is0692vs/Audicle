@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import * as supabaseLocal from './supabaseLocal'
 import type { PlaylistWithItems } from '@/types/playlist'
 
 export interface DefaultPlaylistResult {
@@ -13,6 +14,20 @@ export interface DefaultPlaylistResult {
  */
 export async function getOrCreateDefaultPlaylist(userEmail: string): Promise<DefaultPlaylistResult> {
     // デフォルトプレイリストを取得
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+        // Local fallback (tests)
+        const playlists = await supabaseLocal.getPlaylistsForOwner(userEmail)
+        const defaultPlaylist = playlists.find(p => p.is_default)
+        if (defaultPlaylist) {
+            const { playlist_items: items = [], ...playlistData } = defaultPlaylist
+            return { playlist: { ...playlistData, items, item_count: items.length } }
+        }
+        // create one
+        const newPlaylist = await supabaseLocal.createPlaylist(userEmail, '読み込んだ記事', '読み込んだ記事が自動的に追加されます')
+        await supabaseLocal.setDefaultPlaylist(userEmail, newPlaylist.id)
+        return { playlist: { ...newPlaylist, items: [], item_count: 0 } }
+    }
+
     const { data: defaultPlaylist, error: playlistError } = await supabase
         .from('playlists')
         .select(`

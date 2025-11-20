@@ -201,106 +201,65 @@ export default function ReaderView({
           </div>
         ) : (
           <>
-            {/* デスクトップ用メニューバー: 640px以上で表示 */}
-            <div className="hidden sm:flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 p-4 mb-4">
-              <div className="flex items-center gap-4">
-                {articleUrl && (
-                  <a
-                    href={articleUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 text-sm text-zinc-400 transition-colors hover:text-violet-400"
-                  >
-                    <span className="inline-flex size-6 items-center justify-center rounded-full bg-zinc-800 text-xs">
-                      ↗
-                    </span>
-                    元記事を開く
-                  </a>
-                )}
-                {downloadStatus === "completed" ? (
-                  <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-4 py-2 text-sm font-semibold text-emerald-400">
-                    <span aria-hidden>✅</span>
-                    <span>オフライン対応完了 ({chunks.length}チャンク) </span>
-                  </div>
-                ) : (
-                  <button
-                    onClick={startDownload}
-                    disabled={downloadStatus === "downloading"}
-                    className="inline-flex items-center gap-2 rounded-full bg-violet-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-violet-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 disabled:cursor-not-allowed disabled:bg-zinc-700"
-                  >
-                    {downloadStatus === "downloading" ? (
-                      <span className="inline-flex size-4 items-center justify-center">
-                        <span className="inline-flex size-4 animate-spin rounded-full border-[3px] border-white/40 border-t-white" />
-                      </span>
-                    ) : (
-                      <span aria-hidden>⬇️</span>
-                    )}
-                    <span>{downloadButtonLabel}</span>
-                  </button>
-                )}
-              </div>
-            </div>
-
             {renderDownloadPanel()}
 
             <section className="relative overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-linear-to-b from-zinc-900 via-transparent to-transparent" />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-zinc-900 via-transparent to-transparent" />
               <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-zinc-900 via-transparent to-transparent" />
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-zinc-900 via-transparent to-transparent" />
-              {/* モバイルでは最大高さを80vhに、デスクトップではヘッダーとコントロールバーを除いた高さを使用 */}
-              <div className="relative max-h-[80vh] sm:max-h-[calc(100vh-8rem-5rem)] overflow-y-auto px-4 sm:px-6 py-6 sm:py-8">
-                <div className="space-y-3 sm:space-y-4">
-                  {chunks.map((chunk) => {
-                    const isActive = chunk.id === currentChunkId;
-                    const isHeading = /^h[1-6]$/.test(chunk.type);
-                    const isListItem = chunk.type === "li";
-                    const isBlockquote = chunk.type === "blockquote";
+              <div className="space-y-3 sm:space-y-4">
+                {chunks.map((chunk) => {
+                  const isActive = chunk.id === currentChunkId;
+                  const isHeading = /^h[1-6]$/.test(chunk.type);
+                  const isListItem = chunk.type === "li";
+                  const isBlockquote = chunk.type === "blockquote";
 
-                    const headingFontSizeMap: Record<number, string> = {
-                      1: "text-3xl",
-                      2: "text-2xl",
-                      3: "text-xl",
-                      4: "text-lg",
-                      5: "text-base",
-                      6: "text-sm",
-                    };
+                  const headingFontSizeMap: Record<number, string> = {
+                    1: "text-3xl",
+                    2: "text-2xl",
+                    3: "text-xl",
+                    4: "text-lg",
+                    5: "text-base",
+                    6: "text-sm",
+                  };
 
-                    let typography = "text-lg leading-relaxed text-zinc-300";
-                    if (isHeading) {
-                      const level = parseInt(chunk.type.charAt(1), 10);
-                      const fontSize = headingFontSizeMap[level] ?? "text-xl";
-                      typography = cn(fontSize, "font-semibold");
-                    } else if (isListItem) {
-                      typography = "text-lg leading-relaxed text-zinc-300 ml-6";
-                    } else if (isBlockquote) {
-                      typography =
-                        "text-lg leading-relaxed text-zinc-300 border-l-4 border-zinc-700 pl-4 italic";
-                    }
+                  let typography = "text-lg leading-relaxed text-zinc-300";
+                  if (isHeading) {
+                    const level = parseInt(chunk.type.charAt(1), 10);
+                    const fontSize = headingFontSizeMap[level] ?? "text-xl";
+                    typography = cn(fontSize, "font-semibold");
+                  } else if (isListItem) {
+                    typography = "text-lg leading-relaxed text-zinc-300 ml-6";
+                  } else if (isBlockquote) {
+                    typography =
+                      "text-lg leading-relaxed text-zinc-300 border-l-4 border-zinc-700 pl-4 italic";
+                  }
 
-                    return (
+                  return (
+                    <div
+                      key={chunk.id}
+                      data-audicle-id={chunk.id}
+                      onClick={() => onChunkClick?.(chunk.id)}
+                      className={cn(
+                        "group cursor-pointer rounded-lg border border-transparent bg-zinc-800/50 px-4 sm:px-5 py-3 sm:py-4 transition-all duration-200 hover:border-violet-500/30 hover:bg-zinc-800",
+                        isActive
+                          ? "border-violet-500/60 bg-violet-900/30 ring-2 ring-violet-500/40"
+                          : ""
+                      )}
+                    >
                       <div
-                        key={chunk.id}
-                        data-audicle-id={chunk.id}
-                        onClick={() => onChunkClick?.(chunk.id)}
                         className={cn(
-                          "group cursor-pointer rounded-lg border border-transparent bg-zinc-800/50 px-4 sm:px-5 py-3 sm:py-4 transition-all duration-200 hover:border-violet-500/30 hover:bg-zinc-800",
-                          isActive
-                            ? "border-violet-500/60 bg-violet-900/30 ring-2 ring-violet-500/40"
-                            : ""
+                          "whitespace-pre-wrap text-base sm:text-lg",
+                          typography,
+                          isActive && !isHeading ? "font-medium" : undefined
                         )}
                       >
-                        <div
-                          className={cn(
-                            "whitespace-pre-wrap text-base sm:text-lg",
-                            typography,
-                            isActive && !isHeading ? "font-medium" : undefined
-                          )}
-                        >
-                          {chunk.text}
-                        </div>
+                        {chunk.text}
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  );
+                })}
               </div>
             </section>
           </>

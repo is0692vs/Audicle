@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-// @ts-ignore
+// @ts-expect-error next-pwa does not have types
 import withPWA from "next-pwa";
 
 const nextConfig: NextConfig = {

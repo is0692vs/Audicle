@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import * as supabaseLocal from '@/lib/supabaseLocal'
 import { requireAuth } from '@/lib/api-auth'
 import type { Playlist } from '@/types/playlist'
 
@@ -9,12 +10,27 @@ export async function GET() {
         const { userEmail, response } = await requireAuth()
         if (response) return response
 
-        const { data, error } = await supabase
-            .from('playlists')
-            .select('*, playlist_items(count)')
-            .eq('owner_email', userEmail)
-            .order('is_default', { ascending: false })
-            .order('created_at', { ascending: false })
+        let data: Playlist[] | null = null
+        let error: Error | null = null
+
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+            // Local fallback for tests (no Supabase configured)
+            try {
+                const playlists = await supabaseLocal.getPlaylistsForOwner(userEmail)
+                data = playlists
+            } catch (e) {
+                error = e as Error
+            }
+        } else {
+            const resp = await supabase
+                .from('playlists')
+                .select('*, playlist_items(count)')
+                .eq('owner_email', userEmail)
+                .order('is_default', { ascending: false })
+                .order('created_at', { ascending: false })
+            data = resp.data
+            error = resp.error
+        }
 
         if (error) {
             console.error('Supabase error:', error)
@@ -25,7 +41,7 @@ export async function GET() {
         }
 
         // カウントを含めて整形
-        const playlists = data.map((playlist: Playlist & { playlist_items?: { count: number }[] }) => ({
+        const playlists = (data || []).map((playlist: Playlist & { playlist_items?: { count: number }[] }) => ({
             ...playlist,
             item_count: playlist.playlist_items?.[0]?.count || 0,
             playlist_items: undefined,
@@ -57,28 +73,37 @@ export async function POST(request: Request) {
             )
         }
 
-        const { data, error } = await supabase
-            .from('playlists')
-            .insert({
-                owner_email: userEmail,
-                name,
-                description: description || null,
-                visibility: 'private',
-                is_default: false,
-                allow_fork: true,
-            })
-            .select()
-            .single()
+        let insertData: Playlist | null = null
+        let insertError: Error | null = null
 
-        if (error) {
-            console.error('Supabase error:', error)
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+            insertData = await supabaseLocal.createPlaylist(userEmail, name, description)
+        } else {
+            const resp = await supabase
+                .from('playlists')
+                .insert({
+                    owner_email: userEmail,
+                    name,
+                    description: description || null,
+                    visibility: 'private',
+                    is_default: false,
+                    allow_fork: true,
+                })
+                .select()
+                .single()
+            insertData = resp.data
+            insertError = resp.error
+        }
+
+        if (insertError || !insertData) {
+            console.error('Supabase/Local error:', insertError)
             return NextResponse.json(
                 { error: 'Failed to create playlist' },
                 { status: 500 }
             )
         }
 
-        return NextResponse.json(data as Playlist, { status: 201 })
+        return NextResponse.json(insertData as Playlist, { status: 201 })
     } catch (error) {
         console.error('Error in POST /api/playlists:', error)
         return NextResponse.json(

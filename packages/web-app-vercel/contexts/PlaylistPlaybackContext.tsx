@@ -59,23 +59,19 @@ function parseSortOption(sortOption: string | null): {
   order: "asc" | "desc" | null;
 } {
   if (!sortOption) {
-    return { field: null, order: null };
+    return { field: "position", order: "asc" };
   }
 
-  // 文字列形式に対応
-  switch (sortOption) {
-    case "position":
-      return { field: "position", order: "asc" };
-    case "title":
-      return { field: "title", order: "asc" };
-    case "added_at":
-      return { field: "added_at", order: "desc" };
-    default:
-      logger.warn(
-        `Unsupported sort option found in localStorage: ${sortOption}`
-      );
-      return { field: null, order: null };
+  const [field, orderSuffix] = sortOption.split("-");
+  const order: "asc" | "desc" = orderSuffix === "desc" ? "desc" : "asc";
+
+  const validFields = ["position", "title", "added_at"];
+  if (validFields.includes(field)) {
+    return { field, order };
   }
+
+  logger.warn(`Unsupported sort option found in localStorage: ${sortOption}`);
+  return { field: "position", order: "asc" };
 }
 
 function savePlaybackState(state: PlaylistPlaybackState): void {
@@ -168,13 +164,15 @@ export function PlaylistPlaybackProvider({
       // 最初の記事に遷移（自動再生フラグ付き）
       if (items.length > startIndex) {
         const firstItem = items[startIndex];
-        const readerUrl = createReaderUrl({
-          articleUrl: firstItem.article.url,
-          playlistId,
-          playlistIndex: startIndex,
-          autoplay: true,
-        });
-        router.push(readerUrl);
+        if (firstItem.article?.url) {
+          const readerUrl = createReaderUrl({
+            articleUrl: firstItem.article.url,
+            playlistId,
+            playlistIndex: startIndex,
+            autoplay: true,
+          });
+          router.push(readerUrl);
+        }
       }
     },
     [router]
@@ -201,10 +199,10 @@ export function PlaylistPlaybackProvider({
         currentIndex: prevState.currentIndex,
         nextIndex,
         totalCount: prevState.items.length,
-        articleUrl: nextItem?.article.url,
+        articleUrl: nextItem?.article?.url,
       });
 
-      if (nextItem && prevState.playlistId) {
+      if (nextItem && nextItem.article?.url && prevState.playlistId) {
         const nextUrl = createReaderUrl({
           articleUrl: nextItem.article.url,
           playlistId: prevState.playlistId,
@@ -245,10 +243,10 @@ export function PlaylistPlaybackProvider({
         currentIndex: prevState.currentIndex,
         prevIndex,
         totalCount: prevState.items.length,
-        articleUrl: prevItem?.article.url,
+        articleUrl: prevItem?.article?.url,
       });
 
-      if (prevItem && prevState.playlistId) {
+      if (prevItem && prevItem.article?.url && prevState.playlistId) {
         const prevUrl = createReaderUrl({
           articleUrl: prevItem.article.url,
           playlistId: prevState.playlistId,
@@ -301,10 +299,10 @@ export function PlaylistPlaybackProvider({
         logger.info("自動的に次の記事へ遷移", {
           nextIndex,
           totalCount: prevState.items.length,
-          articleUrl: nextItem?.article.url,
+          articleUrl: nextItem?.article?.url,
         });
 
-        if (nextItem && prevState.playlistId) {
+        if (nextItem && nextItem.article?.url && prevState.playlistId) {
           const nextUrl = createReaderUrl({
             articleUrl: nextItem.article.url,
             playlistId: prevState.playlistId,
@@ -359,10 +357,23 @@ export function PlaylistPlaybackProvider({
         isDefault: targetPlaylist.is_default,
       });
 
+      // localStorageからsortオプションを読み込み
+      const sortKey = `${STORAGE_KEYS.PLAYLIST_SORT_PREFIX}${targetPlaylist.id}`;
+      const savedSortOption =
+        typeof window !== "undefined" ? localStorage.getItem(sortKey) : null;
+      const { field: sortField, order: sortOrder } =
+        parseSortOption(savedSortOption);
+
+      // APIにソートパラメータを渡す
+      const queryParams = new URLSearchParams();
+      if (sortField && sortOrder) {
+        queryParams.set("sortField", sortField);
+        queryParams.set("sortOrder", sortOrder);
+      }
+      const apiUrl = `/api/playlists/${targetPlaylist.id}${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+
       // プレイリスト内のアイテムを取得
-      const itemsResponse = await fetch(
-        `/api/playlists/${targetPlaylist.id}/items`
-      );
+      const itemsResponse = await fetch(apiUrl);
 
       if (!itemsResponse.ok) {
         logger.warn("プレイリストアイテムの取得に失敗", {
@@ -371,11 +382,12 @@ export function PlaylistPlaybackProvider({
         return;
       }
 
-      const items: PlaylistItemWithArticle[] = await itemsResponse.json();
+      const playlistData = await itemsResponse.json();
+      const items: PlaylistItemWithArticle[] = playlistData.items || [];
 
       // 現在の記事のインデックスを特定
       const currentIndex = items.findIndex(
-        (item) => item.article.url === articleUrl
+        (item) => item.article?.url === articleUrl
       );
 
       if (currentIndex === -1) {
@@ -397,8 +409,8 @@ export function PlaylistPlaybackProvider({
         items,
         totalCount: items.length,
         isPlaylistMode: true,
-        sortField: null,
-        sortOrder: null,
+        sortField,
+        sortOrder,
       });
     } catch (error) {
       logger.error("プレイリスト初期化エラー", error);

@@ -27,13 +27,15 @@ import type {
   PlaylistItemWithArticle,
 } from "@/types/playlist";
 
-type SortOption = "position" | "title" | "added_at";
-
 const SORT_OPTIONS = {
   position: "位置順",
-  title: "タイトル順",
-  added_at: "追加日時順",
+  title: "タイトル順 (A-Z)",
+  "title-desc": "タイトル順 (Z-A)",
+  added_at: "追加日時順 (古い順)",
+  "added_at-desc": "追加日時順 (新しい順)",
 } as const;
+
+type SortOption = keyof typeof SORT_OPTIONS;
 
 // 型ガード関数
 function isSortOption(value: string): value is SortOption {
@@ -74,9 +76,13 @@ export default function PlaylistDetailPage() {
         case "position":
           return (a.position ?? 0) - (b.position ?? 0);
         case "title":
-          return a.article.title.localeCompare(b.article.title);
+          return (a.article?.title || "").localeCompare(b.article?.title || "");
+        case "title-desc":
+          return (b.article?.title || "").localeCompare(a.article?.title || "");
         case "added_at":
           return a.added_at.localeCompare(b.added_at);
+        case "added_at-desc":
+          return b.added_at.localeCompare(a.added_at);
         default:
           return 0;
       }
@@ -145,7 +151,7 @@ export default function PlaylistDetailPage() {
     const item = sortedItems.find((item) => item.article_id === articleId);
     if (item) {
       setSelectedArticleId(articleId);
-      setSelectedArticleTitle(item.article.title);
+      setSelectedArticleTitle(item.article?.title || "");
       setIsPlaylistModalOpen(true);
     }
   };
@@ -269,7 +275,7 @@ export default function PlaylistDetailPage() {
                         }
                       }}
                     >
-                      <SelectTrigger className="w-32">
+                      <SelectTrigger data-testid="playlist-sort-select" className="w-32">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -289,7 +295,7 @@ export default function PlaylistDetailPage() {
                       // opening Reader with playlist ID only.
                       const firstArticleUrl =
                         playlist.items && playlist.items.length > 0
-                          ? playlist.items[0].article.url
+                          ? playlist.items[0].article?.url
                           : undefined;
 
                       router.push(
@@ -325,24 +331,26 @@ export default function PlaylistDetailPage() {
               <ArticleCard
                 key={item.id}
                 item={item}
-                onArticleClick={(playlistItem) =>
-                  router.push(
-                    createReaderUrl({
-                      articleUrl: playlistItem.article.url,
-                      playlistId: playlist.id,
-                      playlistIndex: index,
-                      autoplay: true,
-                    })
-                  )
-                }
-                href={createReaderUrl({
+                onArticleClick={(playlistItem) => {
+                  if (playlistItem.article?.url) {
+                    router.push(
+                      createReaderUrl({
+                        articleUrl: playlistItem.article.url,
+                        playlistId: playlist.id,
+                        playlistIndex: index,
+                        autoplay: true,
+                      })
+                    );
+                  }
+                }}
+                href={item.article?.url ? createReaderUrl({
                   articleUrl: item.article.url,
                   playlistId: playlist.id,
                   playlistIndex: index,
-                })}
+                }) : undefined}
                 onPlaylistAdd={handlePlaylistAdd}
                 onRemove={(id) =>
-                  handleRemoveFromPlaylist(id, item.article.title)
+                  handleRemoveFromPlaylist(id, item.article?.title || "")
                 }
               />
             ))}

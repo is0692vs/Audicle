@@ -267,10 +267,12 @@ export default function ReaderPageClient() {
       id,
       url: maybeUrl,
       titleFallback,
+      isPlaylistMode = false,
     }: {
       id?: string;
       url?: string;
       titleFallback?: string;
+      isPlaylistMode?: boolean;
     }) => {
       setIsLoading(true);
       setError("");
@@ -315,7 +317,9 @@ export default function ReaderPageClient() {
         const data = await extractRes.json();
         const chunksWithId = convertParagraphsToChunks(data.content);
 
-        setTitle(data.title || resolvedTitle || "");
+        setTitle(
+          isPlaylistMode ? resolvedTitle : data.title || resolvedTitle || ""
+        );
         setChunks(chunksWithId);
         setUrl(resolvedUrl);
         setArticleId(resolvedId);
@@ -449,7 +453,7 @@ export default function ReaderPageClient() {
             newIndex,
             playlistId: playlistIdFromQuery,
             articleId: item.article_id,
-            articleUrl: item.article.url,
+            articleUrl: item.article?.url,
           });
 
           // 前の再生状態をクリア
@@ -480,8 +484,9 @@ export default function ReaderPageClient() {
             // localStorageに記事が見つからない場合、サーバーから取得してstateにセット
             fetchArticleAndSetState({
               id: item.article_id,
-              url: item.article.url,
-              titleFallback: item.article.title,
+              url: item.article?.url,
+              titleFallback: item.article?.title,
+              isPlaylistMode: true,
             });
           }
         } else {
@@ -509,7 +514,16 @@ export default function ReaderPageClient() {
   ]); // URLクエリパラメータが指定されている場合は記事を自動取得
   useEffect(() => {
     // プレイリスト読み込みが完了してから記事を読み込む
-    if (urlFromQuery && arePlaylistsLoaded && !hasLoadedFromQuery) {
+    // If a playlist query param is present, prefer initializing from the
+    // playlist context instead of loading the article directly, to ensure
+    // the `title` displayed is the playlist's item title (not the remote
+    // extracted document title).
+    if (
+      urlFromQuery &&
+      arePlaylistsLoaded &&
+      !hasLoadedFromQuery &&
+      !playlistIdFromQuery
+    ) {
       setUrl(urlFromQuery || "");
       // 既にlocalStorageに同じURLの記事が存在するかチェック
       const existingArticle = articleStorage
@@ -623,9 +637,13 @@ export default function ReaderPageClient() {
   // If the reader was opened with a `playlist` param, ensure the playback context
   // is seeded from that playlist so the Prev/Next UI works deterministically.
   useEffect(() => {
+    // Initialize playlist from query if either:
+    //  - playlistState is not already in playlist mode
+    //  - OR we are in playlist mode but the playlistId does not match the query
     if (
       playlistIdFromQuery &&
-      !playlistState.isPlaylistMode &&
+      (!playlistState.isPlaylistMode ||
+        playlistState.playlistId !== playlistIdFromQuery) &&
       session?.user?.email
     ) {
       logger.info("Reader opened with playlist query, initializing playlist", {
@@ -651,7 +669,7 @@ export default function ReaderPageClient() {
     (index: number) => {
       stop(); // ページ遷移前に再生を停止
       const item = playlistState.items[index];
-      if (item && playlistState.playlistId) {
+      if (item && item.article?.url && playlistState.playlistId) {
         const readerUrl = createReaderUrl({
           articleUrl: item.article.url,
           playlistId: playlistState.playlistId,
@@ -777,10 +795,6 @@ export default function ReaderPageClient() {
                 <div className="min-w-0 flex-1">
                   <p className="text-xs text-zinc-400 truncate">
                     {playlistState.playlistName}
-                  </p>
-                  <p className="text-xs sm:text-sm text-zinc-500">
-                    {playlistState.currentIndex + 1} /{" "}
-                    {playlistState.totalCount}
                   </p>
                 </div>
               </div>
