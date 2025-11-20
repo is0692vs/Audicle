@@ -275,7 +275,7 @@ export default function PlaylistDetailPage() {
                         }
                       }}
                     >
-                      <SelectTrigger className="w-32">
+                      <SelectTrigger data-testid="playlist-sort-select" className="w-32">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>

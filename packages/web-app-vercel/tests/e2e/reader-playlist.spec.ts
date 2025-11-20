@@ -163,8 +163,9 @@ test.describe('Reader - Playlist related navigation', () => {
         await page.goto(`/playlists/${created.id}`);
 
         // Change sort to Title Descending (Z-A)
-        // Select trigger usually has role combobox
-        await page.getByRole('combobox').click();
+        // Use explicit data-testid for the playlist sort select to avoid flakiness
+        await page.waitForSelector('[data-testid="playlist-sort-select"]', { state: 'visible', timeout: 5000 });
+        await page.getByTestId('playlist-sort-select').click();
         await page.getByRole('option', { name: 'タイトル順 (Z-A)' }).click();
 
         // Wait for sort to apply. Cherry should be first.
