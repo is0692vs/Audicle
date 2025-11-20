@@ -194,7 +194,7 @@ export default function PlaylistDetailPage() {
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={() => router.push("/playlists")}
-            className="text-zinc-400 hover:text-violet-400 transition-colors"
+            className="text-zinc-400 hover:text-primary transition-colors"
           >
             ← プレイリスト一覧
           </button>
@@ -275,7 +275,10 @@ export default function PlaylistDetailPage() {
                         }
                       }}
                     >
-                      <SelectTrigger data-testid="playlist-sort-select" className="w-32">
+                      <SelectTrigger
+                        data-testid="playlist-sort-select"
+                        className="w-32"
+                      >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -343,11 +346,15 @@ export default function PlaylistDetailPage() {
                     );
                   }
                 }}
-                href={item.article?.url ? createReaderUrl({
-                  articleUrl: item.article.url,
-                  playlistId: playlist.id,
-                  playlistIndex: index,
-                }) : undefined}
+                href={
+                  item.article?.url
+                    ? createReaderUrl({
+                        articleUrl: item.article.url,
+                        playlistId: playlist.id,
+                        playlistIndex: index,
+                      })
+                    : undefined
+                }
                 onPlaylistAdd={handlePlaylistAdd}
                 onRemove={(id) =>
                   handleRemoveFromPlaylist(id, item.article?.title || "")

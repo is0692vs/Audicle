@@ -1,6 +1,7 @@
-import { UserSettings, VoiceModel, Language, VOICE_MODELS } from '@/types/settings'
+import { UserSettings, VoiceModel, Language, ColorTheme, VOICE_MODELS, COLOR_THEMES } from '@/types/settings'
 
 const VALID_VOICE_MODELS: VoiceModel[] = VOICE_MODELS.map(m => m.value);
+const VALID_COLOR_THEMES: ColorTheme[] = COLOR_THEMES.map(m => m.value);
 
 const VALID_LANGUAGES = ['ja-JP', 'en-US'] as const;
 
@@ -30,6 +31,14 @@ export function validateLanguage(language: unknown): language is Language {
 }
 
 /**
+ * Validate color theme
+ * @param theme - Color theme to validate
+ */
+export function validateColorTheme(theme: unknown): theme is ColorTheme {
+    return VALID_COLOR_THEMES.includes(theme as ColorTheme)
+}
+
+/**
  * Validate complete UserSettings object
  */
 export function validateUserSettings(data: unknown): data is UserSettings {
@@ -40,6 +49,7 @@ export function validateUserSettings(data: unknown): data is UserSettings {
     return (
         validatePlaybackSpeed(settings.playback_speed) &&
         validateVoiceModel(settings.voice_model) &&
-        validateLanguage(settings.language)
+        validateLanguage(settings.language) &&
+        validateColorTheme(settings.color_theme)
     )
 }

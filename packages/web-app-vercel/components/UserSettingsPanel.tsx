@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
+import { useSession } from "next-auth/react";
+import { useDebounce } from "use-debounce";
 import {
   useUserSettings,
   useUpdateUserSettingsMutation,
@@ -11,23 +13,59 @@ import {
   Language,
   VoiceModel,
   DEFAULT_SETTINGS,
+  COLOR_THEMES,
+  ColorTheme,
 } from "@/types/settings";
+import { applyTheme } from "@/lib/theme";
 
 export default function UserSettingsPanel() {
+  const { data: session } = useSession();
   const { data: originalSettings, isLoading, error } = useUserSettings();
   const updateSettingsMutation = useUpdateUserSettingsMutation();
 
   const [settings, setSettings] = useState(
     originalSettings || DEFAULT_SETTINGS
   );
+  const [previewTheme, setPreviewTheme] = useState<ColorTheme>(
+    originalSettings?.color_theme || DEFAULT_SETTINGS.color_theme
+  );
   const [hasChanged, setHasChanged] = useState(false);
+
+  // Debounce the theme for saving (1000ms delay)
+  const [debouncedTheme] = useDebounce(previewTheme, 1000);
+
+  // Keep refs to the latest values for unmount flush
+  const latestPreviewRef = useRef(previewTheme);
+  const latestSettingsRef = useRef(settings);
+  useEffect(() => {
+    latestPreviewRef.current = previewTheme;
+  }, [previewTheme]);
+  useEffect(() => {
+    latestSettingsRef.current = settings;
+  }, [settings]);
 
   // originalSettingsが変わったら、ローカル変更がない場合は同期
   useEffect(() => {
     if (originalSettings && !hasChanged) {
       setSettings(originalSettings);
+      setPreviewTheme(originalSettings.color_theme);
     }
   }, [originalSettings, hasChanged]);
+
+  // Load local settings for guest users
+  useEffect(() => {
+    if (!session?.user?.email) {
+      const storedSettings = localStorage.getItem("audicle-user-settings");
+      if (storedSettings) {
+        try {
+          const parsed = JSON.parse(storedSettings);
+          setSettings({ ...DEFAULT_SETTINGS, ...parsed });
+        } catch (e) {
+          console.error("Failed to parse local settings:", e);
+        }
+      }
+    }
+  }, [session]);
 
   const handlePlaybackSpeedChange = (value: number) => {
     setSettings({ ...settings, playback_speed: value });
@@ -50,9 +88,88 @@ export default function UserSettingsPanel() {
     setHasChanged(true);
   };
 
+  const handleColorThemeChange = (value: string) => {
+    const theme = value as ColorTheme;
+    // Update preview immediately
+    setPreviewTheme(theme);
+    applyTheme(theme); // Apply immediately to CSS
+    setHasChanged(true);
+  };
+
+  // Auto-save theme to DB when debounced theme changes
+  useEffect(() => {
+    if (!hasChanged) return;
+
+    const saveTheme = async () => {
+      try {
+        if (session?.user?.email) {
+          // Logged in user: save to DB
+          const newSettings = { ...settings, color_theme: debouncedTheme };
+          await updateSettingsMutation.mutateAsync(newSettings);
+          setSettings(newSettings);
+        } else {
+          // Guest user: save to localStorage
+          const newSettings = { ...settings, color_theme: debouncedTheme };
+          localStorage.setItem(
+            "audicle-user-settings",
+            JSON.stringify(newSettings)
+          );
+          localStorage.setItem("audicle-color-theme", debouncedTheme);
+          setSettings(newSettings);
+        }
+        // Don't show toast for auto-save to avoid notification spam
+      } catch (error) {
+        console.error("Error saving theme:", error);
+        toast.error(
+          error instanceof Error ? error.message : "テーマの保存に失敗しました"
+        );
+      }
+    };
+
+    saveTheme();
+  }, [debouncedTheme, session, hasChanged]);
+
+  // On unmount: flush any unsaved theme changes immediately
+  useEffect(() => {
+    return () => {
+      if (!hasChanged) return;
+      const finalPreview = latestPreviewRef.current;
+      const finalSettings = latestSettingsRef.current;
+      if (finalPreview !== finalSettings.color_theme) {
+        // Fire and forget; it's fine to call async from cleanup
+        (async () => {
+          try {
+            if (session?.user?.email) {
+              await updateSettingsMutation.mutateAsync({
+                ...finalSettings,
+                color_theme: finalPreview,
+              });
+            } else {
+              localStorage.setItem(
+                "audicle-user-settings",
+                JSON.stringify({ ...finalSettings, color_theme: finalPreview })
+              );
+              localStorage.setItem("audicle-color-theme", finalPreview);
+            }
+          } catch (e) {
+            console.error("Failed to flush theme on unmount:", e);
+          }
+        })();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleSave = async () => {
     try {
-      await updateSettingsMutation.mutateAsync(settings);
+      if (session?.user?.email) {
+        // Logged in user: save to DB
+        await updateSettingsMutation.mutateAsync(settings);
+      } else {
+        // Guest user: save to localStorage
+        localStorage.setItem("audicle-user-settings", JSON.stringify(settings));
+        localStorage.setItem("audicle-color-theme", settings.color_theme);
+      }
       setHasChanged(false);
       toast.success("設定を保存しました");
     } catch (error) {
@@ -66,6 +183,7 @@ export default function UserSettingsPanel() {
   const handleCancel = () => {
     if (originalSettings) {
       setSettings(originalSettings);
+      setPreviewTheme(originalSettings.color_theme);
       setHasChanged(false);
     }
   };
@@ -98,6 +216,29 @@ export default function UserSettingsPanel() {
       <h2 className="text-xl font-bold mb-6">再生設定</h2>
 
       <div className="space-y-6">
+        {/* Color Theme Section */}
+        <div>
+          <label className="block text-sm font-medium mb-2">カラーテーマ</label>
+          <div className="flex gap-3 flex-wrap">
+            {COLOR_THEMES.map((theme) => (
+              <button
+                key={theme.value}
+                onClick={() => handleColorThemeChange(theme.value)}
+                className={`w-12 h-12 rounded-full border-2 transition-all ${
+                  previewTheme === theme.value
+                    ? "border-white scale-110"
+                    : "border-zinc-600 hover:border-zinc-400"
+                }`}
+                style={{ backgroundColor: theme.color }}
+                title={theme.label}
+              />
+            ))}
+          </div>
+          <p className="text-xs text-zinc-400 mt-1">
+            クリックしてテーマを切り替え（リアルタイムプレビュー、1秒後に自動保存）
+          </p>
+        </div>
+
         {/* Playback Speed Slider */}
         <div>
           <label className="block text-sm font-medium mb-2">再生速度</label>

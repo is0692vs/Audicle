@@ -130,7 +130,10 @@ export default function PlaylistsPage() {
                   value={sortBy}
                   onValueChange={(value) => setSortBy(value as PlaylistSortBy)}
                 >
-                  <SelectTrigger data-testid="playlists-sort-select" className="w-[140px]">
+                  <SelectTrigger
+                    data-testid="playlists-sort-select"
+                    className="w-[140px]"
+                  >
                     <SelectValue placeholder="ソート" />
                   </SelectTrigger>
                   <SelectContent>

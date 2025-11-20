@@ -1,6 +1,8 @@
 // packages/web-app-vercel/app/layout.tsx
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import dynamic from "next/dynamic";
 import ClientLayout from "./client-layout";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
@@ -15,6 +17,27 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="ja" data-theme="ocean" suppressHydrationWarning>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
+      >
+        <Analytics />
+        <ClientLayout>{children}</ClientLayout>
+      </body>
+    </html>
+  );
+}
+
+// NOTE: `metadata` and `viewport` are essential for SEO, PWA features,
+// and theme color support across platforms. They were removed in a previous
+// change and should be persisted at module scope so Next.js can pick them up.
 export const metadata: Metadata = {
   title: "Audicle - Web Reader with TTS",
   description:
@@ -27,24 +50,8 @@ export const metadata: Metadata = {
   },
 };
 
+// `viewport.themeColor` is used by Next to set color for mobile browser
+// UI elements; keep it at module scope so it is included in the app HTML.
 export const viewport = {
   themeColor: "#000000",
 };
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html lang="ja" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        suppressHydrationWarning
-      >
-        <Analytics />
-        <ClientLayout>{children}</ClientLayout>
-      </body>
-    </html>
-  );
-}

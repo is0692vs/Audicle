@@ -20,7 +20,7 @@ export async function GET() {
         // Fetch user settings from Supabase
         const { data, error } = await supabase
             .from('user_settings')
-            .select('playback_speed, voice_model, language, created_at, updated_at')
+            .select('playback_speed, voice_model, language, color_theme, created_at, updated_at')
             .eq('user_id', userId)
             .single()
 
