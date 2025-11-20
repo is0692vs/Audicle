@@ -66,6 +66,11 @@ export default defineConfig({
             NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || '',
             NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'http://localhost:3000',
             AUTH_ENV: process.env.AUTH_ENV || '',
+            // Expose CI and test helpers to the Next.js dev server started by Playwright
+            CI: process.env.CI || '',
+            TEST_SESSION_TOKEN: process.env.TEST_SESSION_TOKEN || '',
+            // Provide a default EMAIL_HASH_SECRET for local/test runs to avoid "must be set" errors.
+            EMAIL_HASH_SECRET: process.env.EMAIL_HASH_SECRET || 'test-secret-for-playwright',
         },
     },
 })

@@ -45,8 +45,9 @@ function getTTSClient(): TextToSpeechClient | null {
 
     const credentialsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
     if (!credentialsJson) {
-        // In test environments, return null to allow fallback behavior
-        if (process.env.NODE_ENV !== 'production') {
+        // In test environments or CI, return null to allow fallback behavior
+        // (the caller will synthesize a dummy buffer).
+        if (process.env.NODE_ENV !== 'production' || process.env.CI === 'true' || process.env.TEST_SESSION_TOKEN) {
             console.log('[INFO] GOOGLE_APPLICATION_CREDENTIALS_JSON not set, using fallback for test environment');
             return null;
         }

@@ -518,7 +518,12 @@ export default function ReaderPageClient() {
     // playlist context instead of loading the article directly, to ensure
     // the `title` displayed is the playlist's item title (not the remote
     // extracted document title).
-    if (urlFromQuery && arePlaylistsLoaded && !hasLoadedFromQuery && !playlistIdFromQuery) {
+    if (
+      urlFromQuery &&
+      arePlaylistsLoaded &&
+      !hasLoadedFromQuery &&
+      !playlistIdFromQuery
+    ) {
       setUrl(urlFromQuery || "");
       // 既にlocalStorageに同じURLの記事が存在するかチェック
       const existingArticle = articleStorage
@@ -637,7 +642,8 @@ export default function ReaderPageClient() {
     //  - OR we are in playlist mode but the playlistId does not match the query
     if (
       playlistIdFromQuery &&
-      ( !playlistState.isPlaylistMode || playlistState.playlistId !== playlistIdFromQuery ) &&
+      (!playlistState.isPlaylistMode ||
+        playlistState.playlistId !== playlistIdFromQuery) &&
       session?.user?.email
     ) {
       logger.info("Reader opened with playlist query, initializing playlist", {
