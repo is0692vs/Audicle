@@ -7,13 +7,11 @@ import { Toaster } from "react-hot-toast";
 import { PlaylistPlaybackProvider } from "@/contexts/PlaylistPlaybackContext";
 import { useSession } from "next-auth/react";
 import { useUserSettings } from "@/lib/hooks/useUserSettings";
+import SessionProviderWrapper from "./session-provider-wrapper";
 import { applyTheme } from "@/lib/theme";
 import { DEFAULT_SETTINGS, ColorTheme } from "@/types/settings";
 
 export default function ClientLayout({ children }: { children: ReactNode }) {
-  const { data: session, status } = useSession();
-  const userEmail = session?.user?.email;
-  const { data: userSettings } = useUserSettings();
 
   const queryClient = useMemo(
     () =>
@@ -32,28 +30,40 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
   );
 
   // Initialize theme on mount
-  useEffect(() => {
-    if (status === "loading") {
-      return; // セッション状態が確定するまで待機
-    }
+  function Content({ children }: { children: ReactNode }) {
+    const { data: session, status } = useSession();
+    const { data: userSettings } = useUserSettings();
 
-    if (status === "authenticated" && userSettings) {
-      // Logged in user: use DB settings
-      applyTheme(userSettings.color_theme);
-    } else {
-      // Guest user: use localStorage or default
-      const storedTheme = localStorage.getItem("audicle-color-theme") as string;
-      const theme = storedTheme || DEFAULT_SETTINGS.color_theme;
-      applyTheme(theme as ColorTheme);
-    }
-  }, [status, userSettings]);
+    // Initialize theme on mount
+    useEffect(() => {
+      if (status === "loading") {
+        return; // セッション状態が確定するまで待機
+      }
 
-  return (
-    <QueryClientProvider client={queryClient}>
+      if (status === "authenticated" && userSettings) {
+        // Logged in user: use DB settings
+        applyTheme(userSettings.color_theme);
+      } else {
+        // Guest user: use localStorage or default
+        const storedTheme = localStorage.getItem("audicle-color-theme") as string;
+        const theme = storedTheme || DEFAULT_SETTINGS.color_theme;
+        applyTheme(theme as ColorTheme);
+      }
+    }, [status, userSettings]);
+
+    return (
       <PlaylistPlaybackProvider>
         <Toaster position="top-right" />
         {children}
       </PlaylistPlaybackProvider>
+    );
+  }
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <SessionProviderWrapper>
+        <Content>{children}</Content>
+      </SessionProviderWrapper>
     </QueryClientProvider>
   );
 }

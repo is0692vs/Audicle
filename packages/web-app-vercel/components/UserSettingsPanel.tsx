@@ -30,7 +30,7 @@ export default function UserSettingsPanel() {
     originalSettings?.color_theme || DEFAULT_SETTINGS.color_theme
   );
   const [hasChanged, setHasChanged] = useState(false);
-  
+
   // Debounce the theme for saving (1000ms delay)
   const [debouncedTheme] = useDebounce(previewTheme, 1000);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -101,7 +101,10 @@ export default function UserSettingsPanel() {
         } else {
           // Guest user: save to localStorage
           const newSettings = { ...settings, color_theme: debouncedTheme };
-          localStorage.setItem("audicle-user-settings", JSON.stringify(newSettings));
+          localStorage.setItem(
+            "audicle-user-settings",
+            JSON.stringify(newSettings)
+          );
           localStorage.setItem("audicle-color-theme", debouncedTheme);
           setSettings(newSettings);
         }
