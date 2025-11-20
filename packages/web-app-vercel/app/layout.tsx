@@ -7,7 +7,6 @@ import ClientLayout from "./client-layout";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],

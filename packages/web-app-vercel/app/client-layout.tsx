@@ -12,7 +12,6 @@ import { applyTheme } from "@/lib/theme";
 import { DEFAULT_SETTINGS, ColorTheme } from "@/types/settings";
 
 export default function ClientLayout({ children }: { children: ReactNode }) {
-
   const queryClient = useMemo(
     () =>
       new QueryClient({
@@ -45,7 +44,9 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
         applyTheme(userSettings.color_theme);
       } else {
         // Guest user: use localStorage or default
-        const storedTheme = localStorage.getItem("audicle-color-theme") as string;
+        const storedTheme = localStorage.getItem(
+          "audicle-color-theme"
+        ) as string;
         const theme = storedTheme || DEFAULT_SETTINGS.color_theme;
         applyTheme(theme as ColorTheme);
       }
