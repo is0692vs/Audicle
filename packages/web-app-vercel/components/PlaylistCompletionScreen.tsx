@@ -34,7 +34,7 @@ export function PlaylistCompletionScreen({
         <div className="flex flex-col gap-3 justify-center">
           <button
             onClick={onReplay}
-            className="px-6 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors flex items-center justify-center gap-2 font-semibold"
+            className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 font-semibold"
           >
             <RotateCcw className="size-5" />
             もう一度聴く

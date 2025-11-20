@@ -193,7 +193,7 @@ export default function PopularPage() {
           {/* Content */}
           {isLoading && articles.length === 0 ? (
             <div className="text-center py-12 text-zinc-500">
-              <Spinner size={32} className="border-violet-600 mb-4" />
+              <Spinner size={32} className="border-primary mb-4" />
               <p className="text-lg">読み込み中...</p>
             </div>
           ) : error ? (
@@ -205,7 +205,7 @@ export default function PopularPage() {
               <p className="text-zinc-400 mb-6">{error}</p>
               <Button
                 onClick={handleRefresh}
-                className="bg-violet-600 hover:bg-violet-700 text-white"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
                 disabled={isLoading || isRateLimited}
               >
                 <RotateCcw className="size-4 mr-2" />
@@ -223,7 +223,7 @@ export default function PopularPage() {
               </p>
               <Button
                 onClick={handleRefresh}
-                className="bg-violet-600 hover:bg-violet-700 text-white"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
                 disabled={isLoading || isRateLimited}
               >
                 <RotateCcw className="size-4 mr-2" />

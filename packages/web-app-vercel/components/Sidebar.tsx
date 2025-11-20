@@ -118,7 +118,7 @@ export default function Sidebar() {
 
           {/* New article button */}
           <Button
-            className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
             onClick={() => router.push("/reader")}
           >
             <Plus className="h-4 w-4 mr-2" />

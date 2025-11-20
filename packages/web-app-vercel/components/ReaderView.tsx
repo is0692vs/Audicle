@@ -135,7 +135,7 @@ export default function ReaderView({
         {progress.total > 0 && (
           <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-zinc-800">
             <div
-              className="h-full rounded-full bg-violet-600 transition-[width] duration-300 ease-out"
+              className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out"
               style={{ width: `${percentage}%` }}
             />
           </div>
