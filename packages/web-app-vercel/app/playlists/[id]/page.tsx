@@ -194,7 +194,7 @@ export default function PlaylistDetailPage() {
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={() => router.push("/playlists")}
-            className="text-zinc-400 hover:text-violet-400 transition-colors"
+            className="text-zinc-400 hover:text-white transition-colors"
           >
             ← プレイリスト一覧
           </button>
@@ -214,13 +214,13 @@ export default function PlaylistDetailPage() {
               type="text"
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              className="w-full px-4 py-2 border border-zinc-700 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full px-4 py-2 border border-zinc-700 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-violet-600 focus:border-transparent"
               required
             />
             <textarea
               value={editDescription}
               onChange={(e) => setEditDescription(e.target.value)}
-              className="w-full px-4 py-2 border border-zinc-700 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full px-4 py-2 border border-zinc-700 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-violet-600 focus:border-transparent"
               rows={3}
               placeholder="説明（省略可）"
             />
@@ -228,7 +228,7 @@ export default function PlaylistDetailPage() {
               <button
                 onClick={handleSave}
                 disabled={updatePlaylistMutation.isPending}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:bg-zinc-700 transition-colors"
+                className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:bg-zinc-700 transition-colors"
               >
                 {updatePlaylistMutation.isPending ? "保存中..." : "保存"}
               </button>
@@ -275,7 +275,10 @@ export default function PlaylistDetailPage() {
                         }
                       }}
                     >
-                      <SelectTrigger data-testid="playlist-sort-select" className="w-32">
+                      <SelectTrigger
+                        data-testid="playlist-sort-select"
+                        className="w-32"
+                      >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -307,7 +310,7 @@ export default function PlaylistDetailPage() {
                         })
                       );
                     }}
-                    className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2 whitespace-nowrap"
+                    className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors flex items-center gap-2 whitespace-nowrap"
                   >
                     <Play className="size-4" />
                     再生
@@ -343,11 +346,15 @@ export default function PlaylistDetailPage() {
                     );
                   }
                 }}
-                href={item.article?.url ? createReaderUrl({
-                  articleUrl: item.article.url,
-                  playlistId: playlist.id,
-                  playlistIndex: index,
-                }) : undefined}
+                href={
+                  item.article?.url
+                    ? createReaderUrl({
+                        articleUrl: item.article.url,
+                        playlistId: playlist.id,
+                        playlistIndex: index,
+                      })
+                    : undefined
+                }
                 onPlaylistAdd={handlePlaylistAdd}
                 onRemove={(id) =>
                   handleRemoveFromPlaylist(id, item.article?.title || "")

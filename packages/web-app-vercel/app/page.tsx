@@ -207,7 +207,7 @@ export default function Home() {
               </p>
               <Button
                 onClick={handleRefresh}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                className="bg-violet-600 hover:bg-violet-700 text-white"
               >
                 <RotateCcw className="size-4 mr-2" />
                 再試行
@@ -224,7 +224,7 @@ export default function Home() {
               </p>
               <Button
                 onClick={() => router.push("/reader")}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                className="bg-violet-600 hover:bg-violet-700 text-white"
               >
                 <Plus className="size-4 mr-2" />
                 新しい記事を読む

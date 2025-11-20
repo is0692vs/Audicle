@@ -252,7 +252,7 @@ export default function UserSettingsPanel() {
               onChange={(e) =>
                 handlePlaybackSpeedChange(parseFloat(e.target.value))
               }
-              className="flex-1 h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-primary"
+              className="flex-1 h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-violet-600"
             />
             <span className="w-12 text-right font-semibold">
               {settings.playback_speed.toFixed(1)}x
@@ -269,7 +269,7 @@ export default function UserSettingsPanel() {
           <select
             value={settings.language}
             onChange={(e) => handleLanguageChange(e.target.value)}
-            className="w-full px-3 py-2 border border-zinc-700 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="w-full px-3 py-2 border border-zinc-700 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-violet-600 focus:border-transparent"
           >
             <option value="ja-JP">日本語</option>
             <option value="en-US">English</option>
@@ -282,7 +282,7 @@ export default function UserSettingsPanel() {
           <select
             value={settings.voice_model}
             onChange={(e) => handleVoiceModelChange(e.target.value)}
-            className="w-full px-3 py-2 border border-zinc-700 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="w-full px-3 py-2 border border-zinc-700 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-violet-600 focus:border-transparent"
           >
             {VOICE_MODELS.map((model) => (
               <option key={model.value} value={model.value}>
@@ -297,7 +297,7 @@ export default function UserSettingsPanel() {
           <button
             onClick={handleSave}
             disabled={!hasChanged || updateSettingsMutation.isPending}
-            className="px-4 py-2 bg-primary hover:bg-primary/90 disabled:bg-zinc-700 disabled:text-zinc-500 text-primary-foreground rounded-lg transition-colors font-medium"
+            className="px-4 py-2 bg-violet-600 hover:bg-violet-700 disabled:bg-zinc-700 disabled:text-zinc-500 text-white rounded-lg transition-colors font-medium"
           >
             {updateSettingsMutation.isPending ? "保存中..." : "保存"}
           </button>

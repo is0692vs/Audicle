@@ -31,7 +31,7 @@ export function PeriodFilter({
           size="sm"
           className={
             activePeriod === period
-              ? "bg-primary hover:bg-primary/90 text-primary-foreground border-primary"
+              ? "bg-violet-600 hover:bg-violet-700 text-white border-violet-600"
               : "border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-900"
           }
         >

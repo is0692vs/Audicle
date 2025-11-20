@@ -138,3 +138,7 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Ensure form accent (range, checkbox, radio) follows primary theme color */
+/* Keep default browser accent colors unless the user chooses to theme more controls. */
+/* Currently we don't override default accents to avoid inconsistent appearances across browsers. */

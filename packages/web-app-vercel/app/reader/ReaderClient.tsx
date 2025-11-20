@@ -844,7 +844,7 @@ export default function ReaderPageClient() {
                     <button
                       onClick={isPlaying ? pause : play}
                       disabled={isPlaybackLoading}
-                      className="w-12 h-12 p-0 bg-green-600 text-white rounded-full hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center text-2xl"
+                      className="w-12 h-12 p-0 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center text-2xl"
                       title={
                         isPlaybackLoading
                           ? "処理中..."
@@ -1009,7 +1009,7 @@ export default function ReaderPageClient() {
               <button
                 onClick={isPlaying ? pause : play}
                 disabled={isPlaybackLoading}
-                className="px-6 py-3 bg-green-600 text-white rounded-full hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-lg"
+                className="px-6 py-3 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-lg"
                 title={
                   isPlaybackLoading
                     ? "処理中..."

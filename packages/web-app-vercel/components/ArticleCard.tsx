@@ -23,7 +23,11 @@ export function ArticleCard({
   onRemove,
   href,
 }: ArticleCardProps) {
-  const readerHref = href ?? (item.article?.url ? createReaderUrl({ articleUrl: item.article.url }) : '#');
+  const readerHref =
+    href ??
+    (item.article?.url
+      ? createReaderUrl({ articleUrl: item.article.url })
+      : "#");
 
   return (
     <a

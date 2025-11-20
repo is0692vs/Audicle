@@ -130,7 +130,10 @@ export default function PlaylistsPage() {
                   value={sortBy}
                   onValueChange={(value) => setSortBy(value as PlaylistSortBy)}
                 >
-                  <SelectTrigger data-testid="playlists-sort-select" className="w-[140px]">
+                  <SelectTrigger
+                    data-testid="playlists-sort-select"
+                    className="w-[140px]"
+                  >
                     <SelectValue placeholder="ソート" />
                   </SelectTrigger>
                   <SelectContent>
@@ -159,7 +162,7 @@ export default function PlaylistsPage() {
                       value={newPlaylistName}
                       onChange={(e) => setNewPlaylistName(e.target.value)}
                       placeholder="プレイリスト名"
-                      className="bg-zinc-950 border-zinc-700 text-white placeholder:text-zinc-500"
+                        className="bg-zinc-950 border-zinc-700 text-white placeholder:text-zinc-500"
                       required
                       autoFocus
                       data-testid="playlist-name-input"
@@ -177,7 +180,7 @@ export default function PlaylistsPage() {
                       <Button
                         type="submit"
                         disabled={createPlaylistMutation.isPending}
-                        className="bg-primary hover:bg-primary/90"
+                        className="bg-violet-600 hover:bg-violet-700"
                         data-testid="save-playlist-button"
                       >
                         {createPlaylistMutation.isPending
