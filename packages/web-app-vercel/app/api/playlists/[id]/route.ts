@@ -87,7 +87,7 @@ export async function GET(
                 query.order('added_at', { foreignTable: 'playlist_items', ascending: order === 'asc' })
             }
 
-            const resp = await retryQuery(() => query.single())
+            const resp = await retryQuery(async () => await query.single())
             playlist = resp.data
             playlistError = resp.error
         }
