@@ -27,13 +27,14 @@ export function PlaylistCompletionScreen({
           プレイリストの再生が完了しました
         </h2>
         <p className="text-zinc-400 mb-8">
-            「<span className="text-violet-300 font-semibold">{playlistName}</span>
+          「
+          <span className="text-violet-300 font-semibold">{playlistName}</span>
           」({totalCount}記事)を聴き終えました
         </p>
         <div className="flex flex-col gap-3 justify-center">
           <button
             onClick={onReplay}
-              className="px-6 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors flex items-center justify-center gap-2 font-semibold"
+            className="px-6 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors flex items-center justify-center gap-2 font-semibold"
           >
             <RotateCcw className="size-5" />
             もう一度聴く

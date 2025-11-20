@@ -162,7 +162,7 @@ export default function PlaylistsPage() {
                       value={newPlaylistName}
                       onChange={(e) => setNewPlaylistName(e.target.value)}
                       placeholder="プレイリスト名"
-                        className="bg-zinc-950 border-zinc-700 text-white placeholder:text-zinc-500"
+                      className="bg-zinc-950 border-zinc-700 text-white placeholder:text-zinc-500"
                       required
                       autoFocus
                       data-testid="playlist-name-input"
