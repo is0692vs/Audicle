@@ -122,16 +122,14 @@ export default function Home() {
   };
 
   const handleArticleClick = (item: (typeof items)[0]) => {
-      <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gradient-to-b from-zinc-900 to-black">
-      router.push(`/reader?url=${encodeURIComponent(item.article.url)}`);
-    }
+    router.push(`/reader?url=${encodeURIComponent(item.article!.url)}`);
   };
 
   return (
     <div className="h-screen bg-black text-white flex flex-col lg:flex-row">
       <Sidebar />
 
-      <main className="flex-1 overflow-x-hidden overflow-y-auto bg-linear-to-b from-zinc-900 to-black">
+      <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gradient-to-b from-zinc-900 to-black">
         <div className="p-4 sm:p-6 lg:p-8">
           {confirmDialog}
 
