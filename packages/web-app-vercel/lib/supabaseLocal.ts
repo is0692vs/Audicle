@@ -75,10 +75,20 @@ export async function createPlaylist(email: string | null, name: string, descrip
 export async function getPlaylistsForOwner(email: string | null) {
     return inMemoryDB.playlists
         .filter(p => p.owner_email === email)
-        .map(p => ({
-            ...p,
-            playlist_items: inMemoryDB.playlist_items.filter(i => i.playlist_id === p.id),
-        }));
+        .map(p => {
+            const rawItems = inMemoryDB.playlist_items.filter(i => i.playlist_id === p.id);
+            const itemsWithArticle: PlaylistItemWithArticle[] = rawItems.map(pi => ({
+                ...pi,
+                article: inMemoryDB.articles.find(a => a.id === pi.article_id) || undefined,
+            }));
+            return {
+                ...p,
+                // keep raw storage shape
+                playlist_items: rawItems,
+                // provide `items` for frontend convenience (with article attached)
+                items: itemsWithArticle,
+            };
+        });
 }
 
 export async function updatePlaylist(playlistId: string, updates: Partial<Playlist>) {
@@ -192,7 +202,9 @@ export async function getPlaylistWithItems(ownerEmail: string | null, id: string
 
     return {
         ...playlist,
+        // keep both names: `playlist_items` (storage-like) and `items` (frontend-friendly)
         playlist_items: sorted,
+        items: sorted,
     };
 }
 
