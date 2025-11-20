@@ -26,9 +26,10 @@ interface ArticleStatsResponse {
 function hashEmail(email: string): string {
     const secret = process.env.EMAIL_HASH_SECRET;
     if (!secret) {
-        // テスト環境ではダミーハッシュを返す（セキュリティ要件を満たさないがテストを通すため）
+        // テスト環境ではダミーのシークレットを使用する
         if (process.env.NODE_ENV !== 'production') {
-            return createHash('sha256').update(email).digest('hex');
+            const testSecret = 'test-secret-for-development-only';
+            return createHmac('sha256', testSecret).update(email).digest('hex');
         }
         throw new Error('EMAIL_HASH_SECRET must be set for security reasons.');
     }
