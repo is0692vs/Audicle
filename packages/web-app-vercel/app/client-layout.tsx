@@ -28,8 +28,20 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
     []
   );
 
-  // Initialize theme on mount
-  function Content({ children }: { children: ReactNode }) {
+  // The `Content` component is defined at module scope to avoid re-creating
+  // it every time `ClientLayout` rerenders. That helps avoid remounts and
+  // preserves component state and subscriptions.
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <SessionProviderWrapper>
+        <Content>{children}</Content>
+      </SessionProviderWrapper>
+    </QueryClientProvider>
+  );
+}
+
+function Content({ children }: { children: ReactNode }) {
     const { data: session, status } = useSession();
     const { data: userSettings } = useUserSettings();
 
@@ -60,11 +72,3 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      <SessionProviderWrapper>
-        <Content>{children}</Content>
-      </SessionProviderWrapper>
-    </QueryClientProvider>
-  );
-}

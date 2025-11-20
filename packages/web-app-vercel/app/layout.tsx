@@ -34,3 +34,24 @@ export default function RootLayout({
     </html>
   );
 }
+
+// NOTE: `metadata` and `viewport` are essential for SEO, PWA features,
+// and theme color support across platforms. They were removed in a previous
+// change and should be persisted at module scope so Next.js can pick them up.
+export const metadata: Metadata = {
+  title: "Audicle - Web Reader with TTS",
+  description:
+    "音楽アプリの歌詞表示のような体験で、Webページの本文を読み上げます",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Audicle",
+  },
+};
+
+// `viewport.themeColor` is used by Next to set color for mobile browser
+// UI elements; keep it at module scope so it is included in the app HTML.
+export const viewport = {
+  themeColor: "#000000",
+};
