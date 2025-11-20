@@ -4,6 +4,27 @@ import * as supabaseLocal from '@/lib/supabaseLocal'
 import { requireAuth } from '@/lib/api-auth'
 import { PlaylistWithItems } from '@/types/playlist'
 
+// リトライヘルパー関数
+async function retryQuery<T>(queryFn: () => Promise<T>, maxRetries: number = 3, delay: number = 1000): Promise<T> {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            return await queryFn();
+        } catch (error) {
+            if (attempt === maxRetries) {
+                throw error;
+            }
+            // ECONNRESET などのネットワークエラー時はリトライ
+            if (error instanceof Error && (error.message.includes('ECONNRESET') || error.message.includes('aborted'))) {
+                console.warn(`Query attempt ${attempt} failed, retrying in ${delay}ms:`, error.message);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            } else {
+                throw error; // ネットワークエラー以外は即座に投げる
+            }
+        }
+    }
+    throw new Error('Max retries exceeded');
+}
+
 // GET: プレイリスト詳細取得（ブックマーク含む）
 export async function GET(
     request: Request,
@@ -66,7 +87,7 @@ export async function GET(
                 query.order('added_at', { foreignTable: 'playlist_items', ascending: order === 'asc' })
             }
 
-            const resp = await query.single()
+            const resp = await retryQuery(() => query.single())
             playlist = resp.data
             playlistError = resp.error
         }
@@ -122,7 +143,7 @@ export async function PATCH(
             const ownsPlaylist = playlists.some(p => p.id === id);
 
             if (!ownsPlaylist) {
-                 return NextResponse.json({ error: 'Playlist not found or permission denied' }, { status: 404 })
+                return NextResponse.json({ error: 'Playlist not found or permission denied' }, { status: 404 })
             }
 
             const updated = await supabaseLocal.updatePlaylist(id, { name, description })

@@ -12,6 +12,27 @@ interface RecordStatsParams {
     chunks: Chunk[];
 }
 
+// リトライヘルパー関数
+async function retryFetch(fetchFn: () => Promise<Response>, maxRetries: number = 3, delay: number = 1000): Promise<Response> {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            return await fetchFn();
+        } catch (error) {
+            if (attempt === maxRetries) {
+                throw error;
+            }
+            // ECONNRESET などのネットワークエラー時はリトライ
+            if (error instanceof Error && (error.message.includes('ECONNRESET') || error.message.includes('aborted'))) {
+                logger.warn(`Fetch attempt ${attempt} failed, retrying in ${delay}ms:`, error.message);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            } else {
+                throw error; // ネットワークエラー以外は即座に投げる
+            }
+        }
+    }
+    throw new Error('Max retries exceeded');
+}
+
 /**
  * 簡易ハッシュ関数（記事識別用）
  * MD5の代わりにSHA-256を使用
@@ -70,21 +91,24 @@ export async function recordArticleStats({
         const { cacheHits, cacheMisses, isFullyCached } = await calculateCacheStats(chunks);
 
         // 統計APIを呼び出し（非同期、エラー無視）
-        const response = await fetch('/api/stats/article', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                articleHash,
-                url,
-                title,
-                domain,
-                cacheHits,
-                cacheMisses,
-                isFullyCached,
-            }),
-        });
+        const response = await retryFetch(() =>
+            fetch('/api/stats/article', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    articleHash,
+                    url,
+                    title,
+                    domain,
+                    cacheHits,
+                    cacheMisses,
+                    isFullyCached,
+                }),
+                signal: AbortSignal.timeout(5000), // 5秒タイムアウト
+            })
+        );
 
         if (response.ok) {
             const data = await response.json();
@@ -102,6 +126,6 @@ export async function recordArticleStats({
         }
     } catch (error) {
         // エラーをログに記録するが、例外は投げない
-        logger.error('記事統計記録エラー', error);
+        logger.warn('記事統計記録エラー', error);
     }
 }
