@@ -514,7 +514,11 @@ export default function ReaderPageClient() {
   ]); // URLクエリパラメータが指定されている場合は記事を自動取得
   useEffect(() => {
     // プレイリスト読み込みが完了してから記事を読み込む
-    if (urlFromQuery && arePlaylistsLoaded && !hasLoadedFromQuery) {
+    // If a playlist query param is present, prefer initializing from the
+    // playlist context instead of loading the article directly, to ensure
+    // the `title` displayed is the playlist's item title (not the remote
+    // extracted document title).
+    if (urlFromQuery && arePlaylistsLoaded && !hasLoadedFromQuery && !playlistIdFromQuery) {
       setUrl(urlFromQuery || "");
       // 既にlocalStorageに同じURLの記事が存在するかチェック
       const existingArticle = articleStorage
@@ -628,9 +632,12 @@ export default function ReaderPageClient() {
   // If the reader was opened with a `playlist` param, ensure the playback context
   // is seeded from that playlist so the Prev/Next UI works deterministically.
   useEffect(() => {
+    // Initialize playlist from query if either:
+    //  - playlistState is not already in playlist mode
+    //  - OR we are in playlist mode but the playlistId does not match the query
     if (
       playlistIdFromQuery &&
-      !playlistState.isPlaylistMode &&
+      ( !playlistState.isPlaylistMode || playlistState.playlistId !== playlistIdFromQuery ) &&
       session?.user?.email
     ) {
       logger.info("Reader opened with playlist query, initializing playlist", {
