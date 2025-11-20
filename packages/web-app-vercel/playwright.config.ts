@@ -52,7 +52,7 @@ export default defineConfig({
         },
     ],
     webServer: {
-        command: 'AUTH_ENV=test npm run dev',
+        command: process.env.CI_WEB_SERVER_COMMAND || 'AUTH_ENV=test npm run dev',
         url: 'http://localhost:3000',
         reuseExistingServer: !process.env.CI,
         // Increase timeout to allow the Next.js dev server (and turbopack) to
