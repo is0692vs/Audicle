@@ -50,13 +50,16 @@ export async function DELETE(
         }
 
         // 削除前に、この記事が他のプレイリストにも存在するか確認するためarticle_idを取得
-        let itemToDelete: any = null
+        let itemToDelete: { article_id: string } | null = null
         let fetchError: { message: string } | null = null
 
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
             const items = (await supabaseLocal.getPlaylistWithItems(userEmail, playlistId))?.playlist_items || []
-            itemToDelete = items.find((i: PlaylistItemWithArticle) => i.id === itemId)
-            if (!itemToDelete) fetchError = { message: 'Item not found' }
+            const found = items.find((i: PlaylistItemWithArticle) => i.id === itemId)
+            if (found) {
+                itemToDelete = { article_id: found.article_id }
+            }
+            if (!found) fetchError = { message: 'Item not found' }
         } else {
             const resp = await supabase
                 .from('playlist_items')

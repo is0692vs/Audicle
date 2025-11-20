@@ -1,4 +1,3 @@
-import { randomUUID } from 'crypto';
 import { PlaylistItemWithArticle } from '@/types/playlist';
 
 /**
@@ -34,7 +33,7 @@ interface PlaylistItem {
     id: string;
     playlist_id: string;
     article_id: string;
-    position: number | null;
+    position: number;
     added_at: string;
 }
 
@@ -55,7 +54,7 @@ export function resetInMemorySupabase() {
 }
 
 export async function createPlaylist(email: string | null, name: string, description?: string | null) {
-    const id = randomUUID();
+    const id = crypto.randomUUID();
     const now = new Date().toISOString();
     const playlist: Playlist = {
         id,
@@ -82,6 +81,24 @@ export async function getPlaylistsForOwner(email: string | null) {
         }));
 }
 
+export async function updatePlaylist(playlistId: string, updates: Partial<Playlist>) {
+    const playlist = inMemoryDB.playlists.find(p => p.id === playlistId);
+    if (!playlist) return null;
+
+    Object.assign(playlist, updates);
+    playlist.updated_at = new Date().toISOString();
+    return playlist;
+}
+
+export async function setDefaultPlaylist(ownerEmail: string, playlistId: string) {
+    // Unset default for all other playlists of this owner
+    inMemoryDB.playlists.forEach(p => {
+        if (p.owner_email === ownerEmail) {
+            p.is_default = p.id === playlistId;
+        }
+    });
+}
+
 export async function deletePlaylistById(ownerEmail: string | null, id: string) {
     const idx = inMemoryDB.playlists.findIndex(p => p.id === id && p.owner_email === ownerEmail);
     if (idx === -1) return false;
@@ -96,7 +113,7 @@ export async function upsertArticle(ownerEmail: string | null, url: string, titl
     const now = new Date().toISOString();
     if (!article) {
         article = {
-            id: randomUUID(),
+            id: crypto.randomUUID(),
             owner_email: ownerEmail || '',
             url,
             title,
@@ -109,7 +126,7 @@ export async function upsertArticle(ownerEmail: string | null, url: string, titl
     } else {
         // update title & thumbnail if provided
         article.title = title || article.title;
-        article.thumbnail_url = thumbnail_url || article.thumbnail_url || null;
+        article.thumbnail_url = thumbnail_url || article.thumbnail_url || undefined;
         article.updated_at = now;
     }
     return article;
@@ -125,7 +142,7 @@ export async function addPlaylistItem(playlistId: string, articleId: string) {
     const maxPos = items.length === 0 ? 0 : Math.max(...items.map(i => i.position ?? 0));
 
     const item: PlaylistItem = {
-        id: randomUUID(),
+        id: crypto.randomUUID(),
         playlist_id: playlistId,
         article_id: articleId,
         position: maxPos + 1,
@@ -156,8 +173,9 @@ export async function getPlaylistWithItems(ownerEmail: string | null, id: string
     const sortOrder = sort?.order || 'asc';
 
     const sortFn = (a: PlaylistItemWithArticle, b: PlaylistItemWithArticle) => {
-        const aVal = sortField.includes('at') ? (a.article?.[sortField] || '') : (a.article?.title || '');
-        const bVal = sortField.includes('at') ? (b.article?.[sortField] || '') : (b.article?.title || '');
+        const sField = sortField as keyof Article;
+        const aVal = sortField.includes('at') ? ((a.article?.[sField] as string) || '') : (a.article?.title || '');
+        const bVal = sortField.includes('at') ? ((b.article?.[sField] as string) || '') : (b.article?.title || '');
 
         if (sortField === 'position') {
             return (a.position ?? 0) - (b.position ?? 0);
@@ -178,8 +196,9 @@ export async function getPlaylistWithItems(ownerEmail: string | null, id: string
         });
     } else if (['added_at', 'created_at', 'updated_at'].includes(sortField)) {
         sorted = [...items].sort((a, b) => {
-            const aDate = sortField === 'added_at' ? a.added_at : a.article?.[sortField] || '';
-            const bDate = sortField === 'added_at' ? b.added_at : b.article?.[sortField] || '';
+            const sField = sortField as keyof Article;
+            const aDate = sortField === 'added_at' ? a.added_at : (a.article?.[sField] as string) || '';
+            const bDate = sortField === 'added_at' ? b.added_at : (b.article?.[sField] as string) || '';
             if (sortOrder === 'desc') return bDate.localeCompare(aDate);
             return aDate.localeCompare(bDate);
         });

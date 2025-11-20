@@ -65,9 +65,9 @@ export default function Home() {
             new Date(a.added_at).getTime() - new Date(b.added_at).getTime()
           );
         case "title":
-          return a.article.title.localeCompare(b.article.title);
+          return (a.article?.title || "").localeCompare(b.article?.title || "");
         case "title-desc":
-          return b.article.title.localeCompare(a.article.title);
+          return (b.article?.title || "").localeCompare(a.article?.title || "");
         default:
           return 0;
       }
@@ -99,7 +99,7 @@ export default function Home() {
 
     const confirmed = await showConfirm({
       title: "ホームから除く",
-      message: `「${item.article.title}」をホームから除きますか?\n\n他のプレイリストには残ります。`,
+      message: `「${item.article?.title}」をホームから除きますか?\n\n他のプレイリストには残ります。`,
       confirmText: "除く",
       cancelText: "キャンセル",
       isDangerous: false,
@@ -113,7 +113,7 @@ export default function Home() {
         });
         logger.success("アイテムを削除", {
           itemId,
-          title: item.article.title,
+          title: item.article?.title || "",
         });
       } catch (error) {
         logger.error("アイテムの削除に失敗", error);
@@ -122,7 +122,9 @@ export default function Home() {
   };
 
   const handleArticleClick = (item: (typeof items)[0]) => {
-    router.push(`/reader?url=${encodeURIComponent(item.article.url)}`);
+    if (item.article?.url) {
+      router.push(`/reader?url=${encodeURIComponent(item.article.url)}`);
+    }
   };
 
   return (
@@ -142,7 +144,7 @@ export default function Home() {
               }}
               itemId={undefined}
               articleId={selectedItem.article_id}
-              articleTitle={selectedItem.article.title}
+              articleTitle={selectedItem.article?.title || ""}
               onPlaylistsUpdated={async () => {
                 handleRefresh();
               }}

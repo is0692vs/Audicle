@@ -47,7 +47,7 @@ export async function POST(
             try {
                 article = await supabaseLocal.upsertArticle(userEmail, article_url, article_title, thumbnail_url, last_read_position)
             } catch (e) {
-                articleError = e
+                articleError = e as Error
             }
         } else {
             const resp = await supabase
@@ -84,9 +84,9 @@ export async function POST(
 
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
             try {
-                playlistItem = await supabaseLocal.addPlaylistItem(id, article.id)
+                playlistItem = await supabaseLocal.addPlaylistItem(id, article!.id)
             } catch (e) {
-                itemError = e
+                itemError = e as Error
             }
         } else {
             const resp2 = await supabase
@@ -94,7 +94,7 @@ export async function POST(
                 .upsert(
                     {
                         playlist_id: id,
-                        article_id: article.id,
+                        article_id: article!.id,
                     },
                     {
                         onConflict: 'playlist_id,article_id',

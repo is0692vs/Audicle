@@ -22,12 +22,13 @@ export async function PUT(
         }
 
         // 指定されたプレイリストがユーザーに属しているか確認
-        let targetPlaylist: Playlist | null = null
+        let targetPlaylist: Partial<Playlist> | null = null
         let fetchError: { code: string } | null = null
 
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
             const playlists = await supabaseLocal.getPlaylistsForOwner(userEmail)
-            targetPlaylist = playlists.find(p => p.id === id)
+            const found = playlists.find(p => p.id === id)
+            targetPlaylist = found || null
             if (!targetPlaylist) fetchError = { code: 'PGRST116' }
         } else {
             const resp = await supabase

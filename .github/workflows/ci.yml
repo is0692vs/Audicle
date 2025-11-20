@@ -49,7 +49,7 @@ jobs:
         working-directory: packages/web-app-vercel
 
   lint:
-    name: Lint
+    name: Lint (web-app-vercel)
     needs: setup
     runs-on: ubuntu-slim
     steps:
@@ -65,6 +65,40 @@ jobs:
       - name: Run lint
         run: npm run lint
         working-directory: packages/web-app-vercel
+
+  lint-web-app:
+    name: Lint & Build (web-app)
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm install
+        working-directory: packages/web-app
+      - name: Run lint
+        run: npm run lint
+        working-directory: packages/web-app
+      - name: Run build
+        run: npm run build
+        working-directory: packages/web-app
+
+  check-api-server:
+    name: Check (api-server)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+        working-directory: packages/api-server
+      - name: Check syntax
+        run: python -m py_compile main.py
+        working-directory: packages/api-server
 
   unit-test:
     name: Unit Tests

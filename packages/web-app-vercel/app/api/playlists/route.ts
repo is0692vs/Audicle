@@ -19,7 +19,7 @@ export async function GET() {
                 const playlists = await supabaseLocal.getPlaylistsForOwner(userEmail)
                 data = playlists
             } catch (e) {
-                error = e
+                error = e as Error
             }
         } else {
             const resp = await supabase
@@ -41,7 +41,7 @@ export async function GET() {
         }
 
         // カウントを含めて整形
-        const playlists = data.map((playlist: Playlist & { playlist_items?: { count: number }[] }) => ({
+        const playlists = (data || []).map((playlist: Playlist & { playlist_items?: { count: number }[] }) => ({
             ...playlist,
             item_count: playlist.playlist_items?.[0]?.count || 0,
             playlist_items: undefined,
