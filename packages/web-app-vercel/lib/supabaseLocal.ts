@@ -193,7 +193,46 @@ export async function getPlaylistWithItems(ownerEmail: string | null, id: string
         });
     } else { // position
         sorted = [...items].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
-        if (sortOrder === 'desc') sorted = sorted.reverse();
+    // Basic sorting
+    const sortField = sort?.field || 'position';
+    const sortOrder = sort?.order || 'asc';
+
+    const sorted = [...items].sort((a, b) => {
+        let aVal: string | number = 0;
+        let bVal: string | number = 0;
+
+        switch (sortField) {
+            case 'title':
+                aVal = a.article?.title || '';
+                bVal = b.article?.title || '';
+                break;
+            case 'added_at':
+                aVal = a.added_at || '';
+                bVal = b.added_at || '';
+                break;
+            case 'created_at':
+                aVal = a.article?.created_at || '';
+                bVal = b.article?.created_at || '';
+                break;
+            case 'updated_at':
+                aVal = a.article?.updated_at || '';
+                bVal = b.article?.updated_at || '';
+                break;
+            case 'position':
+            default:
+                aVal = a.position ?? 0;
+                bVal = b.position ?? 0;
+                break;
+        }
+
+        if (typeof aVal === 'string' && typeof bVal === 'string') {
+            return sortOrder === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+        }
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+            return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+        return 0;
+    });
     }
 
 
