@@ -160,7 +160,10 @@ export default function Home() {
                   value={sortBy}
                   onValueChange={(value) => setSortBy(value as ArticleSortBy)}
                 >
-                  <SelectTrigger className="w-[140px]">
+                  <SelectTrigger
+                    data-testid="home-sort-select"
+                    className="w-[140px]"
+                  >
                     <SelectValue placeholder="ソート" />
                   </SelectTrigger>
                   <SelectContent>
