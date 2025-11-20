@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
-import { validatePlaybackSpeed, validateVoiceModel, validateLanguage } from '@/lib/settingsValidator'
-import { UpdateSettingsRequest, UpdateSettingsSuccessResponse, VOICE_MODELS } from '@/types/settings'
+import { validatePlaybackSpeed, validateVoiceModel, validateLanguage, validateColorTheme } from '@/lib/settingsValidator'
+import { UpdateSettingsRequest, UpdateSettingsSuccessResponse, VOICE_MODELS, COLOR_THEMES } from '@/types/settings'
 
 export async function PUT(request: NextRequest) {
     try {
@@ -22,7 +22,7 @@ export async function PUT(request: NextRequest) {
         const body: UpdateSettingsRequest = await request.json()
 
         // Validate input
-        const { playback_speed, voice_model, language } = body
+        const { playback_speed, voice_model, language, color_theme } = body
         const errors: string[] = []
 
         if (playback_speed !== undefined && !validatePlaybackSpeed(playback_speed)) {
@@ -36,6 +36,11 @@ export async function PUT(request: NextRequest) {
 
         if (language !== undefined && !validateLanguage(language)) {
             errors.push('Invalid language. Must be ja-JP or en-US')
+        }
+
+        if (color_theme !== undefined && !validateColorTheme(color_theme)) {
+            const validThemes = COLOR_THEMES.map(m => m.value).join(', ')
+            errors.push(`Invalid color_theme. Must be one of: ${validThemes}`)
         }
 
         if (errors.length > 0) {
@@ -53,6 +58,7 @@ export async function PUT(request: NextRequest) {
         if (playback_speed !== undefined) updateData.playback_speed = playback_speed
         if (voice_model !== undefined) updateData.voice_model = voice_model
         if (language !== undefined) updateData.language = language
+        if (color_theme !== undefined) updateData.color_theme = color_theme
 
         // UPSERT to user_settings table
         const { data, error } = await supabase

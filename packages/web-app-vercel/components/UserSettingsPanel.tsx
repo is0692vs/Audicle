@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import { useSession } from "next-auth/react";
 import {
   useUserSettings,
   useUpdateUserSettingsMutation,
@@ -11,9 +12,13 @@ import {
   Language,
   VoiceModel,
   DEFAULT_SETTINGS,
+  COLOR_THEMES,
+  ColorTheme,
 } from "@/types/settings";
+import { applyTheme } from "@/lib/theme";
 
 export default function UserSettingsPanel() {
+  const { data: session } = useSession();
   const { data: originalSettings, isLoading, error } = useUserSettings();
   const updateSettingsMutation = useUpdateUserSettingsMutation();
 
@@ -28,6 +33,21 @@ export default function UserSettingsPanel() {
       setSettings(originalSettings);
     }
   }, [originalSettings, hasChanged]);
+
+  // Load local settings for guest users
+  useEffect(() => {
+    if (!session?.user?.email) {
+      const storedSettings = localStorage.getItem("audicle-user-settings");
+      if (storedSettings) {
+        try {
+          const parsed = JSON.parse(storedSettings);
+          setSettings({ ...DEFAULT_SETTINGS, ...parsed });
+        } catch (e) {
+          console.error("Failed to parse local settings:", e);
+        }
+      }
+    }
+  }, [session]);
 
   const handlePlaybackSpeedChange = (value: number) => {
     setSettings({ ...settings, playback_speed: value });
@@ -50,16 +70,42 @@ export default function UserSettingsPanel() {
     setHasChanged(true);
   };
 
+  const handleColorThemeChange = (value: string) => {
+    const theme = value as ColorTheme;
+    setSettings({ ...settings, color_theme: theme });
+    applyTheme(theme); // Apply immediately
+    setHasChanged(true);
+
+    // Save to localStorage for guest users
+    if (!session?.user?.email) {
+      const currentSettings = { ...settings, color_theme: theme };
+      localStorage.setItem(
+        "audicle-user-settings",
+        JSON.stringify(currentSettings)
+      );
+      localStorage.setItem("audicle-color-theme", theme);
+    }
+  };
+
   const handleSave = async () => {
-    try {
-      await updateSettingsMutation.mutateAsync(settings);
+    if (session?.user?.email) {
+      // Logged in user: save to DB
+      try {
+        await updateSettingsMutation.mutateAsync(settings);
+        setHasChanged(false);
+        toast.success("設定を保存しました");
+      } catch (error) {
+        console.error("Error saving settings:", error);
+        toast.error(
+          error instanceof Error ? error.message : "設定の保存に失敗しました"
+        );
+      }
+    } else {
+      // Guest user: save to localStorage
+      localStorage.setItem("audicle-user-settings", JSON.stringify(settings));
+      localStorage.setItem("audicle-color-theme", settings.color_theme);
       setHasChanged(false);
       toast.success("設定を保存しました");
-    } catch (error) {
-      console.error("Error saving settings:", error);
-      toast.error(
-        error instanceof Error ? error.message : "設定の保存に失敗しました"
-      );
     }
   };
 
@@ -98,6 +144,29 @@ export default function UserSettingsPanel() {
       <h2 className="text-xl font-bold mb-6">再生設定</h2>
 
       <div className="space-y-6">
+        {/* Color Theme Section */}
+        <div>
+          <label className="block text-sm font-medium mb-2">カラーテーマ</label>
+          <div className="flex gap-3 flex-wrap">
+            {COLOR_THEMES.map((theme) => (
+              <button
+                key={theme.value}
+                onClick={() => handleColorThemeChange(theme.value)}
+                className={`w-12 h-12 rounded-full border-2 transition-all ${
+                  settings.color_theme === theme.value
+                    ? "border-white scale-110"
+                    : "border-zinc-600 hover:border-zinc-400"
+                }`}
+                style={{ backgroundColor: theme.color }}
+                title={theme.label}
+              />
+            ))}
+          </div>
+          <p className="text-xs text-zinc-400 mt-1">
+            クリックしてテーマを切り替え（リアルタイムプレビュー）
+          </p>
+        </div>
+
         {/* Playback Speed Slider */}
         <div>
           <label className="block text-sm font-medium mb-2">再生速度</label>
