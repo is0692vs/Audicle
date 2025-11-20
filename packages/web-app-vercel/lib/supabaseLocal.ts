@@ -157,7 +157,7 @@ export async function getPlaylistWithItems(ownerEmail: string | null, id: string
     if (!playlist) return null;
 
     // Collect items with article info
-    const items = inMemoryDB.playlist_items
+    const items: PlaylistItemWithArticle[] = inMemoryDB.playlist_items
         .filter(pi => pi.playlist_id === playlist.id)
         .map(pi => {
             const article = inMemoryDB.articles.find(a => a.id === pi.article_id);
@@ -167,74 +167,28 @@ export async function getPlaylistWithItems(ownerEmail: string | null, id: string
             };
         });
 
-    // Basic sorting
-    let sorted = items;
-    // Basic sorting
-    let sorted = items;
     const sortField = sort?.field || 'position';
     const sortOrder = sort?.order || 'asc';
 
-    };
+    let sorted = [...items];
 
     if (sortField === 'title') {
         sorted = [...items].sort((a, b) => {
             const at = a.article?.title || '';
             const bt = b.article?.title || '';
-            if (sortOrder === 'desc') return bt.localeCompare(at);
-            return at.localeCompare(bt);
+            return sortOrder === 'desc' ? bt.localeCompare(at) : at.localeCompare(bt);
         });
     } else if (['added_at', 'created_at', 'updated_at'].includes(sortField)) {
         sorted = [...items].sort((a, b) => {
             const sField = sortField as keyof Article;
             const aDate = sortField === 'added_at' ? a.added_at : (a.article?.[sField] as string) || '';
             const bDate = sortField === 'added_at' ? b.added_at : (b.article?.[sField] as string) || '';
-            if (sortOrder === 'desc') return bDate.localeCompare(aDate);
-            return aDate.localeCompare(bDate);
+            return sortOrder === 'desc' ? bDate.localeCompare(aDate) : aDate.localeCompare(bDate);
         });
-    } else { // position
+    } else {
+        // position
         sorted = [...items].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
-    // Basic sorting
-    const sortField = sort?.field || 'position';
-    const sortOrder = sort?.order || 'asc';
-
-    const sorted = [...items].sort((a, b) => {
-        let aVal: string | number = 0;
-        let bVal: string | number = 0;
-
-        switch (sortField) {
-            case 'title':
-                aVal = a.article?.title || '';
-                bVal = b.article?.title || '';
-                break;
-            case 'added_at':
-                aVal = a.added_at || '';
-                bVal = b.added_at || '';
-                break;
-            case 'created_at':
-                aVal = a.article?.created_at || '';
-                bVal = b.article?.created_at || '';
-                break;
-            case 'updated_at':
-                aVal = a.article?.updated_at || '';
-                bVal = b.article?.updated_at || '';
-                break;
-            case 'position':
-            default:
-                aVal = a.position ?? 0;
-                bVal = b.position ?? 0;
-                break;
-        }
-
-        if (typeof aVal === 'string' && typeof bVal === 'string') {
-            return sortOrder === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-        }
-        if (typeof aVal === 'number' && typeof bVal === 'number') {
-            return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
-        }
-        return 0;
-    });
     }
-
 
     return {
         ...playlist,

@@ -261,7 +261,6 @@ export default function ReaderView({
                     );
                   })}
                 </div>
-              </div>
             </section>
           </>
         )}
