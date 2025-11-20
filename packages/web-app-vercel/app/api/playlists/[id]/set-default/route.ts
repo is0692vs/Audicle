@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import * as supabaseLocal from '@/lib/supabaseLocal'
 import { requireAuth } from '@/lib/api-auth'
+import { Playlist } from '@/types/playlist'
 
 // PUT: デフォルトプレイリストを変更
 export async function PUT(
@@ -21,8 +22,8 @@ export async function PUT(
         }
 
         // 指定されたプレイリストがユーザーに属しているか確認
-        let targetPlaylist: any = null
-        let fetchError: any = null
+        let targetPlaylist: Playlist | null = null
+        let fetchError: { code: string } | null = null
 
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
             const playlists = await supabaseLocal.getPlaylistsForOwner(userEmail)

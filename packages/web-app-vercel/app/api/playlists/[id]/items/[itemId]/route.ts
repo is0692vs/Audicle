@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import * as supabaseLocal from '@/lib/supabaseLocal'
 import { requireAuth } from '@/lib/api-auth'
+import { PlaylistItemWithArticle } from '@/types/playlist'
 
 // DELETE: プレイリストからアイテムを削除
 export async function DELETE(
@@ -15,32 +16,33 @@ export async function DELETE(
         const { id: playlistId, itemId } = await params
 
         // プレイリストの所有権を確認
-        let playlist: any = null
-        let playlistError: any = null
+        let ownerEmailFromPlaylist: string | null = null
+        let playlistError: { message: string } | null = null
 
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
             const all = await supabaseLocal.getPlaylistsForOwner(userEmail)
-            playlist = all.find(p => p.id === playlistId)
-            if (!playlist) playlistError = { message: 'Not found' }
+            const found = all.find(p => p.id === playlistId)
+            if (!found) playlistError = { message: 'Not found' }
+            else ownerEmailFromPlaylist = found.owner_email
         } else {
             const resp = await supabase
                 .from('playlists')
                 .select('owner_email')
                 .eq('id', playlistId)
                 .single()
-            playlist = resp.data
+            ownerEmailFromPlaylist = resp.data?.owner_email || null
             playlistError = resp.error
         }
 
-        if (playlistError || !playlist) {
+        if (playlistError || ownerEmailFromPlaylist === null) {
             console.error('Supabase error:', playlistError)
             return NextResponse.json(
-                { error: playlistError.message || 'Playlist not found' },
+                { error: playlistError?.message || 'Playlist not found' },
                 { status: 404 }
             )
         }
 
-        if (playlist.owner_email !== userEmail) {
+        if (ownerEmailFromPlaylist !== userEmail) {
             return NextResponse.json(
                 { error: 'Forbidden' },
                 { status: 403 }
@@ -49,11 +51,11 @@ export async function DELETE(
 
         // 削除前に、この記事が他のプレイリストにも存在するか確認するためarticle_idを取得
         let itemToDelete: any = null
-        let fetchError: any = null
+        let fetchError: { message: string } | null = null
 
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
             const items = (await supabaseLocal.getPlaylistWithItems(userEmail, playlistId))?.playlist_items || []
-            itemToDelete = items.find((i: any) => i.id === itemId)
+            itemToDelete = items.find((i: PlaylistItemWithArticle) => i.id === itemId)
             if (!itemToDelete) fetchError = { message: 'Item not found' }
         } else {
             const resp = await supabase
@@ -75,11 +77,11 @@ export async function DELETE(
         }
 
         // playlist_itemsから削除
-        let deleteError: any = null
+        let deleteError: { code?: string; message?: string } | null = null
 
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
             const ok = await supabaseLocal.removePlaylistItem(playlistId, itemId)
-            if (!ok) deleteError = { code: 'PGRST116' }
+            if (!ok) deleteError = { code: 'PGRST116', message: 'Item not found' }
         } else {
             const resp = await supabase
                 .from('playlist_items')
@@ -109,8 +111,8 @@ export async function DELETE(
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
             // check if any other playlist uses the article
             const playlistAll = await supabaseLocal.getPlaylistsForOwner(userEmail)
-            const allItems = playlistAll.flatMap(p => p.playlist_items || [])
-            const usedElsewhere = allItems.some((i: any) => i.article_id === itemToDelete.article_id)
+            const allItems = playlistAll.flatMap(p => p.playlist_items || []) as PlaylistItemWithArticle[]
+            const usedElsewhere = allItems.some((i: PlaylistItemWithArticle) => i.article_id === itemToDelete.article_id)
             if (!usedElsewhere) {
                 // Optionally remove article from local store. Not required for tests.
             }

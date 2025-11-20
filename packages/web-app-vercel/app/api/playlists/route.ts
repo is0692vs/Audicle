@@ -10,8 +10,8 @@ export async function GET() {
         const { userEmail, response } = await requireAuth()
         if (response) return response
 
-        let data: any = null
-        let error: any = null
+        let data: Playlist[] | null = null
+        let error: Error | null = null
 
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
             // Local fallback for tests (no Supabase configured)
@@ -73,8 +73,8 @@ export async function POST(request: Request) {
             )
         }
 
-        let insertData: any = null
-        let insertError: any = null
+        let insertData: Playlist | null = null
+        let insertError: Error | null = null
 
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
             insertData = await supabaseLocal.createPlaylist(userEmail, name, description)

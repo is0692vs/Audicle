@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { PlaylistItemWithArticle } from '@/types/playlist';
 
 /**
  * Very small in-memory supabase fallback for tests.
@@ -10,7 +11,7 @@ interface Article {
     owner_email: string;
     url: string;
     title: string;
-    thumbnail_url?: string | null;
+    thumbnail_url?: string;
     last_read_position?: number;
     created_at: string;
     updated_at: string;
@@ -18,12 +19,15 @@ interface Article {
 
 interface Playlist {
     id: string;
-    owner_email: string | null;
+    owner_email: string;
     name: string;
-    description?: string | null;
-    visibility: string;
+    description?: string;
+    visibility: 'private' | 'shared' | 'collaborative';
+    share_url?: string;
     is_default: boolean;
+    allow_fork: boolean;
     created_at: string;
+    updated_at: string;
 }
 
 interface PlaylistItem {
@@ -55,12 +59,15 @@ export async function createPlaylist(email: string | null, name: string, descrip
     const now = new Date().toISOString();
     const playlist: Playlist = {
         id,
-        owner_email: email,
+        owner_email: email || '',
         name,
-        description: description || null,
+        description: description || undefined,
         visibility: 'private',
+        share_url: undefined,
         is_default: false,
+        allow_fork: true,
         created_at: now,
+        updated_at: now,
     };
     inMemoryDB.playlists.push(playlist);
     return playlist;
@@ -93,7 +100,7 @@ export async function upsertArticle(ownerEmail: string | null, url: string, titl
             owner_email: ownerEmail || '',
             url,
             title,
-            thumbnail_url: thumbnail_url || null,
+            thumbnail_url: thumbnail_url || undefined,
             last_read_position: last_read_position || 0,
             created_at: now,
             updated_at: now,
@@ -139,7 +146,7 @@ export async function getPlaylistWithItems(ownerEmail: string | null, id: string
             const article = inMemoryDB.articles.find(a => a.id === pi.article_id);
             return {
                 ...pi,
-                article: article || null,
+                article: article || undefined,
             };
         });
 
@@ -148,10 +155,10 @@ export async function getPlaylistWithItems(ownerEmail: string | null, id: string
     const sortField = sort?.field || 'position';
     const sortOrder = sort?.order || 'asc';
 
-    const sortFn = (a: any, b: any) => {
+    const sortFn = (a: PlaylistItemWithArticle, b: PlaylistItemWithArticle) => {
         const aVal = sortField.includes('at') ? (a.article?.[sortField] || '') : (a.article?.title || '');
         const bVal = sortField.includes('at') ? (b.article?.[sortField] || '') : (b.article?.title || '');
-        
+
         if (sortField === 'position') {
             return (a.position ?? 0) - (b.position ?? 0);
         }
@@ -186,4 +193,11 @@ export async function getPlaylistWithItems(ownerEmail: string | null, id: string
         ...playlist,
         playlist_items: sorted,
     };
+}
+
+export async function removePlaylistItem(playlistId: string, itemId: string) {
+    const idx = inMemoryDB.playlist_items.findIndex(i => i.id === itemId && i.playlist_id === playlistId);
+    if (idx === -1) return false;
+    inMemoryDB.playlist_items.splice(idx, 1);
+    return true;
 }

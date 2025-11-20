@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import * as supabaseLocal from '@/lib/supabaseLocal'
 import { requireAuth } from '@/lib/api-auth'
+import { PlaylistWithItems } from '@/types/playlist'
 
 // GET: プレイリスト詳細取得（ブックマーク含む）
 export async function GET(
@@ -22,8 +23,8 @@ export async function GET(
         const field = validSortFields.includes(sortField || '') ? sortField : 'position'
         const order = validSortOrders.includes(sortOrder || '') ? sortOrder as 'asc' | 'desc' : 'asc'
 
-        let playlist: any = null
-        let playlistError: any = null
+        let playlist: PlaylistWithItems | null = null
+        let playlistError: { code: string } | Error | null = null
 
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
             try {

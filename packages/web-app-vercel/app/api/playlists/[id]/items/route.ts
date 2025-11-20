@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import * as supabaseLocal from '@/lib/supabaseLocal'
 import { requireAuth } from '@/lib/api-auth'
+import { Article, PlaylistItem } from '@/types/playlist'
 
 export async function POST(
     request: Request,
@@ -39,8 +40,8 @@ export async function POST(
         }
 
         // 記事を作成または既存のものを取得
-        let article: any = null
-        let articleError: any = null
+        let article: Article | null = null
+        let articleError: Error | null = null
 
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
             try {
@@ -78,8 +79,8 @@ export async function POST(
         }
 
         // playlist_itemsにupsert（既に存在する場合は更新扱い）
-        let playlistItem: any = null
-        let itemError: any = null
+        let playlistItem: PlaylistItem | null = null
+        let itemError: Error | null = null
 
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
             try {

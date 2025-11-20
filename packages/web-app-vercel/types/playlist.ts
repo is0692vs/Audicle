@@ -31,7 +31,7 @@ export interface PlaylistItem {
 }
 
 export interface PlaylistItemWithArticle extends PlaylistItem {
-    article: Article;
+    article?: Article;
 }
 
 export interface PlaylistWithItems extends Playlist {

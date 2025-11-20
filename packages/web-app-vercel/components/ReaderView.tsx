@@ -204,8 +204,8 @@ export default function ReaderView({
             {renderDownloadPanel()}
 
             <section className="relative overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-zinc-900 via-transparent to-transparent" />
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-zinc-900 via-transparent to-transparent" />
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-linear-to-b from-zinc-900 via-transparent to-transparent" />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-zinc-900 via-transparent to-transparent" />
               {/* モバイルでは最大高さを80vhに、デスクトップではヘッダーとコントロールバーを除いた高さを使用 */}
               <div className="relative max-h-[80vh] sm:max-h-[calc(100vh-8rem-5rem)] overflow-y-auto px-4 sm:px-6 py-6 sm:py-8">
                 <div className="space-y-3 sm:space-y-4">
