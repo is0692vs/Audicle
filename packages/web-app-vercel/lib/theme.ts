@@ -11,8 +11,17 @@ export function applyTheme(theme: ColorTheme) {
  * Get current theme from document
  */
 export function getCurrentTheme(): ColorTheme {
-    const theme = document.documentElement.getAttribute('data-theme') as ColorTheme
-    return theme || 'ocean'
+    const theme = document.documentElement.getAttribute('data-theme');
+    switch (theme) {
+        case 'ocean':
+        case 'purple':
+        case 'forest':
+        case 'rose':
+        case 'orange':
+            return theme;
+        default:
+            return 'ocean';
+    }
 }
 
 /**

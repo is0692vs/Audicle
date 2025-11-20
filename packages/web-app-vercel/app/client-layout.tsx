@@ -2,7 +2,6 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { SessionProvider } from "next-auth/react";
 import { ReactNode, useMemo, useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 import { PlaylistPlaybackProvider } from "@/contexts/PlaylistPlaybackContext";
@@ -12,7 +11,8 @@ import { applyTheme } from "@/lib/theme";
 import { DEFAULT_SETTINGS, ColorTheme } from "@/types/settings";
 
 export default function ClientLayout({ children }: { children: ReactNode }) {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const userEmail = session?.user?.email;
   const { data: userSettings } = useUserSettings();
 
   const queryClient = useMemo(
@@ -33,7 +33,11 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
 
   // Initialize theme on mount
   useEffect(() => {
-    if (session?.user?.email && userSettings) {
+    if (status === "loading") {
+      return; // セッション状態が確定するまで待機
+    }
+
+    if (status === "authenticated" && userSettings) {
       // Logged in user: use DB settings
       applyTheme(userSettings.color_theme);
     } else {
@@ -42,16 +46,14 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
       const theme = storedTheme || DEFAULT_SETTINGS.color_theme;
       applyTheme(theme as ColorTheme);
     }
-  }, [session, userSettings]);
+  }, [status, userSettings]);
 
   return (
-    <SessionProvider>
-      <QueryClientProvider client={queryClient}>
-        <PlaylistPlaybackProvider>
-          <Toaster position="top-right" />
-          {children}
-        </PlaylistPlaybackProvider>
-      </QueryClientProvider>
-    </SessionProvider>
+    <QueryClientProvider client={queryClient}>
+      <PlaylistPlaybackProvider>
+        <Toaster position="top-right" />
+        {children}
+      </PlaylistPlaybackProvider>
+    </QueryClientProvider>
   );
 }

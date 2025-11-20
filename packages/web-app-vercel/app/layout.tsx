@@ -1,9 +1,17 @@
 // packages/web-app-vercel/app/layout.tsx
+"use client";
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import dynamic from "next/dynamic";
 import ClientLayout from "./client-layout";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
+
+const SessionProviderWrapper = dynamic(
+  () => import("./session-provider-wrapper"),
+  { ssr: false }
+);
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,36 +23,22 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Audicle - Web Reader with TTS",
-  description:
-    "音楽アプリの歌詞表示のような体験で、Webページの本文を読み上げます",
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Audicle",
-  },
-};
-
-export const viewport = {
-  themeColor: "#000000",
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        suppressHydrationWarning
-      >
-        <Analytics />
-        <ClientLayout>{children}</ClientLayout>
-      </body>
-    </html>
+    <SessionProviderWrapper>
+      <html lang="ja" data-theme="ocean" suppressHydrationWarning>
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          suppressHydrationWarning
+        >
+          <Analytics />
+          <ClientLayout>{children}</ClientLayout>
+        </body>
+      </html>
+    </SessionProviderWrapper>
   );
 }

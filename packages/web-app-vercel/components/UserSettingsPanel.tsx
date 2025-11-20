@@ -72,40 +72,37 @@ export default function UserSettingsPanel() {
 
   const handleColorThemeChange = (value: string) => {
     const theme = value as ColorTheme;
-    setSettings({ ...settings, color_theme: theme });
+    const newSettings = { ...settings, color_theme: theme };
+    setSettings(newSettings);
     applyTheme(theme); // Apply immediately
     setHasChanged(true);
-
     // Save to localStorage for guest users
     if (!session?.user?.email) {
-      const currentSettings = { ...settings, color_theme: theme };
       localStorage.setItem(
         "audicle-user-settings",
-        JSON.stringify(currentSettings)
+        JSON.stringify(newSettings)
       );
       localStorage.setItem("audicle-color-theme", theme);
     }
   };
 
   const handleSave = async () => {
-    if (session?.user?.email) {
-      // Logged in user: save to DB
-      try {
+    try {
+      if (session?.user?.email) {
+        // Logged in user: save to DB
         await updateSettingsMutation.mutateAsync(settings);
-        setHasChanged(false);
-        toast.success("設定を保存しました");
-      } catch (error) {
-        console.error("Error saving settings:", error);
-        toast.error(
-          error instanceof Error ? error.message : "設定の保存に失敗しました"
-        );
+      } else {
+        // Guest user: save to localStorage
+        localStorage.setItem("audicle-user-settings", JSON.stringify(settings));
+        localStorage.setItem("audicle-color-theme", settings.color_theme);
       }
-    } else {
-      // Guest user: save to localStorage
-      localStorage.setItem("audicle-user-settings", JSON.stringify(settings));
-      localStorage.setItem("audicle-color-theme", settings.color_theme);
       setHasChanged(false);
       toast.success("設定を保存しました");
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      toast.error(
+        error instanceof Error ? error.message : "設定の保存に失敗しました"
+      );
     }
   };
 
