@@ -103,6 +103,12 @@ import * as routeModule from '../route'
 describe('/api/playlists route', () => {
     beforeEach(() => {
         jest.clearAllMocks()
+        // Set NEXT_PUBLIC_SUPABASE_URL to use the mocked supabase
+        process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://localhost:54321'
+    })
+
+    afterEach(() => {
+        delete process.env.NEXT_PUBLIC_SUPABASE_URL
     })
 
     it('returns 200 on GET with playlists data', async () => {

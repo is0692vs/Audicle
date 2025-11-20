@@ -186,3 +186,4 @@ export async function getPlaylistWithItems(ownerEmail: string | null, id: string
         ...playlist,
         playlist_items: sorted,
     };
+}
