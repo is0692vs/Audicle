@@ -121,7 +121,7 @@ export default function Home() {
     }
   };
 
-  const handleArticleClick = (item: (typeof items)[0]) => {
+      <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gradient-to-b from-zinc-900 to-black">
     if (item.article?.url) {
       router.push(`/reader?url=${encodeURIComponent(item.article.url)}`);
     }
