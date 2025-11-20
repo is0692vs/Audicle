@@ -104,7 +104,7 @@ export async function POST(request: Request) {
                 )
             }
 
-            return NextResponse.json(insertData as Playlist, { status: 201 })
+            return NextResponse.json(insertData as Playlist, { status: 201 });
         } catch (error) {
             console.error('Error in POST /api/playlists:', error)
             return NextResponse.json(
@@ -112,7 +112,8 @@ export async function POST(request: Request) {
                 { status: 500 }
             )
         }
-    } catch (error) {
+    }
+} catch (error) {
         console.error('Error in POST /api/playlists:', error)
         return NextResponse.json(
             { error: 'Internal server error' },
