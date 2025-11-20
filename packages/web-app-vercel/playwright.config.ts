@@ -71,6 +71,14 @@ export default defineConfig({
             TEST_SESSION_TOKEN: process.env.TEST_SESSION_TOKEN || '',
             // Provide a default EMAIL_HASH_SECRET for local/test runs to avoid "must be set" errors.
             EMAIL_HASH_SECRET: process.env.EMAIL_HASH_SECRET || 'test-secret-for-playwright',
+            // R2 and KV environment variables for storage and metadata
+            R2_ACCOUNT_ID: process.env.R2_ACCOUNT_ID || '',
+            R2_ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID || '',
+            R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY || '',
+            R2_BUCKET_NAME: process.env.R2_BUCKET_NAME || '',
+            KV_REST_API_URL: process.env.KV_REST_API_URL || '',
+            KV_REST_API_TOKEN: process.env.KV_REST_API_TOKEN || '',
+            STORAGE_PROVIDER: process.env.STORAGE_PROVIDER || 'r2',
         },
     },
 })
