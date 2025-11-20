@@ -21,7 +21,7 @@ export function PlaylistCompletionScreen({
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-primary/40 to-zinc-950">
-      <div className="text-center py-12 max-w-md bg-gradient-to-b from-violet-950 to-zinc-950">
+      <div className="text-center py-12 max-w-md">
         <div className="text-6xl mb-6 animate-bounce">🎉</div>
         <h2 className="text-3xl font-bold text-white mb-3">
           プレイリストの再生が完了しました
