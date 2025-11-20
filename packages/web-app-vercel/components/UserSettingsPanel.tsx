@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
+import { useDebounce } from "use-debounce";
 import {
   useUserSettings,
   useUpdateUserSettingsMutation,
@@ -25,12 +26,20 @@ export default function UserSettingsPanel() {
   const [settings, setSettings] = useState(
     originalSettings || DEFAULT_SETTINGS
   );
+  const [previewTheme, setPreviewTheme] = useState<ColorTheme>(
+    originalSettings?.color_theme || DEFAULT_SETTINGS.color_theme
+  );
   const [hasChanged, setHasChanged] = useState(false);
+  
+  // Debounce the theme for saving (1000ms delay)
+  const [debouncedTheme] = useDebounce(previewTheme, 1000);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // originalSettingsが変わったら、ローカル変更がない場合は同期
   useEffect(() => {
     if (originalSettings && !hasChanged) {
       setSettings(originalSettings);
+      setPreviewTheme(originalSettings.color_theme);
     }
   }, [originalSettings, hasChanged]);
 
@@ -72,19 +81,41 @@ export default function UserSettingsPanel() {
 
   const handleColorThemeChange = (value: string) => {
     const theme = value as ColorTheme;
-    const newSettings = { ...settings, color_theme: theme };
-    setSettings(newSettings);
-    applyTheme(theme); // Apply immediately
+    // Update preview immediately
+    setPreviewTheme(theme);
+    applyTheme(theme); // Apply immediately to CSS
     setHasChanged(true);
-    // Save to localStorage for guest users
-    if (!session?.user?.email) {
-      localStorage.setItem(
-        "audicle-user-settings",
-        JSON.stringify(newSettings)
-      );
-      localStorage.setItem("audicle-color-theme", theme);
-    }
   };
+
+  // Auto-save theme to DB when debounced theme changes
+  useEffect(() => {
+    if (!hasChanged) return;
+
+    const saveTheme = async () => {
+      try {
+        if (session?.user?.email) {
+          // Logged in user: save to DB
+          const newSettings = { ...settings, color_theme: debouncedTheme };
+          await updateSettingsMutation.mutateAsync(newSettings);
+          setSettings(newSettings);
+        } else {
+          // Guest user: save to localStorage
+          const newSettings = { ...settings, color_theme: debouncedTheme };
+          localStorage.setItem("audicle-user-settings", JSON.stringify(newSettings));
+          localStorage.setItem("audicle-color-theme", debouncedTheme);
+          setSettings(newSettings);
+        }
+        // Don't show toast for auto-save to avoid notification spam
+      } catch (error) {
+        console.error("Error saving theme:", error);
+        toast.error(
+          error instanceof Error ? error.message : "テーマの保存に失敗しました"
+        );
+      }
+    };
+
+    saveTheme();
+  }, [debouncedTheme, session, hasChanged]);
 
   const handleSave = async () => {
     try {
@@ -109,6 +140,7 @@ export default function UserSettingsPanel() {
   const handleCancel = () => {
     if (originalSettings) {
       setSettings(originalSettings);
+      setPreviewTheme(originalSettings.color_theme);
       setHasChanged(false);
     }
   };
@@ -150,7 +182,7 @@ export default function UserSettingsPanel() {
                 key={theme.value}
                 onClick={() => handleColorThemeChange(theme.value)}
                 className={`w-12 h-12 rounded-full border-2 transition-all ${
-                  settings.color_theme === theme.value
+                  previewTheme === theme.value
                     ? "border-white scale-110"
                     : "border-zinc-600 hover:border-zinc-400"
                 }`}
@@ -160,7 +192,7 @@ export default function UserSettingsPanel() {
             ))}
           </div>
           <p className="text-xs text-zinc-400 mt-1">
-            クリックしてテーマを切り替え（リアルタイムプレビュー）
+            クリックしてテーマを切り替え（リアルタイムプレビュー、1秒後に自動保存）
           </p>
         </div>
 

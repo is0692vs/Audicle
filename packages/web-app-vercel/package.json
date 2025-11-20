@@ -47,11 +47,12 @@
     "react-dom": "19.1.0",
     "react-hot-toast": "^2.6.0",
     "serwist": "^10.0.0-preview.14",
-    "tailwind-merge": "^2.5.4"
+    "tailwind-merge": "^2.5.4",
+    "use-debounce": "^10.0.6"
   },
   "devDependencies": {
-    "prettier": "^3.6.2",
     "@eslint/eslintrc": "^3",
+    "@google/generative-ai": "^0.21.0",
     "@playwright/test": "^1.45.0",
     "@serwist/next": "^10.0.0-preview.14",
     "@tailwindcss/postcss": "^4",
@@ -71,10 +72,10 @@
     "jsonwebtoken": "^9.0.2",
     "msw": "^2.3.0",
     "playwright": "^1.45.0",
+    "prettier": "^3.6.2",
     "sharp": "^0.34.4",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "@google/generative-ai": "^0.21.0",
-    "ts-morph": "^21.0.0"
+    "ts-morph": "^21.0.0",
+    "typescript": "^5"
   }
 }
