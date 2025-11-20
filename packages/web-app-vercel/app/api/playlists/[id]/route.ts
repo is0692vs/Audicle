@@ -28,12 +28,12 @@ export async function GET(
 
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
             try {
-                playlist = await supabaseLocal.getPlaylistWithItems(userEmail, id, { field, order })
+                playlist = await supabaseLocal.getPlaylistWithItems(userEmail, id, { field: field || undefined, order })
                 if (!playlist) {
                     playlistError = { code: 'PGRST116' }
                 }
             } catch (e) {
-                playlistError = e
+                playlistError = e as Error
             }
         } else {
             // プレイリスト情報とアイテムを1つのクエリで取得
@@ -71,7 +71,7 @@ export async function GET(
             playlistError = resp.error
         }
 
-        if (playlistError) {
+        if (playlistError || !playlist) {
             console.error('Supabase error:', playlistError)
             return NextResponse.json(
                 { error: 'Playlist not found' },
@@ -117,7 +117,15 @@ export async function PATCH(
         }
 
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-            const updated = await supabaseLocal.updatePlaylist(id, userEmail, { name, description })
+            // Local update check: we need to check ownership first because updatePlaylist in local doesn't check it explicitly
+            const playlists = await supabaseLocal.getPlaylistsForOwner(userEmail);
+            const ownsPlaylist = playlists.some(p => p.id === id);
+
+            if (!ownsPlaylist) {
+                 return NextResponse.json({ error: 'Playlist not found or permission denied' }, { status: 404 })
+            }
+
+            const updated = await supabaseLocal.updatePlaylist(id, { name, description })
             if (!updated) {
                 return NextResponse.json({ error: 'Playlist not found or permission denied' }, { status: 404 })
             }

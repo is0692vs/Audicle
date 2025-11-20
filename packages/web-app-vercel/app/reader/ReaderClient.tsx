@@ -453,7 +453,7 @@ export default function ReaderPageClient() {
             newIndex,
             playlistId: playlistIdFromQuery,
             articleId: item.article_id,
-            articleUrl: item.article.url,
+            articleUrl: item.article?.url,
           });
 
           // 前の再生状態をクリア
@@ -484,8 +484,8 @@ export default function ReaderPageClient() {
             // localStorageに記事が見つからない場合、サーバーから取得してstateにセット
             fetchArticleAndSetState({
               id: item.article_id,
-              url: item.article.url,
-              titleFallback: item.article.title,
+              url: item.article?.url,
+              titleFallback: item.article?.title,
               isPlaylistMode: true,
             });
           }
@@ -656,7 +656,7 @@ export default function ReaderPageClient() {
     (index: number) => {
       stop(); // ページ遷移前に再生を停止
       const item = playlistState.items[index];
-      if (item && playlistState.playlistId) {
+      if (item && item.article?.url && playlistState.playlistId) {
         const readerUrl = createReaderUrl({
           articleUrl: item.article.url,
           playlistId: playlistState.playlistId,

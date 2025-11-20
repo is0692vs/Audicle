@@ -8,6 +8,7 @@ import { extractContent } from "@/lib/api";
 import { usePlayback } from "@/hooks/usePlayback";
 import { articleStorage, type Article } from "@/lib/storage";
 import { logger } from "@/lib/logger";
+import { Play, Pause } from "lucide-react";
 
 export default function ReaderPageClient() {
   const router = useRouter();

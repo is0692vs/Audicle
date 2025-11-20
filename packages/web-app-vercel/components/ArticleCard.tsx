@@ -23,7 +23,7 @@ export function ArticleCard({
   onRemove,
   href,
 }: ArticleCardProps) {
-  const readerHref = href ?? createReaderUrl({ articleUrl: item.article.url });
+  const readerHref = href ?? (item.article?.url ? createReaderUrl({ articleUrl: item.article.url }) : '#');
 
   return (
     <a
@@ -43,10 +43,10 @@ export function ArticleCard({
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div className="flex-1 min-w-0">
               <h3 className="text-lg lg:text-xl font-semibold text-white mb-2 truncate">
-                {item.article.title}
+                {item.article?.title || "No Title"}
               </h3>
               <p className="text-sm text-zinc-400 mb-3 truncate">
-                {extractDomain(item.article.url)}
+                {item.article?.url ? extractDomain(item.article.url) : ""}
               </p>
               <div className="flex items-center gap-4 text-xs text-zinc-500">
                 <span>

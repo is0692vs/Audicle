@@ -36,6 +36,7 @@ export interface PlaylistItemWithArticle extends PlaylistItem {
 
 export interface PlaylistWithItems extends Playlist {
     items?: PlaylistItemWithArticle[];
+    playlist_items?: PlaylistItemWithArticle[];
     item_count?: number;
 }
 
