@@ -194,7 +194,7 @@ export default function PlaylistDetailPage() {
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={() => router.push("/playlists")}
-            className="text-zinc-400 hover:text-white transition-colors"
+            className="text-zinc-400 hover:text-primary transition-colors"
           >
             ← プレイリスト一覧
           </button>
