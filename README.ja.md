@@ -122,6 +122,8 @@ curl -X POST "http://localhost:8001/synthesize/simple" \
 
 貢献を歓迎します！詳細は[貢献ガイドライン（日本語）](CONTRIBUTING.ja.md)または[貢献ガイドライン（英語）](CONTRIBUTING.md)をご覧ください。
 
+なお、本プロジェクトに関するコミュニケーションは、すべて日本語で行うようお願いします。
+
 ## ライセンス
 
 本プロジェクトはMITライセンスです。詳細は[LICENSE](LICENSE)ファイルをご覧ください。

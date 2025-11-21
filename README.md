@@ -122,6 +122,8 @@ On success, the audio data is saved with the filename `test.mp3`.
 
 Contributions are welcome! Please see the [Contribution Guidelines (English)](CONTRIBUTING.md) or [Contribution Guidelines (Japanese)](CONTRIBUTING.ja.md) for details.
 
+Please note that all project-related communication must be in Japanese.
+
 ## License
 
 This project is under the MIT License. See the [LICENSE](LICENSE) file for details.

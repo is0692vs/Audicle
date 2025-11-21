@@ -91,6 +91,10 @@ Using the Dev Containers extension in VS Code makes it easy to build a consisten
 
 ## 🔄 Pull Request Process
 
+### Communication Language
+
+All communication, including Pull Request descriptions, comments, and commit messages, must be in **Japanese**. This is to ensure smooth communication within the development community of this project.
+
 ### 1. Fork and Clone
 
 ```bash
