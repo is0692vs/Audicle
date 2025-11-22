@@ -48,11 +48,14 @@ jobs:
             const combinedText = issueBody + '\\n' + allCommentsText;
 
             if (combinedText.toLowerCase().includes('@jules')) {
-              let prompt = `Issue Title: ${issue.title}\\n\\nIssue Body:\\n${issueBody}\\n\\n`;
+              // Clean the issue body
+              const cleanedIssueBody = issueBody.replace(/@jules\s*/i, '').trim();
+
+              let prompt = `Issue Title: ${issue.title}\\n\\nIssue Body:\\n${cleanedIssueBody}\\n\\n`;
               if (comments.length > 0) {
                 prompt += 'Comments:\\n';
                 for (const comment of comments) {
-                  prompt += `- ${comment.user.login} at ${comment.created_at}: ${comment.body}\\n`;
+                  prompt += `- ${comment.body}\\n`;
                 }
               }
 
