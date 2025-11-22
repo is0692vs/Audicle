@@ -28,12 +28,12 @@ import type {
 } from "@/types/playlist";
 
 const SORT_OPTIONS = {
-  position: "位置順 (昇順)",
-  "position-desc": "位置順 (降順)",
-  title: "タイトル順 (A-Z)",
-  "title-desc": "タイトル順 (Z-A)",
-  added_at: "追加日時順 (古い順)",
-  "added_at-desc": "追加日時順 (新しい順)",
+  position: "位置 (昇順)",
+  "position-desc": "位置 (降順)",
+  title: "タイトル (A-Z)",
+  "title-desc": "タイトル (Z-A)",
+  added_at: "追加日時 (古い順)",
+  "added_at-desc": "追加日時 (新しい順)",
 } as const;
 
 type SortOption = keyof typeof SORT_OPTIONS;

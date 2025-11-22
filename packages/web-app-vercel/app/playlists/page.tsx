@@ -25,12 +25,12 @@ import Sidebar from "@/components/Sidebar";
 import { logger } from "@/lib/logger";
 
 const PLAYLIST_SORT_OPTIONS = {
-  newest: "作成順 (新しい順)",
-  oldest: "作成順 (古い順)",
-  name: "名前順 (A-Z)",
-  "name-desc": "名前順 (Z-A)",
-  count: "記事数順 (多い順)",
-  "count-desc": "記事数順 (少ない順)",
+  newest: "作成日時 (新しい順)",
+  oldest: "作成日時 (古い順)",
+  name: "名前 (A-Z)",
+  "name-desc": "名前 (Z-A)",
+  count: "記事数 (多い順)",
+  "count-desc": "記事数 (少ない順)",
 } as const;
 
 type PlaylistSortBy = keyof typeof PLAYLIST_SORT_OPTIONS;

@@ -24,10 +24,10 @@ import Sidebar from "@/components/Sidebar";
 import { STORAGE_KEYS } from "@/lib/constants";
 
 const ARTICLE_SORT_OPTIONS = {
-  newest: "追加順 (新しい順)",
-  oldest: "追加順 (古い順)",
-  title: "タイトル順 (A-Z)",
-  "title-desc": "タイトル順 (Z-A)",
+  newest: "追加日時 (新しい順)",
+  oldest: "追加日時 (古い順)",
+  title: "タイトル (A-Z)",
+  "title-desc": "タイトル (Z-A)",
 } as const;
 type ArticleSortBy = keyof typeof ARTICLE_SORT_OPTIONS;
 
