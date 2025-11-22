@@ -24,7 +24,21 @@ import { Plus } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import { logger } from "@/lib/logger";
 
-type PlaylistSortBy = "newest" | "oldest" | "name" | "count";
+const PLAYLIST_SORT_OPTIONS = {
+  newest: "作成順 (新しい順)",
+  oldest: "作成順 (古い順)",
+  name: "名前順 (A-Z)",
+  "name-desc": "名前順 (Z-A)",
+  count: "記事数順 (多い順)",
+  "count-desc": "記事数順 (少ない順)",
+} as const;
+
+type PlaylistSortBy = keyof typeof PLAYLIST_SORT_OPTIONS;
+
+// 型ガード関数
+function isPlaylistSortBy(value: string): value is PlaylistSortBy {
+  return value in PLAYLIST_SORT_OPTIONS;
+}
 
 export default function PlaylistsPage() {
   const router = useRouter();
@@ -52,8 +66,12 @@ export default function PlaylistsPage() {
           );
         case "name":
           return a.name.localeCompare(b.name);
+        case "name-desc":
+          return b.name.localeCompare(a.name);
         case "count":
           return (b.item_count || 0) - (a.item_count || 0);
+        case "count-desc":
+          return (a.item_count || 0) - (b.item_count || 0);
         default:
           return 0;
       }
@@ -128,7 +146,11 @@ export default function PlaylistsPage() {
                 <h2 className="text-2xl lg:text-3xl font-bold">プレイリスト</h2>
                 <Select
                   value={sortBy}
-                  onValueChange={(value) => setSortBy(value as PlaylistSortBy)}
+                  onValueChange={(value) => {
+                    if (isPlaylistSortBy(value)) {
+                      setSortBy(value);
+                    }
+                  }}
                 >
                   <SelectTrigger
                     data-testid="playlists-sort-select"
@@ -137,10 +159,13 @@ export default function PlaylistsPage() {
                     <SelectValue placeholder="ソート" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="newest">新しい順</SelectItem>
-                    <SelectItem value="oldest">古い順</SelectItem>
-                    <SelectItem value="name">名前順</SelectItem>
-                    <SelectItem value="count">記事数順</SelectItem>
+                    {Object.entries(PLAYLIST_SORT_OPTIONS).map(
+                      ([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      )
+                    )}
                   </SelectContent>
                 </Select>
               </div>
