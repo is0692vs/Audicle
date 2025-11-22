@@ -212,7 +212,16 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
             );
           }
         } else {
-          logger.info(
+            logger.warn(
+              "⚠️ Audio 404 detected (LRU deletion), regenerating...",
+              {
+                chunk: index,
+                text: chunk.cleanedText.substring(0, 50),
+                errorCode: mediaError.code,
+                errorMessage: mediaError.message,
+                audioUrl: audioUrl.substring(0, 50),
+              }
+            );
             "🌐 キャッシュミス: articleUrlが未設定のためテキストのみでAPI呼び出し",
             {
               chunkIndex: index,
