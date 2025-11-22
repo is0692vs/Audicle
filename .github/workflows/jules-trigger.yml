@@ -59,6 +59,10 @@ jobs:
                 }
               }
 
+              // Add default instructions
+              const issueUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/issues/${issueNumber}`;
+              prompt += `\\n\\nInstructions:\\n- Include the issue URL: ${issueUrl}\\n- In the PR description, include that it was created from this issue.\\n- Write the PR description in Japanese and make it detailed.`;
+
               try {
                 const response = await fetch('https://jules.googleapis.com/v1alpha/sessions', {
                   method: 'POST',
