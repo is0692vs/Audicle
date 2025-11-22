@@ -242,6 +242,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
                 text: chunk.cleanedText.substring(0, 50),
                 errorCode: mediaError.code,
                 errorMessage: mediaError.message,
+                audioUrl: audioUrl.substring(0, 50),
               }
             );
             if (articleUrl && voiceModel) {
