@@ -240,6 +240,8 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
               {
                 chunk: index,
                 text: chunk.cleanedText.substring(0, 50),
+                errorCode: mediaError.code,
+                errorMessage: mediaError.message,
               }
             );
             if (articleUrl && voiceModel) {
