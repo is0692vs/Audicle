@@ -304,7 +304,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         setIsLoading(false);
       }
     },
-    [chunks, articleUrl, voiceModel, onChunkChange, prefetchAudio, handleAudioEnded, createAndPlayAudio]
+    [chunks, articleUrl, voiceModel, onChunkChange, prefetchAudio]
   );
 
   // onended ハンドラを共通化
