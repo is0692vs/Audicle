@@ -212,16 +212,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
             );
           }
         } else {
-            logger.warn(
-              "⚠️ Audio 404 detected (LRU deletion), regenerating...",
-              {
-                chunk: index,
-                text: chunk.cleanedText.substring(0, 50),
-                errorCode: mediaError.code,
-                errorMessage: mediaError.message,
-                audioUrl: audioUrl.substring(0, 50),
-              }
-            );
+          logger.info(
             "🌐 キャッシュミス: articleUrlが未設定のためテキストのみでAPI呼び出し",
             {
               chunkIndex: index,
@@ -266,12 +257,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
               }).catch((err) => {
                 logger.error(
                   "[Cache Remove] Failed to remove from Supabase index:",
-          logger.error("音声再生エラー", {
-            error: mediaError,
-            event: e,
-            audioUrl,
-            chunkIndex: index,
-          });
+                  err
                 );
               });
             }
@@ -296,7 +282,13 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
             }
           }
           const errorMessage = `音声の再生に失敗しました (URL: ${audioUrl}, Code: ${mediaError?.code})`;
-          logger.error("音声再生エラー", { error: mediaError, event: e });
+          logger.error("音声再生エラー", {
+            error: mediaError,
+            event: e,
+            audioUrl,
+            chunkIndex: index,
+            audioUrlType: audioUrl.startsWith("blob:") ? "blob" : "other",
+          });
           setError(errorMessage);
 
           setIsPlaying(false);
