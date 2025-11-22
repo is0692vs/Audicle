@@ -23,13 +23,18 @@ import { Plus, RotateCcw } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import { STORAGE_KEYS } from "@/lib/constants";
 
-const ARTICLE_SORT_BY_OPTIONS = [
-  "newest",
-  "oldest",
-  "title",
-  "title-desc",
-] as const;
-type ArticleSortBy = (typeof ARTICLE_SORT_BY_OPTIONS)[number];
+const ARTICLE_SORT_OPTIONS = {
+  newest: "追加順 (新しい順)",
+  oldest: "追加順 (古い順)",
+  title: "タイトル順 (A-Z)",
+  "title-desc": "タイトル順 (Z-A)",
+} as const;
+type ArticleSortBy = keyof typeof ARTICLE_SORT_OPTIONS;
+
+// 型ガード関数
+function isArticleSortBy(value: string): value is ArticleSortBy {
+  return value in ARTICLE_SORT_OPTIONS;
+}
 
 // 追加: localStorage key定義
 const HOME_SORT_KEY = STORAGE_KEYS.HOME_SORT;
@@ -43,10 +48,7 @@ export default function Home() {
   const [sortBy, setSortBy] = useState<ArticleSortBy>(() => {
     if (typeof window === "undefined") return "newest";
     const saved = localStorage.getItem(HOME_SORT_KEY);
-    return saved &&
-      (ARTICLE_SORT_BY_OPTIONS as readonly string[]).includes(saved)
-      ? (saved as ArticleSortBy)
-      : "newest";
+    return saved && isArticleSortBy(saved) ? saved : "newest";
   });
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
@@ -156,7 +158,11 @@ export default function Home() {
                 <h2 className="text-2xl lg:text-3xl font-bold">記事一覧</h2>
                 <Select
                   value={sortBy}
-                  onValueChange={(value) => setSortBy(value as ArticleSortBy)}
+                  onValueChange={(value) => {
+                    if (isArticleSortBy(value)) {
+                      setSortBy(value);
+                    }
+                  }}
                 >
                   <SelectTrigger
                     data-testid="home-sort-select"
@@ -165,10 +171,13 @@ export default function Home() {
                     <SelectValue placeholder="ソート" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="newest">新しい順</SelectItem>
-                    <SelectItem value="oldest">古い順</SelectItem>
-                    <SelectItem value="title">タイトル順 (A-Z)</SelectItem>
-                    <SelectItem value="title-desc">タイトル順 (Z-A)</SelectItem>
+                    {Object.entries(ARTICLE_SORT_OPTIONS).map(
+                      ([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      )
+                    )}
                   </SelectContent>
                 </Select>
               </div>
