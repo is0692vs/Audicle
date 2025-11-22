@@ -46,9 +46,9 @@ export default function ReaderView({
   return (
     <div
       ref={containerRef}
-      className="h-full max-h-[80vh] sm:max-h-[calc(100vh-8rem-5rem)] overflow-y-auto bg-gray-50 dark:bg-gray-950"
+      className="h-full max-h-full sm:max-h-[calc(100vh-8rem-5rem)] overflow-y-auto bg-gray-50 dark:bg-gray-950 py-8"
     >
-      <div className="max-w-3xl mx-auto px-4 py-8">
+      <div className="max-w-3xl mx-auto px-4">
         {chunks.length === 0 ? (
           <div className="text-center text-gray-500 dark:text-gray-400 mt-20">
             <p className="text-lg">URLを入力して記事を読み込んでください</p>
