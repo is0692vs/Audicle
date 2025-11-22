@@ -153,27 +153,54 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
       setIsLoading(true);
       setError("");
 
+      // 既存のオーディオをクリーンアップ
+      if (audioRef.current) {
+        if (currentAudioUrlRef.current?.startsWith("blob:")) {
+          URL.revokeObjectURL(currentAudioUrlRef.current);
+        }
+        audioRef.current.pause();
+      }
+
+      // Audio要素を即座に作成し、再生を開始してブラウザの自動再生ポリシーをクリア
+      const audio = new Audio();
+      audioRef.current = audio;
+      currentAudioUrlRef.current = ""; // URLはまだない
+
+      // 再生速度を設定
+      const rate = parseFloat(
+        localStorage.getItem(PLAYBACK_RATE_STORAGE_KEY) || ""
+      );
+      audio.playbackRate = isNaN(rate) ? DEFAULT_PLAYBACK_RATE : rate;
+
+      // play()を即座に呼び出す
+      const playPromise = audio.play();
+
       try {
+        // play()のPromiseを待つ。ここでユーザーの許可が得られる。
+        await playPromise;
+        setIsPlaying(true); // 再生状態を更新
+
+        // --- ここから非同期処理 ---
         const chunk = chunks[index];
+        logger.info(
+          `▶️ 再生開始: チャンク ${index + 1}/${chunks.length} (${chunk.type})`
+        );
 
-        logger.info(`▶️ 再生開始: チャンク ${index + 1}/${chunks.length} (${chunk.type})`);
-
-        // 見出しの前にポーズ
         if (needsPauseBefore(chunk.type)) {
-          await sleep(getPauseDuration('heading'));
+          await sleep(getPauseDuration("heading"));
         }
 
-        // 1. IndexedDBからキャッシュをチェック
         let audioUrl: string;
         if (articleUrl) {
-          const cachedChunk = await getAudioChunk(articleUrl, index, voiceModel);
-
+          const cachedChunk = await getAudioChunk(
+            articleUrl,
+            index,
+            voiceModel
+          );
           if (cachedChunk) {
-            // キャッシュヒット: Blobから直接URLを生成
             logger.info(`💾 キャッシュヒット: チャンク ${index + 1}`);
             audioUrl = URL.createObjectURL(cachedChunk.audioData);
           } else {
-            // キャッシュミス: API呼び出し
             logger.info(`🌐 キャッシュミス: API呼び出し`, {
               articleUrl: articleUrl ?? null,
               chunkIndex: index,
@@ -185,72 +212,62 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
             );
           }
         } else {
-          // articleURLがない場合は既存の動作
-          logger.info("🌐 キャッシュミス: articleUrlが未設定のためテキストのみでAPI呼び出し", {
-            chunkIndex: index,
-          });
+          logger.info(
+            "🌐 キャッシュミス: articleUrlが未設定のためテキストのみでAPI呼び出し",
+            {
+              chunkIndex: index,
+            }
+          );
           audioUrl = await audioCache.get(chunk.cleanedText, voiceModel);
         }
 
-        // 先読み処理（非同期で実行）
+        // 先読み
         prefetchAudio(index + 1);
 
-        // 前のAudioをクリーンアップ（メモリリーク防止）
-        if (audioRef.current) {
-          if (currentAudioUrlRef.current?.startsWith('blob:')) {
-            URL.revokeObjectURL(currentAudioUrlRef.current);
-          }
-          audioRef.current.pause();
-        }
-
-        const audio = new Audio(audioUrl);
-        audioRef.current = audio;
+        // 取得したURLをセット
+        audio.src = audioUrl;
         currentAudioUrlRef.current = audioUrl;
-        // 現在の playbackRate を取得して反映
-        const rate = parseFloat(localStorage.getItem(PLAYBACK_RATE_STORAGE_KEY) || '');
-        audio.playbackRate = isNaN(rate) ? DEFAULT_PLAYBACK_RATE : rate;
 
+        // イベントハンドラを設定
         audio.onended = () => handleAudioEnded(index);
-
         audio.onerror = async (e) => {
           const mediaError = audio.error;
-
-          // 404エラー（Vercel Blob LRU削除）の場合は強制再生成
-          if (mediaError?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED) {
-            logger.warn("⚠️ Audio 404 detected (LRU deletion), regenerating...", {
-              chunk: index,
-              text: chunk.cleanedText.substring(0, 50),
-              errorCode: mediaError.code,
-              errorMessage: mediaError.message,
-              audioUrl: audioUrl.substring(0, 50)
-            });
-
-            // Supabaseインデックスから削除（非同期で実行、エラーは無視）
+          if (
+            mediaError?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED
+          ) {
+            logger.warn(
+              "⚠️ Audio 404 detected (LRU deletion), regenerating...",
+              {
+                chunk: index,
+                text: chunk.cleanedText.substring(0, 50),
+              }
+            );
             if (articleUrl && voiceModel) {
-              fetch('/api/cache/remove', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+              fetch("/api/cache/remove", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   articleUrl,
                   voice: voiceModel,
                   text: chunk.cleanedText,
-                  index
-                })
+                  index,
+                }),
               }).catch((err) => {
-                logger.error('[Cache Remove] Failed to remove from Supabase index:', err);
+                logger.error(
+                  "[Cache Remove] Failed to remove from Supabase index:",
+                  err
+                );
               });
             }
-
-            // 強制再生成フラグで新しいオーディオURLを取得
             if (chunk && articleUrl) {
               try {
-                const newUrl = await audioCache.get(chunk.cleanedText, voiceModel, articleUrl, true);
-                logger.info("✅ Audio regenerated successfully", {
-                  chunk: index,
-                  newUrl: newUrl.substring(0, 50)
-                });
-
-                // ヘルパー関数を使用して音声を作成・再生
+                const newUrl = await audioCache.get(
+                  chunk.cleanedText,
+                  voiceModel,
+                  articleUrl,
+                  true
+                );
+                logger.info("✅ Audio regenerated successfully");
                 await createAndPlayAudio(newUrl, index);
                 return;
               } catch (err) {
@@ -260,40 +277,34 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
                 setIsLoading(false);
                 return;
               }
-            } else {
-              logger.error("❌ Cannot regenerate: missing chunk or articleUrl", {
-                hasChunk: !!chunk,
-                hasArticleUrl: !!articleUrl
-              });
             }
           }
-
-          // その他のエラー
           const errorMessage = `音声の再生に失敗しました (URL: ${audioUrl}, Code: ${mediaError?.code})`;
-          logger.error("音声再生エラー", {
-            error: mediaError,
-            event: e,
-            audioUrl,
-            chunkIndex: index,
-            audioUrlType: audioUrl.startsWith('blob:') ? 'blob' : 'other',
-          });
+          logger.error("音声再生エラー", { error: mediaError, event: e });
           setError(errorMessage);
+
           setIsPlaying(false);
         };
 
-        await audio.play();
         setCurrentIndex(index);
-        setIsPlaying(true);
         onChunkChange?.(chunk.id);
       } catch (err) {
-        logger.error("再生エラー", err);
-        setError(err instanceof Error ? err.message : "エラーが発生しました");
+        if ((err as Error).name === "NotAllowedError") {
+          setError(
+            "音声の再生がブラウザにブロックされました。ページをクリックしてから再度お試しください。"
+          );
+        } else {
+          setError(
+            err instanceof Error ? err.message : "不明なエラーが発生しました"
+          );
+        }
+        logger.error("再生処理全体でエラー", err);
         setIsPlaying(false);
       } finally {
         setIsLoading(false);
       }
     },
-    [chunks, articleUrl, voiceModel, onChunkChange, prefetchAudio]
+    [chunks, articleUrl, voiceModel, onChunkChange, prefetchAudio, handleAudioEnded, createAndPlayAudio]
   );
 
   // onended ハンドラを共通化

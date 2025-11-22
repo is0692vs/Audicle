@@ -22,3 +22,6 @@ packages/web-app/public/*.map
 
 playwright/.auth/user.json
 packages/web-app-vercel/coverage.json
+
+# Log files
+*.log
