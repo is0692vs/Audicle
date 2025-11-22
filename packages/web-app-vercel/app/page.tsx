@@ -56,23 +56,36 @@ export default function Home() {
   const { items = [], playlistId, playlistName } = playlistData ?? {};
 
   const sortedItems = useMemo(() => {
+    const isDesc = sortBy.endsWith("-desc");
+    const field = isDesc ? sortBy.slice(0, -5) : sortBy;
+    const order = isDesc ? -1 : 1;
+
     return [...items].sort((a, b) => {
-      switch (sortBy) {
+      let valA: string | number;
+      let valB: string | number;
+
+      switch (field) {
         case "newest":
-          return (
-            new Date(b.added_at).getTime() - new Date(a.added_at).getTime()
-          );
         case "oldest":
-          return (
-            new Date(a.added_at).getTime() - new Date(b.added_at).getTime()
-          );
+          valA = new Date(a.added_at).getTime();
+          valB = new Date(b.added_at).getTime();
+          // "newest" is descending, so we invert the order
+          return (valA - valB) * (field === "newest" ? -1 : 1);
         case "title":
-          return (a.article?.title || "").localeCompare(b.article?.title || "");
-        case "title-desc":
-          return (b.article?.title || "").localeCompare(a.article?.title || "");
+          valA = a.article?.title || "";
+          valB = b.article?.title || "";
+          break;
         default:
           return 0;
       }
+
+      if (typeof valA === "string" && typeof valB === "string") {
+        return valA.localeCompare(valB) * order;
+      }
+      if (typeof valA === "number" && typeof valB === "number") {
+        return (valA - valB) * order;
+      }
+      return 0;
     });
   }, [items, sortBy]);
 

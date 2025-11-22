@@ -54,27 +54,40 @@ export default function PlaylistsPage() {
   const { showConfirm, confirmDialog } = useConfirmDialog();
 
   const sortedPlaylists = useMemo(() => {
+    const isDesc = sortBy.endsWith("-desc");
+    const field = isDesc ? sortBy.slice(0, -5) : sortBy;
+    const order = isDesc ? -1 : 1;
+
     return [...playlists].sort((a, b) => {
-      switch (sortBy) {
+      let valA: string | number;
+      let valB: string | number;
+
+      switch (field) {
         case "newest":
-          return (
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          );
         case "oldest":
-          return (
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          );
+          valA = new Date(a.created_at).getTime();
+          valB = new Date(b.created_at).getTime();
+          // "newest" is descending, so we invert the order
+          return (valA - valB) * (field === "newest" ? -1 : 1);
         case "name":
-          return a.name.localeCompare(b.name);
-        case "name-desc":
-          return b.name.localeCompare(a.name);
+          valA = a.name;
+          valB = b.name;
+          break;
         case "count":
-          return (b.item_count || 0) - (a.item_count || 0);
-        case "count-desc":
-          return (a.item_count || 0) - (b.item_count || 0);
+          valA = a.item_count || 0;
+          valB = b.item_count || 0;
+          break;
         default:
           return 0;
       }
+
+      if (typeof valA === "string" && typeof valB === "string") {
+        return valA.localeCompare(valB) * order;
+      }
+      if (typeof valA === "number" && typeof valB === "number") {
+        return (valA - valB) * order;
+      }
+      return 0;
     });
   }, [playlists, sortBy]);
 

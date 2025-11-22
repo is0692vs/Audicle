@@ -72,23 +72,38 @@ export default function PlaylistDetailPage() {
   const sortedItems = useMemo(() => {
     if (!playlist?.items) return [];
 
+    const isDesc = sortOption.endsWith("-desc");
+    const field = isDesc ? sortOption.slice(0, -5) : sortOption;
+    const order = isDesc ? -1 : 1;
+
     return [...playlist.items].sort((a, b) => {
-      switch (sortOption) {
+      let valA: string | number | undefined;
+      let valB: string | number | undefined;
+
+      switch (field) {
         case "position":
-          return (a.position ?? 0) - (b.position ?? 0);
-        case "position-desc":
-          return (b.position ?? 0) - (a.position ?? 0);
+          valA = a.position ?? 0;
+          valB = b.position ?? 0;
+          break;
         case "title":
-          return (a.article?.title || "").localeCompare(b.article?.title || "");
-        case "title-desc":
-          return (b.article?.title || "").localeCompare(a.article?.title || "");
+          valA = a.article?.title || "";
+          valB = b.article?.title || "";
+          break;
         case "added_at":
-          return a.added_at.localeCompare(b.added_at);
-        case "added_at-desc":
-          return b.added_at.localeCompare(a.added_at);
+          valA = a.added_at;
+          valB = b.added_at;
+          break;
         default:
           return 0;
       }
+
+      if (typeof valA === "string" && typeof valB === "string") {
+        return valA.localeCompare(valB) * order;
+      }
+      if (typeof valA === "number" && typeof valB === "number") {
+        return (valA - valB) * order;
+      }
+      return 0;
     });
   }, [playlist?.items, sortOption]);
 
