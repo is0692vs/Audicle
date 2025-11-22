@@ -28,7 +28,8 @@ import type {
 } from "@/types/playlist";
 
 const SORT_OPTIONS = {
-  position: "位置順",
+  position: "位置順 (昇順)",
+  "position-desc": "位置順 (降順)",
   title: "タイトル順 (A-Z)",
   "title-desc": "タイトル順 (Z-A)",
   added_at: "追加日時順 (古い順)",
@@ -75,6 +76,8 @@ export default function PlaylistDetailPage() {
       switch (sortOption) {
         case "position":
           return (a.position ?? 0) - (b.position ?? 0);
+        case "position-desc":
+          return (b.position ?? 0) - (a.position ?? 0);
         case "title":
           return (a.article?.title || "").localeCompare(b.article?.title || "");
         case "title-desc":

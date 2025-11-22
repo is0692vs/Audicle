@@ -24,7 +24,13 @@ import { Plus } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import { logger } from "@/lib/logger";
 
-type PlaylistSortBy = "newest" | "oldest" | "name" | "count";
+type PlaylistSortBy =
+  | "newest"
+  | "oldest"
+  | "name"
+  | "name-desc"
+  | "count"
+  | "count-desc";
 
 export default function PlaylistsPage() {
   const router = useRouter();
@@ -52,8 +58,12 @@ export default function PlaylistsPage() {
           );
         case "name":
           return a.name.localeCompare(b.name);
+        case "name-desc":
+          return b.name.localeCompare(a.name);
         case "count":
           return (b.item_count || 0) - (a.item_count || 0);
+        case "count-desc":
+          return (a.item_count || 0) - (b.item_count || 0);
         default:
           return 0;
       }
@@ -137,10 +147,12 @@ export default function PlaylistsPage() {
                     <SelectValue placeholder="ソート" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="newest">新しい順</SelectItem>
-                    <SelectItem value="oldest">古い順</SelectItem>
-                    <SelectItem value="name">名前順</SelectItem>
-                    <SelectItem value="count">記事数順</SelectItem>
+                    <SelectItem value="newest">作成順 (新しい順)</SelectItem>
+                    <SelectItem value="oldest">作成順 (古い順)</SelectItem>
+                    <SelectItem value="name">名前順 (A-Z)</SelectItem>
+                    <SelectItem value="name-desc">名前順 (Z-A)</SelectItem>
+                    <SelectItem value="count">記事数順 (多い順)</SelectItem>
+                    <SelectItem value="count-desc">記事数順 (少ない順)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
