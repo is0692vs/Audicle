@@ -266,7 +266,12 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
               }).catch((err) => {
                 logger.error(
                   "[Cache Remove] Failed to remove from Supabase index:",
-                  err
+          logger.error("音声再生エラー", {
+            error: mediaError,
+            event: e,
+            audioUrl,
+            chunkIndex: index,
+          });
                 );
               });
             }
