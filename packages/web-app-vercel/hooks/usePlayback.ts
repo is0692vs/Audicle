@@ -244,7 +244,13 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
             logger.warn(
               "⚠️ Audio 404 detected (LRU deletion), regenerating...",
               {
-                chunk: index,
+              // 404エラーが検出されたため、このチャンクをスキップして次に進みます。
+              // キャッシュエントリは既に削除API呼び出しで無効化されているため、
+              // 次回アクセス時に音声が再生成されます。
+              logger.warn("⚠️ Audio 404 detected, skipping to the next chunk.");
+              setError("一部の音声が再生できませんでした。次の部分から再開します。");
+              handleAudioEnded(index);
+              return;
                 text: chunk.cleanedText.substring(0, 50),
                 errorCode: mediaError.code,
                 errorMessage: mediaError.message,
