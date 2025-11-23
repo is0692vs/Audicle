@@ -49,8 +49,11 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
   const onArticleEndRef = useRef<(() => void) | undefined>(onArticleEnd);
   // `playFromIndex` と `handleAudioEnded` の循環参照を避けるため、refで管理
   const playFromIndexRef = useRef<(index: number) => Promise<void>>(async () => {});
-
-  // 現在のチャンクID
+  // `playFromIndex` と `handleAudioEnded` の間の循環参照を解決するためのRef。
+  // `handleAudioEnded` は `useCallback` でメモ化されていますが、内部で `playFromIndex` を呼び出す必要があります。
+  // `playFromIndex` はレンダリングごとに再生成されるため、`handleAudioEnded` が古いバージョンの `playFromIndex` をキャプチャしてしまう可能性があります。
+  // このRefを通じて呼び出すことで、常に最新の `playFromIndex` を参照できるようにします。
+  const playFromIndexRef = useRef<(index: number) => Promise<void>>(async () => {});
   const currentChunkId =
     currentIndex >= 0 && currentIndex < chunks.length
       ? chunks[currentIndex].id
