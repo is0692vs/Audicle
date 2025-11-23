@@ -46,7 +46,7 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       {/* ヘッダー */}
-      <header className="border-b border-border bg-card">
+      <header className="border-b border-border bg-card text-card-foreground">
         <div className="max-w-4xl mx-auto p-4">
           <h1 className="text-2xl font-bold mb-4">Audicle - 記事一覧</h1>
           <button
@@ -72,7 +72,7 @@ export default function Home() {
             {articles.map((article) => (
               <div
                 key={article.id}
-                className="bg-card border border-border rounded-lg p-4 hover:shadow-md transition-shadow"
+                className="bg-card text-card-foreground border border-border rounded-lg p-4 hover:shadow-md transition-shadow"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div
@@ -83,7 +83,7 @@ export default function Home() {
                       )
                     }
                   >
-                    <h3 className="text-lg font-semibold text-card-foreground hover:text-primary transition-colors">
+                    <h3 className="text-lg font-semibold hover:text-primary transition-colors">
                       {article.title}
                     </h3>
                     <p className="text-sm opacity-70 mt-1">
@@ -96,7 +96,7 @@ export default function Home() {
                   </div>
                   <button
                     onClick={() => handleDelete(article.id)}
-                    className="px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 rounded transition-colors"
+                    className="px-3 py-1 text-sm bg-destructive text-destructive-foreground hover:opacity-90 rounded transition-colors"
                     title="削除"
                   >
                     削除

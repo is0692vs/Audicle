@@ -94,7 +94,7 @@ export default function ReaderPageClient() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* ヘッダー: URL入力欄 */}
-      <header className="sticky top-0 z-10 border-b border-border bg-card">
+      <header className="sticky top-0 z-10 border-b border-border bg-card text-card-foreground">
         <div className="max-w-4xl mx-auto p-4">
           <div className="flex items-center gap-4 mb-4">
             <button
@@ -129,12 +129,12 @@ export default function ReaderPageClient() {
             </button>
           </form>
           {error && (
-            <div className="mt-2 text-red-600 dark:text-red-400 text-sm">
+            <div className="mt-2 text-destructive text-sm">
               {error}
             </div>
           )}
           {playbackError && (
-            <div className="mt-2 text-red-600 dark:text-red-400 text-sm">
+            <div className="mt-2 text-destructive text-sm">
               {playbackError}
             </div>
           )}
@@ -146,7 +146,7 @@ export default function ReaderPageClient() {
                 <button
                   onClick={isPlaying ? pause : play}
                   disabled={isPlaybackLoading}
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  className="px-6 py-2 bg-success text-success-foreground rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {isPlaybackLoading
                     ? "処理中..."
@@ -222,7 +222,7 @@ function DesktopAudioControls({
   playbackRate,
 }: DesktopAudioControlsProps) {
   return (
-    <div className="hidden sm:flex sm:fixed sm:bottom-0 sm:left-0 sm:right-0 bg-card border-t border-border p-4 shadow-lg z-40">
+    <div className="hidden sm:flex sm:fixed sm:bottom-0 sm:left-0 sm:right-0 bg-card text-card-foreground border-t border-border p-4 shadow-lg z-40">
       <div className="max-w-3xl mx-auto flex items-center gap-4 px-4">
         <div className="flex items-center gap-2">
           <label
@@ -250,7 +250,7 @@ function DesktopAudioControls({
           <button
             onClick={isPlaying ? pause : play}
             disabled={isPlaybackLoading}
-            className="w-12 h-12 p-0 bg-green-600 text-white rounded-full hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center text-2xl"
+            className="w-12 h-12 p-0 bg-success text-success-foreground rounded-full hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center text-2xl"
             title={
               isPlaybackLoading ? "処理中..." : isPlaying ? "一時停止" : "再生"
             }

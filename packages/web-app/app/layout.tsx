@@ -28,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="ja" suppressHydrationWarning>
       <body
-        className={`${notoSansJp.variable} antialiased bg-background text-foreground`}
+        className={`${notoSansJp.variable} font-sans antialiased bg-background text-foreground`}
         suppressHydrationWarning
       >
         {children}

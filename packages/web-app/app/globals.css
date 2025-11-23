@@ -10,6 +10,10 @@
   --primary: #2563eb;
   --primary-foreground: #fafafa;
   --border: #e5e7eb;
+  --destructive: #ef4444;
+  --destructive-foreground: #fafafa;
+  --success: #22c55e;
+  --success-foreground: #fafafa;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -21,11 +25,14 @@
     --primary: #3b82f6;
     --primary-foreground: #f9fafb;
     --border: #262626;
+    --destructive: #f87171;
+    --destructive-foreground: #f9fafb;
+    --success: #4ade80;
+    --success-foreground: #f9fafb;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }

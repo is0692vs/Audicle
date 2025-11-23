@@ -16,6 +16,13 @@ const config: Config = {
         primary: "var(--primary)",
         "primary-foreground": "var(--primary-foreground)",
         border: "var(--border)",
+        destructive: "var(--destructive)",
+        "destructive-foreground": "var(--destructive-foreground)",
+        success: "var(--success)",
+        "success-foreground": "var(--success-foreground)",
+      },
+      fontFamily: {
+        sans: ["var(--font-noto-sans-jp)"],
       },
     },
   },
