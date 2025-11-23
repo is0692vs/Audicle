@@ -126,46 +126,6 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
     }
   }, [chunks, setIsPlaying, setCurrentIndex, articleUrl, voiceModel]);
 
-  // オーディオオブジェクトを作成して再生するヘルパー関数
-  const createAndPlayAudio = useCallback(async (audioUrl: string, audioIndex: number) => {
-    // 前のAudioをクリーンアップ
-    if (audioRef.current) {
-      if (currentAudioUrlRef.current?.startsWith('blob:')) {
-        URL.revokeObjectURL(currentAudioUrlRef.current);
-      }
-      audioRef.current.pause();
-    }
-
-    const audio = new Audio(audioUrl);
-    audioRef.current = audio;
-    currentAudioUrlRef.current = audioUrl;
-
-    // playbackRateを復元
-    const rate = parseFloat(localStorage.getItem(PLAYBACK_RATE_STORAGE_KEY) || '');
-    audio.playbackRate = isNaN(rate) ? DEFAULT_PLAYBACK_RATE : rate;
-
-    audio.onended = () => handleAudioEnded(audioIndex);
-
-    audio.onerror = () => {
-      const mediaError = audio.error;
-      const errorMessage = `音声の再生に失敗しました (URL: ${audioUrl}, Code: ${mediaError?.code})`;
-      logger.error("音声再生エラー", {
-        error: mediaError,
-        audioUrl,
-        chunkIndex: audioIndex,
-        audioUrlType: audioUrl.startsWith('blob:') ? 'blob' : 'other',
-      });
-      setError(errorMessage);
-      setIsPlaying(false);
-    };
-
-    await audio.play();
-    setCurrentIndex(audioIndex);
-    setIsPlaying(true);
-    setIsLoading(false);
-    const chunk = chunks[audioIndex];
-    onChunkChange?.(chunk.id);
-  }, [chunks, onChunkChange, handleAudioEnded]);
 
   // 先読み処理（クリーンアップ済みテキストを使用）
   const prefetchAudio = useCallback(
@@ -308,22 +268,12 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
               });
             }
             if (chunk && articleUrl) {
-              try {
-                const newUrl = await audioCache.get(
-                  chunk.cleanedText,
-                  voiceModel,
-                  articleUrl,
-                  true
-                );
-                logger.info("✅ Audio regenerated successfully");
-                await createAndPlayAudio(newUrl, index);
-                return;
-              } catch (err) {
-                setError("音声の再生成に失敗しました");
-                setIsPlaying(false);
-                setIsLoading(false);
-                return;
-              }
+              // 404エラーが検出されたため、このチャンクをスキップして次に進みます。
+              // キャッシュエントリは既に削除API呼び出しで無効化されているため、
+              // 次回アクセス時に音声が再生成されます。
+              logger.warn("⚠️ Audio 404 detected, skipping to the next chunk.");
+              handleAudioEnded(index);
+              return;
             }
           }
           const errorMessage = `音声の再生に失敗しました (URL: ${audioUrl}, Code: ${mediaError?.code})`;
@@ -357,7 +307,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         setIsLoading(false);
       }
     },
-    [chunks, articleUrl, voiceModel, onChunkChange, prefetchAudio, createAndPlayAudio, handleAudioEnded]
+    [chunks, articleUrl, voiceModel, onChunkChange, prefetchAudio, handleAudioEnded]
   );
 
   useEffect(() => {
