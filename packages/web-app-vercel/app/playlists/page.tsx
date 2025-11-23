@@ -57,7 +57,12 @@ export default function PlaylistsPage() {
     const descSuffix = "-desc";
     const isDesc = sortBy.endsWith(descSuffix);
     const field = isDesc ? sortBy.slice(0, -descSuffix.length) : sortBy;
-    const order = isDesc ? -1 : 1;
+    let order = isDesc ? -1 : 1;
+
+    // `count` はデフォルトで降順、`count-desc` は昇順のため、順序を反転します
+    if (field === "count") {
+      order *= -1;
+    }
 
     return [...playlists].sort((a, b) => {
       let valA: string | number;
