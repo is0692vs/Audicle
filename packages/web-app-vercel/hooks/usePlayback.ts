@@ -47,13 +47,13 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentAudioUrlRef = useRef<string | null>(null);
   const onArticleEndRef = useRef<(() => void) | undefined>(onArticleEnd);
-  // `playFromIndex` と `handleAudioEnded` の循環参照を避けるため、refで管理
-  const playFromIndexRef = useRef<(index: number) => Promise<void>>(async () => {});
   // `playFromIndex` と `handleAudioEnded` の間の循環参照を解決するためのRef。
   // `handleAudioEnded` は `useCallback` でメモ化されていますが、内部で `playFromIndex` を呼び出す必要があります。
-  // `playFromIndex` はレンダリングごとに再生成されるため、`handleAudioEnded` が古いバージョンの `playFromIndex` をキャプチャしてしまう可能性があります。
-  // このRefを通じて呼び出すことで、常に最新の `playFromIndex` を参照できるようにします。
+  // `playFromIndex` も `handleAudioEnded` に依存しているため、単純に依存配列に加えると循環参照が発生します。
+  // このRefを通じて呼び出すことで、常に最新の `playFromIndex` を参照できるようにし、循環参照を回避します。
   const playFromIndexRef = useRef<(index: number) => Promise<void>>(async () => {});
+
+  // 現在のチャンクID
   const currentChunkId =
     currentIndex >= 0 && currentIndex < chunks.length
       ? chunks[currentIndex].id
