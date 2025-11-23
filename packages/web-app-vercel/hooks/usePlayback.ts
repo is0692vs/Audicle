@@ -273,7 +273,9 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
                   err
                 );
               });
-            }
+          setError(
+            err instanceof Error ? err.message : "不明なエラーが発生しました。時間をおいて再度お試しください。"
+          );
             if (chunk && articleUrl) {
               // 404エラーが検出されたため、このチャンクをスキップして次に進みます。
               // キャッシュエントリは既に削除API呼び出しで無効化されているため、
