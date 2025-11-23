@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 
@@ -17,6 +17,9 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "Audicle",
   },
+};
+
+export const viewport: Viewport = {
   themeColor: "#000000",
 };
 
