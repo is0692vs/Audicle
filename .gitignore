@@ -1,6 +1,9 @@
 # IDEs and editors
 .vscode/
 
+# Log files
+*.log
+
 /sample/
 
 v0/*

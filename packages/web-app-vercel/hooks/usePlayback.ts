@@ -47,7 +47,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentAudioUrlRef = useRef<string | null>(null);
   const onArticleEndRef = useRef<(() => void) | undefined>(onArticleEnd);
-  // `useCallback` の依存関係が複雑になるのを避けるため、`playFromIndex` をrefで管理
+  // `playFromIndex` と `handleAudioEnded` の循環参照を避けるため、refで管理
   const playFromIndexRef = useRef<(index: number) => Promise<void>>(async () => {});
 
   // 現在のチャンクID
@@ -229,9 +229,10 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         // 先読み
         prefetchAudio(index + 1);
 
-        // 取得したURLをセット
+        // 取得したURLをセットして再生
         audio.src = audioUrl;
         currentAudioUrlRef.current = audioUrl;
+        await audio.play();
 
         // イベントハンドラを設定
         audio.onended = () => handleAudioEnded(index);
