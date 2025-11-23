@@ -54,8 +54,9 @@ export default function PlaylistsPage() {
   const { showConfirm, confirmDialog } = useConfirmDialog();
 
   const sortedPlaylists = useMemo(() => {
-    const isDesc = sortBy.endsWith("-desc");
-    const field = isDesc ? sortBy.slice(0, -5) : sortBy;
+    const descSuffix = "-desc";
+    const isDesc = sortBy.endsWith(descSuffix);
+    const field = isDesc ? sortBy.slice(0, -descSuffix.length) : sortBy;
     const order = isDesc ? -1 : 1;
 
     return [...playlists].sort((a, b) => {

@@ -56,8 +56,9 @@ export default function Home() {
   const { items = [], playlistId, playlistName } = playlistData ?? {};
 
   const sortedItems = useMemo(() => {
-    const isDesc = sortBy.endsWith("-desc");
-    const field = isDesc ? sortBy.slice(0, -5) : sortBy;
+    const descSuffix = "-desc";
+    const isDesc = sortBy.endsWith(descSuffix);
+    const field = isDesc ? sortBy.slice(0, -descSuffix.length) : sortBy;
     const order = isDesc ? -1 : 1;
 
     return [...items].sort((a, b) => {

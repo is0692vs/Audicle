@@ -72,8 +72,9 @@ export default function PlaylistDetailPage() {
   const sortedItems = useMemo(() => {
     if (!playlist?.items) return [];
 
-    const isDesc = sortOption.endsWith("-desc");
-    const field = isDesc ? sortOption.slice(0, -5) : sortOption;
+    const descSuffix = "-desc";
+    const isDesc = sortOption.endsWith(descSuffix);
+    const field = isDesc ? sortOption.slice(0, -descSuffix.length) : sortOption;
     const order = isDesc ? -1 : 1;
 
     return [...playlist.items].sort((a, b) => {
