@@ -120,7 +120,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
     setIsLoading(false);
     const chunk = chunks[audioIndex];
     onChunkChange?.(chunk.id);
-  }, [chunks, onChunkChange]);
+  }, [chunks, onChunkChange, handleAudioEnded]);
 
   // 先読み処理（クリーンアップ済みテキストを使用）
   const prefetchAudio = useCallback(
@@ -274,7 +274,6 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
                 await createAndPlayAudio(newUrl, index);
                 return;
               } catch (err) {
-                logger.error("❌ Audio regeneration failed", err);
                 setError("音声の再生成に失敗しました");
                 setIsPlaying(false);
                 setIsLoading(false);
