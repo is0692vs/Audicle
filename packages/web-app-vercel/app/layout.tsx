@@ -54,5 +54,4 @@ export const metadata: Metadata = {
 // UI elements; keep it at module scope so it is included in the app HTML.
 export const viewport = {
   themeColor: "#000000",
-  maximumScale: 1,
 };

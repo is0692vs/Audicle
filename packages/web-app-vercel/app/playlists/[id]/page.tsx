@@ -28,12 +28,11 @@ import type {
 } from "@/types/playlist";
 
 const SORT_OPTIONS = {
-  position: "位置 (昇順)",
-  "position-desc": "位置 (降順)",
-  title: "タイトル (A-Z)",
-  "title-desc": "タイトル (Z-A)",
-  added_at: "追加日時 (古い順)",
-  "added_at-desc": "追加日時 (新しい順)",
+  position: "位置順",
+  title: "タイトル順 (A-Z)",
+  "title-desc": "タイトル順 (Z-A)",
+  added_at: "追加日時順 (古い順)",
+  "added_at-desc": "追加日時順 (新しい順)",
 } as const;
 
 type SortOption = keyof typeof SORT_OPTIONS;
@@ -72,39 +71,21 @@ export default function PlaylistDetailPage() {
   const sortedItems = useMemo(() => {
     if (!playlist?.items) return [];
 
-    const descSuffix = "-desc";
-    const isDesc = sortOption.endsWith(descSuffix);
-    const field = isDesc ? sortOption.slice(0, -descSuffix.length) : sortOption;
-    const order = isDesc ? -1 : 1;
-
     return [...playlist.items].sort((a, b) => {
-      let valA: string | number | undefined;
-      let valB: string | number | undefined;
-
-      switch (field) {
+      switch (sortOption) {
         case "position":
-          valA = a.position ?? 0;
-          valB = b.position ?? 0;
-          break;
+          return (a.position ?? 0) - (b.position ?? 0);
         case "title":
-          valA = a.article?.title || "";
-          valB = b.article?.title || "";
-          break;
+          return (a.article?.title || "").localeCompare(b.article?.title || "");
+        case "title-desc":
+          return (b.article?.title || "").localeCompare(a.article?.title || "");
         case "added_at":
-          valA = a.added_at;
-          valB = b.added_at;
-          break;
+          return a.added_at.localeCompare(b.added_at);
+        case "added_at-desc":
+          return b.added_at.localeCompare(a.added_at);
         default:
           return 0;
       }
-
-      if (typeof valA === "string" && typeof valB === "string") {
-        return valA.localeCompare(valB) * order;
-      }
-      if (typeof valA === "number" && typeof valB === "number") {
-        return (valA - valB) * order;
-      }
-      return 0;
     });
   }, [playlist?.items, sortOption]);
 
