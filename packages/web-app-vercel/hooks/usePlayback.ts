@@ -238,25 +238,17 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         audio.onended = () => handleAudioEnded(index);
         audio.onerror = async (e) => {
           const mediaError = audio.error;
-          if (
-            mediaError?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED
-          ) {
-            logger.warn(
-              "⚠️ Audio 404 detected (LRU deletion), regenerating...",
-              {
-              // 404エラーが検出されたため、このチャンクをスキップして次に進みます。
-              // キャッシュエントリは既に削除API呼び出しで無効化されているため、
-              // 次回アクセス時に音声が再生成されます。
-              logger.warn("⚠️ Audio 404 detected, skipping to the next chunk.");
-              setError("一部の音声が再生できませんでした。次の部分から再開します。");
-              handleAudioEnded(index);
-              return;
-                text: chunk.cleanedText.substring(0, 50),
-                errorCode: mediaError.code,
-                errorMessage: mediaError.message,
-                audioUrl: audioUrl.substring(0, 50),
-              }
-            );
+
+          if (mediaError?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED) {
+            logger.warn("⚠️ Audio 404 detected (LRU deletion), skipping to the next chunk.", {
+              chunkIndex: index,
+              text: chunk.cleanedText.substring(0, 50),
+              errorCode: mediaError.code,
+              errorMessage: mediaError.message,
+              audioUrl: audioUrl.substring(0, 50),
+            });
+
+            // Supabaseインデックスから削除（非同期で実行、エラーは無視）
             if (articleUrl && voiceModel) {
               fetch("/api/cache/remove", {
                 method: "POST",
@@ -267,24 +259,21 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
                   text: chunk.cleanedText,
                   index,
                 }),
-              }).catch((err) => {
+              }).catch((fetchErr) => {
                 logger.error(
                   "[Cache Remove] Failed to remove from Supabase index:",
-                  err
+                  fetchErr
                 );
               });
-          setError(
-            err instanceof Error ? err.message : "不明なエラーが発生しました。時間をおいて再度お試しください。"
-          );
-            if (chunk && articleUrl) {
-              // 404エラーが検出されたため、このチャンクをスキップして次に進みます。
-              // キャッシュエントリは既に削除API呼び出しで無効化されているため、
-              // 次回アクセス時に音声が再生成されます。
-              logger.warn("⚠️ Audio 404 detected, skipping to the next chunk.");
-              handleAudioEnded(index);
-              return;
             }
+
+            setError("一部の音声が再生できませんでした。次の部分から再開します。");
+            // 次のチャンクへ進む
+            handleAudioEnded(index);
+            return;
           }
+
+          // その他のエラー
           const errorMessage = `音声の再生に失敗しました (URL: ${audioUrl}, Code: ${mediaError?.code})`;
           logger.error("音声再生エラー", {
             error: mediaError,
@@ -294,7 +283,6 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
             audioUrlType: audioUrl.startsWith("blob:") ? "blob" : "other",
           });
           setError(errorMessage);
-
           setIsPlaying(false);
         };
 

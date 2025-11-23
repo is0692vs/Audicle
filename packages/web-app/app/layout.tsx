@@ -25,11 +25,6 @@ export const metadata: Metadata = {
   themeColor: "#000000",
 };
 
-export const viewport = {
-  themeColor: "#000000",
-  maximumScale: 1,
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
