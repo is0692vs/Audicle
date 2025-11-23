@@ -94,19 +94,19 @@ export default function ReaderPageClient() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* ヘッダー: URL入力欄 */}
-      <header className="sticky top-0 z-10 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+      <header className="sticky top-0 z-10 border-b border-border bg-card">
         <div className="max-w-4xl mx-auto p-4">
           <div className="flex items-center gap-4 mb-4">
             <button
               onClick={() => router.push("/")}
-              className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+              className="px-4 py-2 text-sm opacity-80 hover:opacity-100 transition-colors"
             >
               ← 記事一覧
             </button>
             <h1 className="text-2xl font-bold">Audicle</h1>
           </div>
           {title && (
-            <h2 className="text-lg text-gray-600 dark:text-gray-400 mb-4">
+            <h2 className="text-lg opacity-80 mb-4">
               {title}
             </h2>
           )}
@@ -116,14 +116,14 @@ export default function ReaderPageClient() {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="記事のURLを入力してください"
-              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               disabled={isLoading}
               required
             />
             <button
               type="submit"
               disabled={isLoading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isLoading ? "読込中..." : "読込"}
             </button>
@@ -158,7 +158,7 @@ export default function ReaderPageClient() {
               <div className="flex items-center gap-2 ml-auto">
                 <label
                   htmlFor="playback-rate"
-                  className="text-sm text-gray-600 dark:text-gray-400"
+                  className="text-sm opacity-80"
                 >
                   再生速度:
                 </label>
@@ -172,7 +172,7 @@ export default function ReaderPageClient() {
                   onChange={(e) => setPlaybackRate(parseFloat(e.target.value))}
                   className="w-32"
                 />
-                <span className="text-sm text-gray-600 dark:text-gray-400 w-12">
+                <span className="text-sm opacity-80 w-12">
                   {playbackRate.toFixed(1)}x
                 </span>
               </div>
@@ -222,12 +222,12 @@ function DesktopAudioControls({
   playbackRate,
 }: DesktopAudioControlsProps) {
   return (
-    <div className="hidden sm:flex sm:fixed sm:bottom-0 sm:left-0 sm:right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 shadow-lg z-40">
+    <div className="hidden sm:flex sm:fixed sm:bottom-0 sm:left-0 sm:right-0 bg-card border-t border-border p-4 shadow-lg z-40">
       <div className="max-w-3xl mx-auto flex items-center gap-4 px-4">
         <div className="flex items-center gap-2">
           <label
             htmlFor="playback-rate-desktop"
-            className="text-sm text-gray-600 dark:text-gray-400"
+            className="text-sm opacity-80"
           >
             速度:
           </label>
@@ -241,7 +241,7 @@ function DesktopAudioControls({
             onChange={(e) => setPlaybackRate(parseFloat(e.target.value))}
             className="w-24"
           />
-          <span className="text-sm text-gray-600 dark:text-gray-400 w-12">
+          <span className="text-sm opacity-80 w-12">
             {playbackRate.toFixed(1)}x
           </span>
         </div>
