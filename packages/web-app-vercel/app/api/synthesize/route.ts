@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { randomUUID } from 'crypto';
 import { auth } from '@/lib/auth';
 import { getKv } from '@/lib/kv';
 import { parseArticleMetadata, serializeArticleMetadata } from '@/lib/kv-helpers';
@@ -195,6 +196,12 @@ export async function OPTIONS() {
 }
 
 export async function POST(request: NextRequest) {
+    const requestId = randomUUID();
+    // biome-ignore lint/suspicious/noExplicitAny: The data payload for structured logging can accept any object shape.
+    const log = (level: 'info' | 'warn' | 'error', message: string, data: Record<string, unknown> = {}) => {
+        console[level](JSON.stringify({ requestId, level, message, ...data }));
+    };
+
     const corsHeaders = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -202,22 +209,24 @@ export async function POST(request: NextRequest) {
     };
 
     try {
+        log('info', 'リクエスト受信');
         // 認証チェック
         const session = await auth();
         if (!session?.user?.email) {
+            log('warn', '認証されていないリクエスト');
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders });
         }
 
         // 許可リストチェック
         if (ALLOWED_EMAILS.length > 0 && !ALLOWED_EMAILS.includes(session.user.email)) {
+            log('warn', 'アクセスが拒否されました', { email: session.user.email });
             return NextResponse.json({ error: 'Access denied' }, { status: 403, headers: corsHeaders });
         }
 
         // リクエストボディをパース
         const body = await request.json();
 
-        // デバッグログ
-        console.log('[DEBUG] Request params:', {
+        log('info', 'リクエストパラメータ', {
             hasText: !!body.text,
             hasArticleUrl: !!body.articleUrl,
             hasChunks: !!body.chunks,
@@ -226,6 +235,7 @@ export async function POST(request: NextRequest) {
 
         // 入力バリデーション
         if (!body.chunks && !body.text) {
+            log('warn', 'text または chunks がリクエストボディにありません');
             return NextResponse.json(
                 { error: 'text or chunks is required' },
                 { status: 400, headers: corsHeaders }
@@ -274,10 +284,10 @@ export async function POST(request: NextRequest) {
                             lastUpdated: new Date().toISOString(),
                             lastAccessed: new Date().toISOString()
                         }));
-                        console.log(`[INFO] ✅ Article metadata initialized: ${articleUrl} (${totalChunks} chunks)`);
+                        log('info', '記事メタデータを初期化しました', { articleUrl, totalChunks });
                     }
                 } catch (kvError) {
-                    console.error('[ERROR] ❌ Failed to initialize article metadata:', kvError);
+                    log('error', '記事メタデータの初期化に失敗しました', { error: kvError });
                 }
             }
 
@@ -291,7 +301,7 @@ export async function POST(request: NextRequest) {
                     // 人気記事判定（記事レベルメタデータから）
                     if (metadata && metadata.readCount >= POPULAR_ARTICLE_READ_COUNT_THRESHOLD && metadata.completedPlayback === true) {
                         isPopularArticle = true;
-                        console.log('[Optimize] ⚡ Popular article detected:', {
+                        log('info', '人気記事を検出しました', {
                             articleUrl,
                             readCount: metadata.readCount,
                             completedPlayback: metadata.completedPlayback,
@@ -305,15 +315,14 @@ export async function POST(request: NextRequest) {
                         lastAccessed: new Date().toISOString(),
                         lastPlayedChunk: chunkIndex ?? 0
                     });
-                    console.log(`[INFO] ✅ Access metadata updated: ${articleUrl}`);
+                    log('info', 'アクセスメタデータを更新しました', { articleUrl });
                 } catch (kvError) {
-                    console.error('[ERROR] ❌ Failed to update access metadata:', kvError);
+                    log('error', 'アクセスメタデータの更新に失敗しました', { error: kvError });
                 }
             }
         }
 
-        // デバッグログ: 人気記事判定結果
-        console.log('[Optimize] Article metadata:', {
+        log('info', '記事メタデータ', {
             articleUrl,
             readCount: metadata?.readCount ?? 0,
             completedPlayback: metadata?.completedPlayback ?? false,
@@ -325,7 +334,7 @@ export async function POST(request: NextRequest) {
         if (articleUrl) {
             try {
                 cacheIndex = await getCacheIndex(articleUrl, voiceToUse);
-                console.log('[Supabase Index] Cache index loaded:', {
+                log('info', 'Supabaseキャッシュインデックスをロードしました', {
                     articleUrl,
                     voice: voiceToUse,
                     cachedChunksCount: cacheIndex?.cached_chunks.length ?? 0
@@ -360,7 +369,7 @@ export async function POST(request: NextRequest) {
                     audioBuffers.push(Buffer.alloc(0));
                     return true;
                 } catch (urlError) {
-                    console.warn('[Storage] ⚠️ Failed to issue presigned GET URL:', {
+                    log('warn', '署名付きGET URLの発行に失敗しました', {
                         cacheKey,
                         error: urlError instanceof Error ? urlError.message : urlError,
                     });
@@ -376,8 +385,9 @@ export async function POST(request: NextRequest) {
                     return;
                 }
                 headChecked = true;
+                log('info', `R2キャッシュをチェック中 (headObject): ${cacheKey}`);
                 const result = await storage.headObject(cacheKey).catch((error: unknown) => {
-                    console.error(`Failed to check cache for key ${cacheKey}:`, error);
+                    log('error', `キー ${cacheKey} のキャッシュチェックに失敗しました`, { error });
                     return null;
                 });
                 objectExists = result?.exists ?? false;
@@ -385,7 +395,7 @@ export async function POST(request: NextRequest) {
 
             // 人気記事の場合：全チャンクがキャッシュ済みと仮定してhead()をスキップ
             if (isPopularArticle) {
-                console.log(`[Optimize] ⚡ Popular article: skipping head() for chunk ${audioUrls.length + 1}`);
+                log('info', `人気記事のためhead()をスキップ: チャンク ${audioUrls.length + 1}`);
                 headOperationsSkipped++;
 
                 const hitRecorded = await recordCachedHit();
@@ -393,13 +403,13 @@ export async function POST(request: NextRequest) {
                     continue;
                 }
 
-                console.warn('[Optimize] ⚠️ Popular article presigned URL failed, falling back to normal flow');
+                log('warn', '人気記事の署名付きURLの取得に失敗しました。通常のフローにフォールバックします。');
             }
 
             if (cacheIndex) {
                 if (isCachedByIndex) {
                     // Supabaseインデックスにキャッシュ済み → head()スキップ！
-                    console.log('[Supabase Index] ⚡ Cache hit, skipping head() for key:', cacheKey);
+                    log('info', `✅ R2キャッシュヒット (Supabase Index): ${cacheKey}のためhead()をスキップ`);
                     headOperationsSkipped++;
 
                     const hitRecorded = await recordCachedHit();
@@ -407,7 +417,7 @@ export async function POST(request: NextRequest) {
                         continue;
                     }
 
-                    console.warn('[Supabase Index] ⚠️ Presigned URL failed, falling back to head() check');
+                    log('warn', '署名付きURLの取得に失敗しました。head()チェックにフォールバックします。');
                     await checkWithHead();
                     if (objectExists) {
                         const fallbackHit = await recordCachedHit();
@@ -417,18 +427,18 @@ export async function POST(request: NextRequest) {
                     }
                 } else {
                     // Supabaseインデックスになし → キャッシュミス確定
-                    console.log('[Supabase Index] ❌ Cache miss for key:', cacheKey);
+                    log('info', `❌ R2キャッシュミス (Supabase Index): ${cacheKey}`);
                 }
             }
 
             // 通常フロー or Supabaseインデックスなし or ミス → head()でチェック
             if (!cacheIndex || !isCachedByIndex) {
-                console.log('[Optimize] 🔍 Checking with head() for key:', cacheKey);
+                log('info', `🔍 R2キャッシュをチェック中 (head()): ${cacheKey}`);
                 await checkWithHead();
             }
 
             if (objectExists) {
-                console.log(`Cache hit for key: ${cacheKey}`);
+                log('info', `✅ R2キャッシュヒット (headObject): ${cacheKey}`);
 
                 const hitRecorded = await recordCachedHit();
                 if (hitRecorded) {
@@ -436,10 +446,10 @@ export async function POST(request: NextRequest) {
                     if (articleUrl && cacheIndex && !isCachedByIndex) {
                         addCachedChunk(articleUrl, voiceToUse, textHash)
                             .then(() => {
-                                console.log('[Supabase Index] 🔄 Backfilling index for existing cache:', textHash);
+                                log('info', '既存のキャッシュのインデックスをバックフィルしました', { textHash });
                             })
                             .catch((error) => {
-                                console.error('[Supabase Index] ❌ Failed to backfill index:', textHash, error);
+                                log('error', 'インデックスのバックフィルに失敗しました', { textHash, error });
                             });
                     }
 
@@ -448,7 +458,7 @@ export async function POST(request: NextRequest) {
             }
 
             // 2. キャッシュミス：TTS生成
-            console.log(`Cache miss for key: ${cacheKey}`);
+            log('info', `❌ R2キャッシュミス: ${cacheKey}。Google TTS APIを呼び出します。`);
             cacheMisses++;
             const audioBuffer = await synthesizeToBuffer(chunkText, voiceToUse, speakingRate);
 
@@ -459,18 +469,19 @@ export async function POST(request: NextRequest) {
             try {
                 const storedUrl = await storage.uploadObject(cacheKey, audioBuffer, 'audio/mpeg', signedUrlTtlSeconds);
                 audioUrls.push(storedUrl);
+                log('info', `音声を作成しR2キャッシュに保存しました: ${cacheKey}`);
 
                 // 4. Supabaseインデックスに追加（articleUrlがある場合）
                 if (articleUrl) {
                     try {
                         await addCachedChunk(articleUrl, voiceToUse, textHash);
-                        console.log('[Supabase Index] ✅ Chunk added to index:', textHash);
+                        log('info', 'チャンクをSupabaseインデックスに追加しました', { textHash });
                     } catch {
                         // addCachedChunk関数内で既にエラーログが出力されているため、ここではログ出力しない
                     }
                 }
             } catch (putError) {
-                console.error(`Failed to save audio to cache, falling back to base64 for key ${cacheKey}:`, putError);
+                log('error', `音声のキャッシュへの保存に失敗しました。base64にフォールバックします: ${cacheKey}`, { error: putError });
                 const base64Audio = audioBuffer.toString('base64');
                 audioUrls.push(`data:audio/mpeg;base64,${base64Audio}`);
             }
@@ -485,8 +496,8 @@ export async function POST(request: NextRequest) {
             totalChunks,
         };
 
-        console.log(`Cache stats - Hits: ${cacheHits}, Misses: ${cacheMisses}, Rate: ${(hitRate * 100).toFixed(2)}%`);
-        console.log(`[Optimize] ⚡ Simple Operations saved: ${headOperationsSkipped} head() calls skipped`);
+        log('info', 'キャッシュ統計', { cacheHits, cacheMisses, hitRate: `${(hitRate * 100).toFixed(2)}%` });
+        log('info', `最適化: ${headOperationsSkipped} 回の head() コールをスキップしました`);
 
         // 旧形式（1チャンク）の場合はbase64を返す
         if (!body.chunks && body.text) {
@@ -497,10 +508,11 @@ export async function POST(request: NextRequest) {
             // キャッシュヒット時はバッファが空のため、URLから音声データを取得
             if (!audioBuffer || audioBuffer.length === 0) {
                 const audioUrl = audioUrls[0];
+                log('info', 'キャッシュされた音声をフェッチ中', { audioUrl });
                 const response = await fetch(audioUrl);
 
                 if (!response.ok) {
-                    console.error(`Failed to fetch cached audio from ${audioUrl}. Status: ${response.status}`);
+                    log('error', `キャッシュされた音声のフェッチに失敗しました: ${audioUrl}`, { status: response.status });
                     return NextResponse.json(
                         { error: 'Failed to fetch cached audio' },
                         { status: 500, headers: corsHeaders }
@@ -513,6 +525,7 @@ export async function POST(request: NextRequest) {
 
             const base64Audio = audioBuffer.toString('base64');
 
+            log('info', '古い形式のリクエストにbase64でエンコードされた音声を返します');
             return NextResponse.json({
                 audio: base64Audio
             }, {
@@ -521,6 +534,7 @@ export async function POST(request: NextRequest) {
         }
 
         // 新形式：URL配列レスポンス
+        log('info', '新しい形式のリクエストに音声URLの配列を返します');
         return NextResponse.json(
             {
                 audioUrls,
@@ -537,7 +551,7 @@ export async function POST(request: NextRequest) {
             'Access-Control-Allow-Headers': 'Content-Type',
         };
 
-        console.error('Synthesize error:', error);
+        log('error', '音声合成エラー', { error });
 
         if (error instanceof SyntaxError) {
             return NextResponse.json(

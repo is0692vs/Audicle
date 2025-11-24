@@ -207,16 +207,17 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
 
         let audioUrl: string;
         if (articleUrl) {
+          logger.info(`💾 IndexedDB: チャンク ${index + 1} をチェック中`);
           const cachedChunk = await getAudioChunk(
             articleUrl,
             index,
             voiceModel
           );
           if (cachedChunk) {
-            logger.info(`💾 キャッシュヒット: チャンク ${index + 1}`);
+            logger.info(`✅ IndexedDB: キャッシュヒット チャンク ${index + 1}`);
             audioUrl = URL.createObjectURL(cachedChunk.audioData);
           } else {
-            logger.info(`🌐 キャッシュミス: API呼び出し`, {
+            logger.info(`❌ IndexedDB: キャッシュミス チャンク ${index + 1}。バックエンドAPIを呼び出します。`, {
               articleUrl: articleUrl ?? null,
               chunkIndex: index,
             });
@@ -228,7 +229,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
           }
         } else {
           logger.info(
-            "🌐 キャッシュミス: articleUrlが未設定のためテキストのみでAPI呼び出し",
+            "🌐 articleUrl が未設定のため、IndexedDBをスキップしてバックエンドAPIを呼び出します。",
             {
               chunkIndex: index,
             }
