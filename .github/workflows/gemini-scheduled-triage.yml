@@ -130,18 +130,18 @@ jobs:
             }
             triagedIssues = triagedIssues.sort((a, b) => a.issue_number - b.issue_number);
 
-            core.debug(`Triaged issues: ${JSON.stringify(triagedIssues)}`);
+            core.info(`Triaged issues: ${JSON.stringify(triagedIssues)}`);
 
             // Iterate over each label
             for (const issue of triagedIssues) {
               if (!issue) {
-                core.debug(`Skipping empty issue: ${JSON.stringify(issue)}`);
+                core.info(`Skipping empty issue: ${JSON.stringify(issue)}`);
                 continue;
               }
 
               const issueNumber = issue.issue_number;
               if (!issueNumber) {
-                core.debug(`Skipping issue with no data: ${JSON.stringify(issue)}`);
+                core.info(`Skipping issue with no data: ${JSON.stringify(issue)}`);
                 continue;
               }
 
@@ -152,14 +152,14 @@ jobs:
                 .filter((label) => availableLabels.includes(label))
                 .sort()
 
-              core.debug(`Identified labels to set: ${JSON.stringify(labelsToSet)}`);
+              core.info(`Identified labels to set: ${JSON.stringify(labelsToSet)}`);
 
               if (labelsToSet.length === 0) {
                 core.info(`Skipping issue #${issueNumber} - no labels to set.`)
                 continue;
               }
 
-              core.debug(`Setting labels on issue #${issueNumber} to ${labelsToSet.join(', ')} (${issue.explanation || 'no explanation'})`)
+              core.info(`Setting labels on issue #${issueNumber} to ${labelsToSet.join(', ')} (${issue.explanation || 'no explanation'})`)
 
               await github.rest.issues.setLabels({
                 owner: context.repo.owner,

@@ -95,9 +95,9 @@ jobs:
 
                       You will retrieve issue data and available labels from environment variables, analyze the issues, and assign the most relevant labels. You will then generate a single JSON array containing your triage decisions and write it to /tmp/triaged_issues.json.
 
-                      To avoid quoting issues, you MUST use Python to write the file.
+                      JSONファイルを作成する際は，エスケープ問題を避けるため，必ずPythonワンライナーを使用すること。
                       Execute exactly this format:
-                      run_shell_command(python3 -c "import json; open('/tmp/triaged_issues.json', 'w').write(json.dumps([...your json array...]))")
+                      run_shell_command(python3 -c "import json; f=open('/tmp/triaged_issues.json', 'w'); json.dump([{'issue_number': 123, 'labels_to_set': ['bug']}], f); f.close()")
 
             - name: "Collect outputs"
               id: "collect_outputs"
