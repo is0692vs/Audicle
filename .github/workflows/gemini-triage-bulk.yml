@@ -97,6 +97,8 @@ jobs:
 
                       Use the run_shell_command tool to execute: run_shell_command(echo '[{"issue_number": 1, ...}]' > /tmp/triaged_issues.json)
 
+                      Note: If the JSON string contains single quotes, ensure they are properly escaped for shell execution.
+
             - name: "Collect outputs"
               id: "collect_outputs"
               uses: "actions/github-script@v7"
