@@ -220,8 +220,6 @@ jobs:
     runs-on: "ubuntu-slim"
     needs:
       - "triage"
-    if: |-
-      ${{ needs.triage.outputs.selected_labels != '' }}
     permissions:
       contents: "read"
       issues: "write"
