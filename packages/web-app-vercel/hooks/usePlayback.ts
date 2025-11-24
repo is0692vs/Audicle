@@ -38,8 +38,13 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
   const [error, setError] = useState<string>("");
   const [playbackRate, setPlaybackRate] = useState<number>(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(PLAYBACK_RATE_STORAGE_KEY);
-      return saved ? parseFloat(saved) : DEFAULT_PLAYBACK_RATE;
+      try {
+        const saved = localStorage.getItem(PLAYBACK_RATE_STORAGE_KEY);
+        return saved ? parseFloat(saved) : DEFAULT_PLAYBACK_RATE;
+      } catch (error) {
+        logger.warn("Failed to load playback rate from localStorage", error);
+        return DEFAULT_PLAYBACK_RATE;
+      }
     }
     return DEFAULT_PLAYBACK_RATE;
   });
@@ -53,7 +58,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
   // `handleAudioEnded` は `useCallback` でメモ化されていますが、内部で `playFromIndex` を呼び出す必要があります。
   // `playFromIndex` も `handleAudioEnded` に依存しているため、単純に依存配列に加えると循環参照が発生します。
   // このRefを通じて呼び出すことで、常に最新の `playFromIndex` を参照できるようにし、循環参照を回避します。
-  const playFromIndexRef = useRef<(index: number) => Promise<void>>(async () => {});
+  const playFromIndexRef = useRef<(index: number) => Promise<void>>(async () => { });
 
   // 現在のチャンクID
   const currentChunkId =
@@ -68,7 +73,11 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
 
   // playbackRateの変更をlocalStorageに保存
   useEffect(() => {
-    localStorage.setItem(PLAYBACK_RATE_STORAGE_KEY, playbackRate.toString());
+    try {
+      localStorage.setItem(PLAYBACK_RATE_STORAGE_KEY, playbackRate.toString());
+    } catch (error) {
+      logger.warn("Failed to save playback rate to localStorage", error);
+    }
   }, [playbackRate]);
 
   // playbackSpeedプロパティの変更をplaybackRateに反映
@@ -82,7 +91,11 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
   const updatePlaybackRate = useCallback((rate: number) => {
     setPlaybackRate(rate);
     // localStorage を同期的に更新して競合状態を回避
-    localStorage.setItem(PLAYBACK_RATE_STORAGE_KEY, rate.toString());
+    try {
+      localStorage.setItem(PLAYBACK_RATE_STORAGE_KEY, rate.toString());
+    } catch (error) {
+      logger.warn("Failed to save playback rate to localStorage", error);
+    }
     if (audioRef.current) {
       audioRef.current.playbackRate = rate;
     }
@@ -298,7 +311,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         onChunkChange?.(chunk.id);
       } catch (err) {
         const error = err as Error;
-        
+
         // AbortErrorは通常の操作で発生する可能性があるため、警告レベルで記録
         // (例: ユーザーが素早くクリック、ページ遷移、コンポーネントのアンマウント等)
         // これらはエラーではなく通常の動作なので、ユーザーにエラーを表示しない
