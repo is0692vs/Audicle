@@ -1,5 +1,5 @@
 import { applyTheme, getCurrentTheme, initializeTheme } from '../theme';
-import { ColorTheme } from '@/types/settings';
+import { ColorTheme, COLOR_THEMES } from '@/types/settings';
 
 // Helper function to mock matchMedia
 function mockMatchMedia(prefersDark: boolean) {
@@ -19,6 +19,8 @@ function mockMatchMedia(prefersDark: boolean) {
 }
 
 describe('theme', () => {
+    const validThemes: ColorTheme[] = COLOR_THEMES.map(t => t.value);
+
     beforeEach(() => {
         // Reset DOM for each test
         document.documentElement.removeAttribute('data-theme');
@@ -47,7 +49,7 @@ describe('theme', () => {
         });
 
         it('should work for all valid themes', () => {
-            const themes: ColorTheme[] = ['ocean', 'purple', 'forest', 'rose', 'orange'];
+            const themes: ColorTheme[] = COLOR_THEMES.map(t => t.value);
             
             themes.forEach(theme => {
                 applyTheme(theme);
@@ -72,9 +74,7 @@ describe('theme', () => {
         });
 
         it('should return correct theme for all valid themes', () => {
-            const themes: ColorTheme[] = ['ocean', 'purple', 'forest', 'rose', 'orange'];
-            
-            themes.forEach(theme => {
+            validThemes.forEach(theme => {
                 document.documentElement.setAttribute('data-theme', theme);
                 expect(getCurrentTheme()).toBe(theme);
             });

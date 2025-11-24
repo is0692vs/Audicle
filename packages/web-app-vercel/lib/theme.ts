@@ -23,6 +23,17 @@ export function applyTheme(theme: ColorTheme) {
 }
 
 /**
+ * Update dark mode class based on system preference
+ */
+function updateDarkMode() {
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.classList.add('dark')
+    } else {
+        document.documentElement.classList.remove('dark')
+    }
+}
+
+/**
  * Get current theme from document
  */
 export function getCurrentTheme(): ColorTheme {
@@ -41,7 +52,15 @@ export function getCurrentTheme(): ColorTheme {
 
 /**
  * Initialize theme on app start
+ * Sets up the initial theme and listens for system theme changes
  */
 export function initializeTheme(theme: ColorTheme = 'ocean') {
+    // Apply initial theme
     applyTheme(theme)
+    
+    // Listen for system theme changes
+    if (window.matchMedia) {
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+        mediaQuery.addEventListener('change', updateDarkMode)
+    }
 }
