@@ -215,18 +215,18 @@ jobs:
 
             2. Based on the issue title and issue body, classify the issue and choose all appropriate labels from the list of available labels.
 
-            3. Convert the list of appropriate labels into a comma-separated list (CSV). If there are no appropriate labels, use the empty string.
+            4. Convert the list of appropriate labels into a comma-separated list (CSV). If there are no appropriate labels, use the empty string.
 
-            4. Use the "echo" shell command to append the CSV labels to the output file path provided above:
+            5. Use the run_shell_command tool to execute the echo command and append the CSV labels to the output file path provided above:
 
                 ```
-                echo "SELECTED_LABELS=[APPROPRIATE_LABELS_AS_CSV]" >> "[filepath_for_env]"
+                run_shell_command(echo "SELECTED_LABELS=[APPROPRIATE_LABELS_AS_CSV]" >> "[filepath_for_env]")
                 ```
 
                 for example:
 
                 ```
-                echo "SELECTED_LABELS=bug,enhancement" >> "/tmp/runner/env"
+                run_shell_command(echo "SELECTED_LABELS=bug,enhancement" >> "/tmp/runner/env")
                 ```
 
       - name: "Collect outputs"

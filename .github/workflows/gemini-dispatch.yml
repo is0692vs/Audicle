@@ -140,6 +140,7 @@ jobs:
     with:
       additional_context: "${{ needs.dispatch.outputs.additional_context }}"
       language: "ja"
+      gemini_debug: true
       gemini_model: "gemini-2.5-flash-lite"
     secrets: "inherit"
 
