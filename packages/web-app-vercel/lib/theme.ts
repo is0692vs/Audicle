@@ -5,6 +5,13 @@ import { ColorTheme } from '@/types/settings'
  */
 export function applyTheme(theme: ColorTheme) {
     document.documentElement.setAttribute('data-theme', theme)
+    
+    // Apply dark class based on system preference
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.classList.add('dark')
+    } else {
+        document.documentElement.classList.remove('dark')
+    }
 }
 
 /**
