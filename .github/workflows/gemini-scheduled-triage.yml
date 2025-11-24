@@ -89,7 +89,7 @@ jobs:
       additional_context: "Scheduled triage run"
       issues_to_triage: "${{ needs.triage.outputs.issues_to_triage }}"
       language: "ja"
-      gemini_model: "gemini-2.5-flash-lite"
+      gemini_model: "gemini-2.5-flash"
     secrets: "inherit"
 
   label:
