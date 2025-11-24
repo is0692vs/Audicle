@@ -84,6 +84,13 @@ export default function ReaderPageClient() {
   const [hasLoadedFromQuery, setHasLoadedFromQuery] = useState(false);
   const [isSpeedModalOpen, setIsSpeedModalOpen] = useState(false);
 
+  // Hydrationエラーを防ぐためのクライアントサイド判定
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   // プレイリスト再生のための追加状態
   const [currentPlaylistIndex, setCurrentPlaylistIndex] = useState<number>(
     indexFromQuery ? parseInt(indexFromQuery, 10) : 0
@@ -789,7 +796,7 @@ export default function ReaderPageClient() {
             </div>
           )}
           {/* プレイリスト再生情報: コンパクト化 */}
-          {playlistState.isPlaylistMode && (
+          {playlistState.isPlaylistMode && isClient && (
             <div className="mt-2 bg-violet-950/30 p-2 sm:p-3 rounded-lg border border-violet-900/50">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="min-w-0 flex-1">
