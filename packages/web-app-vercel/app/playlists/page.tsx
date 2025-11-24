@@ -24,21 +24,7 @@ import { Plus } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import { logger } from "@/lib/logger";
 
-const PLAYLIST_SORT_OPTIONS = {
-  newest: "作成日時 (新しい順)",
-  oldest: "作成日時 (古い順)",
-  name: "名前 (A-Z)",
-  "name-desc": "名前 (Z-A)",
-  count: "記事数 (多い順)",
-  "count-desc": "記事数 (少ない順)",
-} as const;
-
-type PlaylistSortBy = keyof typeof PLAYLIST_SORT_OPTIONS;
-
-// 型ガード関数
-function isPlaylistSortBy(value: string): value is PlaylistSortBy {
-  return value in PLAYLIST_SORT_OPTIONS;
-}
+type PlaylistSortBy = "newest" | "oldest" | "name" | "count";
 
 export default function PlaylistsPage() {
   const router = useRouter();
@@ -54,46 +40,23 @@ export default function PlaylistsPage() {
   const { showConfirm, confirmDialog } = useConfirmDialog();
 
   const sortedPlaylists = useMemo(() => {
-    const descSuffix = "-desc";
-    const isDesc = sortBy.endsWith(descSuffix);
-    const field = isDesc ? sortBy.slice(0, -descSuffix.length) : sortBy;
-    let order = isDesc ? -1 : 1;
-
-    // `count` はデフォルトで降順、`count-desc` は昇順のため、順序を反転します
-    if (field === "count") {
-      order *= -1;
-    }
-
     return [...playlists].sort((a, b) => {
-      let valA: string | number;
-      let valB: string | number;
-
-      switch (field) {
+      switch (sortBy) {
         case "newest":
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
         case "oldest":
-          valA = new Date(a.created_at).getTime();
-          valB = new Date(b.created_at).getTime();
-          // "newest" is descending, so we invert the order
-          return (valA - valB) * (field === "newest" ? -1 : 1);
+          return (
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          );
         case "name":
-          valA = a.name;
-          valB = b.name;
-          break;
+          return a.name.localeCompare(b.name);
         case "count":
-          valA = a.item_count || 0;
-          valB = b.item_count || 0;
-          break;
+          return (b.item_count || 0) - (a.item_count || 0);
         default:
           return 0;
       }
-
-      if (typeof valA === "string" && typeof valB === "string") {
-        return valA.localeCompare(valB) * order;
-      }
-      if (typeof valA === "number" && typeof valB === "number") {
-        return (valA - valB) * order;
-      }
-      return 0;
     });
   }, [playlists, sortBy]);
 
@@ -165,11 +128,7 @@ export default function PlaylistsPage() {
                 <h2 className="text-2xl lg:text-3xl font-bold">プレイリスト</h2>
                 <Select
                   value={sortBy}
-                  onValueChange={(value) => {
-                    if (isPlaylistSortBy(value)) {
-                      setSortBy(value);
-                    }
-                  }}
+                  onValueChange={(value) => setSortBy(value as PlaylistSortBy)}
                 >
                   <SelectTrigger
                     data-testid="playlists-sort-select"
@@ -178,13 +137,10 @@ export default function PlaylistsPage() {
                     <SelectValue placeholder="ソート" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(PLAYLIST_SORT_OPTIONS).map(
-                      ([value, label]) => (
-                        <SelectItem key={value} value={value}>
-                          {label}
-                        </SelectItem>
-                      )
-                    )}
+                    <SelectItem value="newest">新しい順</SelectItem>
+                    <SelectItem value="oldest">古い順</SelectItem>
+                    <SelectItem value="name">名前順</SelectItem>
+                    <SelectItem value="count">記事数順</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

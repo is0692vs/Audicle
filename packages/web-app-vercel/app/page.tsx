@@ -23,18 +23,13 @@ import { Plus, RotateCcw } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import { STORAGE_KEYS } from "@/lib/constants";
 
-const ARTICLE_SORT_OPTIONS = {
-  newest: "追加日時 (新しい順)",
-  oldest: "追加日時 (古い順)",
-  title: "タイトル (A-Z)",
-  "title-desc": "タイトル (Z-A)",
-} as const;
-type ArticleSortBy = keyof typeof ARTICLE_SORT_OPTIONS;
-
-// 型ガード関数
-function isArticleSortBy(value: string): value is ArticleSortBy {
-  return value in ARTICLE_SORT_OPTIONS;
-}
+const ARTICLE_SORT_BY_OPTIONS = [
+  "newest",
+  "oldest",
+  "title",
+  "title-desc",
+] as const;
+type ArticleSortBy = (typeof ARTICLE_SORT_BY_OPTIONS)[number];
 
 // 追加: localStorage key定義
 const HOME_SORT_KEY = STORAGE_KEYS.HOME_SORT;
@@ -48,7 +43,10 @@ export default function Home() {
   const [sortBy, setSortBy] = useState<ArticleSortBy>(() => {
     if (typeof window === "undefined") return "newest";
     const saved = localStorage.getItem(HOME_SORT_KEY);
-    return saved && isArticleSortBy(saved) ? saved : "newest";
+    return saved &&
+      (ARTICLE_SORT_BY_OPTIONS as readonly string[]).includes(saved)
+      ? (saved as ArticleSortBy)
+      : "newest";
   });
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
@@ -56,37 +54,23 @@ export default function Home() {
   const { items = [], playlistId, playlistName } = playlistData ?? {};
 
   const sortedItems = useMemo(() => {
-    const descSuffix = "-desc";
-    const isDesc = sortBy.endsWith(descSuffix);
-    const field = isDesc ? sortBy.slice(0, -descSuffix.length) : sortBy;
-    const order = isDesc ? -1 : 1;
-
     return [...items].sort((a, b) => {
-      let valA: string | number;
-      let valB: string | number;
-
-      switch (field) {
+      switch (sortBy) {
         case "newest":
+          return (
+            new Date(b.added_at).getTime() - new Date(a.added_at).getTime()
+          );
         case "oldest":
-          valA = new Date(a.added_at).getTime();
-          valB = new Date(b.added_at).getTime();
-          // "newest" is descending, so we invert the order
-          return (valA - valB) * (field === "newest" ? -1 : 1);
+          return (
+            new Date(a.added_at).getTime() - new Date(b.added_at).getTime()
+          );
         case "title":
-          valA = a.article?.title || "";
-          valB = b.article?.title || "";
-          break;
+          return (a.article?.title || "").localeCompare(b.article?.title || "");
+        case "title-desc":
+          return (b.article?.title || "").localeCompare(a.article?.title || "");
         default:
           return 0;
       }
-
-      if (typeof valA === "string" && typeof valB === "string") {
-        return valA.localeCompare(valB) * order;
-      }
-      if (typeof valA === "number" && typeof valB === "number") {
-        return (valA - valB) * order;
-      }
-      return 0;
     });
   }, [items, sortBy]);
 
@@ -172,11 +156,7 @@ export default function Home() {
                 <h2 className="text-2xl lg:text-3xl font-bold">記事一覧</h2>
                 <Select
                   value={sortBy}
-                  onValueChange={(value) => {
-                    if (isArticleSortBy(value)) {
-                      setSortBy(value);
-                    }
-                  }}
+                  onValueChange={(value) => setSortBy(value as ArticleSortBy)}
                 >
                   <SelectTrigger
                     data-testid="home-sort-select"
@@ -185,13 +165,10 @@ export default function Home() {
                     <SelectValue placeholder="ソート" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(ARTICLE_SORT_OPTIONS).map(
-                      ([value, label]) => (
-                        <SelectItem key={value} value={value}>
-                          {label}
-                        </SelectItem>
-                      )
-                    )}
+                    <SelectItem value="newest">新しい順</SelectItem>
+                    <SelectItem value="oldest">古い順</SelectItem>
+                    <SelectItem value="title">タイトル順 (A-Z)</SelectItem>
+                    <SelectItem value="title-desc">タイトル順 (Z-A)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
