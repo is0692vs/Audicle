@@ -47,6 +47,8 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentAudioUrlRef = useRef<string | null>(null);
   const onArticleEndRef = useRef<(() => void) | undefined>(onArticleEnd);
+  // 再生処理が進行中かどうかを追跡するフラグ
+  const isPlayingRequestInProgressRef = useRef<boolean>(false);
   // `playFromIndex` と `handleAudioEnded` の間の循環参照を解決するためのRef。
   // `handleAudioEnded` は `useCallback` でメモ化されていますが、内部で `playFromIndex` を呼び出す必要があります。
   // `playFromIndex` も `handleAudioEnded` に依存しているため、単純に依存配列に加えると循環参照が発生します。
@@ -158,6 +160,15 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         return;
       }
 
+      // 既に再生処理が進行中の場合は新しいリクエストを無視
+      if (isPlayingRequestInProgressRef.current) {
+        logger.warn("再生リクエストが既に進行中のため、新しいリクエストをスキップします", {
+          index,
+        });
+        return;
+      }
+
+      isPlayingRequestInProgressRef.current = true;
       setIsLoading(true);
       setError("");
 
@@ -169,26 +180,8 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         audioRef.current.pause();
       }
 
-      // Audio要素を即座に作成し、再生を開始してブラウザの自動再生ポリシーをクリア
-      const audio = new Audio();
-      audioRef.current = audio;
-      currentAudioUrlRef.current = ""; // URLはまだない
-
-      // 再生速度を設定
-      const rate = parseFloat(
-        localStorage.getItem(PLAYBACK_RATE_STORAGE_KEY) || ""
-      );
-      audio.playbackRate = isNaN(rate) ? DEFAULT_PLAYBACK_RATE : rate;
-
-      // play()を即座に呼び出す
-      const playPromise = audio.play();
-
       try {
-        // play()のPromiseを待つ。ここでユーザーの許可が得られる。
-        await playPromise;
-        setIsPlaying(true); // 再生状態を更新
-
-        // --- ここから非同期処理 ---
+        // --- まず非同期処理で音声データを取得 ---
         const chunk = chunks[index];
         logger.info(
           `▶️ 再生開始: チャンク ${index + 1}/${chunks.length} (${chunk.type})`
@@ -232,10 +225,21 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         // 先読み
         prefetchAudio(index + 1);
 
-        // 取得したURLをセットして再生
+        // Audio要素を作成し、音声データをセット
+        const audio = new Audio();
+        audioRef.current = audio;
         audio.src = audioUrl;
         currentAudioUrlRef.current = audioUrl;
+
+        // 再生速度を設定
+        const rate = parseFloat(
+          localStorage.getItem(PLAYBACK_RATE_STORAGE_KEY) || ""
+        );
+        audio.playbackRate = isNaN(rate) ? DEFAULT_PLAYBACK_RATE : rate;
+
+        // play()を一度だけ呼び出す
         await audio.play();
+        setIsPlaying(true); // 再生状態を更新
 
         // イベントハンドラを設定
         audio.onended = () => handleAudioEnded(index);
@@ -292,19 +296,32 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         setCurrentIndex(index);
         onChunkChange?.(chunk.id);
       } catch (err) {
-        if ((err as Error).name === "NotAllowedError") {
+        const error = err as Error;
+        
+        // AbortErrorは通常の操作で発生する可能性があるため、警告レベルで記録
+        if (error.name === "AbortError") {
+          logger.warn("再生が中断されました", {
+            errorName: error.name,
+            errorMessage: error.message,
+            chunkIndex: index,
+          });
+          // ユーザーが明示的に停止した可能性が高いため、エラーメッセージは表示しない
+          setError("");
+        } else if (error.name === "NotAllowedError") {
           setError(
             "音声の再生がブラウザにブロックされました。ページをクリックしてから再度お試しください。"
           );
+          logger.error("再生処理全体でエラー (NotAllowedError)", err);
         } else {
           setError(
             err instanceof Error ? err.message : "不明なエラーが発生しました"
           );
+          logger.error("再生処理全体でエラー", err);
         }
-        logger.error("再生処理全体でエラー", err);
         setIsPlaying(false);
       } finally {
         setIsLoading(false);
+        isPlayingRequestInProgressRef.current = false;
       }
     },
     [chunks, articleUrl, voiceModel, onChunkChange, prefetchAudio, handleAudioEnded]
