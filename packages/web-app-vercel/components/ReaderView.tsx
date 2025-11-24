@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useAutoScroll } from "@/hooks/useAutoScroll";
 import { useDownload } from "@/hooks/useDownload";
@@ -26,8 +26,18 @@ export default function ReaderView({
   onChunkClick,
 }: ReaderViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [gradientState, setGradientState] = useState({
+    top: false,
+    bottom: false,
+    enabled: false,
+  });
+  const [chunkListPaddingBottom, setChunkListPaddingBottom] = useState(0);
 
   const chunkCount = chunks.length;
+  const chunkSignature = useMemo(
+    () => chunks.map((chunk) => chunk.id).join("|"),
+    [chunks]
+  );
 
   useEffect(() => {
     if (!articleUrl) return;
@@ -72,10 +82,90 @@ export default function ReaderView({
   // Chrome拡張版と同等の動作を提供
   useAutoScroll({
     currentChunkId,
-    // containerRef, // 一時的にコメントアウトしてwindowスクロールを使用
+    containerRef,
     enabled: true,
     delay: 0,
   });
+
+  // Keep gradient overlays in sync with scroll position
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const updateGradientState = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const hasOverflow = scrollHeight - clientHeight > 4;
+      if (!hasOverflow) {
+        setGradientState((prev) =>
+          prev.enabled ? { top: false, bottom: false, enabled: false } : prev
+        );
+        return;
+      }
+
+      const epsilon = 4;
+      const nextState = {
+        top: scrollTop > epsilon,
+        bottom: scrollTop + clientHeight < scrollHeight - epsilon,
+        enabled: true,
+      };
+
+      setGradientState((prev) =>
+        prev.top === nextState.top &&
+        prev.bottom === nextState.bottom &&
+        prev.enabled === nextState.enabled
+          ? prev
+          : nextState
+      );
+    };
+
+    updateGradientState();
+
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => updateGradientState())
+        : undefined;
+
+    container.addEventListener("scroll", updateGradientState, {
+      passive: true,
+    });
+    resizeObserver?.observe(container);
+
+    return () => {
+      container.removeEventListener("scroll", updateGradientState);
+      resizeObserver?.disconnect();
+    };
+  }, [chunkSignature]);
+
+  // Add an invisible spacer so the last chunk can still reach the visual center
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const MIN_SPACER_PX = 120;
+
+    const updatePadding = () => {
+      const nextPadding = Math.max(
+        Math.round(container.clientHeight / 2),
+        MIN_SPACER_PX
+      );
+      setChunkListPaddingBottom((prev) =>
+        prev === nextPadding ? prev : nextPadding
+      );
+    };
+
+    updatePadding();
+
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => updatePadding())
+        : undefined;
+
+    resizeObserver?.observe(container);
+
+    return () => {
+      resizeObserver?.disconnect();
+    };
+  }, [chunkSignature]);
 
   const renderDownloadPanel = () => {
     if (downloadStatus === "idle" || downloadStatus === "completed") {
@@ -204,11 +294,32 @@ export default function ReaderView({
             {renderDownloadPanel()}
 
             <section className="relative overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-linear-to-b from-zinc-900 via-transparent to-transparent" />
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-zinc-900 via-transparent to-transparent" />
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-zinc-900 via-transparent to-transparent" />
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-zinc-900 via-transparent to-transparent" />
-              <div className="space-y-3 sm:space-y-4">
+              <div
+                aria-hidden="true"
+                className={cn(
+                  "pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-zinc-900 via-transparent to-transparent transition-opacity duration-300",
+                  gradientState.enabled && gradientState.top
+                    ? "opacity-100"
+                    : "opacity-0"
+                )}
+              />
+              <div
+                aria-hidden="true"
+                className={cn(
+                  "pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-zinc-900 via-transparent to-transparent transition-opacity duration-300",
+                  gradientState.enabled && gradientState.bottom
+                    ? "opacity-100"
+                    : "opacity-0"
+                )}
+              />
+              <div
+                className="space-y-3 sm:space-y-4"
+                style={{
+                  paddingBottom: chunkListPaddingBottom
+                    ? `${chunkListPaddingBottom}px`
+                    : undefined,
+                }}
+              >
                 {chunks.map((chunk) => {
                   const isActive = chunk.id === currentChunkId;
                   const isHeading = /^h[1-6]$/.test(chunk.type);
