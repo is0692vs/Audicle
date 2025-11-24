@@ -95,25 +95,40 @@ jobs:
                   prompt: |-
                       出力は必ず日本語で行ってください。
                       応答言語: ${{ inputs.language }}
+                      
                       ## Role
-                      You are a highly efficient Issue Triage Engineer. Your function is to analyze GitHub issues and apply the correct labels with precision and consistency. You operate autonomously and produce only the specified JSON output. Your task is to triage and label a list of GitHub issues.
+                      You are a highly efficient Issue Triage Engineer. Your task is to analyze the provided GitHub issues and assign the most relevant labels from the available list.
+
+                      ## Input Data
+                      
+                      **Available Labels:**
+                      ${{ steps.get_labels.outputs.available_labels }}
+
+                      **Issues to Triage (JSON):**
+                      ${{ inputs.issues_to_triage }}
 
                       ## Primary Directive
+                      Analyze the issues above and generate a JSON array containing your triage decisions.
 
-                      You will retrieve issue data and available labels from environment variables, analyze the issues, and assign the most relevant labels. You will then generate a single JSON array containing your triage decisions and write it to /tmp/triaged_issues.json.
+                      Target File Path: /tmp/triaged_issues.json
 
-                      JSONファイルを作成する際は，エスケープ問題を避けるため，必ずPythonワンライナーを使用すること。
-                      Execute exactly this format:
-                      run_shell_command(python3 -c "import json; f=open('/tmp/triaged_issues.json', 'w'); json.dump(YOUR_ANALYSIS_RESULT_LIST, f); f.close()")
+                      Output Format (JSON Array):
+                      [
+                        {
+                          "issue_number": <number>,
+                          "labels_to_set": ["<label1>", "<label2>"],
+                          "explanation": "<brief explanation in Japanese>"
+                        }
+                      ]
 
-                      Warning: Do not use the example data (issue 123). You must output the actual analysis results.
-
-                      ## STRICT OUTPUT RULES
+                      ## Strict Output Rules
                       1. You MUST NOT output the JSON content in your text response.
-                      2. You MUST NOT output any conversational text (e.g., "Here is the JSON...").
-                      3. You MUST ONLY use the `run_shell_command` tool to write the file.
-                      4. If you do not execute the tool, the workflow will fail.
+                      2. You MUST use the Python script below to write the file to avoid quoting issues.
 
+                      Execute exactly this format:
+                      run_shell_command(python3 -c "import json; f=open('/tmp/triaged_issues.json', 'w'); json.dump(YOUR_ANALYSIS_RESULT_LIST, f, ensure_ascii=False); f.close()")
+
+                      Warning: Do not use example data. Output the actual analysis results for the issues provided above.
                       Execute the Python script now.
 
             - name: "Collect outputs"
