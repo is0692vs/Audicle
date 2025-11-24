@@ -1,6 +1,23 @@
 import { applyTheme, getCurrentTheme, initializeTheme } from '../theme';
 import { ColorTheme } from '@/types/settings';
 
+// Helper function to mock matchMedia
+function mockMatchMedia(prefersDark: boolean) {
+    Object.defineProperty(window, 'matchMedia', {
+        writable: true,
+        value: jest.fn().mockImplementation(query => ({
+            matches: prefersDark && query === '(prefers-color-scheme: dark)',
+            media: query,
+            onchange: null,
+            addListener: jest.fn(),
+            removeListener: jest.fn(),
+            addEventListener: jest.fn(),
+            removeEventListener: jest.fn(),
+            dispatchEvent: jest.fn(),
+        })),
+    });
+}
+
 describe('theme', () => {
     beforeEach(() => {
         // Reset DOM for each test
@@ -15,21 +32,7 @@ describe('theme', () => {
         });
 
         it('should add dark class when system prefers dark mode', () => {
-            // Mock matchMedia to return true for dark mode
-            Object.defineProperty(window, 'matchMedia', {
-                writable: true,
-                value: jest.fn().mockImplementation(query => ({
-                    matches: query === '(prefers-color-scheme: dark)',
-                    media: query,
-                    onchange: null,
-                    addListener: jest.fn(),
-                    removeListener: jest.fn(),
-                    addEventListener: jest.fn(),
-                    removeEventListener: jest.fn(),
-                    dispatchEvent: jest.fn(),
-                })),
-            });
-
+            mockMatchMedia(true);
             applyTheme('ocean');
             expect(document.documentElement.classList.contains('dark')).toBe(true);
         });
@@ -37,22 +40,8 @@ describe('theme', () => {
         it('should remove dark class when system prefers light mode', () => {
             // First add dark class
             document.documentElement.classList.add('dark');
-
-            // Mock matchMedia to return false for dark mode
-            Object.defineProperty(window, 'matchMedia', {
-                writable: true,
-                value: jest.fn().mockImplementation(query => ({
-                    matches: false,
-                    media: query,
-                    onchange: null,
-                    addListener: jest.fn(),
-                    removeListener: jest.fn(),
-                    addEventListener: jest.fn(),
-                    removeEventListener: jest.fn(),
-                    dispatchEvent: jest.fn(),
-                })),
-            });
-
+            
+            mockMatchMedia(false);
             applyTheme('forest');
             expect(document.documentElement.classList.contains('dark')).toBe(false);
         });

@@ -2,6 +2,14 @@ import { ColorTheme } from '@/types/settings'
 
 /**
  * Apply color theme to the document
+ * 
+ * This function sets two separate aspects of theming:
+ * 1. Color theme (ocean/purple/forest/rose/orange) via data-theme attribute - determines accent colors
+ * 2. Light/Dark mode via .dark class - determined by system preference, affects background/foreground colors
+ * 
+ * The theme parameter only controls accent colors. Light/dark mode is always based on system preference
+ * as defined in globals.css where [data-theme] defines light mode variables and [data-theme].dark defines
+ * dark mode variables.
  */
 export function applyTheme(theme: ColorTheme) {
     document.documentElement.setAttribute('data-theme', theme)
