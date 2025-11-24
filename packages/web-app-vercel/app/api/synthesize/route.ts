@@ -210,7 +210,7 @@ export async function POST(request: NextRequest) {
 
     try {
         log('info', 'リクエスト受信');
-        // 認証チェック
+        log('info', 'リクエスト受信', { method: request.method, url: request.url });
         const session = await auth();
         if (!session?.user?.email) {
             log('warn', '認証されていないリクエスト');
