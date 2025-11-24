@@ -87,10 +87,12 @@ export default function ReaderView({
     delay: 0,
   });
 
-  // Keep gradient overlays in sync with scroll position
+  // Keep gradient overlays and padding in sync with scroll position and container size
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+
+    const MIN_SPACER_PX = 120;
 
     const updateGradientState = () => {
       const { scrollTop, scrollHeight, clientHeight } = container;
@@ -118,31 +120,6 @@ export default function ReaderView({
       );
     };
 
-    updateGradientState();
-
-    const resizeObserver =
-      typeof ResizeObserver !== "undefined"
-        ? new ResizeObserver(() => updateGradientState())
-        : undefined;
-
-    container.addEventListener("scroll", updateGradientState, {
-      passive: true,
-    });
-    resizeObserver?.observe(container);
-
-    return () => {
-      container.removeEventListener("scroll", updateGradientState);
-      resizeObserver?.disconnect();
-    };
-  }, [chunkSignature]);
-
-  // Add an invisible spacer so the last chunk can still reach the visual center
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const MIN_SPACER_PX = 120;
-
     const updatePadding = () => {
       const nextPadding = Math.max(
         Math.round(container.clientHeight / 2),
@@ -153,16 +130,26 @@ export default function ReaderView({
       );
     };
 
+    const handleResize = () => {
+      updateGradientState();
+      updatePadding();
+    };
+
+    updateGradientState();
     updatePadding();
 
     const resizeObserver =
       typeof ResizeObserver !== "undefined"
-        ? new ResizeObserver(() => updatePadding())
+        ? new ResizeObserver(handleResize)
         : undefined;
 
+    container.addEventListener("scroll", updateGradientState, {
+      passive: true,
+    });
     resizeObserver?.observe(container);
 
     return () => {
+      container.removeEventListener("scroll", updateGradientState);
       resizeObserver?.disconnect();
     };
   }, [chunkSignature]);
