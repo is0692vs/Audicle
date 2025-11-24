@@ -57,7 +57,7 @@ describe("usePlayback", () => {
   const originalAudio = global.Audio;
 
   beforeEach(() => {
-    // AudioオブジェクトをモックWithする
+    // Audioオブジェクトをモックする
     mockAudioInstance = new MockAudio();
     global.Audio = jest.fn(() => mockAudioInstance) as any;
 
