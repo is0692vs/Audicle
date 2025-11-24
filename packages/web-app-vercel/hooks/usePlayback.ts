@@ -161,14 +161,15 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
       }
 
       // 既に再生処理が進行中の場合は新しいリクエストを無視
+      // フラグのチェックと設定を即座に行うことで競合状態を最小化
       if (isPlayingRequestInProgressRef.current) {
         logger.warn("再生リクエストが既に進行中のため、新しいリクエストをスキップします", {
           index,
         });
         return;
       }
-
       isPlayingRequestInProgressRef.current = true;
+
       setIsLoading(true);
       setError("");
 
@@ -299,13 +300,14 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         const error = err as Error;
         
         // AbortErrorは通常の操作で発生する可能性があるため、警告レベルで記録
+        // (例: ユーザーが素早くクリック、ページ遷移、コンポーネントのアンマウント等)
+        // これらはエラーではなく通常の動作なので、ユーザーにエラーを表示しない
         if (error.name === "AbortError") {
           logger.warn("再生が中断されました", {
             errorName: error.name,
             errorMessage: error.message,
             chunkIndex: index,
           });
-          // ユーザーが明示的に停止した可能性が高いため、エラーメッセージは表示しない
           setError("");
         } else if (error.name === "NotAllowedError") {
           setError(
