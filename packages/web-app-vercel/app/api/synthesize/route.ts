@@ -314,7 +314,7 @@ export async function POST(request: NextRequest) {
                     await kv.hset(metadataKey, {
                         lastAccessed: new Date().toISOString(),
                         lastPlayedChunk: chunkIndex ?? 0
-                    });
+        log('info', '記事メタデータ処理結果', {
                     log('info', 'アクセスメタデータを更新しました', { articleUrl });
                 } catch (kvError) {
                     log('error', 'アクセスメタデータの更新に失敗しました', { error: kvError });
