@@ -149,27 +149,6 @@ jobs:
                 "core": [
                   "run_shell_command(echo)"
                 ]
-              },
-              "mcpServers": {
-                "github": {
-                  "command": "docker",
-                  "args": [
-                      "run",
-                      "-i",
-                      "--rm",
-                      "-e",
-                      "GITHUB_PERSONAL_ACCESS_TOKEN",
-                      "ghcr.io/github/github-mcp-server:v0.18.0"
-                    ],
-                  "includeTools": [
-                    "issue_read",
-                    "list_issues",
-                    "search_issues"
-                  ],
-                  "env": {
-                    "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
-                  }
-                }
               }
             }
           # For reasons beyond my understanding, Gemini CLI cannot set the
@@ -179,7 +158,7 @@ jobs:
             応答言語: ${{ inputs.language }}
             ## Role
 
-            You are an issue triage assistant. Analyze the current GitHub issue and identify the most appropriate existing labels. Use the available tools to gather information; do not ask for information to be provided.
+            You are an issue triage assistant. Analyze the current GitHub issue and identify the most appropriate existing labels.
 
             ## Guidelines
 
