@@ -99,6 +99,14 @@ jobs:
                       Execute exactly this format:
                       run_shell_command(python3 -c "import json; f=open('/tmp/triaged_issues.json', 'w'); json.dump([{'issue_number': 123, 'labels_to_set': ['bug']}], f); f.close()")
 
+                      ## STRICT OUTPUT RULES
+                      1. You MUST NOT output the JSON content in your text response.
+                      2. You MUST NOT output any conversational text (e.g., "Here is the JSON...").
+                      3. You MUST ONLY use the `run_shell_command` tool to write the file.
+                      4. If you do not execute the tool, the workflow will fail.
+
+                      Execute the Python script now.
+
             - name: "Collect outputs"
               id: "collect_outputs"
               uses: "actions/github-script@v7"
@@ -111,9 +119,12 @@ jobs:
                       try {
                         if (fs.existsSync(path)) {
                           const content = fs.readFileSync(path, 'utf8');
+                          console.log('File content preview:', content.substring(0, 100)); // プレビューも出す
                           // Validate JSON
                           JSON.parse(content);
                           triagedIssues = content;
+                        } else {
+                          core.warning('⚠️ Output file /tmp/triaged_issues.json was NOT found. Gemini likely failed to execute the write command.');
                         }
                       } catch (error) {
                         core.warning(`Error reading or parsing triaged issues file: ${error.message}`);
