@@ -198,7 +198,7 @@ export async function OPTIONS() {
 export async function POST(request: NextRequest) {
     const requestId = randomUUID();
     // biome-ignore lint/suspicious/noExplicitAny: The data payload for structured logging can accept any object shape.
-    const log = (level: 'info' | 'warn' | 'error', message: string, data: Record<string, any> = {}) => {
+    const log = (level: 'info' | 'warn' | 'error', message: string, data: Record<string, unknown> = {}) => {
         console[level](JSON.stringify({ requestId, level, message, ...data }));
     };
 
@@ -210,7 +210,7 @@ export async function POST(request: NextRequest) {
 
     try {
         log('info', 'リクエスト受信');
-        log('info', 'リクエスト受信', { method: request.method, url: request.url });
+        // 認証チェック
         const session = await auth();
         if (!session?.user?.email) {
             log('warn', '認証されていないリクエスト');
@@ -314,7 +314,7 @@ export async function POST(request: NextRequest) {
                     await kv.hset(metadataKey, {
                         lastAccessed: new Date().toISOString(),
                         lastPlayedChunk: chunkIndex ?? 0
-        log('info', '記事メタデータ処理結果', {
+                    });
                     log('info', 'アクセスメタデータを更新しました', { articleUrl });
                 } catch (kvError) {
                     log('error', 'アクセスメタデータの更新に失敗しました', { error: kvError });

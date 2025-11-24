@@ -207,7 +207,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
 
         let audioUrl: string;
         if (articleUrl) {
-          logger.info(`💾 IndexedDB: チャンク ${index + 1} をチェック中`, { articleUrl, chunkIndex: index });
+          logger.info(`💾 IndexedDB: チャンク ${index + 1} をチェック中`);
           const cachedChunk = await getAudioChunk(
             articleUrl,
             index,
