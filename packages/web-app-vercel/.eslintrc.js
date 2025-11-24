@@ -1,5 +1,14 @@
 module.exports = {
   root: true,
+  ignorePatterns: [
+    '.next/**',
+    'out/**',
+    'build/**',
+    'public/**',
+    'next-env.d.ts',
+    'components/v0/**',
+    'convert-icons.js',
+  ],
   parser: '@typescript-eslint/parser',
   plugins: ['@typescript-eslint', 'react', 'react-hooks', 'import', 'jsx-a11y'],
   extends: [
@@ -24,8 +33,24 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['*.test.ts', '*.test.tsx'],
+      files: [
+        '**/__tests__/**/*.ts',
+        '**/__tests__/**/*.tsx',
+        '**/*.test.ts',
+        '**/*.test.tsx',
+        '**/*.spec.ts',
+        '**/*.spec.tsx',
+        '**/tests/**/*.ts',
+        '**/tests/**/*.tsx',
+      ],
       rules: {
+        '@typescript-eslint/no-explicit-any': 'off',
+      },
+    },
+    {
+      files: ['scripts/**/*.js'],
+      rules: {
+        '@typescript-eslint/no-var-requires': 'off',
         '@typescript-eslint/no-explicit-any': 'off',
       },
     },
