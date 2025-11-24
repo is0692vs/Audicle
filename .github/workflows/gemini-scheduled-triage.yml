@@ -79,6 +79,7 @@ jobs:
 
   call_triage:
     needs: triage
+    if: needs.triage.outputs.issues_to_triage != '[]' && needs.triage.outputs.issues_to_triage != ''
     uses: "./.github/workflows/gemini-triage-bulk.yml"
     permissions:
       contents: "read"
@@ -95,11 +96,6 @@ jobs:
     runs-on: "ubuntu-latest"
     needs:
       - "call_triage"
-    if: |-
-      needs.call_triage.outputs.available_labels != '' &&
-      needs.call_triage.outputs.available_labels != '[]' &&
-      needs.call_triage.outputs.triaged_issues != '' &&
-      needs.call_triage.outputs.triaged_issues != '[]'
     permissions:
       contents: "read"
       issues: "write"
