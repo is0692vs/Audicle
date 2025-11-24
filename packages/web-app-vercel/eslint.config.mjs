@@ -26,7 +26,7 @@ const eslintConfig = [
     },
   },
   {
-    files: ["**/*.js", "**/*.test.ts"],
+    files: ["**/*.js", "**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"],
     rules: {
       "@typescript-eslint/no-require-imports": "off",
       "@typescript-eslint/no-var-requires": "off",
