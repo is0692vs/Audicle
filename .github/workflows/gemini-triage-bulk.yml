@@ -20,6 +20,13 @@ on:
                 description: "Gemini model override"
                 required: false
                 default: ""
+        outputs:
+          available_labels:
+            description: "List of available labels"
+            value: ${{ jobs.triage_bulk.outputs.available_labels }}
+          triaged_issues:
+            description: "JSON string of triaged issues"
+            value: ${{ jobs.triage_bulk.outputs.triaged_issues }}
         secrets:
           GEMINI_API_KEY:
             required: true
@@ -97,7 +104,9 @@ jobs:
 
                       JSONファイルを作成する際は，エスケープ問題を避けるため，必ずPythonワンライナーを使用すること。
                       Execute exactly this format:
-                      run_shell_command(python3 -c "import json; f=open('/tmp/triaged_issues.json', 'w'); json.dump([{'issue_number': 123, 'labels_to_set': ['bug']}], f); f.close()")
+                      run_shell_command(python3 -c "import json; f=open('/tmp/triaged_issues.json', 'w'); json.dump(YOUR_ANALYSIS_RESULT_LIST, f); f.close()")
+
+                      Warning: Do not use the example data (issue 123). You must output the actual analysis results.
 
                       ## STRICT OUTPUT RULES
                       1. You MUST NOT output the JSON content in your text response.
