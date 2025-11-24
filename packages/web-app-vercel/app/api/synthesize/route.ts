@@ -304,7 +304,12 @@ export async function POST(request: NextRequest) {
                         log('info', '人気記事を検出しました', {
                             articleUrl,
                             readCount: metadata.readCount,
-                            completedPlayback: metadata.completedPlayback,
+                    await kv.hset(metadataKey, {
+                        lastAccessed: new Date().toISOString(),
+                        lastPlayedChunk: chunkIndex ?? 0
+                    });
+                    log('info', 'アクセスメタデータを更新しました', { articleUrl });
+                } catch (kvError) {
                             threshold: POPULAR_ARTICLE_READ_COUNT_THRESHOLD
                         });
                     }
