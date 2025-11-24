@@ -147,7 +147,7 @@ jobs:
               },
               "tools": {
                 "core": [
-                  "run_shell_command(echo)"
+                  "run_shell_command"
                 ]
               }
             }
@@ -185,7 +185,7 @@ jobs:
 
             **Output File Path**:
             ```
-            ${{ env.GITHUB_ENV }}
+            /tmp/runner/env
             ```
 
             ## Steps
@@ -199,7 +199,7 @@ jobs:
             5. Use the run_shell_command tool to execute the echo command and append the CSV labels to the output file path provided above:
 
                 ```
-                run_shell_command(echo "SELECTED_LABELS=[APPROPRIATE_LABELS_AS_CSV]" >> "[filepath_for_env]")
+                run_shell_command(echo "SELECTED_LABELS=[APPROPRIATE_LABELS_AS_CSV]" >> "/tmp/runner/env")
                 ```
 
                 for example:
