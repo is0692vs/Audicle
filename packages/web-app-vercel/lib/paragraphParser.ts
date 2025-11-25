@@ -58,8 +58,7 @@ function splitByDelimiters(text: string, delimiters: string[]): string[] {
 
 /**
  * テキストを指定バイトサイズ以下に分割する（再帰的処理）
-  // 各区切り文字を正規表現で安全に使えるようにエスケープし、OR条件で結合したパターンを作成
-  const pattern = new RegExp(`([${delimiters.map(d => d.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('')}])`, 'g');
+ * @param text 分割対象のテキスト
  * @param maxBytes 最大バイトサイズ
  * @returns 分割されたテキストの配列
  */
@@ -88,12 +87,8 @@ function splitTextByByteSize(text: string, maxBytes: number = SAFE_MAX_TTS_BYTES
         } else {
           // 現在のチャンクを保存
           if (currentChunk) {
-/**
- * テキストを指定バイトサイズ以下に分割する（再帰的処理）
- * @param text 分割対象のテキスト
- * @param maxBytes 最大バイトサイズ
- * @returns 分割されたテキストの配列
- */
+            result.push(currentChunk);
+          }
 
           // partが単体でも大きすぎる場合は再帰的に分割
           if (getByteSize(part) > maxBytes) {
@@ -128,12 +123,11 @@ function forceSplitByBytes(text: string, maxBytes: number): string[] {
   let start = 0;
 
   while (start < text.length) {
-    // 最大文字数を見積もる（日本語は1文字最大3バイト、安全のため4バイトで計算）
+    // 最大文字数を見積もる（UTF-8では1文字が最大4バイトを占める可能性があるため、安全のため4で割る）
     let end = start + Math.floor(maxBytes / 4);
 
     // 実際のバイトサイズを確認しながら調整
-    // 最大文字数を見積もる（UTF-8では1文字が最大4バイトを占める可能性があるため、安全のため4で割る）
-    let end = start + Math.floor(maxBytes / 4);
+    while (end > start && getByteSize(text.slice(start, end)) > maxBytes) {
       end--;
     }
 
@@ -144,10 +138,7 @@ function forceSplitByBytes(text: string, maxBytes: number): string[] {
 
     result.push(text.slice(start, end));
     start = end;
-    // 実際のバイトサイズを確認しながら調整
-    while (end > start && getByteSize(text.slice(start, end)) > maxBytes) {
-      end--;
-    }
+  }
 
   return result;
 }
