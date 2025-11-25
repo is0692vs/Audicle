@@ -14,6 +14,7 @@ export interface ExtractResponse {
 
 export interface SynthesizeChunk {
   text: string;
+  isSplitChunk?: boolean; // true の場合、元の段落が分割されたもの
 }
 
 export interface SynthesizeRequest {
@@ -34,6 +35,10 @@ export interface CacheStats {
 export interface SynthesizeResponse {
   audio?: string; // base64エンコードされた音声データ（旧形式互換）
   audioUrls?: string[]; // 新形式：各チャンクの音声URL
+  chunkMetadata?: Array<{  // 新形式：各チャンクのメタデータ
+    url: string;
+    isSplitChunk?: boolean; // true の場合、元の段落が分割されたもの
+  }>;
   mediaType?: string;
   duration?: number;
   cacheStats?: CacheStats; // キャッシュ統計情報
