@@ -88,8 +88,12 @@ function splitTextByByteSize(text: string, maxBytes: number = SAFE_MAX_TTS_BYTES
         } else {
           // 現在のチャンクを保存
           if (currentChunk) {
-            result.push(currentChunk);
-          }
+/**
+ * テキストを指定バイトサイズ以下に分割する（再帰的処理）
+ * @param text 分割対象のテキスト
+ * @param maxBytes 最大バイトサイズ
+ * @returns 分割されたテキストの配列
+ */
 
           // partが単体でも大きすぎる場合は再帰的に分割
           if (getByteSize(part) > maxBytes) {
