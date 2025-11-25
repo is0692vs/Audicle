@@ -58,7 +58,8 @@ function splitByDelimiters(text: string, delimiters: string[]): string[] {
 
 /**
  * テキストを指定バイトサイズ以下に分割する（再帰的処理）
- * @param text 分割するテキスト
+  // 各区切り文字を正規表現で安全に使えるようにエスケープし、OR条件で結合したパターンを作成
+  const pattern = new RegExp(`([${delimiters.map(d => d.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('')}])`, 'g');
  * @param maxBytes 最大バイトサイズ
  * @returns 分割されたテキストの配列
  */
