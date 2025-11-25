@@ -10,6 +10,175 @@ export interface Paragraph {
   cleanedText: string; // クリーンアップ済みテキスト（TTS送信用）
 }
 
+// Google Cloud TTS APIの最大リクエストバイト数
+const MAX_TTS_BYTES = 5000;
+// 安全マージンを設けた上限（日本語の文字境界問題を考慮）
+const SAFE_MAX_TTS_BYTES = 4800;
+
+/**
+ * テキストのUTF-8バイトサイズを計算する
+ */
+function getByteSize(text: string): number {
+  return new TextEncoder().encode(text).length;
+}
+
+/**
+ * 分割文字の優先順位
+ * 1. 句点: 。 ．
+ * 2. 読点: 、 ，
+ * 3. 英語ピリオド・カンマ: . ,
+ */
+const SPLIT_DELIMITERS = [
+  ['。', '．'],           // 句点（最優先）
+  ['、', '，'],           // 読点
+  ['.', ','],            // 英語ピリオド・カンマ
+];
+
+/**
+ * 指定された区切り文字でテキストを分割し、区切り文字を前のチャンクに含める
+ */
+function splitByDelimiters(text: string, delimiters: string[]): string[] {
+  const pattern = new RegExp(`([${delimiters.map(d => d.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('')}])`, 'g');
+  const parts = text.split(pattern);
+  
+  // 区切り文字を前の要素に結合
+  const result: string[] = [];
+  for (let i = 0; i < parts.length; i++) {
+    if (i > 0 && delimiters.includes(parts[i])) {
+      // 区切り文字を前の要素に追加
+      result[result.length - 1] += parts[i];
+    } else if (parts[i]) {
+      result.push(parts[i]);
+    }
+  }
+  
+  return result;
+}
+
+/**
+ * テキストを指定バイトサイズ以下に分割する（再帰的処理）
+ * @param text 分割するテキスト
+ * @param maxBytes 最大バイトサイズ
+ * @returns 分割されたテキストの配列
+ */
+function splitTextByByteSize(text: string, maxBytes: number = SAFE_MAX_TTS_BYTES): string[] {
+  const byteSize = getByteSize(text);
+  
+  // バイトサイズが制限内なら分割不要
+  if (byteSize <= maxBytes) {
+    return [text];
+  }
+  
+  // 優先順位に従って分割を試みる
+  for (const delimiters of SPLIT_DELIMITERS) {
+    const parts = splitByDelimiters(text, delimiters);
+    
+    // 分割できた場合
+    if (parts.length > 1) {
+      const result: string[] = [];
+      let currentChunk = '';
+      
+      for (const part of parts) {
+        const potentialChunk = currentChunk + part;
+        
+        if (getByteSize(potentialChunk) <= maxBytes) {
+          currentChunk = potentialChunk;
+        } else {
+          // 現在のチャンクを保存
+          if (currentChunk) {
+            result.push(currentChunk);
+          }
+          
+          // partが単体でも大きすぎる場合は再帰的に分割
+          if (getByteSize(part) > maxBytes) {
+            const subParts = splitTextByByteSize(part, maxBytes);
+            result.push(...subParts);
+            currentChunk = '';
+          } else {
+            currentChunk = part;
+          }
+        }
+      }
+      
+      // 残りのチャンクを追加
+      if (currentChunk) {
+        result.push(currentChunk);
+      }
+      
+      return result;
+    }
+  }
+  
+  // どの区切り文字でも分割できなかった場合：文字数で強制分割（フォールバック）
+  return forceSplitByBytes(text, maxBytes);
+}
+
+/**
+ * 文字数で強制分割（フォールバック）
+ * UTF-8のバイト境界を考慮して分割する
+ */
+function forceSplitByBytes(text: string, maxBytes: number): string[] {
+  const result: string[] = [];
+  let start = 0;
+  
+  while (start < text.length) {
+    // 最大文字数を見積もる（日本語は1文字最大3バイト、安全のため4バイトで計算）
+    let end = start + Math.floor(maxBytes / 4);
+    
+    // 実際のバイトサイズを確認しながら調整
+    while (end > start && getByteSize(text.slice(start, end)) > maxBytes) {
+      end--;
+    }
+    
+    // 最低1文字は含める
+    if (end === start) {
+      end = start + 1;
+    }
+    
+    result.push(text.slice(start, end));
+    start = end;
+  }
+  
+  return result;
+}
+
+/**
+ * 段落配列に対してチャンクリサイズを適用する
+ * 5000バイトを超えるチャンクを適切に分割する
+ */
+export function resizeChunksIfNeeded(paragraphs: Paragraph[]): Paragraph[] {
+  const result: Paragraph[] = [];
+  let idCounter = 0;
+  
+  for (const para of paragraphs) {
+    const cleanedByteSize = getByteSize(para.cleanedText);
+    
+    if (cleanedByteSize <= SAFE_MAX_TTS_BYTES) {
+      // サイズが制限内ならそのまま追加（IDは再採番）
+      result.push({
+        ...para,
+        id: `para-${idCounter++}`,
+      });
+    } else {
+      // サイズ超過：分割処理
+      const splitTexts = splitTextByByteSize(para.cleanedText, SAFE_MAX_TTS_BYTES);
+      const originalSplitTexts = splitTextByByteSize(para.originalText, MAX_TTS_BYTES);
+      
+      for (let i = 0; i < splitTexts.length; i++) {
+        result.push({
+          id: `para-${idCounter++}`,
+          type: para.type,
+          // originalTextも分割するが、分割数が異なる場合は元のテキストを使用
+          originalText: originalSplitTexts[i] || para.originalText,
+          cleanedText: splitTexts[i],
+        });
+      }
+    }
+  }
+  
+  return result;
+}
+
 /**
  * HTMLからテキストを抽出し、段落単位で分割する
  * @param htmlContent Readability.jsの.contentで取得したHTML文字列
@@ -50,7 +219,8 @@ export function parseHTMLToParagraphs(htmlContent: string): Paragraph[] {
     });
   });
 
-  return paragraphs;
+  // チャンクリサイズを適用（5000バイト超過チャンクを分割）
+  return resizeChunksIfNeeded(paragraphs);
 }
 
 /**

@@ -9,11 +9,90 @@ import fs from 'fs';
 import { getCacheIndex, addCachedChunk, isCachedInIndex } from '@/lib/db/cacheIndex';
 import { calculateTextHash } from '@/lib/textHash';
 import { getStorageProvider } from '@/lib/storage';
+import { GoogleError } from 'google-gax';
 
 // Node.js runtimeを明示的に指定（Google Cloud TTS SDKはEdge Runtimeで動作しない）
 export const runtime = 'nodejs';
 // 動的レンダリングを強制（キャッシュを無効化）
 export const dynamic = 'force-dynamic';
+
+// Google Cloud TTS APIの最大リクエストバイト数
+const MAX_TTS_BYTES = 5000;
+
+/**
+ * Google Cloud TTS APIエラーの種類
+ */
+interface TTSErrorInfo {
+  statusCode: number;
+  userMessage: string;
+  errorType: 'INVALID_ARGUMENT' | 'RESOURCE_EXHAUSTED' | 'INTERNAL' | 'NETWORK' | 'UNKNOWN';
+}
+
+/**
+ * Google Cloud TTS APIエラーをパースして適切なエラー情報を返す
+ */
+function parseTTSError(error: unknown): TTSErrorInfo {
+  // GoogleErrorの場合（gRPCエラー）
+  if (error instanceof GoogleError) {
+    const code = error.code;
+    const message = error.message || '';
+
+    // INVALID_ARGUMENT (3): テキストが長すぎる、無効な入力など
+    if (code === 3 || message.includes('INVALID_ARGUMENT')) {
+      return {
+        statusCode: 400,
+        userMessage: 'テキストが長すぎるか、無効な入力です。チャンクサイズを確認してください。',
+        errorType: 'INVALID_ARGUMENT',
+      };
+    }
+
+    // RESOURCE_EXHAUSTED (8): クォータ超過
+    if (code === 8 || message.includes('RESOURCE_EXHAUSTED') || message.includes('quota')) {
+      return {
+        statusCode: 429,
+        userMessage: 'API利用制限に達しました。しばらく待ってから再試行してください。',
+        errorType: 'RESOURCE_EXHAUSTED',
+      };
+    }
+
+    // INTERNAL (13): Google側の内部エラー
+    if (code === 13 || message.includes('INTERNAL')) {
+      return {
+        statusCode: 503,
+        userMessage: 'Google Cloud TTSサービスで一時的なエラーが発生しました。しばらく待ってから再試行してください。',
+        errorType: 'INTERNAL',
+      };
+    }
+
+    // UNAVAILABLE (14): サービス利用不可
+    if (code === 14 || message.includes('UNAVAILABLE')) {
+      return {
+        statusCode: 503,
+        userMessage: 'Google Cloud TTSサービスが一時的に利用できません。しばらく待ってから再試行してください。',
+        errorType: 'INTERNAL',
+      };
+    }
+  }
+
+  // ネットワークエラー
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    if (message.includes('network') || message.includes('timeout') || message.includes('econnrefused') || message.includes('enotfound')) {
+      return {
+        statusCode: 503,
+        userMessage: 'ネットワークエラーが発生しました。接続を確認してください。',
+        errorType: 'NETWORK',
+      };
+    }
+  }
+
+  // その他の不明なエラー
+  return {
+    statusCode: 500,
+    userMessage: '音声合成中にエラーが発生しました。再試行してください。',
+    errorType: 'UNKNOWN',
+  };
+}
 
 // 許可リスト（環境変数から取得、カンマ区切り）
 const ALLOWED_EMAILS = process.env.ALLOWED_EMAILS?.split(',').map(e => e.trim()) || [];
@@ -152,6 +231,17 @@ async function synthesizeToBuffer(text: string, voice: string, speakingRate: num
         return dummyMp3Buffer;
     }
 
+    // テキストのバイトサイズをチェック
+    const textByteSize = Buffer.byteLength(text, 'utf-8');
+    if (textByteSize > MAX_TTS_BYTES) {
+        console.error(`[TTS Error] Text exceeds maximum byte size: ${textByteSize} bytes (max: ${MAX_TTS_BYTES})`);
+        throw new TTSError(
+            `テキストが最大バイトサイズを超えています: ${textByteSize} bytes (最大: ${MAX_TTS_BYTES})`,
+            'INVALID_ARGUMENT',
+            400
+        );
+    }
+
     const synthesisInput: protos.google.cloud.texttospeech.v1.ISynthesisInput = {
         text: text,
     };
@@ -180,8 +270,40 @@ async function synthesizeToBuffer(text: string, voice: string, speakingRate: num
 
         return Buffer.isBuffer(audioContent) ? audioContent : Buffer.from(audioContent);
     } catch (synthError) {
-        console.error('Google Cloud TTS API error:', synthError);
-        throw new Error(`TTS synthesis failed: ${synthError instanceof Error ? synthError.message : String(synthError)}`);
+        // 既にTTSErrorの場合はそのまま再スロー
+        if (synthError instanceof TTSError) {
+            throw synthError;
+        }
+
+        // エラー詳細をログに記録
+        console.error('[TTS Error] Google Cloud TTS API error:', {
+            error: synthError,
+            errorType: synthError instanceof GoogleError ? 'GoogleError' : 'Unknown',
+            code: synthError instanceof GoogleError ? synthError.code : undefined,
+            message: synthError instanceof Error ? synthError.message : String(synthError),
+            textLength: text.length,
+            textByteSize,
+            voice,
+        });
+
+        // エラーをパースして適切な情報を取得
+        const errorInfo = parseTTSError(synthError);
+        throw new TTSError(errorInfo.userMessage, errorInfo.errorType, errorInfo.statusCode);
+    }
+}
+
+/**
+ * TTS固有のエラークラス
+ */
+class TTSError extends Error {
+    statusCode: number;
+    errorType: string;
+
+    constructor(message: string, errorType: string, statusCode: number) {
+        super(message);
+        this.name = 'TTSError';
+        this.errorType = errorType;
+        this.statusCode = statusCode;
     }
 }
 
@@ -551,7 +673,11 @@ export async function POST(request: NextRequest) {
             'Access-Control-Allow-Headers': 'Content-Type',
         };
 
-        log('error', '音声合成エラー', { error });
+        log('error', '音声合成エラー', { 
+            error,
+            errorType: error instanceof TTSError ? 'TTSError' : error instanceof SyntaxError ? 'SyntaxError' : 'Unknown',
+            statusCode: error instanceof TTSError ? error.statusCode : undefined,
+        });
 
         if (error instanceof SyntaxError) {
             return NextResponse.json(
@@ -560,14 +686,29 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // TTSエラーの場合は適切なステータスコードとユーザーフレンドリーなメッセージを返す
+        if (error instanceof TTSError) {
+            return NextResponse.json(
+                { 
+                    error: error.message,
+                    errorType: error.errorType,
+                },
+                { status: error.statusCode, headers: corsHeaders }
+            );
+        }
+
         // When not in production, include the original error message for easier
         // debugging. Do not include sensitive details in production.
         interface SynthesizeErrorResponse {
             error: string;
             detail?: string;
+            errorType?: string;
         }
 
-        const responseBody: SynthesizeErrorResponse = { error: 'Failed to synthesize speech' };
+        const responseBody: SynthesizeErrorResponse = { 
+            error: 'Failed to synthesize speech',
+            errorType: 'UNKNOWN'
+        };
         if (process.env.NODE_ENV !== 'production' && error instanceof Error) {
             responseBody.detail = error.message;
         }
