@@ -31,7 +31,7 @@ interface TTSErrorInfo {
 /**
  * Google Cloud TTS APIエラーをパースして適切なエラー情報を返す
  */
-export function parseTTSError(error: unknown): TTSErrorInfo {
+function parseTTSError(error: unknown): TTSErrorInfo {
     // GoogleErrorの場合（gRPCエラー）
     if (error instanceof GoogleError) {
         const code = error.code;
