@@ -657,9 +657,17 @@ export async function POST(request: NextRequest) {
 
         // 新形式：URL配列レスポンス
         log('info', '新しい形式のリクエストに音声URLの配列を返します');
+
+        // チャンクメタデータを構築
+        const chunkMetadata = audioUrls.map((url, index) => ({
+            url,
+            isSplitChunk: body.chunks?.[index]?.isSplitChunk ?? false,
+        }));
+
         return NextResponse.json(
             {
                 audioUrls,
+                chunkMetadata,
                 cacheStats,
             },
             {

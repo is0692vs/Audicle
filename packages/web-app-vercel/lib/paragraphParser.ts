@@ -162,7 +162,7 @@ export function resizeChunksIfNeeded(paragraphs: Paragraph[]): Paragraph[] {
     } else {
       // サイズ超過：分割処理
       const splitTexts = splitTextByByteSize(para.cleanedText, SAFE_MAX_TTS_BYTES);
-      const originalSplitTexts = splitTextByByteSize(para.originalText, MAX_TTS_BYTES);
+      const originalSplitTexts = splitTextByByteSize(para.originalText, SAFE_MAX_TTS_BYTES);
 
       for (let i = 0; i < splitTexts.length; i++) {
         result.push({

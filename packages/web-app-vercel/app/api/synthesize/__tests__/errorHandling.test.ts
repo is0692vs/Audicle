@@ -18,7 +18,7 @@ class MockGoogleError extends Error {
 
 /**
  * parseTTSErrorのロジックをシミュレート
- * （route.tsの実装と同じロジック）
+ * route.tsの実装と同じロジック - ESM モジュール問題を回避するため
  */
 interface TTSErrorInfo {
     statusCode: number;
@@ -36,7 +36,7 @@ function parseTTSError(error: unknown): TTSErrorInfo {
         if (code === 3 || message.includes('invalid_argument')) {
             return {
                 statusCode: 400,
-                userMessage: 'テキストが長すぎるか、無効な入力です。',
+                userMessage: 'テキストが長すぎるか、無効な入力です。チャンクサイズを確認してください。',
                 errorType: 'INVALID_ARGUMENT',
             };
         }
@@ -45,7 +45,7 @@ function parseTTSError(error: unknown): TTSErrorInfo {
         if (code === 8 || message.includes('resource_exhausted') || message.includes('quota')) {
             return {
                 statusCode: 429,
-                userMessage: 'API利用制限に達しました。',
+                userMessage: 'API利用制限に達しました。しばらく待ってから再試行してください。',
                 errorType: 'RESOURCE_EXHAUSTED',
             };
         }
@@ -54,7 +54,7 @@ function parseTTSError(error: unknown): TTSErrorInfo {
         if (code === 13 || message.includes('internal')) {
             return {
                 statusCode: 503,
-                userMessage: 'Google Cloud TTSサービスで一時的なエラーが発生しました。',
+                userMessage: 'Google Cloud TTSサービスで一時的なエラーが発生しました。しばらく待ってから再試行してください。',
                 errorType: 'INTERNAL',
             };
         }
@@ -63,7 +63,7 @@ function parseTTSError(error: unknown): TTSErrorInfo {
         if (code === 14 || message.includes('unavailable')) {
             return {
                 statusCode: 503,
-                userMessage: 'Google Cloud TTSサービスが一時的に利用できません。',
+                userMessage: 'Google Cloud TTSサービスが一時的に利用できません。しばらく待ってから再試行してください。',
                 errorType: 'INTERNAL',
             };
         }
@@ -80,7 +80,7 @@ function parseTTSError(error: unknown): TTSErrorInfo {
         ) {
             return {
                 statusCode: 503,
-                userMessage: 'ネットワークエラーが発生しました。',
+                userMessage: 'ネットワークエラーが発生しました。接続を確認してください。',
                 errorType: 'NETWORK',
             };
         }
@@ -89,7 +89,7 @@ function parseTTSError(error: unknown): TTSErrorInfo {
     // その他の不明なエラー
     return {
         statusCode: 500,
-        userMessage: '音声合成中にエラーが発生しました。',
+        userMessage: '音声合成中にエラーが発生しました。再試行してください。',
         errorType: 'UNKNOWN',
     };
 }
