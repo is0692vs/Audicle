@@ -23,75 +23,75 @@ const MAX_TTS_BYTES = 5000;
  * Google Cloud TTS APIエラーの種類
  */
 interface TTSErrorInfo {
-  statusCode: number;
-  userMessage: string;
-  errorType: 'INVALID_ARGUMENT' | 'RESOURCE_EXHAUSTED' | 'INTERNAL' | 'NETWORK' | 'UNKNOWN';
+    statusCode: number;
+    userMessage: string;
+    errorType: 'INVALID_ARGUMENT' | 'RESOURCE_EXHAUSTED' | 'INTERNAL' | 'NETWORK' | 'UNKNOWN';
 }
 
 /**
  * Google Cloud TTS APIエラーをパースして適切なエラー情報を返す
  */
 function parseTTSError(error: unknown): TTSErrorInfo {
-  // GoogleErrorの場合（gRPCエラー）
-  if (error instanceof GoogleError) {
-    const code = error.code;
-    const message = error.message || '';
+    // GoogleErrorの場合（gRPCエラー）
+    if (error instanceof GoogleError) {
+        const code = error.code;
+        const message = error.message || '';
 
-    // INVALID_ARGUMENT (3): テキストが長すぎる、無効な入力など
-    if (code === 3 || message.includes('INVALID_ARGUMENT')) {
-      return {
-        statusCode: 400,
-        userMessage: 'テキストが長すぎるか、無効な入力です。チャンクサイズを確認してください。',
-        errorType: 'INVALID_ARGUMENT',
-      };
+        // INVALID_ARGUMENT (3): テキストが長すぎる、無効な入力など
+        if (code === 3 || message.includes('INVALID_ARGUMENT')) {
+            return {
+                statusCode: 400,
+                userMessage: 'テキストが長すぎるか、無効な入力です。チャンクサイズを確認してください。',
+                errorType: 'INVALID_ARGUMENT',
+            };
+        }
+
+        // RESOURCE_EXHAUSTED (8): クォータ超過
+        if (code === 8 || message.includes('RESOURCE_EXHAUSTED') || message.includes('quota')) {
+            return {
+                statusCode: 429,
+                userMessage: 'API利用制限に達しました。しばらく待ってから再試行してください。',
+                errorType: 'RESOURCE_EXHAUSTED',
+            };
+        }
+
+        // INTERNAL (13): Google側の内部エラー
+        if (code === 13 || message.includes('INTERNAL')) {
+            return {
+                statusCode: 503,
+                userMessage: 'Google Cloud TTSサービスで一時的なエラーが発生しました。しばらく待ってから再試行してください。',
+                errorType: 'INTERNAL',
+            };
+        }
+
+        // UNAVAILABLE (14): サービス利用不可
+        if (code === 14 || message.includes('UNAVAILABLE')) {
+            return {
+                statusCode: 503,
+                userMessage: 'Google Cloud TTSサービスが一時的に利用できません。しばらく待ってから再試行してください。',
+                errorType: 'INTERNAL',
+            };
+        }
     }
 
-    // RESOURCE_EXHAUSTED (8): クォータ超過
-    if (code === 8 || message.includes('RESOURCE_EXHAUSTED') || message.includes('quota')) {
-      return {
-        statusCode: 429,
-        userMessage: 'API利用制限に達しました。しばらく待ってから再試行してください。',
-        errorType: 'RESOURCE_EXHAUSTED',
-      };
+    // ネットワークエラー
+    if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+        if (message.includes('network') || message.includes('timeout') || message.includes('econnrefused') || message.includes('enotfound')) {
+            return {
+                statusCode: 503,
+                userMessage: 'ネットワークエラーが発生しました。接続を確認してください。',
+                errorType: 'NETWORK',
+            };
+        }
     }
 
-    // INTERNAL (13): Google側の内部エラー
-    if (code === 13 || message.includes('INTERNAL')) {
-      return {
-        statusCode: 503,
-        userMessage: 'Google Cloud TTSサービスで一時的なエラーが発生しました。しばらく待ってから再試行してください。',
-        errorType: 'INTERNAL',
-      };
-    }
-
-    // UNAVAILABLE (14): サービス利用不可
-    if (code === 14 || message.includes('UNAVAILABLE')) {
-      return {
-        statusCode: 503,
-        userMessage: 'Google Cloud TTSサービスが一時的に利用できません。しばらく待ってから再試行してください。',
-        errorType: 'INTERNAL',
-      };
-    }
-  }
-
-  // ネットワークエラー
-  if (error instanceof Error) {
-    const message = error.message.toLowerCase();
-    if (message.includes('network') || message.includes('timeout') || message.includes('econnrefused') || message.includes('enotfound')) {
-      return {
-        statusCode: 503,
-        userMessage: 'ネットワークエラーが発生しました。接続を確認してください。',
-        errorType: 'NETWORK',
-      };
-    }
-  }
-
-  // その他の不明なエラー
-  return {
-    statusCode: 500,
-    userMessage: '音声合成中にエラーが発生しました。再試行してください。',
-    errorType: 'UNKNOWN',
-  };
+    // その他の不明なエラー
+    return {
+        statusCode: 500,
+        userMessage: '音声合成中にエラーが発生しました。再試行してください。',
+        errorType: 'UNKNOWN',
+    };
 }
 
 // 許可リスト（環境変数から取得、カンマ区切り）
@@ -673,7 +673,7 @@ export async function POST(request: NextRequest) {
             'Access-Control-Allow-Headers': 'Content-Type',
         };
 
-        log('error', '音声合成エラー', { 
+        log('error', '音声合成エラー', {
             error,
             errorType: error instanceof TTSError ? 'TTSError' : error instanceof SyntaxError ? 'SyntaxError' : 'Unknown',
             statusCode: error instanceof TTSError ? error.statusCode : undefined,
@@ -689,7 +689,7 @@ export async function POST(request: NextRequest) {
         // TTSエラーの場合は適切なステータスコードとユーザーフレンドリーなメッセージを返す
         if (error instanceof TTSError) {
             return NextResponse.json(
-                { 
+                {
                     error: error.message,
                     errorType: error.errorType,
                 },
@@ -705,7 +705,7 @@ export async function POST(request: NextRequest) {
             errorType?: string;
         }
 
-        const responseBody: SynthesizeErrorResponse = { 
+        const responseBody: SynthesizeErrorResponse = {
             error: 'Failed to synthesize speech',
             errorType: 'UNKNOWN'
         };

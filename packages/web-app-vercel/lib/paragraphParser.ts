@@ -40,7 +40,7 @@ const SPLIT_DELIMITERS = [
 function splitByDelimiters(text: string, delimiters: string[]): string[] {
   const pattern = new RegExp(`([${delimiters.map(d => d.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('')}])`, 'g');
   const parts = text.split(pattern);
-  
+
   // 区切り文字を前の要素に結合
   const result: string[] = [];
   for (let i = 0; i < parts.length; i++) {
@@ -51,7 +51,7 @@ function splitByDelimiters(text: string, delimiters: string[]): string[] {
       result.push(parts[i]);
     }
   }
-  
+
   return result;
 }
 
@@ -63,24 +63,24 @@ function splitByDelimiters(text: string, delimiters: string[]): string[] {
  */
 function splitTextByByteSize(text: string, maxBytes: number = SAFE_MAX_TTS_BYTES): string[] {
   const byteSize = getByteSize(text);
-  
+
   // バイトサイズが制限内なら分割不要
   if (byteSize <= maxBytes) {
     return [text];
   }
-  
+
   // 優先順位に従って分割を試みる
   for (const delimiters of SPLIT_DELIMITERS) {
     const parts = splitByDelimiters(text, delimiters);
-    
+
     // 分割できた場合
     if (parts.length > 1) {
       const result: string[] = [];
       let currentChunk = '';
-      
+
       for (const part of parts) {
         const potentialChunk = currentChunk + part;
-        
+
         if (getByteSize(potentialChunk) <= maxBytes) {
           currentChunk = potentialChunk;
         } else {
@@ -88,7 +88,7 @@ function splitTextByByteSize(text: string, maxBytes: number = SAFE_MAX_TTS_BYTES
           if (currentChunk) {
             result.push(currentChunk);
           }
-          
+
           // partが単体でも大きすぎる場合は再帰的に分割
           if (getByteSize(part) > maxBytes) {
             const subParts = splitTextByByteSize(part, maxBytes);
@@ -99,16 +99,16 @@ function splitTextByByteSize(text: string, maxBytes: number = SAFE_MAX_TTS_BYTES
           }
         }
       }
-      
+
       // 残りのチャンクを追加
       if (currentChunk) {
         result.push(currentChunk);
       }
-      
+
       return result;
     }
   }
-  
+
   // どの区切り文字でも分割できなかった場合：文字数で強制分割（フォールバック）
   return forceSplitByBytes(text, maxBytes);
 }
@@ -120,25 +120,25 @@ function splitTextByByteSize(text: string, maxBytes: number = SAFE_MAX_TTS_BYTES
 function forceSplitByBytes(text: string, maxBytes: number): string[] {
   const result: string[] = [];
   let start = 0;
-  
+
   while (start < text.length) {
     // 最大文字数を見積もる（日本語は1文字最大3バイト、安全のため4バイトで計算）
     let end = start + Math.floor(maxBytes / 4);
-    
+
     // 実際のバイトサイズを確認しながら調整
     while (end > start && getByteSize(text.slice(start, end)) > maxBytes) {
       end--;
     }
-    
+
     // 最低1文字は含める
     if (end === start) {
       end = start + 1;
     }
-    
+
     result.push(text.slice(start, end));
     start = end;
   }
-  
+
   return result;
 }
 
@@ -149,10 +149,10 @@ function forceSplitByBytes(text: string, maxBytes: number): string[] {
 export function resizeChunksIfNeeded(paragraphs: Paragraph[]): Paragraph[] {
   const result: Paragraph[] = [];
   let idCounter = 0;
-  
+
   for (const para of paragraphs) {
     const cleanedByteSize = getByteSize(para.cleanedText);
-    
+
     if (cleanedByteSize <= SAFE_MAX_TTS_BYTES) {
       // サイズが制限内ならそのまま追加（IDは再採番）
       result.push({
@@ -163,7 +163,7 @@ export function resizeChunksIfNeeded(paragraphs: Paragraph[]): Paragraph[] {
       // サイズ超過：分割処理
       const splitTexts = splitTextByByteSize(para.cleanedText, SAFE_MAX_TTS_BYTES);
       const originalSplitTexts = splitTextByByteSize(para.originalText, MAX_TTS_BYTES);
-      
+
       for (let i = 0; i < splitTexts.length; i++) {
         result.push({
           id: `para-${idCounter++}`,
@@ -175,7 +175,7 @@ export function resizeChunksIfNeeded(paragraphs: Paragraph[]): Paragraph[] {
       }
     }
   }
-  
+
   return result;
 }
 
@@ -188,7 +188,7 @@ export function parseHTMLToParagraphs(htmlContent: string): Paragraph[] {
   // DOMパーサーを使用してHTMLを解析
   const parser = new DOMParser();
   const doc = parser.parseFromString(htmlContent, 'text/html');
-  
+
   const paragraphs: Paragraph[] = [];
   let idCounter = 0;
 
@@ -202,15 +202,15 @@ export function parseHTMLToParagraphs(htmlContent: string): Paragraph[] {
 
   // すべての対象要素を順番に処理
   const elements = doc.querySelectorAll(selectors.join(','));
-  
+
   elements.forEach((element) => {
     const text = element.textContent?.trim() || '';
-    
+
     // 空の要素はスキップ
     if (!text) return;
-    
+
     const tagName = element.tagName.toLowerCase();
-    
+
     paragraphs.push({
       id: `para-${idCounter++}`,
       type: tagName,
@@ -251,20 +251,20 @@ function cleanText(text: string): string {
   // 太字: **text** or __text__
   cleaned = cleaned.replace(/\*\*(.+?)\*\*/g, '$1');
   cleaned = cleaned.replace(/__(.+?)__/g, '$1');
-  
+
   // 斜体: *text* or _text_
   cleaned = cleaned.replace(/\*(.+?)\*/g, '$1');
   cleaned = cleaned.replace(/_(.+?)_/g, '$1');
-  
+
   // 打ち消し: ~~text~~
   cleaned = cleaned.replace(/~~(.+?)~~/g, '$1');
-  
+
   // インラインコード: `code`
   cleaned = cleaned.replace(/`(.+?)`/g, '$1');
-  
+
   // 見出し: # text
   cleaned = cleaned.replace(/^#+\s+/gm, '');
-  
+
   // リンク: [text](url) -> text
   cleaned = cleaned.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
 

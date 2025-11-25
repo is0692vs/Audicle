@@ -11,7 +11,7 @@ describe('TTS Error Handling', () => {
     describe('TTSError class', () => {
         // TTSErrorクラスは内部クラスなので直接テストできないが、
         // APIレスポンスの形式を検証
-        
+
         it('should return proper error response format', () => {
             const errorResponse = {
                 error: 'テキストが最大バイトサイズを超えています',
