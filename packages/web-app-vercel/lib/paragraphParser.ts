@@ -19,7 +19,7 @@ const SAFE_MAX_TTS_BYTES = 4800;
  * テキストのUTF-8バイトサイズを計算する
  */
 function getByteSize(text: string): number {
-  return new TextEncoder().encode(text).length;
+  return Buffer.byteLength(text, 'utf-8');
 }
 
 /**
@@ -169,7 +169,7 @@ export function resizeChunksIfNeeded(paragraphs: Paragraph[]): Paragraph[] {
           id: `para-${idCounter++}`,
           type: para.type,
           // originalTextも分割するが、分割数が異なる場合は元のテキストを使用
-          originalText: originalSplitTexts[i] || para.originalText,
+          originalText: originalSplitTexts[i] || splitTexts[i],
           cleanedText: splitTexts[i],
         });
       }
