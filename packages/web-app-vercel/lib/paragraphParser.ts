@@ -127,7 +127,8 @@ function forceSplitByBytes(text: string, maxBytes: number): string[] {
     let end = start + Math.floor(maxBytes / 4);
 
     // 実際のバイトサイズを確認しながら調整
-    while (end > start && getByteSize(text.slice(start, end)) > maxBytes) {
+    // 最大文字数を見積もる（UTF-8では1文字が最大4バイトを占める可能性があるため、安全のため4で割る）
+    let end = start + Math.floor(maxBytes / 4);
       end--;
     }
 
