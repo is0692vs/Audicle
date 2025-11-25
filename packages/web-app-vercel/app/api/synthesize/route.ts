@@ -51,10 +51,15 @@ function parseTTSError(error: unknown): TTSErrorInfo {
             return {
                 statusCode: 429,
         // INTERNAL (13), UNAVAILABLE (14): Google側の内部エラー/サービス利用不可
-        if (code === 13 || code === 14 || message.includes('internal') || message.includes('unavailable')) {
+            return {
+                statusCode: 429,
+                userMessage: 'API利用制限に達しました。しばらく待ってから再試行してください。',
                 errorType: 'RESOURCE_EXHAUSTED',
             };
         }
+
+        // INTERNAL (13), UNAVAILABLE (14): Google側の内部エラー/サービス利用不可
+        if (code === 13 || code === 14 || message.includes('internal') || message.includes('unavailable')) {
 
         // INTERNAL (13), UNAVAILABLE (14): Google側の内部エラー/サービス利用不可
         if (code === 13 || code === 14 || message.includes('internal') || message.includes('unavailable')) {
