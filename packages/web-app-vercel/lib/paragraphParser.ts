@@ -140,7 +140,10 @@ function forceSplitByBytes(text: string, maxBytes: number): string[] {
 
     result.push(text.slice(start, end));
     start = end;
-  }
+    // 実際のバイトサイズを確認しながら調整
+    while (end > start && getByteSize(text.slice(start, end)) > maxBytes) {
+      end--;
+    }
 
   return result;
 }
