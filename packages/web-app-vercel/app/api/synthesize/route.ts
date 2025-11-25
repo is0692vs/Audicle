@@ -55,27 +55,17 @@ function parseTTSError(error: unknown): TTSErrorInfo {
             };
         }
 
-        // INTERNAL (13): Google側の内部エラー
-        if (code === 13 || message.includes('internal')) {
+        // INTERNAL (13), UNAVAILABLE (14): Google側の内部エラー/サービス利用不可
+        if (code === 13 || code === 14 || message.includes('internal') || message.includes('unavailable')) {
             return {
                 statusCode: 503,
                 userMessage: 'Google Cloud TTSサービスで一時的なエラーが発生しました。しばらく待ってから再試行してください。',
                 errorType: 'INTERNAL',
             };
         }
-
-        // UNAVAILABLE (14): サービス利用不可
-        if (code === 14 || message.includes('unavailable')) {
-            return {
-                statusCode: 503,
-                userMessage: 'Google Cloud TTSサービスが一時的に利用できません。しばらく待ってから再試行してください。',
-                errorType: 'INTERNAL',
-            };
-        }
-    }
-
-    // ネットワークエラー
-    if (error instanceof Error) {
+        // その他のGoogleErrorは不明なエラーとしてフォールバック
+    } else if (error instanceof Error) {
+        // ネットワークエラー
         const message = error.message.toLowerCase();
         if (message.includes('network') || message.includes('timeout') || message.includes('econnrefused') || message.includes('enotfound')) {
             return {

@@ -8,6 +8,7 @@ export interface Paragraph {
   type: string; // 要素タイプ（p, h1, h2, li等）
   originalText: string; // 元のテキスト（表示用）
   cleanedText: string; // クリーンアップ済みテキスト（TTS送信用）
+  isSplitChunk?: boolean; // true の場合、元の段落が分割されたもの
 }
 
 // Google Cloud TTS APIの最大リクエストバイト数
@@ -158,19 +159,21 @@ export function resizeChunksIfNeeded(paragraphs: Paragraph[]): Paragraph[] {
       result.push({
         ...para,
         id: `para-${idCounter++}`,
+        isSplitChunk: false,
       });
     } else {
       // サイズ超過：分割処理
       const splitTexts = splitTextByByteSize(para.cleanedText, SAFE_MAX_TTS_BYTES);
-      const originalSplitTexts = splitTextByByteSize(para.originalText, SAFE_MAX_TTS_BYTES);
 
       for (let i = 0; i < splitTexts.length; i++) {
         result.push({
           id: `para-${idCounter++}`,
           type: para.type,
-          // originalTextも分割するが、分割数が異なる場合は元のテキストを使用
-          originalText: originalSplitTexts[i] || splitTexts[i],
+          // 分割されたチャンクでは、originalTextとcleanedTextの正確な対応を維持するのが困難です。
+          // 表示の整合性を保つため、cleanedTextをoriginalTextとしても使用します。
+          originalText: splitTexts[i],
           cleanedText: splitTexts[i],
+          isSplitChunk: true,
         });
       }
     }
