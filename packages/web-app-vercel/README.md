@@ -1,5 +1,7 @@
 # Audicle Web App (Vercel 版)
 
+[![codecov](https://codecov.io/gh/is0692vs/Audicle/branch/main/graph/badge.svg)](https://codecov.io/gh/is0692vs/Audicle)
+
 **完全サーバーレス構成**の Next.js 15 アプリケーション。Vercel にデプロイ可能で、外部 API サーバー不要。音楽プレイヤーのような直感的な UI で、Web ページの記事を音声読み上げします。
 
 > **注意**: このプロジェクトは`web-app`（セルフホスト版）とは異なり、完全にサーバーレスです。外部 API サーバー（FastAPI）は不要です。
