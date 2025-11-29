@@ -35,10 +35,10 @@ const customJestConfig = {
     global: {
       branches: 9,
       functions: 9,
-      lines: 14,
-      statements: 14,
-    },
-  },
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
   testTimeout: 10000, // 10秒タイムアウト
 };
 
