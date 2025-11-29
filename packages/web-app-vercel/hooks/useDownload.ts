@@ -47,6 +47,10 @@ export function useDownload({ articleUrl, chunks, voiceModel, speed, onSlowConne
             });
             const audioBlob = await synthesizeSpeech(chunk.cleanedText, undefined, voiceModel, articleUrl);
 
+            if (cancelledRef.current) {
+                throw new Error('Cancelled');
+            }
+
             // IndexedDBに直接保存
             await saveAudioChunk({
                 audioData: audioBlob,
@@ -63,7 +67,12 @@ export function useDownload({ articleUrl, chunks, voiceModel, speed, onSlowConne
             });
         } catch (err) {
             if (cancelledRef.current) {
-                throw err;
+                throw err; // Cancelledエラーはそのまま投げる (or rethrow 'Cancelled')
+            }
+
+            // Cancelledエラーの場合はリトライしない
+            if (err instanceof Error && err.message === 'Cancelled') {
+                 throw err;
             }
 
             // リトライ
@@ -174,6 +183,13 @@ export function useDownload({ articleUrl, chunks, voiceModel, speed, onSlowConne
                 const batch = chunks.slice(i, i + MAX_CONCURRENT);
                 await downloadBatch(batch, i);
 
+                // バッチ完了後にもキャンセルチェック
+                 if (cancelledRef.current) {
+                    setStatus('cancelled');
+                    logger.info('ダウンロードがキャンセルされました');
+                    return;
+                }
+
                 const current = Math.min(i + MAX_CONCURRENT, chunks.length);
                 setProgress({ current, total: chunks.length });
                 updateEstimatedTime(current, chunks.length);
@@ -182,7 +198,7 @@ export function useDownload({ articleUrl, chunks, voiceModel, speed, onSlowConne
             setStatus('completed');
             logger.success(`全${chunks.length}チャンクのダウンロードが完了しました`);
         } catch (err) {
-            if (cancelledRef.current) {
+            if (cancelledRef.current || (err instanceof Error && err.message === 'Cancelled')) {
                 setStatus('cancelled');
             } else {
                 setStatus('error');
