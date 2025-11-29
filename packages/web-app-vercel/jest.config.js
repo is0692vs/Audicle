@@ -8,7 +8,10 @@ const customJestConfig = {
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
   testEnvironment: "jsdom",
   moduleNameMapper: {
-    "^@/(.*)$": "<rootDir>/$1",
+    "^@/lib/(.*)$": "<rootDir>/lib/$1",
+    "^@/app/(.*)$": "<rootDir>/app/$1",
+    "^@/components/(.*)$": "<rootDir>/components/$1",
+    "^@/types/(.*)$": "<rootDir>/types/$1",
     "^until-async$": "<rootDir>/__mocks__/until-async.js",
   },
   testPathIgnorePatterns: [
