@@ -20,17 +20,17 @@ const customJestConfig = {
     "node_modules/(?!(msw|@mswjs|@bundled-es-modules|until-async|strict-event-emitter|@open-draft)/)",
   ],
   collectCoverageFrom: [
-    'app/**/*.{js,jsx,ts,tsx}',
-    'lib/**/*.{js,jsx,ts,tsx}',
-    '!**/*.d.ts',
-    '!**/node_modules/**',
-    '!**/.next/**',
-    '!**/coverage/**',
-    '!**/tests/**'
+    "app/**/*.{js,jsx,ts,tsx}",
+    "lib/**/*.{js,jsx,ts,tsx}",
+    "!**/*.d.ts",
+    "!**/node_modules/**",
+    "!**/.next/**",
+    "!**/coverage/**",
+    "!**/tests/**",
   ],
   collectCoverage: true,
-  coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov', 'html'],
+  coverageDirectory: "coverage",
+  coverageReporters: ["text", "lcov", "html"],
   coverageThreshold: {
     global: {
       branches: 9,
@@ -39,7 +39,7 @@ const customJestConfig = {
       statements: 14,
     },
   },
-  testTimeout: 10000, // 10秒タイムアウト
+  testTimeout: 10000,
 };
 
 module.exports = createJestConfig(customJestConfig);
