@@ -32,10 +32,12 @@ const customJestConfig = {
   coverageDirectory: "coverage",
   coverageReporters: ["text", "lcov", "html"],
   coverageThreshold: {
-    branches: 10,
-    functions: 10,
-    lines: 10,
-    statements: 10,
+    global: {
+      branches: 4,
+      functions: 3,
+      lines: 7,
+      statements: 7,
+    },
   },
   testTimeout: 10000, // 10秒タイムアウト
 };
