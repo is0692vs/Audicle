@@ -32,22 +32,12 @@ const customJestConfig = {
   coverageDirectory: "coverage",
   coverageReporters: ["text", "lcov", "html"],
   coverageThreshold: {
-      branches: 80,
-      functions: 80,
-      functions: 9,
-<<<<<<< HEAD
-      lines: 14,
-      statements: 14,
-    },
+    branches: 80,
+    functions: 80,
+    lines: 80,
+    statements: 80,
   },
-  testTimeout: 10000,
-=======
-      branches: 80,
-      functions: 80,
-      lines: 80,
-      statements: 80,
   testTimeout: 10000, // 10秒タイムアウト
->>>>>>> af36a1eb9c3d7efcc9ec3077eb2a227404a911bb
 };
 
 module.exports = createJestConfig(customJestConfig);
