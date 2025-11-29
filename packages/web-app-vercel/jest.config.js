@@ -8,7 +8,10 @@ const customJestConfig = {
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
   testEnvironment: "jsdom",
   moduleNameMapper: {
-    "^@/(.*)$": "<rootDir>/$1",
+    "^@/lib/(.*)$": "<rootDir>/lib/$1",
+    "^@/app/(.*)$": "<rootDir>/app/$1",
+    "^@/components/(.*)$": "<rootDir>/components/$1",
+    "^@/types/(.*)$": "<rootDir>/types/$1",
     "^until-async$": "<rootDir>/__mocks__/until-async.js",
   },
   testPathIgnorePatterns: [
@@ -32,12 +35,10 @@ const customJestConfig = {
   coverageDirectory: "coverage",
   coverageReporters: ["text", "lcov", "html"],
   coverageThreshold: {
-    global: {
-      branches: 4,
-      functions: 3,
-      lines: 7,
-      statements: 7,
-    },
+    branches: 10,
+    functions: 10,
+    lines: 10,
+    statements: 10,
   },
   testTimeout: 10000, // 10秒タイムアウト
 };
