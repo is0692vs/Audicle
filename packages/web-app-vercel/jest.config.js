@@ -23,8 +23,9 @@ const customJestConfig = {
     "node_modules/(?!(msw|@mswjs|@bundled-es-modules|until-async|strict-event-emitter|@open-draft)/)",
   ],
   collectCoverageFrom: [
-    "app/**/*.{js,jsx,ts,tsx}",
     "lib/**/*.{js,jsx,ts,tsx}",
+    "hooks/**/*.{js,jsx,ts,tsx}",
+    "contexts/**/*.{js,jsx,ts,tsx}",
     "!**/*.d.ts",
     "!**/node_modules/**",
     "!**/.next/**",
@@ -35,10 +36,12 @@ const customJestConfig = {
   coverageDirectory: "coverage",
   coverageReporters: ["text", "lcov", "html"],
   coverageThreshold: {
-    branches: 10,
-    functions: 10,
-    lines: 10,
-    statements: 10,
+    global: {
+      branches: 15,
+      functions: 15,
+      lines: 15,
+      statements: 15,
+    },
   },
   testTimeout: 10000, // 10秒タイムアウト
 };
