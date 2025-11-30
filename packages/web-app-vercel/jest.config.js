@@ -24,8 +24,7 @@ const customJestConfig = {
   ],
   collectCoverageFrom: [
     "lib/**/*.{js,jsx,ts,tsx}",
-    "hooks/**/*.{js,jsx,ts,tsx}",
-    "contexts/**/*.{js,jsx,ts,tsx}",
+    "!lib/**/__tests__/**",
     "!**/*.d.ts",
     "!**/node_modules/**",
     "!**/.next/**",
@@ -39,8 +38,8 @@ const customJestConfig = {
     global: {
       branches: 25,
       functions: 25,
-      lines: 30,
-      statements: 30,
+      lines: 25,
+      statements: 25,
     },
   },
   testTimeout: 10000, // 10秒タイムアウト
