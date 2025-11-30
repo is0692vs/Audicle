@@ -584,6 +584,16 @@ export default function ReaderPageClient() {
 
   // autoplay パラメータが指定されている場合、チャンクが読み込まれたら自動再生
   useEffect(() => {
+    // デバッグ: autoplayの状態をログ出力
+    logger.info("自動再生チェック", {
+      autoplayFromQuery,
+      chunksLength: chunks.length,
+      isLoading,
+      isPlaying,
+      isPlaybackLoading,
+      hasInitiatedAutoplay: hasInitiatedAutoplayRef.current,
+    });
+
     if (
       autoplayFromQuery &&
       chunks.length > 0 &&
