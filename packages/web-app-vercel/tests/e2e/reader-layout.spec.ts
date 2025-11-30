@@ -108,17 +108,34 @@ test.describe('Reader layout and controls', () => {
         let created = null;
         if (createResp.ok()) {
             created = await createResp.json();
+            console.log('[DEBUG] Created playlist:', JSON.stringify(created));
             for (const article of [mockArticles[0], mockArticles[1]]) {
-                await page.request.post(`/api/playlists/${created.id}/items`, {
+                const itemResp = await page.request.post(`/api/playlists/${created.id}/items`, {
                     data: { article_url: article.url, article_title: article.title, thumbnail_url: null, last_read_position: 0 },
                 });
+                console.log('[DEBUG] Added item response:', itemResp.status(), await itemResp.text());
             }
+        } else {
+            console.log('[DEBUG] Failed to create playlist:', createResp.status(), await createResp.text());
         }
         expect(created).toBeTruthy();
         if (!created) return;
 
         const playlistHref = `/playlists/${created.id}`;
-        
+
+        // APIレスポンスをキャプチャ
+        let playlistApiResponse: string | null = null;
+        page.on('response', async (response) => {
+            if (response.url().includes(`/api/playlists/${created.id}`) && response.status() === 200) {
+                try {
+                    playlistApiResponse = await response.text();
+                    console.log('[DEBUG] Playlist API response:', playlistApiResponse.substring(0, 500));
+                } catch (e) {
+                    console.log('[DEBUG] Error reading response:', e);
+                }
+            }
+        });
+
         // gotoとwaitForResponseを同時に実行してAPIレスポンスを待つ
         await Promise.all([
             page.waitForResponse(
@@ -127,10 +144,19 @@ test.describe('Reader layout and controls', () => {
             ),
             page.goto(playlistHref)
         ]);
-        
+
         // Reactの状態更新を待つ
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(2000);
+
+        // ページの状態をデバッグ
+        const pageContent = await page.content();
+        console.log('[DEBUG] Page URL:', page.url());
+        console.log('[DEBUG] Page contains "まだ記事がありません":', pageContent.includes('まだ記事がありません'));
+        console.log('[DEBUG] Page contains "playlist-article":', pageContent.includes('playlist-article'));
         
+        // スクリーンショットを取る
+        await page.screenshot({ path: 'test-results/debug-playlist-page.png', fullPage: true });
+
         await page.waitForSelector('[data-testid="playlist-article"]', { state: 'visible', timeout: 20000 });
         const articleLink = page.locator('a[data-testid="playlist-article"]').first();
         const articleHref = await articleLink.getAttribute('href');
