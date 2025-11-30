@@ -128,6 +128,8 @@ export default function ReaderPageClient() {
     articleUrl: url,
     voiceModel: settings.voice_model,
     playbackSpeed: settings.playback_speed,
+    articleTitle: title,
+    articleAuthor: url ? new URL(url).hostname : undefined,
     onArticleEnd: () => {
       if (isPlaylistMode && playlistState.isPlaylistMode) {
         // プレイリストの最後の記事の場合は完了画面を表示
