@@ -200,7 +200,7 @@ export function parseHTMLToParagraphs(htmlContent: string): Paragraph[] {
   const paragraphs: Paragraph[] = [];
   let idCounter = 0;
 
-  // ブロック要素のセレクタ（divを追加して取りこぼしを防ぐ）
+  // ブロック要素のセレクタ
   const blockSelectors = [
     'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
     'li', 'pre', 'td', 'th', 'figcaption', 'blockquote'
