@@ -57,8 +57,18 @@ test.describe('人気記事（認証済み）', () => {
 
         await page.goto('/popular');
 
+        // APIレスポンスを待つ（ページ遷移後にリクエストが発生するため、waitForResponseを使用）
+        await page.waitForResponse(
+            resp => resp.url().includes('/api/stats/popular') && resp.status() === 200,
+            { timeout: 15000 }
+        ).catch(e => console.log('[DEBUG] waitForResponse timeout or error:', e));
+
+        // Reactの状態更新とレンダリングを待つ
+        await page.waitForTimeout(2000);
+
         const articles = page.locator('[data-testid="article-card"]');
         const count = await articles.count();
+        console.log('[DEBUG] Article card count after waiting:', count);
 
         if (count === 0) {
             console.log('No popular articles available');
@@ -87,8 +97,18 @@ test.describe('人気記事（認証済み）', () => {
 
         await page.goto('/popular');
 
+        // APIレスポンスを待つ
+        await page.waitForResponse(
+            resp => resp.url().includes('/api/stats/popular') && resp.status() === 200,
+            { timeout: 15000 }
+        ).catch(e => console.log('[DEBUG] waitForResponse timeout or error:', e));
+
+        // Reactの状態更新とレンダリングを待つ
+        await page.waitForTimeout(2000);
+
         const articles = page.locator('[data-testid="article-card"]');
         const count = await articles.count();
+        console.log('[DEBUG] Article card count after waiting:', count);
 
         if (count === 0) {
             console.log('No popular articles available, skipping test');
