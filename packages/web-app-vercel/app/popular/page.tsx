@@ -86,11 +86,11 @@ export default function PopularPage() {
       }
 
       const data: PopularArticlesResponse = await response.json();
-      console.log('[DEBUG] API response data:', data);
-      console.log('[DEBUG] articles count:', data.articles?.length ?? 0);
+      console.log("[DEBUG] API response data:", data);
+      console.log("[DEBUG] articles count:", data.articles?.length ?? 0);
       const fetchedAt = Date.now();
       setArticles(data.articles);
-      console.log('[DEBUG] setArticles called with:', data.articles);
+      console.log("[DEBUG] setArticles called with:", data.articles);
       setLastFetchedAt(fetchedAt);
       setCachedEntry(selectedPeriod, {
         articles: data.articles,
@@ -107,10 +107,13 @@ export default function PopularPage() {
 
   useEffect(() => {
     const cached = getCachedEntry(period);
-    console.log('[DEBUG] useEffect: period=', period, 'cached=', cached);
+    console.log("[DEBUG] useEffect: period=", period, "cached=", cached);
     if (cached && isFresh(cached.fetchedAt)) {
       // 新鮮なキャッシュがあれば表示
-      console.log('[DEBUG] Using fresh cache, articles count:', cached.articles?.length);
+      console.log(
+        "[DEBUG] Using fresh cache, articles count:",
+        cached.articles?.length
+      );
       setArticles(cached.articles);
       setLastFetchedAt(cached.fetchedAt);
       setIsLoading(false);
@@ -118,7 +121,7 @@ export default function PopularPage() {
       setNotice(null);
     } else {
       // キャッシュがないか古い場合は取得
-      console.log('[DEBUG] Cache miss or stale, will fetch from API');
+      console.log("[DEBUG] Cache miss or stale, will fetch from API");
       if (cached) {
         // 古いデータがあれば、取得中にそれを表示
         setArticles(cached.articles);
@@ -211,7 +214,6 @@ export default function PopularPage() {
               <p className="text-zinc-400 mb-6">{error}</p>
               <Button
                 onClick={handleRefresh}
-                className="bg-primary hover:bg-primary/90 text-white"
                 disabled={isLoading || isRateLimited}
               >
                 <RotateCcw className="size-4 mr-2" />
@@ -229,7 +231,6 @@ export default function PopularPage() {
               </p>
               <Button
                 onClick={handleRefresh}
-                className="bg-primary hover:bg-primary/90 text-white"
                 disabled={isLoading || isRateLimited}
               >
                 <RotateCcw className="size-4 mr-2" />
