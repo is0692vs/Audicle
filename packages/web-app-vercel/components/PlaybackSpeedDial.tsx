@@ -204,6 +204,7 @@ export function PlaybackSpeedDial({
                       key={speed}
                       ref={index === 0 ? itemRef : null} // 最初のアイテムにrefを設定
                       onClick={() => handleSpeedClick(speed)}
+                      data-testid={`speed-option-${speed.toFixed(1)}`}
                       className="flex flex-col items-center justify-center mx-2 transition-all duration-200 cursor-pointer"
                       style={{
                         pointerEvents: "auto",

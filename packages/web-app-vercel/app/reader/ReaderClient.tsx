@@ -819,6 +819,7 @@ export default function ReaderPageClient() {
                 <button
                   onClick={() => setIsSpeedModalOpen(true)}
                   className="flex items-center gap-1 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                  data-testid="speed-button"
                   title="再生速度を変更"
                 >
                   <span className="hidden sm:inline">
@@ -852,6 +853,13 @@ export default function ReaderPageClient() {
                       onClick={isPlaying ? pause : play}
                       disabled={isPlaybackLoading}
                       className="w-12 h-12 p-0 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center text-2xl"
+                      data-testid={
+                        isPlaybackLoading
+                          ? "playback-loading"
+                          : isPlaying
+                            ? "pause-button"
+                            : "play-button"
+                      }
                       title={
                         isPlaybackLoading
                           ? "処理中..."
@@ -987,6 +995,7 @@ export default function ReaderPageClient() {
             <button
               onClick={() => setIsSpeedModalOpen(true)}
               className="flex items-center gap-1 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+              data-testid="speed-button-mobile"
               title="再生速度を変更"
             >
               <span>{playbackRate.toFixed(1)}x</span>
@@ -1017,6 +1026,13 @@ export default function ReaderPageClient() {
                 onClick={isPlaying ? pause : play}
                 disabled={isPlaybackLoading}
                 className="px-6 py-3 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-lg"
+                data-testid={
+                  isPlaybackLoading
+                    ? "playback-loading"
+                    : isPlaying
+                      ? "pause-button"
+                      : "play-button"
+                }
                 title={
                   isPlaybackLoading
                     ? "処理中..."

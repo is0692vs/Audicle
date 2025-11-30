@@ -9,4 +9,19 @@ export const mockArticles = [
     }
 ];
 
+// Minimal valid silent MP3 file (1 frame, ~0.026 seconds)
+// This is a valid MPEG Audio Layer 3 frame that decodes to silence
+export const validAudioBase64 = '//uQxAAAAAANIAAAAAExBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==';
+
+// Legacy mock data (deprecated)
 export const mockAudioData = 'data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAA...';
+
+// Mock article content for E2E tests
+export const mockArticleContent = {
+    title: 'テスト記事タイトル',
+    content: 'これはテスト用の記事コンテンツです。音声再生のテストに使用されます。',
+    paragraphs: [
+        'これはテスト用の記事コンテンツです。',
+        '音声再生のテストに使用されます。'
+    ]
+};
