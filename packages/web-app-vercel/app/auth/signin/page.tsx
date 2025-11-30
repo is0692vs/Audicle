@@ -24,7 +24,9 @@ function SignInForm() {
   };
 
   const isDevelopment =
-    process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
+    process.env.NODE_ENV === "development" || 
+    process.env.NODE_ENV === "test" ||
+    process.env.NEXT_PUBLIC_AUTH_ENV === "test";
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-linear-to-b from-zinc-900 to-black">
