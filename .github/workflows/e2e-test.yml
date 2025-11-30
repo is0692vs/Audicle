@@ -4,7 +4,31 @@ on:
   workflow_dispatch: {}
 
 jobs:
+  seed-test-db:
+    name: テストデータ投入
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: packages/web-app-vercel
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'packages/web-app-vercel/package-lock.json'
+      - name: Install dependencies
+        run: npm ci
+      - name: Seed test database
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npm run seed-test-data
   test-auth:
+    needs: seed-test-db
     name: 認証フロー
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -60,7 +84,9 @@ jobs:
 
   test-playlist:
     name: プレイリスト管理
-    needs: test-auth
+    needs:
+      - seed-test-db
+      - test-auth
     runs-on: ubuntu-latest
     timeout-minutes: 5
     defaults:
@@ -99,7 +125,9 @@ jobs:
 
   test-popular:
     name: 人気記事機能
-    needs: test-auth
+    needs:
+      - seed-test-db
+      - test-auth
     runs-on: ubuntu-latest
     timeout-minutes: 5
     defaults:
@@ -137,7 +165,9 @@ jobs:
 
   test-article:
     name: 記事抽出機能
-    needs: test-auth
+    needs:
+      - seed-test-db
+      - test-auth
     runs-on: ubuntu-latest
     timeout-minutes: 5
     defaults:

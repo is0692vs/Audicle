@@ -104,11 +104,10 @@ CREATE OR REPLACE FUNCTION public.increment_article_stats(
   p_url text,
   p_title text,
   p_domain character varying,
-  p_user_id_hash character varying,
-  p_cache_hits integer DEFAULT 0,
-  p_cache_misses integer DEFAULT 0,
-  p_is_fully_cached boolean DEFAULT false
-)
+p_user_id_hash character varying,
+p_cache_hits integer DEFAULT 0,
+p_cache_misses integer DEFAULT 0,
+p_is_fully_cached boolean DEFAULT false)
 RETURNS void
 LANGUAGE plpgsql
 AS $$

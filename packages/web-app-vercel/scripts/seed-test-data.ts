@@ -124,7 +124,8 @@ async function seedTestData() {
 
     // 4. 音声キャッシュインデックス
     console.log("4. 音声キャッシュインデックスを作成中...");
-    for (const article of popularArticles) {
+    for (let i = 0; i < popularArticles.length; i += 1) {
+        const article = popularArticles[i];
         const { error: cacheError } = await supabase
             .from("audio_cache_index")
             .upsert(
@@ -133,7 +134,7 @@ async function seedTestData() {
                     voice: "ja-JP",
                     cached_chunks: ["chunk-1", "chunk-2"],
                     completed_playback: true,
-                    read_count: Math.floor(Math.random() * 10) + 5,
+                    read_count: 5 + i,
                 },
                 { onConflict: "article_url,voice" }
             );
