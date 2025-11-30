@@ -109,6 +109,7 @@ async function seedTestData() {
                     unique_users: 10,
                     cache_hit_rate: 0.85,
                     is_fully_cached: true,
+                    last_accessed_at: new Date().toISOString(),
                 },
                 { onConflict: "article_hash" }
             );
