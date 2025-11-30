@@ -81,7 +81,7 @@ export function PopularArticleCard({
             onTouchStart={(e: TouchEvent<HTMLButtonElement>) =>
               e.stopPropagation()
             }
-            className="text-violet-400 hover:text-violet-300 hover:bg-violet-950/30"
+            className="text-primary/70 hover:text-primary/80 hover:bg-primary/10"
           >
             <Plus className="size-4" />
           </Button>
