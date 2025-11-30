@@ -39,6 +39,42 @@ describe('paragraphParser', () => {
             expect(result[0].originalText).toContain('Quote line 1');
             expect(result[0].originalText).toContain('Quote line 2');
         });
+
+        it('should extract code blocks (pre elements)', () => {
+            const html = '<p>コード例：</p><pre><code>function hello() {\n  console.log("Hello");\n}</code></pre><p>以上です。</p>';
+            const result = parseHTMLToParagraphs(html);
+            expect(result.length).toBe(3);
+            expect(result[0].originalText).toBe('コード例：');
+            expect(result[1].type).toBe('pre');
+            expect(result[1].originalText).toContain('function hello()');
+            expect(result[2].originalText).toBe('以上です。');
+        });
+
+        it('should extract table cells (td/th elements)', () => {
+            const html = '<table><tr><th>項目</th><th>値</th></tr><tr><td>名前</td><td>テスト</td></tr></table>';
+            const result = parseHTMLToParagraphs(html);
+            expect(result.length).toBeGreaterThanOrEqual(4);
+            const texts = result.map(p => p.originalText);
+            expect(texts).toContain('項目');
+            expect(texts).toContain('値');
+            expect(texts).toContain('名前');
+            expect(texts).toContain('テスト');
+        });
+
+        it('should extract figcaption', () => {
+            const html = '<figure><img src="test.png" /><figcaption>図1: テスト画像</figcaption></figure>';
+            const result = parseHTMLToParagraphs(html);
+            expect(result.length).toBe(1);
+            expect(result[0].type).toBe('figcaption');
+            expect(result[0].originalText).toBe('図1: テスト画像');
+        });
+
+        it('should fallback to body text when no block elements found', () => {
+            const html = '<div>直接のテキスト内容</div>';
+            const result = parseHTMLToParagraphs(html);
+            expect(result.length).toBeGreaterThanOrEqual(1);
+            expect(result.some(p => p.originalText.includes('直接のテキスト内容'))).toBe(true);
+        });
     });
 
     describe('chunk resizing', () => {
