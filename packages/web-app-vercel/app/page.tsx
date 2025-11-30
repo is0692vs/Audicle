@@ -205,9 +205,7 @@ export default function Home() {
                   ? error.message
                   : "記事の読み込みに失敗しました"}
               </p>
-              <Button
-                onClick={handleRefresh}
-              >
+              <Button onClick={handleRefresh}>
                 <RotateCcw className="size-4 mr-2" />
                 再試行
               </Button>
@@ -221,9 +219,7 @@ export default function Home() {
               <p className="text-zinc-400 mb-6">
                 新しい記事を読み込んでみましょう
               </p>
-              <Button
-                onClick={() => router.push("/reader")}
-              >
+              <Button onClick={() => router.push("/reader")}>
                 <Plus className="size-4 mr-2" />
                 新しい記事を読む
               </Button>
