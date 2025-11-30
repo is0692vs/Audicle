@@ -2,6 +2,15 @@ import { test, expect } from '@playwright/test'
 
 // 認証済みテスト用
 test.describe('人気記事（認証済み）', () => {
+    // ブラウザのコンソールログをキャプチャ
+    test.beforeEach(async ({ page }) => {
+        page.on('console', msg => {
+            if (msg.text().includes('[DEBUG]') || msg.text().includes('[POPULAR]')) {
+                console.log(`[BROWSER] ${msg.text()}`);
+            }
+        });
+    });
+
     test('人気記事ページへのアクセス', async ({ page }) => {
         // /popularページにアクセス
         await page.goto('/popular');
