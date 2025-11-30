@@ -352,6 +352,7 @@ export default function PlaylistDetailPage() {
                         articleUrl: item.article.url,
                         playlistId: playlist.id,
                         playlistIndex: index,
+                        autoplay: false,
                       })
                     : undefined
                 }
