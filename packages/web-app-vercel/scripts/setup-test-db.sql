@@ -3,6 +3,7 @@
 
 -- UUID生成はPostgreSQL標準のgen_random_uuid()を使用
 
+
 CREATE TABLE IF NOT EXISTS public.article_access_log (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   article_hash character varying(64) NOT NULL,
