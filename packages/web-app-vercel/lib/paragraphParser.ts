@@ -184,6 +184,11 @@ export function resizeChunksIfNeeded(paragraphs: Paragraph[]): Paragraph[] {
 
 /**
  * HTMLからテキストを抽出し、段落単位で分割する
+ * 
+ * Readabilityが抽出した本文をTreeWalkerで走査し、
+ * ブロック要素単位でテキストを抽出する。
+ * blockquote内の要素は重複を避けるため特別処理する。
+ * 
  * @param htmlContent Readability.jsの.contentで取得したHTML文字列
  * @returns 段落情報の配列
  */
@@ -195,23 +200,43 @@ export function parseHTMLToParagraphs(htmlContent: string): Paragraph[] {
   const paragraphs: Paragraph[] = [];
   let idCounter = 0;
 
-  // 抽出対象の要素セレクタ
-  const selectors = [
-    'p',
-    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'li',
-    'blockquote'
+  // ブロック要素のセレクタ
+  const blockSelectors = [
+    'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'li', 'pre', 'td', 'th', 'figcaption', 'blockquote'
   ];
 
   // すべての対象要素を順番に処理
-  const elements = doc.querySelectorAll(selectors.join(','));
+  const elements = doc.querySelectorAll(blockSelectors.join(','));
 
   elements.forEach((element) => {
     const tagName = element.tagName.toLowerCase();
 
-    // blockquote 内の <p> は blockquote として既に処理されるためスキップ
-    if (tagName === 'p' && element.closest('blockquote')) {
+    // blockquote内の子要素はblockquoteとして既に処理されるためスキップ
+    if (tagName !== 'blockquote' && element.closest('blockquote')) {
       return;
+    }
+
+    // 入れ子のli（サブリスト）の親liは子のliで処理されるためスキップ
+    if (tagName === 'li') {
+      const nestedLi = element.querySelector('li');
+      if (nestedLi) {
+        // このliは子liを持つので、直接のテキストノードのみ抽出
+        const directText = Array.from(element.childNodes)
+          .filter(node => node.nodeType === Node.TEXT_NODE)
+          .map(node => node.textContent?.trim())
+          .filter(Boolean)
+          .join(' ');
+        if (directText) {
+          paragraphs.push({
+            id: `para-${idCounter++}`,
+            type: tagName,
+            originalText: directText,
+            cleanedText: cleanText(directText),
+          });
+        }
+        return;
+      }
     }
 
     const text = element.textContent?.trim() || '';
@@ -226,6 +251,19 @@ export function parseHTMLToParagraphs(htmlContent: string): Paragraph[] {
       cleanedText: cleanText(text),
     });
   });
+
+  // ブロック要素が見つからない場合は、body全体のテキストを1つの段落として返す
+  if (paragraphs.length === 0) {
+    const bodyText = doc.body.textContent?.trim() || '';
+    if (bodyText) {
+      paragraphs.push({
+        id: `para-${idCounter++}`,
+        type: 'p',
+        originalText: bodyText,
+        cleanedText: cleanText(bodyText),
+      });
+    }
+  }
 
   // チャンクリサイズを適用（5000バイト超過チャンクを分割）
   return resizeChunksIfNeeded(paragraphs);
