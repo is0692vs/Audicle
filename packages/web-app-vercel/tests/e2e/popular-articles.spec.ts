@@ -6,6 +6,17 @@ test.describe('人気記事（認証済み）', () => {
         // /popularページにアクセス
         await page.goto('/popular');
 
+        // Also fetch the API from the page context to log its response
+        try {
+            const apiResp = await page.evaluate(async () => {
+                const res = await fetch('/api/stats/popular?period=week&limit=20');
+                return { status: res.status, body: await res.text() };
+            });
+            console.log('[DEBUG] Direct fetch from page context status:', apiResp.status, 'body:', apiResp.body);
+        } catch (e) {
+            console.warn('[DEBUG] Direct fetch from page context failed:', e);
+        }
+
         // ログインページにリダイレクトされず、正常に表示される
         await expect(page).toHaveURL('/popular');
         // 「人気記事」という見出しを特定
@@ -13,6 +24,28 @@ test.describe('人気記事（認証済み）', () => {
     });
 
     test('人気記事一覧の表示', async ({ page }) => {
+        // Log API responses for debugging
+        page.on('request', (req) => {
+            if (req.url().includes('/api/stats/popular')) {
+                console.log('[DEBUG] /api/stats/popular request made:', req.method(), req.url());
+            }
+        });
+        page.on('requestfailed', (req) => {
+            if (req.url().includes('/api/stats/popular')) {
+                console.log('[DEBUG] /api/stats/popular request failed:', req.failure()?.errorText, req.url());
+            }
+        });
+        page.on('response', async (resp) => {
+            try {
+                if (resp.url().includes('/api/stats/popular')) {
+                    const text = await resp.text();
+                    console.log('[DEBUG] /api/stats/popular status:', resp.status(), 'body:', text);
+                }
+            } catch (e) {
+                console.warn('[DEBUG] Error reading response body', e);
+            }
+        });
+
         await page.goto('/popular');
 
         const articles = page.locator('[data-testid="article-card"]');
@@ -31,6 +64,18 @@ test.describe('人気記事（認証済み）', () => {
     });
 
     test('人気記事カードのクリックで記事ページへ遷移', async ({ page }) => {
+        // Capture API response for debugging
+        page.on('response', async (resp) => {
+            try {
+                if (resp.url().includes('/api/stats/popular')) {
+                    const text = await resp.text();
+                    console.log('[DEBUG] /api/stats/popular status:', resp.status(), 'body:', text);
+                }
+            } catch (e) {
+                console.warn('[DEBUG] Error reading response body', e);
+            }
+        });
+
         await page.goto('/popular');
 
         const articles = page.locator('[data-testid="article-card"]');
