@@ -28,8 +28,8 @@ test.describe('人気記事（認証済み）', () => {
 
         // ログインページにリダイレクトされず、正常に表示される
         await expect(page).toHaveURL('/popular');
-        // 「人気記事」という見出しを特定
-        await expect(page.getByRole('heading', { name: '人気記事' })).toBeVisible();
+        // 「人気記事」という見出しを特定（exact: true で完全一致）
+        await expect(page.getByRole('heading', { name: '人気記事', exact: true })).toBeVisible();
     });
 
     test('人気記事一覧の表示', async ({ page }) => {
