@@ -2,21 +2,18 @@ import { test, expect } from '@playwright/test';
 import { mockArticles } from '../helpers/testData';
 
 test.describe('記事読み上げ機能', () => {
-    test('記事URLの入力と抽出', async ({ page }) => {
-        // APIモックを削除 - 実際のAPIを使用
+    // 共通のセットアップ: 記事URLを入力して抽出を実行
+    test.beforeEach(async ({ page }) => {
         await page.goto('/reader');
-
-        // URL入力欄が表示される
         await page.waitForSelector('[data-testid="url-input"]', { state: 'visible' });
-
-        // 自分のGitHubプロフィールURLを入力
         await page.fill('[data-testid="url-input"]', mockArticles[0].url);
         await page.click('[data-testid="extract-button"]');
-
-        // 記事タイトルが表示される（実際の抽出が成功）
-        // タイムアウトを長めに設定（実際のAPIは時間がかかる）
+        // 記事タイトルが表示されるまで待機（実際のAPIは時間がかかる）
         await expect(page.locator('[data-testid="article-title"]')).toBeVisible({ timeout: 30000 });
+    });
 
+    test('記事URLの入力と抽出', async ({ page }) => {
+        // beforeEachで既に記事抽出は完了している
         // GitHubプロフィールからタイトルが抽出されることを確認
         const title = await page.locator('[data-testid="article-title"]').textContent();
         console.log('[TEST] Extracted title:', title);
@@ -27,15 +24,6 @@ test.describe('記事読み上げ機能', () => {
     });
 
     test('音声再生ボタンの表示と操作', async ({ page }) => {
-        await page.goto('/reader');
-
-        await page.waitForSelector('[data-testid="url-input"]', { state: 'visible' });
-        await page.fill('[data-testid="url-input"]', mockArticles[0].url);
-        await page.click('[data-testid="extract-button"]');
-
-        // 記事タイトルが表示されるまで待機
-        await expect(page.locator('[data-testid="article-title"]')).toBeVisible({ timeout: 30000 });
-
         // 再生ボタンが表示される（デスクトップまたはモバイル）
         const playButton = page.locator('[data-testid="play-button"]');
         await expect(playButton.first()).toBeVisible({ timeout: 10000 });
@@ -52,15 +40,6 @@ test.describe('記事読み上げ機能', () => {
     });
 
     test('再生速度の変更', async ({ page }) => {
-        await page.goto('/reader');
-
-        await page.waitForSelector('[data-testid="url-input"]', { state: 'visible' });
-        await page.fill('[data-testid="url-input"]', mockArticles[0].url);
-        await page.click('[data-testid="extract-button"]');
-
-        // 記事タイトルが表示されるまで待機
-        await expect(page.locator('[data-testid="article-title"]')).toBeVisible({ timeout: 30000 });
-
         // 速度ボタンをクリック（デスクトップ版）
         const speedButton = page.locator('[data-testid="speed-button"]');
         if (await speedButton.isVisible()) {
@@ -86,15 +65,6 @@ test.describe('記事読み上げ機能', () => {
     });
 
     test('再生と一時停止の切り替え', async ({ page }) => {
-        await page.goto('/reader');
-
-        await page.waitForSelector('[data-testid="url-input"]', { state: 'visible' });
-        await page.fill('[data-testid="url-input"]', mockArticles[0].url);
-        await page.click('[data-testid="extract-button"]');
-
-        // 記事タイトルが表示されるまで待機
-        await expect(page.locator('[data-testid="article-title"]')).toBeVisible({ timeout: 30000 });
-
         // 再生ボタンをクリック
         const playButton = page.locator('[data-testid="play-button"]').first();
         await expect(playButton).toBeVisible({ timeout: 10000 });
