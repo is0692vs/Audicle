@@ -47,6 +47,17 @@ setup('authenticate', async ({ page }) => {
     // ログイン完了を待つ（トップページにリダイレクト）
     await page.waitForURL('/', { timeout: 15000 })
 
+    // Clear localStorage to avoid stale popular-articles cache in storageState
+    await page.evaluate(() => {
+        try {
+            localStorage.clear();
+            sessionStorage.clear();
+            console.log('[AUTH SETUP] Cleared localStorage and sessionStorage');
+        } catch (e) {
+            console.warn('[AUTH SETUP] localStorage clear failed', e);
+        }
+    });
+
     // 認証状態を保存
     await page.context().storageState({ path: authFile })
     console.log('[AUTH SETUP] Authentication state saved to', authFile)
