@@ -163,12 +163,12 @@ jobs:
           path: packages/web-app-vercel/playwright-report/
 
   test-article:
-    name: 記事抽出機能
+    name: 記事抽出・音声再生機能
     needs:
       - seed-test-db
       - test-auth
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: packages/web-app-vercel

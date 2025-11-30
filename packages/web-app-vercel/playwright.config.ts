@@ -38,6 +38,10 @@ export default defineConfig({
             use: {
                 ...devices['Desktop Chrome'],
                 storageState: 'playwright/.auth/user.json', // ここに移動
+                // Enable autoplay without user gesture for audio playback tests
+                launchOptions: {
+                    args: ['--autoplay-policy=no-user-gesture-required'],
+                },
             },
             dependencies: ['setup'],
         },
@@ -47,6 +51,7 @@ export default defineConfig({
             use: {
                 ...devices['Desktop Firefox'],
                 storageState: 'playwright/.auth/user.json',
+                // Firefox doesn't require special autoplay flags in Playwright
             },
             dependencies: ['setup'],
         },
