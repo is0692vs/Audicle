@@ -176,7 +176,7 @@ export default function PlaylistDetailPage() {
           </p>
           <button
             onClick={() => router.push("/playlists")}
-            className="text-violet-400 hover:text-violet-300"
+            className="text-primary/70 hover:text-primary/80"
           >
             ← プレイリスト一覧に戻る
           </button>
@@ -214,13 +214,13 @@ export default function PlaylistDetailPage() {
               type="text"
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              className="w-full px-4 py-2 border border-zinc-700 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-violet-600 focus:border-transparent"
+              className="w-full px-4 py-2 border border-zinc-700 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-primary focus:border-transparent"
               required
             />
             <textarea
               value={editDescription}
               onChange={(e) => setEditDescription(e.target.value)}
-              className="w-full px-4 py-2 border border-zinc-700 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-violet-600 focus:border-transparent"
+              className="w-full px-4 py-2 border border-zinc-700 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-primary focus:border-transparent"
               rows={3}
               placeholder="説明（省略可）"
             />
@@ -228,7 +228,7 @@ export default function PlaylistDetailPage() {
               <button
                 onClick={handleSave}
                 disabled={updatePlaylistMutation.isPending}
-                className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:bg-zinc-700 transition-colors"
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:bg-zinc-700 transition-colors"
               >
                 {updatePlaylistMutation.isPending ? "保存中..." : "保存"}
               </button>
@@ -251,7 +251,7 @@ export default function PlaylistDetailPage() {
                 <div className="flex items-center gap-2 mb-2">
                   <h1 className="text-2xl font-bold">{playlist.name}</h1>
                   {playlist.is_default && (
-                    <span className="px-2 py-1 text-xs bg-violet-900 text-violet-300 rounded">
+                    <span className="px-2 py-1 text-xs bg-primary/20 text-primary/80 rounded">
                       デフォルト
                     </span>
                   )}
@@ -310,7 +310,7 @@ export default function PlaylistDetailPage() {
                         })
                       );
                     }}
-                    className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors flex items-center gap-2 whitespace-nowrap"
+                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2 whitespace-nowrap"
                   >
                     <Play className="size-4" />
                     再生

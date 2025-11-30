@@ -172,7 +172,7 @@ export default function ReaderView({
       downloading: {
         icon: "⬇️",
         label: "音声ファイルを準備中...",
-        tone: "text-violet-400",
+        tone: "text-primary/70",
       },
       error: {
         icon: "⚠️",
@@ -212,7 +212,7 @@ export default function ReaderView({
         {progress.total > 0 && (
           <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-zinc-800">
             <div
-              className="h-full rounded-full bg-violet-600 transition-[width] duration-300 ease-out"
+              className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out"
               style={{ width: `${percentage}%` }}
             />
           </div>
@@ -340,9 +340,9 @@ export default function ReaderView({
                       data-audicle-id={chunk.id}
                       onClick={() => onChunkClick?.(chunk.id)}
                       className={cn(
-                        "group cursor-pointer rounded-lg border border-transparent bg-zinc-800/50 px-4 sm:px-5 py-3 sm:py-4 transition-all duration-200 hover:border-violet-500/30 hover:bg-zinc-800",
+                        "group cursor-pointer rounded-lg border border-transparent bg-zinc-800/50 px-4 sm:px-5 py-3 sm:py-4 transition-all duration-200 hover:border-primary/30 hover:bg-zinc-800",
                         isActive
-                          ? "border-violet-500/60 bg-violet-900/30 ring-2 ring-violet-500/40"
+                          ? "border-primary/60 bg-primary/20 ring-2 ring-primary/40"
                           : ""
                       )}
                     >

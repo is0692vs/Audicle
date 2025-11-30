@@ -180,7 +180,6 @@ export default function PlaylistsPage() {
                       <Button
                         type="submit"
                         disabled={createPlaylistMutation.isPending}
-                        className="bg-violet-600 hover:bg-violet-700"
                         data-testid="save-playlist-button"
                       >
                         {createPlaylistMutation.isPending
