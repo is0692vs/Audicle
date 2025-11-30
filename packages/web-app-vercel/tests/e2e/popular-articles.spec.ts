@@ -55,13 +55,14 @@ test.describe('人気記事（認証済み）', () => {
             }
         });
 
-        await page.goto('/popular');
-
-        // APIレスポンスを待つ（ページ遷移後にリクエストが発生するため、waitForResponseを使用）
-        await page.waitForResponse(
-            resp => resp.url().includes('/api/stats/popular') && resp.status() === 200,
-            { timeout: 15000 }
-        ).catch(e => console.log('[DEBUG] waitForResponse timeout or error:', e));
+        // gotoとwaitForResponseを同時に実行（gotoの後だとレスポンスを逃す可能性がある）
+        await Promise.all([
+            page.waitForResponse(
+                resp => resp.url().includes('/api/stats/popular') && resp.status() === 200,
+                { timeout: 15000 }
+            ),
+            page.goto('/popular')
+        ]).catch(e => console.log('[DEBUG] Promise.all error:', e));
 
         // Reactの状態更新とレンダリングを待つ
         await page.waitForTimeout(2000);
@@ -95,13 +96,14 @@ test.describe('人気記事（認証済み）', () => {
             }
         });
 
-        await page.goto('/popular');
-
-        // APIレスポンスを待つ
-        await page.waitForResponse(
-            resp => resp.url().includes('/api/stats/popular') && resp.status() === 200,
-            { timeout: 15000 }
-        ).catch(e => console.log('[DEBUG] waitForResponse timeout or error:', e));
+        // gotoとwaitForResponseを同時に実行
+        await Promise.all([
+            page.waitForResponse(
+                resp => resp.url().includes('/api/stats/popular') && resp.status() === 200,
+                { timeout: 15000 }
+            ),
+            page.goto('/popular')
+        ]).catch(e => console.log('[DEBUG] Promise.all error:', e));
 
         // Reactの状態更新とレンダリングを待つ
         await page.waitForTimeout(2000);
