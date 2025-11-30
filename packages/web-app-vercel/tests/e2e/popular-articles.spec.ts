@@ -2,9 +2,29 @@ import { test, expect } from '@playwright/test'
 
 // 認証済みテスト用
 test.describe('人気記事（認証済み）', () => {
+    // ブラウザのコンソールログをキャプチャ
+    test.beforeEach(async ({ page }) => {
+        page.on('console', msg => {
+            if (msg.text().includes('[DEBUG]') || msg.text().includes('[POPULAR]')) {
+                console.log(`[BROWSER] ${msg.text()}`);
+            }
+        });
+    });
+
     test('人気記事ページへのアクセス', async ({ page }) => {
         // /popularページにアクセス
         await page.goto('/popular');
+
+        // Also fetch the API from the page context to log its response
+        try {
+            const apiResp = await page.evaluate(async () => {
+                const res = await fetch('/api/stats/popular?period=week&limit=20');
+                return { status: res.status, body: await res.text() };
+            });
+            console.log('[DEBUG] Direct fetch from page context status:', apiResp.status, 'body:', apiResp.body);
+        } catch (e) {
+            console.warn('[DEBUG] Direct fetch from page context failed:', e);
+        }
 
         // ログインページにリダイレクトされず、正常に表示される
         await expect(page).toHaveURL('/popular');
@@ -13,10 +33,43 @@ test.describe('人気記事（認証済み）', () => {
     });
 
     test('人気記事一覧の表示', async ({ page }) => {
-        await page.goto('/popular');
+        // Log API responses for debugging
+        page.on('request', (req) => {
+            if (req.url().includes('/api/stats/popular')) {
+                console.log('[DEBUG] /api/stats/popular request made:', req.method(), req.url());
+            }
+        });
+        page.on('requestfailed', (req) => {
+            if (req.url().includes('/api/stats/popular')) {
+                console.log('[DEBUG] /api/stats/popular request failed:', req.failure()?.errorText, req.url());
+            }
+        });
+        page.on('response', async (resp) => {
+            try {
+                if (resp.url().includes('/api/stats/popular')) {
+                    const text = await resp.text();
+                    console.log('[DEBUG] /api/stats/popular status:', resp.status(), 'body:', text);
+                }
+            } catch (e) {
+                console.warn('[DEBUG] Error reading response body', e);
+            }
+        });
+
+        // gotoとwaitForResponseを同時に実行（gotoの後だとレスポンスを逃す可能性がある）
+        await Promise.all([
+            page.waitForResponse(
+                resp => resp.url().includes('/api/stats/popular') && resp.status() === 200,
+                { timeout: 15000 }
+            ),
+            page.goto('/popular')
+        ]).catch(e => console.log('[DEBUG] Promise.all error:', e));
+
+        // Reactの状態更新とレンダリングを待つ
+        await page.waitForTimeout(2000);
 
         const articles = page.locator('[data-testid="article-card"]');
         const count = await articles.count();
+        console.log('[DEBUG] Article card count after waiting:', count);
 
         if (count === 0) {
             console.log('No popular articles available');
@@ -31,10 +84,33 @@ test.describe('人気記事（認証済み）', () => {
     });
 
     test('人気記事カードのクリックで記事ページへ遷移', async ({ page }) => {
-        await page.goto('/popular');
+        // Capture API response for debugging
+        page.on('response', async (resp) => {
+            try {
+                if (resp.url().includes('/api/stats/popular')) {
+                    const text = await resp.text();
+                    console.log('[DEBUG] /api/stats/popular status:', resp.status(), 'body:', text);
+                }
+            } catch (e) {
+                console.warn('[DEBUG] Error reading response body', e);
+            }
+        });
+
+        // gotoとwaitForResponseを同時に実行
+        await Promise.all([
+            page.waitForResponse(
+                resp => resp.url().includes('/api/stats/popular') && resp.status() === 200,
+                { timeout: 15000 }
+            ),
+            page.goto('/popular')
+        ]).catch(e => console.log('[DEBUG] Promise.all error:', e));
+
+        // Reactの状態更新とレンダリングを待つ
+        await page.waitForTimeout(2000);
 
         const articles = page.locator('[data-testid="article-card"]');
         const count = await articles.count();
+        console.log('[DEBUG] Article card count after waiting:', count);
 
         if (count === 0) {
             console.log('No popular articles available, skipping test');

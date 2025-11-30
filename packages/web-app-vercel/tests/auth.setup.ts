@@ -19,6 +19,17 @@ setup('authenticate', async ({ page }) => {
 
     await page.goto('http://localhost:3000/auth/signin')
 
+    // デバッグ: ページの状態を確認
+    console.log('[AUTH SETUP] Current URL:', page.url())
+    const pageContent = await page.content()
+    console.log('[AUTH SETUP] Page title:', await page.title())
+    console.log('[AUTH SETUP] Page content (first 2000 chars):', pageContent.substring(0, 2000))
+
+    // スクリーンショットを保存（デバッグ用）
+    await page.screenshot({ path: 'test-results/auth-signin-page.png', fullPage: true }).catch(e => {
+        console.warn('[AUTH SETUP] Screenshot failed:', e)
+    })
+
     // ネットワークリクエストを監視（ログインボタンクリックの前に設定）
     page.on('request', request => {
         if (request.url().includes('/api/auth')) {
@@ -46,6 +57,17 @@ setup('authenticate', async ({ page }) => {
 
     // ログイン完了を待つ（トップページにリダイレクト）
     await page.waitForURL('/', { timeout: 15000 })
+
+    // Clear localStorage to avoid stale popular-articles cache in storageState
+    await page.evaluate(() => {
+        try {
+            localStorage.clear();
+            sessionStorage.clear();
+            console.log('[AUTH SETUP] Cleared localStorage and sessionStorage');
+        } catch (e) {
+            console.warn('[AUTH SETUP] localStorage clear failed', e);
+        }
+    });
 
     // 認証状態を保存
     await page.context().storageState({ path: authFile })

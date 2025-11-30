@@ -20,7 +20,9 @@
     "test:auth-setup": "playwright test --project=setup",
     "playwright:install": "playwright install --with-deps chromium",
     "generate-test-token": "node scripts/generate-test-token.js",
-    "create-test-user": "node scripts/create-test-user.js"
+    "create-test-user": "node scripts/create-test-user.js",
+    "setup-test-db": "psql $NEXT_PUBLIC_SUPABASE_URL -f scripts/setup-test-db.sql",
+    "seed-test-data": "tsx scripts/seed-test-data.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.931.0",
@@ -64,7 +66,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "dotenv": "^16.0.0",
+    "dotenv": "^16.6.1",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
     "jest": "^29.7.0",
@@ -76,6 +78,7 @@
     "sharp": "^0.34.4",
     "tailwindcss": "^4",
     "ts-morph": "^21.0.0",
+    "tsx": "^4.17.0",
     "typescript": "^5"
   }
 }

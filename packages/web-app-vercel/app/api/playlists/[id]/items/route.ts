@@ -50,25 +50,44 @@ export async function POST(
                 articleError = e as Error
             }
         } else {
-            const resp = await supabase
+            // まず既存の記事を検索
+            const { data: existingArticle } = await supabase
                 .from('articles')
-                .upsert(
-                    {
+                .select()
+                .eq('owner_email', userEmail)
+                .eq('url', article_url)
+                .single()
+
+            if (existingArticle) {
+                // 既存の記事があれば更新
+                const { data: updated, error: updateError } = await supabase
+                    .from('articles')
+                    .update({
+                        title: article_title,
+                        thumbnail_url: thumbnail_url || null,
+                        last_read_position: last_read_position || 0,
+                    })
+                    .eq('id', existingArticle.id)
+                    .select()
+                    .single()
+                article = updated
+                articleError = updateError
+            } else {
+                // 新規作成
+                const { data: created, error: createError } = await supabase
+                    .from('articles')
+                    .insert({
                         owner_email: userEmail,
                         url: article_url,
                         title: article_title,
                         thumbnail_url: thumbnail_url || null,
                         last_read_position: last_read_position || 0,
-                    },
-                    {
-                        onConflict: 'owner_email,url',
-                        ignoreDuplicates: false,
-                    }
-                )
-                .select()
-                .single()
-            article = resp.data
-            articleError = resp.error
+                    })
+                    .select()
+                    .single()
+                article = created
+                articleError = createError
+            }
         }
 
         if (articleError) {
@@ -78,7 +97,7 @@ export async function POST(
             )
         }
 
-        // playlist_itemsにupsert（既に存在する場合は更新扱い）
+        // playlist_itemsに追加（既に存在する場合は既存のものを返す）
         let playlistItem: PlaylistItem | null = null
         let itemError: Error | null = null
 
@@ -89,22 +108,40 @@ export async function POST(
                 itemError = e as Error
             }
         } else {
-            const resp2 = await supabase
+            // まず既存のアイテムを検索
+            const { data: existingItem } = await supabase
                 .from('playlist_items')
-                .upsert(
-                    {
+                .select()
+                .eq('playlist_id', id)
+                .eq('article_id', article!.id)
+                .single()
+
+            if (existingItem) {
+                playlistItem = existingItem
+            } else {
+                // 新規作成（positionを自動計算）
+                const { data: maxPos } = await supabase
+                    .from('playlist_items')
+                    .select('position')
+                    .eq('playlist_id', id)
+                    .order('position', { ascending: false })
+                    .limit(1)
+                    .single()
+
+                const nextPosition = (maxPos?.position ?? -1) + 1
+
+                const { data: created, error: createError } = await supabase
+                    .from('playlist_items')
+                    .insert({
                         playlist_id: id,
                         article_id: article!.id,
-                    },
-                    {
-                        onConflict: 'playlist_id,article_id',
-                        ignoreDuplicates: false,
-                    }
-                )
-                .select()
-                .single()
-            playlistItem = resp2.data
-            itemError = resp2.error
+                        position: nextPosition,
+                    })
+                    .select()
+                    .single()
+                playlistItem = created
+                itemError = createError
+            }
         }
 
         if (itemError) {
