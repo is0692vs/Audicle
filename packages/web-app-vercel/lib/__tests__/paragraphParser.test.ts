@@ -19,6 +19,26 @@ describe('paragraphParser', () => {
             const result = parseHTMLToParagraphs('');
             expect(result).toEqual([]);
         });
+
+        it('should not duplicate content from p tags inside blockquotes', () => {
+            const html = '<blockquote><p>This is a quote.</p></blockquote><p>This is a paragraph.</p>';
+            const result = parseHTMLToParagraphs(html);
+            expect(result.length).toBe(2);
+            expect(result[0].type).toBe('blockquote');
+            expect(result[0].originalText).toBe('This is a quote.');
+            expect(result[1].type).toBe('p');
+            expect(result[1].originalText).toBe('This is a paragraph.');
+        });
+
+        it('should handle nested blockquote with multiple p tags', () => {
+            const html = '<blockquote><p>Quote line 1</p><p>Quote line 2</p></blockquote>';
+            const result = parseHTMLToParagraphs(html);
+            // blockquote全体が1つの段落として抽出される（内部のpは個別に抽出されない）
+            expect(result.length).toBe(1);
+            expect(result[0].type).toBe('blockquote');
+            expect(result[0].originalText).toContain('Quote line 1');
+            expect(result[0].originalText).toContain('Quote line 2');
+        });
     });
 
     describe('chunk resizing', () => {

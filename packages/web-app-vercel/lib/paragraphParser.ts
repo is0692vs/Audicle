@@ -207,12 +207,17 @@ export function parseHTMLToParagraphs(htmlContent: string): Paragraph[] {
   const elements = doc.querySelectorAll(selectors.join(','));
 
   elements.forEach((element) => {
+    const tagName = element.tagName.toLowerCase();
+
+    // blockquote 内の <p> は blockquote として既に処理されるためスキップ
+    if (tagName === 'p' && element.closest('blockquote')) {
+      return;
+    }
+
     const text = element.textContent?.trim() || '';
 
     // 空の要素はスキップ
     if (!text) return;
-
-    const tagName = element.tagName.toLowerCase();
 
     paragraphs.push({
       id: `para-${idCounter++}`,
