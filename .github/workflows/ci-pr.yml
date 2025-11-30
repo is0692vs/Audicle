@@ -285,6 +285,11 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
         working-directory: packages/web-app-vercel
+      - name: Download build
+        uses: actions/download-artifact@v6
+        with:
+          name: next-build
+          path: packages/web-app-vercel/.next
       - name: Setup Playwright auth
         run: npx playwright test --project=setup
         working-directory: packages/web-app-vercel
@@ -296,6 +301,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          CI_WEB_SERVER_COMMAND: npm run start
       - name: Debug - Check auth files
         run: |
           echo "=== Checking auth directory for CI-PR ==="
