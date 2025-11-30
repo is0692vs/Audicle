@@ -57,7 +57,7 @@ export async function POST(
                 .eq('owner_email', userEmail)
                 .eq('url', article_url)
                 .single()
-            
+
             if (existingArticle) {
                 // 既存の記事があれば更新
                 const { data: updated, error: updateError } = await supabase
@@ -115,7 +115,7 @@ export async function POST(
                 .eq('playlist_id', id)
                 .eq('article_id', article!.id)
                 .single()
-            
+
             if (existingItem) {
                 playlistItem = existingItem
             } else {
@@ -127,9 +127,9 @@ export async function POST(
                     .order('position', { ascending: false })
                     .limit(1)
                     .single()
-                
+
                 const nextPosition = (maxPos?.position ?? -1) + 1
-                
+
                 const { data: created, error: createError } = await supabase
                     .from('playlist_items')
                     .insert({

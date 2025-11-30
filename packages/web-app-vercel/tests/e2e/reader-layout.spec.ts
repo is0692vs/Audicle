@@ -153,7 +153,7 @@ test.describe('Reader layout and controls', () => {
         console.log('[DEBUG] Page URL:', page.url());
         console.log('[DEBUG] Page contains "まだ記事がありません":', pageContent.includes('まだ記事がありません'));
         console.log('[DEBUG] Page contains "playlist-article":', pageContent.includes('playlist-article'));
-        
+
         // スクリーンショットを取る
         await page.screenshot({ path: 'test-results/debug-playlist-page.png', fullPage: true });
 

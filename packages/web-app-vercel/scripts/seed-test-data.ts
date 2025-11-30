@@ -24,7 +24,7 @@ const TEST_USER_EMAIL = "test@example.com";
 
 async function runMigrations() {
     console.log("マイグレーションを実行中...");
-    
+
     // articles テーブルの制約を修正
     // owner_email, url の複合ユニーク制約が必要
     const migrationSql = `
@@ -47,14 +47,14 @@ async function runMigrations() {
             ALTER TABLE public.playlist_items ADD CONSTRAINT playlist_items_playlist_id_article_id_key UNIQUE (playlist_id, article_id);
         EXCEPTION WHEN duplicate_table THEN NULL; END $$;
     `;
-    
+
     const { error } = await supabase.rpc('exec_sql', { sql: migrationSql }).single();
-    
+
     // exec_sql RPC がない場合は直接SQLを実行（Supabase Dashboard経由で手動実行が必要な場合あり）
     if (error) {
         console.log("⚠️ RPC経由でのマイグレーション実行に失敗。直接クエリを試行...");
         console.log("   エラー:", error.message);
-        
+
         // 代替: 個別のクエリで試行
         try {
             // 既存の制約を確認
@@ -62,7 +62,7 @@ async function runMigrations() {
                 .from('articles')
                 .select('id')
                 .limit(1);
-            
+
             if (constraints !== null) {
                 console.log("✓ articles テーブルにアクセス可能");
             }
@@ -76,7 +76,7 @@ async function runMigrations() {
 
 async function seedTestData() {
     console.log("テストデータの投入を開始します...");
-    
+
     // マイグレーションを先に実行
     await runMigrations();
 
@@ -134,13 +134,59 @@ async function seedTestData() {
         },
     ];
 
-    const { data: createdArticles, error: articlesError } = await supabase
-        .from("articles")
-        .upsert(articles, { onConflict: "url" })
-        .select();
+    // select + insert/update パターンで記事を作成（upsertを避ける）
+    interface Article {
+        id: string;
+        owner_email: string;
+        url: string;
+        title: string;
+        thumbnail_url: string;
+    }
+    const createdArticles: Article[] = [];
+    for (const article of articles) {
+        // 既存の記事を検索
+        const { data: existing } = await supabase
+            .from("articles")
+            .select()
+            .eq("url", article.url)
+            .single();
 
-    if (articlesError || !createdArticles) {
-        console.error("記事の作成に失敗:", articlesError);
+        if (existing) {
+            // 既存の記事を更新
+            const { data: updated, error: updateError } = await supabase
+                .from("articles")
+                .update({
+                    owner_email: article.owner_email,
+                    title: article.title,
+                    thumbnail_url: article.thumbnail_url,
+                })
+                .eq("id", existing.id)
+                .select()
+                .single();
+
+            if (updateError) {
+                console.error("記事の更新に失敗:", updateError);
+                process.exit(1);
+            }
+            if (updated) createdArticles.push(updated);
+        } else {
+            // 新規作成
+            const { data: created, error: createError } = await supabase
+                .from("articles")
+                .insert(article)
+                .select()
+                .single();
+
+            if (createError) {
+                console.error("記事の作成に失敗:", createError);
+                process.exit(1);
+            }
+            if (created) createdArticles.push(created);
+        }
+    }
+
+    if (createdArticles.length === 0) {
+        console.error("記事の作成に失敗: 作成された記事がありません");
         process.exit(1);
     }
     console.log(`✓ ${createdArticles.length}件の記事を作成しました`);
