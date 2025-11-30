@@ -8,7 +8,10 @@ const customJestConfig = {
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
   testEnvironment: "jsdom",
   moduleNameMapper: {
-    "^@/(.*)$": "<rootDir>/$1",
+    "^@/lib/(.*)$": "<rootDir>/lib/$1",
+    "^@/app/(.*)$": "<rootDir>/app/$1",
+    "^@/components/(.*)$": "<rootDir>/components/$1",
+    "^@/types/(.*)$": "<rootDir>/types/$1",
     "^until-async$": "<rootDir>/__mocks__/until-async.js",
   },
   testPathIgnorePatterns: [
@@ -20,12 +23,26 @@ const customJestConfig = {
     "node_modules/(?!(msw|@mswjs|@bundled-es-modules|until-async|strict-event-emitter|@open-draft)/)",
   ],
   collectCoverageFrom: [
-    "app/**/*.{js,jsx,ts,tsx}",
     "lib/**/*.{js,jsx,ts,tsx}",
+    "hooks/**/*.{js,jsx,ts,tsx}",
+    "contexts/**/*.{js,jsx,ts,tsx}",
     "!**/*.d.ts",
     "!**/node_modules/**",
     "!**/.next/**",
+    "!**/coverage/**",
+    "!**/tests/**",
   ],
+  collectCoverage: true,
+  coverageDirectory: "coverage",
+  coverageReporters: ["text", "lcov", "html"],
+  coverageThreshold: {
+    global: {
+      branches: 10,
+      functions: 10,
+      lines: 10,
+      statements: 10,
+    },
+  },
   testTimeout: 10000, // 10秒タイムアウト
 };
 

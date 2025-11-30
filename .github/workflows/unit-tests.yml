@@ -27,3 +27,8 @@ jobs:
         working-directory: packages/web-app-vercel
         env:
           NODE_ENV: test
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./packages/web-app-vercel/coverage/lcov.info
