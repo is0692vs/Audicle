@@ -40,6 +40,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# テスト環境の実認証情報
+.env.test.local
+
 # vercel
 .vercel
 
