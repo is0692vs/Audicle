@@ -118,7 +118,19 @@ test.describe('Reader layout and controls', () => {
         if (!created) return;
 
         const playlistHref = `/playlists/${created.id}`;
-        await page.goto(playlistHref);
+        
+        // gotoとwaitForResponseを同時に実行してAPIレスポンスを待つ
+        await Promise.all([
+            page.waitForResponse(
+                resp => resp.url().includes(`/api/playlists/${created.id}`) && resp.status() === 200,
+                { timeout: 20000 }
+            ),
+            page.goto(playlistHref)
+        ]);
+        
+        // Reactの状態更新を待つ
+        await page.waitForTimeout(1000);
+        
         await page.waitForSelector('[data-testid="playlist-article"]', { state: 'visible', timeout: 20000 });
         const articleLink = page.locator('a[data-testid="playlist-article"]').first();
         const articleHref = await articleLink.getAttribute('href');
