@@ -92,7 +92,10 @@ async function seedTestData() {
     // 3. 人気記事の統計データを作成（access_count >= 5）
     console.log("3. 人気記事の統計データを作成中...");
     const popularArticles = createdArticles.slice(2);
-    for (const article of popularArticles) {
+    const fixedAccessCounts = [15, 20, 25];
+
+    for (let i = 0; i < popularArticles.length; i += 1) {
+        const article = popularArticles[i];
         const articleHash = createHash("sha256").update(article.url).digest("hex");
         const { error: statsError } = await supabase
             .from("article_stats")
@@ -102,8 +105,8 @@ async function seedTestData() {
                     url: article.url,
                     title: article.title,
                     domain: "example.com",
-                    access_count: Math.floor(Math.random() * 50) + 10,
-                    unique_users: Math.floor(Math.random() * 20) + 5,
+                    access_count: fixedAccessCounts[i] ?? 10,
+                    unique_users: 10,
                     cache_hit_rate: 0.85,
                     is_fully_cached: true,
                 },
@@ -115,7 +118,9 @@ async function seedTestData() {
             process.exit(1);
         }
     }
-    console.log("✓ 人気記事の統計データを作成しました");
+    console.log(
+        `✓ 人気記事の統計データを作成しました（${popularArticles.length}件，access_count: ${fixedAccessCounts.join(", ")}）`
+    );
 
     // 4. 音声キャッシュインデックス
     console.log("4. 音声キャッシュインデックスを作成中...");
@@ -142,18 +147,22 @@ async function seedTestData() {
 
     // 5. デフォルトプレイリストの作成
     console.log("5. デフォルトプレイリストを作成中...");
+
+    await supabase
+        .from("playlists")
+        .delete()
+        .eq("owner_email", TEST_USER_EMAIL)
+        .eq("is_default", true);
+
     const { data: defaultPlaylist, error: playlistError } = await supabase
         .from("playlists")
-        .upsert(
-            {
-                owner_email: TEST_USER_EMAIL,
-                name: "デフォルトプレイリスト",
-                description: "テスト用デフォルトプレイリスト",
-                is_default: true,
-                visibility: "private",
-            },
-            { onConflict: "owner_email,is_default" }
-        )
+        .insert({
+            owner_email: TEST_USER_EMAIL,
+            name: "デフォルトプレイリスト",
+            description: "テスト用デフォルトプレイリスト",
+            is_default: true,
+            visibility: "private",
+        })
         .select()
         .single();
 

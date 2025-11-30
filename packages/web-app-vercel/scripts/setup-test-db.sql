@@ -63,9 +63,12 @@ CREATE TABLE IF NOT EXISTS public.playlists (
   allow_fork boolean DEFAULT true,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT playlists_pkey PRIMARY KEY (id),
-  CONSTRAINT playlists_owner_email_is_default_key UNIQUE (owner_email, is_default)
+  CONSTRAINT playlists_pkey PRIMARY KEY (id)
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS playlists_owner_default_true_unique
+  ON public.playlists (owner_email)
+  WHERE is_default = true;
 
 CREATE TABLE IF NOT EXISTS public.playlist_items (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
