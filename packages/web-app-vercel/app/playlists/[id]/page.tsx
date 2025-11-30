@@ -15,6 +15,7 @@ import {
 } from "@/lib/hooks/usePlaylists";
 import { ArticleCard } from "@/components/ArticleCard";
 import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
+import Sidebar from "@/components/Sidebar";
 import {
   Select,
   SelectContent,
@@ -158,212 +159,204 @@ export default function PlaylistDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-zinc-400">読み込み中...</p>
+      <div className="h-screen bg-black text-white flex flex-col lg:flex-row">
+        <Sidebar />
+        <main className="flex-1 flex items-center justify-center overflow-y-auto bg-gradient-to-b from-zinc-900 to-black">
+          <p className="text-zinc-400">読み込み中...</p>
+        </main>
       </div>
     );
   }
 
   if (error || !playlist) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4">⚠️</div>
-          <p className="text-zinc-400 mb-6">
-            {error instanceof Error
-              ? error.message
-              : "プレイリストの読み込みに失敗しました"}
-          </p>
-          <button
-            onClick={() => router.push("/playlists")}
-            className="text-primary/70 hover:text-primary/80"
-          >
-            ← プレイリスト一覧に戻る
-          </button>
-        </div>
+      <div className="h-screen bg-black text-white flex flex-col lg:flex-row">
+        <Sidebar />
+        <main className="flex-1 flex items-center justify-center overflow-y-auto bg-gradient-to-b from-zinc-900 to-black">
+          <div className="text-center">
+            <div className="text-6xl mb-4">⚠️</div>
+            <p className="text-zinc-400 mb-6">
+              {error instanceof Error
+                ? error.message
+                : "プレイリストの読み込みに失敗しました"}
+            </p>
+            <button
+              onClick={() => router.back()}
+              className="text-primary/70 hover:text-primary/80"
+            >
+              ← 戻る
+            </button>
+          </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 lg:p-8">
-      {confirmDialog}
+    <div className="h-screen bg-black text-white flex flex-col lg:flex-row">
+      <Sidebar />
 
-      {/* ヘッダー */}
-      <div className="max-w-4xl mx-auto mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={() => router.push("/playlists")}
-            className="text-zinc-400 hover:text-primary transition-colors"
-          >
-            ← プレイリスト一覧
-          </button>
-          {!playlist.is_default && !isEditing && (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="px-4 py-2 text-sm text-zinc-400 hover:bg-zinc-800 rounded transition-colors"
-            >
-              編集
-            </button>
+      <main className="flex-1 overflow-y-auto bg-gradient-to-b from-zinc-900 to-black">
+        <div className="p-4 sm:p-6 lg:p-8">
+          {confirmDialog}
+
+          {/* Page Header */}
+          <div className="mb-6 lg:mb-8">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <h2 className="text-2xl lg:text-3xl font-bold">{playlist.name}</h2>
+                {playlist.is_default && (
+                  <span className="px-2 py-1 text-xs bg-primary/20 text-primary/80 rounded">
+                    デフォルト
+                  </span>
+                )}
+              </div>
+              {!playlist.is_default && !isEditing && (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="px-4 py-2 text-sm text-zinc-400 hover:bg-zinc-800 rounded transition-colors"
+                >
+                  編集
+                </button>
+              )}
+            </div>
+            <p className="text-sm lg:text-base text-zinc-400">
+              {playlist.description || `${playlist.item_count || 0} 件の記事`}
+            </p>
+          </div>
+
+          {isEditing && (
+            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 space-y-3 mb-6">
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="w-full px-4 py-2 border border-zinc-700 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-primary focus:border-transparent"
+                required
+              />
+              <textarea
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                className="w-full px-4 py-2 border border-zinc-700 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-primary focus:border-transparent"
+                rows={3}
+                placeholder="説明（省略可）"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSave}
+                  disabled={updatePlaylistMutation.isPending}
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:bg-zinc-700 transition-colors"
+                >
+                  {updatePlaylistMutation.isPending ? "保存中..." : "保存"}
+                </button>
+                <button
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditName(playlist.name);
+                    setEditDescription(playlist.description || "");
+                  }}
+                  className="px-4 py-2 text-zinc-400 hover:bg-zinc-800 rounded-lg transition-colors"
+                >
+                  キャンセル
+                </button>
+              </div>
+            </div>
           )}
-        </div>
 
-        {isEditing ? (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 space-y-3">
-            <input
-              type="text"
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              className="w-full px-4 py-2 border border-zinc-700 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-primary focus:border-transparent"
-              required
-            />
-            <textarea
-              value={editDescription}
-              onChange={(e) => setEditDescription(e.target.value)}
-              className="w-full px-4 py-2 border border-zinc-700 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-primary focus:border-transparent"
-              rows={3}
-              placeholder="説明（省略可）"
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={handleSave}
-                disabled={updatePlaylistMutation.isPending}
-                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:bg-zinc-700 transition-colors"
-              >
-                {updatePlaylistMutation.isPending ? "保存中..." : "保存"}
-              </button>
+          {/* Controls Row (sort and play) when not editing */}
+          {!isEditing && playlist.items && playlist.items.length > 0 && (
+            <div className="flex items-center justify-end gap-3 mb-6">
+              <div className="flex items-center gap-2">
+                <ArrowUpDown className="size-4 text-zinc-400" />
+                <Select
+                  value={sortOption}
+                  onValueChange={(value) => {
+                    if (isSortOption(value)) {
+                      setSortOption(value);
+                    }
+                  }}
+                >
+                  <SelectTrigger
+                    data-testid="playlist-sort-select"
+                    className="w-32"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(SORT_OPTIONS).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <button
                 onClick={() => {
-                  setIsEditing(false);
-                  setEditName(playlist.name);
-                  setEditDescription(playlist.description || "");
+                  const firstArticleUrl =
+                    playlist.items && playlist.items.length > 0
+                      ? playlist.items[0].article?.url
+                      : undefined;
+
+                  router.push(
+                    createReaderUrl({
+                      articleUrl: firstArticleUrl,
+                      playlistId: playlist.id,
+                      playlistIndex: 0,
+                      autoplay: true,
+                    })
+                  );
                 }}
-                className="px-4 py-2 text-zinc-400 hover:bg-zinc-800 rounded-lg transition-colors"
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2 whitespace-nowrap"
               >
-                キャンセル
+                <Play className="size-4" />
+                再生
               </button>
             </div>
-          </div>
-        ) : (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
-            <div className="flex items-start justify-between gap-4 mb-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <h1 className="text-2xl font-bold">{playlist.name}</h1>
-                  {playlist.is_default && (
-                    <span className="px-2 py-1 text-xs bg-primary/20 text-primary/80 rounded">
-                      デフォルト
-                    </span>
-                  )}
-                </div>
-                {playlist.description && (
-                  <p className="text-zinc-400">{playlist.description}</p>
-                )}
-                <p className="text-sm text-zinc-500 mt-2">
-                  {playlist.item_count || 0} 件の記事
-                </p>
-              </div>
-              {playlist.items && playlist.items.length > 0 && (
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <ArrowUpDown className="size-4 text-zinc-400" />
-                    <Select
-                      value={sortOption}
-                      onValueChange={(value) => {
-                        if (isSortOption(value)) {
-                          setSortOption(value);
-                        }
-                      }}
-                    >
-                      <SelectTrigger
-                        data-testid="playlist-sort-select"
-                        className="w-32"
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(SORT_OPTIONS).map(([value, label]) => (
-                          <SelectItem key={value} value={value}>
-                            {label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <button
-                    onClick={() => {
-                      // If the playlist has items, open the reader at the first
-                      // item's article URL so that the Reader can initialize the
-                      // playlist context deterministically. Otherwise fall back to
-                      // opening Reader with playlist ID only.
-                      const firstArticleUrl =
-                        playlist.items && playlist.items.length > 0
-                          ? playlist.items[0].article?.url
-                          : undefined;
+          )}
 
+          {/* Content */}
+          {!playlist.items || playlist.items.length === 0 ? (
+            <div className="text-center py-12 text-zinc-400">
+              <p>まだ記事がありません</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8">
+              {sortedItems.map((item, index) => (
+                <ArticleCard
+                  key={item.id}
+                  item={item}
+                  onArticleClick={(playlistItem) => {
+                    if (playlistItem.article?.url) {
                       router.push(
                         createReaderUrl({
-                          articleUrl: firstArticleUrl,
+                          articleUrl: playlistItem.article.url,
                           playlistId: playlist.id,
-                          playlistIndex: 0,
+                          playlistIndex: index,
                           autoplay: true,
                         })
                       );
-                    }}
-                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2 whitespace-nowrap"
-                  >
-                    <Play className="size-4" />
-                    再生
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* メインコンテンツ */}
-      <main className="max-w-4xl mx-auto overflow-x-hidden">
-        {!playlist.items || playlist.items.length === 0 ? (
-          <div className="text-center py-12 text-zinc-400">
-            <p>まだ記事がありません</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8">
-            {sortedItems.map((item, index) => (
-              <ArticleCard
-                key={item.id}
-                item={item}
-                onArticleClick={(playlistItem) => {
-                  if (playlistItem.article?.url) {
-                    router.push(
-                      createReaderUrl({
-                        articleUrl: playlistItem.article.url,
-                        playlistId: playlist.id,
-                        playlistIndex: index,
-                        autoplay: true,
-                      })
-                    );
+                    }
+                  }}
+                  href={
+                    item.article?.url
+                      ? createReaderUrl({
+                          articleUrl: item.article.url,
+                          playlistId: playlist.id,
+                          playlistIndex: index,
+                          autoplay: false,
+                        })
+                      : undefined
                   }
-                }}
-                href={
-                  item.article?.url
-                    ? createReaderUrl({
-                        articleUrl: item.article.url,
-                        playlistId: playlist.id,
-                        playlistIndex: index,
-                        autoplay: false,
-                      })
-                    : undefined
-                }
-                onPlaylistAdd={handlePlaylistAdd}
-                onRemove={(id) =>
-                  handleRemoveFromPlaylist(id, item.article?.title || "")
-                }
-              />
-            ))}
-          </div>
-        )}
+                  onPlaylistAdd={handlePlaylistAdd}
+                  onRemove={(id) =>
+                    handleRemoveFromPlaylist(id, item.article?.title || "")
+                  }
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </main>
 
       <PlaylistSelectorModal
