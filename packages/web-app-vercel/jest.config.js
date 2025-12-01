@@ -24,8 +24,7 @@ const customJestConfig = {
   ],
   collectCoverageFrom: [
     "lib/**/*.{js,jsx,ts,tsx}",
-    "hooks/**/*.{js,jsx,ts,tsx}",
-    "contexts/**/*.{js,jsx,ts,tsx}",
+    "!lib/**/__tests__/**",
     "!**/*.d.ts",
     "!**/node_modules/**",
     "!**/.next/**",
@@ -37,10 +36,10 @@ const customJestConfig = {
   coverageReporters: ["text", "lcov", "html"],
   coverageThreshold: {
     global: {
-      branches: 10,
-      functions: 10,
-      lines: 10,
-      statements: 10,
+      branches: 25,
+      functions: 25,
+      lines: 25,
+      statements: 25,
     },
   },
   testTimeout: 10000, // 10秒タイムアウト
