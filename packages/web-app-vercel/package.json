@@ -54,6 +54,8 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "5.2.0",
     "@google/generative-ai": "^0.24.1",
     "@playwright/test": "^1.57.0",
     "@serwist/next": "^10.0.0-preview.14",
