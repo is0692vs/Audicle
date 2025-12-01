@@ -39,16 +39,19 @@ const eslintConfig = [
       "react/react-in-jsx-scope": "off",
       // TypeScript handles types, silence no-undef for type-only React references
       "no-undef": "off",
-        // Relax a few react-hooks rules to warnings to avoid blocking CI while fixing components
-        "react-hooks/set-state-in-effect": "warn",
-        "react-hooks/preserve-manual-memoization": "warn",
-        "react-hooks/immutability": "warn",
-        // Unnecessary escape sequences in some test regexes are mild — warn instead of failing
-        "no-useless-escape": "warn",
-        // Allow empty catch blocks in various try/catch fallbacks
-        "no-empty": ["error", { "allowEmptyCatch": true }],
+      // Relax a few react-hooks rules to warnings to avoid blocking CI while fixing components
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/preserve-manual-memoization": "warn",
+      "react-hooks/immutability": "warn",
+      // Unnecessary escape sequences in some test regexes are mild — warn instead of failing
+      "no-useless-escape": "warn",
+      // Allow empty catch blocks in various try/catch fallbacks
+      "no-empty": ["error", { allowEmptyCatch: true }],
       // Treat most unused-vars as warnings to avoid blocking CI on refactors
-      "no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+      "no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
     },
   },
   {

@@ -379,10 +379,10 @@ export async function POST(request: NextRequest) {
                 const currentHash = calculateArticleHash(textChunks);
                 const totalChunks = textChunks.length;
 
-                        try {
-                            // 既存メタデータを確認
-                            const metadataHash = await kv.hgetall(metadataKey);
-                            metadata = parseArticleMetadata(metadataHash);
+                try {
+                    // 既存メタデータを確認
+                    const metadataHash = await kv.hgetall(metadataKey);
+                    metadata = parseArticleMetadata(metadataHash);
 
                     // 新規 or 記事編集時のみハッシュ/totalChunksを保存
                     if (!metadata || metadata.articleHash !== currentHash) {
