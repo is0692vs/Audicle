@@ -175,10 +175,9 @@ export function useMediaSession({
   }, []);
 
   // タイトルやアーティストが変わったらメタデータを更新
+  // 初期マウント時もデフォルト値で設定されるようにする
   useEffect(() => {
-    if (title) {
-      updateMetadata();
-    }
+    updateMetadata();
   }, [title, artist, album, artwork, updateMetadata]);
 
   // 再生状態が変わったら更新

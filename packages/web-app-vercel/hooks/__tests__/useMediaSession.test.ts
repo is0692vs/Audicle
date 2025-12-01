@@ -138,7 +138,7 @@ describe("useMediaSession", () => {
     expect(onPlay).toHaveBeenCalled();
   });
 
-  it("タイトルが空の場合、メタデータを設定しないこと", () => {
+  it("タイトルが空の場合、デフォルトのタイトルを使用すること", () => {
     renderHook(() =>
       useMediaSession({
         title: "",
@@ -146,8 +146,13 @@ describe("useMediaSession", () => {
       })
     );
 
-    // タイトルが空の場合はメタデータを設定しない
-    expect(mockMediaSession.metadata).toBeNull();
+    // タイトルが空でもデフォルト値でメタデータを設定する
+    expect(mockMediaSession.metadata).toEqual(
+      expect.objectContaining({
+        title: "記事を読み上げ中",
+        artist: "Audicle",
+      })
+    );
   });
 
   it("アンマウント時にアクションハンドラがクリアされること", () => {
