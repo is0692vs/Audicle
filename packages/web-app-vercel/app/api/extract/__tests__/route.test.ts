@@ -49,7 +49,7 @@ describe('/api/extract route', () => {
         expect(body.content).toContain('Test content')
     })
 
-    it('returns 403 with Japanese error message for 401 Unauthorized response', async () => {
+    it('returns 401 with Japanese error message for 401 Unauthorized response', async () => {
         (global.fetch as jest.Mock).mockResolvedValueOnce({
             ok: false,
             status: 401,
@@ -62,7 +62,7 @@ describe('/api/extract route', () => {
             headers: { 'Content-Type': 'application/json' }
         })
         const res = await routeModule.POST(mockRequest)
-        expect(res.status).toBe(403)
+        expect(res.status).toBe(401)
         const body = await res.json()
         expect(body.error).toBe('このURLは認証が必要なサイトです。ログインが必要なページは読み込めません。')
     })

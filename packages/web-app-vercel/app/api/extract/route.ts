@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
         if (error instanceof AuthenticationRequiredError) {
             return NextResponse.json(
                 { error: 'このURLは認証が必要なサイトです。ログインが必要なページは読み込めません。' },
-                { status: 403, headers: corsHeaders }
+                { status: error.statusCode, headers: corsHeaders }
             );
         }
 
@@ -140,7 +140,8 @@ async function fetchWithTimeout(url: string, timeout: number = 8000): Promise<st
         // 認証が必要なサイトの場合は専用エラーをスロー
         if (response.status === 401 || response.status === 403) {
             throw new AuthenticationRequiredError(
-                `このURLには認証が必要です（HTTP ${response.status}）`
+                `このURLには認証が必要です（HTTP ${response.status}）`,
+                response.status
             );
         }
 
@@ -167,8 +168,10 @@ class TimeoutError extends Error {
 }
 
 class AuthenticationRequiredError extends Error {
-    constructor(message: string) {
+    statusCode: number;
+    constructor(message: string, statusCode: number = 403) {
         super(message);
         this.name = 'AuthenticationRequiredError';
+        this.statusCode = statusCode;
     }
 }
