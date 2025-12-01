@@ -58,10 +58,15 @@ jobs:
         with:
           node-version: '20'
       - name: Restore npm cache
+        id: cache-deps
         uses: actions/cache@v4
         with:
           path: packages/web-app-vercel/node_modules
           key: npm-deps-${{ runner.os }}-node-20-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
+      - name: Install dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: npm ci
+        working-directory: packages/web-app-vercel
       - name: Run lint
         run: npm run lint
         working-directory: packages/web-app-vercel
