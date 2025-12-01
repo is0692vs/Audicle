@@ -105,6 +105,13 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        if (error instanceof AuthenticationRequiredError) {
+            return NextResponse.json(
+                { error: 'このURLは認証が必要なサイトです。ログインが必要なページは読み込めません。' },
+                { status: 403, headers: corsHeaders }
+            );
+        }
+
         console.error('Extract error:', error);
         return NextResponse.json(
             { error: 'Failed to extract content' },
@@ -130,6 +137,13 @@ async function fetchWithTimeout(url: string, timeout: number = 8000): Promise<st
             },
         });
 
+        // 認証が必要なサイトの場合は専用エラーをスロー
+        if (response.status === 401 || response.status === 403) {
+            throw new AuthenticationRequiredError(
+                `このURLには認証が必要です（HTTP ${response.status}）`
+            );
+        }
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
@@ -149,5 +163,12 @@ class TimeoutError extends Error {
     constructor(message: string) {
         super(message);
         this.name = 'TimeoutError';
+    }
+}
+
+class AuthenticationRequiredError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'AuthenticationRequiredError';
     }
 }
