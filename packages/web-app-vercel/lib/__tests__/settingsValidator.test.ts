@@ -5,7 +5,7 @@ import {
   validateColorTheme,
   validateUserSettings,
 } from '../settingsValidator';
-import { VOICE_MODELS, COLOR_THEMES } from '@/types/settings';
+// Removed unused imports: VOICE_MODELS and COLOR_THEMES
 
 jest.mock('@/types/settings', () => ({
   ...jest.requireActual('@/types/settings'),

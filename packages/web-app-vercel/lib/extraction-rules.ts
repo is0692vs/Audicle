@@ -10,8 +10,8 @@ export interface ExtractionRule {
         author?: string;
         publishDate?: string;
     };
-    preprocess?: (doc: Document) => void;
-    postprocess?: (content: string) => string;
+    preprocess?: (_doc: Document) => void;
+    postprocess?: (_content: string) => string;
 }
 
 export interface ExtractionRulesMap {
