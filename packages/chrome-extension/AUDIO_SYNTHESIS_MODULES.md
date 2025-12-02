@@ -1,17 +1,17 @@
-# 音声合成モジュール一覧
+# Audio Synthesis Modules List
 
-Audicle で使用可能な音声合成エンジンとその設定方法
+List of available audio synthesis engines for Audicle and how to configure them.
 
-## 🎯 概要
+## 🎯 Overview
 
-Audicle は疎結合な音声合成モジュール設計を採用しており、複数の音声合成エンジンを切り替えて使用できます。  
-`config.json` の `synthesizerType` で使用するエンジンを指定します。
+Audicle adopts a loosely coupled audio synthesis module design, allowing you to switch between multiple audio synthesis engines.
+Specify the engine to use in `config.json` under `synthesizerType`.
 
-## 📋 利用可能なモジュール
+## 📋 Available Modules
 
-### 1. Google TTS (デフォルト)
+### 1. Google TTS (Default)
 
-**設定値**: `"google_tts"`
+**Value**: `"google_tts"`
 
 ```json
 {
@@ -19,32 +19,32 @@ Audicle は疎結合な音声合成モジュール設計を採用しており、
 }
 ```
 
-**特徴**:
+**Features**:
 
-- ✅ **高品質**: Google 翻訳の音声合成エンジンを使用
-- ✅ **日本語対応**: 自然な日本語読み上げ
-- ✅ **英語対応**: 英語テキストも適切に読み上げ
-- ✅ **無料**: 追加コストなし
-- ⚠️ **ネット必須**: インターネット接続が必要
-- ⚠️ **非公式**: Google 翻訳の非公式利用
+- ✅ **High Quality**: Uses Google Translate's audio synthesis engine.
+- ✅ **Japanese Support**: Natural Japanese reading.
+- ✅ **English Support**: Appropriately reads English text as well.
+- ✅ **Free**: No additional cost.
+- ⚠️ **Internet Required**: Internet connection is required.
+- ⚠️ **Unofficial**: Unofficial use of Google Translate.
 
-**適用場面**:
+**Use Cases**:
 
-- 一般的な記事の読み上げ
-- 日本語・英語混在コンテンツ
-- 高品質な音声が必要な場合
+- Reading general articles.
+- Content mixed with Japanese and English.
+- When high-quality audio is required without setup.
 
-**技術詳細**:
+**Technical Details**:
 
-- エンドポイント: `https://translate.google.com/translate_tts`
-- 音声形式: MP3
-- 言語: 日本語 (tl=ja)
+- Endpoint: `https://translate.google.com/translate_tts`
+- Audio Format: MP3
+- Language: Japanese (tl=ja)
 
 ---
 
-### 2. API Server (新しい標準バックエンド)
+### 2. API Server (New Standard Backend)
 
-**設定値**: `"api_server"`
+**Value**: `"api_server"`
 
 ```json
 {
@@ -52,36 +52,36 @@ Audicle は疎結合な音声合成モジュール設計を採用しており、
 }
 ```
 
-**特徴**:
+**Features**:
 
-- ✅ **高品質**: Google Cloud Text-to-Speech API (WaveNet / Neural2) を使用
-- ✅ **安定性**: 公式 API による安定した動作
-- ✅ **カスタマイズ可能**: 音声の種類や速度の調整が可能
-- ✅ **セキュア**: サーバーサイドで API キーを管理
-- ⚠️ **サーバー必須**: `packages/api-server` の起動が必要
+- ✅ **High Quality**: Uses Google Cloud Text-to-Speech API (WaveNet / Neural2).
+- ✅ **Stability**: Stable operation via official API.
+- ✅ **Customizable**: Voice type and speed can be adjusted.
+- ✅ **Secure**: API keys are managed on the server side.
+- ⚠️ **Server Required**: Requires `packages/api-server` to be running.
 
-**適用場面**:
+**Use Cases**:
 
-- 安定した本番環境での長期運用
-- 最高品質の音声が必要な場合
-- 読み上げパラメータを細かく制御したい場合
+- Long-term operation in a stable production environment.
+- When the highest quality audio is required.
+- When fine-grained control over reading parameters is needed.
 
-**技術詳細**:
+**Technical Details**:
 
-- サーバー: `packages/api-server` (http://localhost:8000)
-- 音声形式: MP3
-- デフォルト音声: ja-JP-Neural2-B (Google Cloud TTS)
+- Server: `packages/api-server` (http://localhost:8000)
+- Audio Format: MP3
+- Default Voice: ja-JP-Neural2-B (Google Cloud TTS)
 
-**セットアップ手順**:
+**Setup Instructions**:
 
-1. **API Server 起動**:
+1. **Start API Server**:
 
    ```bash
    cd packages/api-server
    docker-compose up -d
    ```
 
-2. **設定変更**:
+2. **Change Configuration**:
 
    ```json
    {
@@ -89,13 +89,13 @@ Audicle は疎結合な音声合成モジュール設計を採用しており、
    }
    ```
 
-3. **拡張機能リロード**: Chrome 拡張機能を更新
+3. **Reload Extension**: Update the Chrome extension.
 
 ---
 
-### 3. Test Synthesizer (開発用)
+### 3. Test Synthesizer (For Development)
 
-**設定値**: `"test"`
+**Value**: `"test"`
 
 ```json
 {
@@ -103,76 +103,76 @@ Audicle は疎結合な音声合成モジュール設計を採用しており、
 }
 ```
 
-**特徴**:
+**Features**:
 
-- 🔧 **開発専用**: テスト・デバッグ用途
-- ✅ **オフライン**: ネット接続不要
-- ✅ **高速**: 即座に応答
-- ⚠️ **固定音声**: 常に同じサンプル音声を再生
-- ❌ **テキスト無視**: 実際のテキスト内容を読まない
+- 🔧 **Dev Only**: For testing and debugging purposes.
+- ✅ **Offline**: No internet connection required.
+- ✅ **Fast**: Immediate response.
+- ⚠️ **Fixed Audio**: Always plays the same sample audio.
+- ❌ **Ignores Text**: Does not read the actual text content.
 
-**適用場面**:
+**Use Cases**:
 
-- 拡張機能の動作テスト
-- オフライン環境での開発
-- 音声再生機能のデバッグ
+- Testing extension functionality.
+- Development in offline environments.
+- Debugging audio playback features.
 
-**技術詳細**:
+**Technical Details**:
 
-- 音声ファイル: `sample.mp3` を使用
-- 音声形式: MP3
-- レスポンス: 固定
+- Audio File: Uses `sample.mp3`
+- Audio Format: MP3
+- Response: Fixed
 
-## 🔧 設定方法
+## 🔧 Configuration
 
-### 1. 設定ファイルの編集
+### 1. Edit Configuration File
 
-`packages/chrome-extension/config.json` を編集：
+Edit `packages/chrome-extension/config.json`:
 
 ```json
 {
-  "synthesizerType": "google_tts" // または "api_server", "test"
+  "synthesizerType": "google_tts" // or "api_server", "test"
 }
 ```
 
-### 2. 拡張機能のリロード
+### 2. Reload Extension
 
-1. `chrome://extensions/` を開く
-2. Audicle 拡張機能の「更新」ボタンをクリック
-3. 設定が反映されます
+1. Open `chrome://extensions/`.
+2. Click the "Update" button for the Audicle extension.
+3. The settings will be applied.
 
-### 3. 動作確認
+### 3. Verify Operation
 
-- 任意のページで読み上げ機能を実行
-- Console で以下のログを確認:
+- Run the reading function on any page.
+- Check the following logs in the Console:
   ```
-  [GoogleTTSSynthesizer] Synthesizing: "テキスト内容"
+  [GoogleTTSSynthesizer] Synthesizing: "Text content"
   ```
-  または
+  or
   ```
-  [APIServerSynthesizer] Synthesizing: "テキスト内容"
+  [APIServerSynthesizer] Synthesizing: "Text content"
   ```
 
-## 🚀 新しいモジュールの追加
+## 🚀 Adding New Modules
 
-### アーキテクチャ概要
+### Architecture Overview
 
 ```javascript
-// 1. 基底クラス
+// 1. Base Class
 class AudioSynthesizer {
   async synthesize(text) {
-    // 実装が必要
+    // Implementation required
   }
 }
 
-// 2. 具象クラス
+// 2. Concrete Class
 class NewSynthesizer extends AudioSynthesizer {
   async synthesize(text) {
-    // 独自の音声合成ロジック
+    // Unique audio synthesis logic
   }
 }
 
-// 3. ファクトリ登録
+// 3. Factory Registration
 class SynthesizerFactory {
   static create(type) {
     switch (type) {
@@ -184,32 +184,32 @@ class SynthesizerFactory {
 }
 ```
 
-### 実装手順
+### Implementation Steps
 
-1. **新クラス作成**: `background.js` に新しい Synthesizer クラスを追加
-2. **ファクトリ登録**: `SynthesizerFactory.create()` に新しいケースを追加
-3. **設定値追加**: `config.json` で新しい `synthesizerType` を指定可能に
-4. **テスト実行**: 動作確認とデバッグ
+1. **Create New Class**: Add a new Synthesizer class to `background.js`.
+2. **Register in Factory**: Add a new case to `SynthesizerFactory.create()`.
+3. **Add Config Value**: Enable specifying the new `synthesizerType` in `config.json`.
+4. **Run Tests**: Verify operation and debug.
 
-## 🚨 注意事項
+## 🚨 Notes
 
-### Google TTS (非公式) 使用時
+### When Using Google TTS (Unofficial)
 
-- **利用制限**: 大量リクエストでブロックされる可能性
-- **プライバシー**: テキストが Google サーバーに送信される
-- **安定性**: 非公式 API のため将来利用不可の可能性
+- **Usage Limits**: Possibility of being blocked with large request volumes.
+- **Privacy**: Text is sent to Google servers.
+- **Stability**: Possibility of becoming unavailable in the future due to unofficial API.
 
-### API Server 使用時
+### When Using API Server
 
-- **Docker 必須**: Docker と Docker Compose の環境が必要
-- **GCP クレデンシャル**: Google Cloud のサービスアカウントキーが必要
+- **Docker Required**: Docker and Docker Compose environment required.
+- **GCP Credentials**: Google Cloud service account key required.
 
-### Test Synthesizer 使用時
+### When Using Test Synthesizer
 
-- **本番非推奨**: 開発・テスト専用
-- **音声品質**: 実際の読み上げ品質は確認不可
+- **Not for Production**: Dedicated for development/testing.
+- **Audio Quality**: Actual reading quality cannot be verified.
 
-### 設定変更時
+### When Changing Settings
 
-- **拡張機能リロード必須**: 設定変更後は必ずリロード
-- **キャッシュクリア**: 古い音声データがキャッシュされる場合あり
+- **Reload Required**: Must reload the extension after changing settings.
+- **Cache Clear**: Old audio data might be cached.

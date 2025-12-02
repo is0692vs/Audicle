@@ -1,141 +1,131 @@
 # Audicle
 
-Audicle（Article + Audio）は、ウェブページ上の記事コンテンツを音声で読み上げる Chrome 拡張機能です。
+Audicle (Article + Audio) is a Chrome extension that reads web page article content aloud.
 
-クリックした段落から、記事の最後までをインテリジェントに読み上げ、再生箇所をハイライトすることで、快適な「ながら読書」体験を提供します。
+It provides a comfortable "reading while doing something else" experience by intelligently reading from the clicked paragraph to the end of the article and highlighting the playback position.
 
-## ✨ 主な機能
+## ✨ Main Features
 
-![デモ画像](docs/simpledemo.png)
+![Demo Image](docs/simpledemo.png)
 
-- **ワンクリック再生**: 記事の読みたい段落をクリックするだけで、そこから再生が開始されます。
-- **インテリジェントな本文抽出**: [Mozilla Readability.js](https://github.com/mozilla/readability) を活用し、広告やサイドバーなどの不要な要素を除去。本文だけを賢く抽出します。
-- **構造を意識した読み上げ**: 見出しや箇条書きを認識し、「見出し。」「箇条書きです。」といった前置きを付加することで、音声だけでも文章の構造を理解しやすくします。
-- **サイト別最適化**: 特定のドメイン（例: qiita.com）に対して最適化された抽出ルールを適用し、より自然な読み上げを実現します。
-- **連続再生 & プリフェッチ**: 記事の最後まで音声を自動で連続再生。次に再生する音声データを先読み（プリフェッチ）することで、チャンク間の途切れを最小限に抑えます。
-- **同期ハイライト**: 現在再生中の段落がリアルタイムでハイライトされ、どこを読んでいるかが一目でわかります。
-- **再生コントロール**: ポップアップから、読み上げモードの ON/OFF や、再生の一時停止/再開が可能です。
+- **One-Click Playback**: Start reading just by clicking the paragraph you want to hear.
+- **Intelligent Content Extraction**: Utilizes [Mozilla Readability.js](https://github.com/mozilla/readability) to remove ads and sidebars, extracting only the main text.
+- **Structure-Aware Reading**: Recognizes headings and lists, adding prefaces like "Heading." or "This is a list." to make the structure easier to understand through audio alone.
+- **Site-Specific Optimization**: Applies optimized extraction rules for specific domains (e.g., qiita.com) to achieve more natural reading.
+- **Continuous Playback & Prefetching**: Automatically plays audio continuously to the end of the article. It minimizes gaps between chunks by prefetching the next audio data.
+- **Synchronized Highlighting**: The paragraph currently being played is highlighted in real-time, allowing you to see at a glance where it is being read.
+- **Playback Controls**: Toggle reading mode ON/OFF and pause/resume playback from the popup.
 
-## 📖 使い方
+## 📖 How to Use
 
-1. **インストール**: `chrome://extensions` ページで「パッケージ化されていない拡張機能を読み込む」を選択し、**`packages/chrome-extension`ディレクトリ** を読み込みます。
-2. **有効化**: 読み上げたい記事ページを開き、ブラウザのツールバーにある Audicle アイコンをクリック。ポップアップ内の「読み上げモード」トグルスイッチを ON にします。
-3. **再生**: ページ上のハイライト可能になった段落をクリックすると、その位置から再生が開始されます。
-4. **操作**:
-   - **再生位置の変更**: 別の段落をクリックすると、再生が即座にその位置へ移動します。
-   - **一時停止/再開**: ポップアップの「一時停止」ボタンで再生を止め、「再開」ボタンで続きから再生できます。
-   - **完全停止**: 「読み上げモード」のトグルスイッチを OFF にすると、再生が完全に停止し、ハイライトも解除されます。
+1. **Installation**: Go to `chrome://extensions`, select "Load unpacked", and load the **`packages/chrome-extension` directory**.
+2. **Activation**: Open the article page you want to read, click the Audicle icon in the browser toolbar, and toggle the "Reading Mode" switch to ON in the popup.
+3. **Playback**: Click on a highlightable paragraph on the page to start playback from that position.
+4. **Controls**:
+   - **Change Playback Position**: Click another paragraph to immediately move playback to that position.
+   - **Pause/Resume**: Stop playback with the "Pause" button in the popup and continue with the "Resume" button.
+   - **Stop Completely**: Turn the "Reading Mode" toggle switch OFF to completely stop playback and remove highlights.
 
-## 🛠️ アーキテクチャ概要
+## 🛠️ Architecture Overview
 
-本拡張機能は、責務を明確に分離したコンポーネントで構成されています。
+This extension consists of components with clearly separated responsibilities.
 
-- **`popup.html` / `popup.js` / `popup.css`**: ユーザーが操作する UI を提供。拡張機能の ON/OFF、一時停止/再開の**意思**を`chrome.storage`やメッセージを通じて`content.js`に伝えます。
-- **`content.js`**: ページ上で動作するメインスクリプト。
-  - `Readability.js`を使い、本文の構造化されたテキストを抽出。
-  - 再生キューの管理、連続再生、同期ハイライトの全ロジックを担当。
-  - `background.js`にテキストを渡し、音声データの取得を依頼します。
-- **`background.js`**: バックグラウンドで動作するサービスワーカー。
-  - **疎結合音声合成モジュール**: `AudioSynthesizer`基底クラス・`GoogleTTSSynthesizer`実装・`SynthesizerFactory`ファクトリによる疎結合設計を採用。
-  - `config.json`で指定された音声合成方式に基づいて、テキストから音声データ URL を生成。
-  - 将来的な音声合成エンジンの追加・変更を容易にするアーキテクチャを実現。
-- **`config.json`**: 使用する音声合成方式を指定する設定ファイル。
-- **`lib/Readability.js`**: Mozilla 製の本文抽出ライブラリ。ノイズを除去し、質の高いテキストコンテンツを提供します。
+- **`popup.html` / `popup.js` / `popup.css`**: Provides the UI for user operation. It conveys the user's **intent** (ON/OFF, Pause/Resume) to `content.js` via `chrome.storage` or messages.
+- **`content.js`**: The main script running on the page.
+  - Extracts structured text using `Readability.js`.
+  - Handles playback queue management, continuous playback logic, and synchronized highlighting.
+  - Passes text to `background.js` and requests audio data retrieval.
+- **`background.js`**: Service worker running in the background.
+  - **Loosely Coupled Audio Synthesis Modules**: Adopts a loosely coupled design with `AudioSynthesizer` base class, `GoogleTTSSynthesizer` implementation, and `SynthesizerFactory`.
+  - Generates audio data URLs from text based on the synthesis method specified in `config.json`.
+  - Enables easy addition/modification of future TTS engines.
+- **`config.json`**: Configuration file specifying the audio synthesis method to use.
+- **`lib/Readability.js`**: Mozilla's content extraction library. Removes noise and provides high-quality text content.
 
-### 音声合成モジュール設計
+### Audio Synthesis Module Design
 
-音声合成ロジックは疎結合モジュールとして分離されており、以下の構造で動作します：
+The audio synthesis logic is separated as loosely coupled modules:
 
 ```javascript
-// 統一インターフェース
+// Unified Interface
 class AudioSynthesizer {
-  async synthesize(text) // テキスト → 音声データURL
+  async synthesize(text) // Text -> Audio Data URL
 }
 
-// Google TTS実装
+// Google TTS Implementation
 class GoogleTTSSynthesizer extends AudioSynthesizer {
-  // Google翻訳TTSエンドポイントを利用
+  // Uses Google Translate TTS endpoint
 }
 
-// ファクトリによる方式選択
+// Selection by Factory
 SynthesizerFactory.create(config.synthesizerType)
 ```
 
-## 📂 プロジェクト構造
+## 📂 Project Structure
 
-本プロジェクトはモノレポ構成の一部です。
+This project is part of a monorepo configuration.
 
 ```bash
-/ (リポジトリルート)
+/ (Repo Root)
 └── packages/
-    ├── chrome-extension/   # Chrome拡張機能のソースコード
-    └── api-server/         # 音声合成APIサーバー (Google Cloud TTS)
+    ├── chrome-extension/   # Chrome Extension Source Code
+    └── api-server/         # TTS API Server (Google Cloud TTS)
 ```
 
-## ⚙️ 設定
+## ⚙️ Configuration
 
-- **読み上げモード**: ポップアップのトグルスイッチで ON/OFF を切り替えます。
-- **一時停止/再開**: ポップアップのボタンで操作します。
-- **音声合成方式**: `config.json` の `synthesizerType` で音声合成エンジンを指定できます。設定変更後は拡張機能のリロードが必要です。
-  - **利用可能なエンジン**:
-    - `google_tts`: デフォルト。Google 翻訳の非公式 API を使用（日本語・英語）。
-    - `api_server`: `packages/api-server` を使用（Google Cloud TTS、高品質）。
-    - `test`: 開発用。固定のサンプル音声を再生。
+- **Reading Mode**: Toggle ON/OFF with the switch in the popup.
+- **Pause/Resume**: Operate with buttons in the popup.
+- **Audio Synthesis Method**: You can specify the TTS engine in `config.json` under `synthesizerType`. Reload the extension after changing settings.
+  - **Available Engines**:
+    - `google_tts`: Default. Uses Google Translate's unofficial API (Japanese/English).
+    - `api_server`: Uses `packages/api-server` (Google Cloud TTS, High Quality).
+    - `test`: For development. Plays a fixed sample audio.
 
-> **📋 詳細ガイド**: 利用可能な音声合成モジュールの詳細は [AUDIO_SYNTHESIS_MODULES.md](AUDIO_SYNTHESIS_MODULES.md) を参照してください。
+> **📋 Detailed Guide**: See [AUDIO_SYNTHESIS_MODULES.md](AUDIO_SYNTHESIS_MODULES.md) for details on available audio synthesis modules.
 
-## 🧪 テスト方法
+## 🧪 Testing
 
-### 基本動作テスト
+### Basic Operation Test
 
-1. **Chrome 拡張機能の更新**
-   `chrome://extensions/` で Audicle 拡張機能の「更新」ボタンをクリック
+1. **Update Chrome Extension**: Click the "Update" button for the Audicle extension at `chrome://extensions/`.
+2. **Check on Test Page**:
+   - Open `packages/chrome-extension/test/test.html` in the browser to test basic functions.
+   - Click paragraphs to verify audio playback and highlighting.
 
-2. **テストページでの確認**
-   - リポジトリ内の `packages/chrome-extension/test/test.html` をブラウザで開いて基本機能をテスト
-   - 段落をクリックして音声再生・ハイライト機能を確認
+### API Server Test
 
-### API Server テスト
+Steps when using the new API server (`packages/api-server`):
 
-新しい API サーバー (`packages/api-server`) を使用する場合の手順：
-
-1. **API サーバー起動**
-
+1. **Start API Server**:
    ```bash
    cd packages/api-server
    docker-compose up -d
    ```
-
-2. **設定変更**
-
-   `config.json` を手動編集：
-
+2. **Change Configuration**:
+   Edit `config.json` manually:
    ```json
    {
      "synthesizerType": "api_server"
    }
    ```
+3. **Update Extension**: Click the update button at `chrome://extensions/`.
+4. **Verify Operation**: Check playback on the test page or any web article.
 
-3. **拡張機能の更新**
-   `chrome://extensions/` で更新ボタンをクリック
+## 🔧 For Developers - Adding New Site Rules
 
-4. **動作確認**
-   テストページや任意のWeb記事で読み上げを確認してください。
+Steps to add extraction rules optimized for specific sites:
 
-## 🔧 開発者向け - 新サイト対応ルール追加手順
+> **📋 Detailed Guide**: See `content-extract/RULE_ADDITION_GUIDE.md` for more information.
 
-特定のサイトに最適化された抽出ルールを追加する場合の手順：
+1. **Define Rule**: Add a new rule to `SITE_SPECIFIC_RULES` in `content-extract/rules.js`.
+2. **Identify Selector**: Identify the CSS selector for the body text using Developer Tools on the target site.
+3. **Set Priority**: `priority: 1000` is recommended for site-specific rules.
+4. **Verify**: Reload the extension and check the Console logs on the target site.
 
-> **📋 詳細ガイド**: より詳しい情報は `content-extract/RULE_ADDITION_GUIDE.md` を参照してください。
+## 📝 Notes
 
-1. **ルール定義**: `content-extract/rules.js` の `SITE_SPECIFIC_RULES` に新しいルールを追加。
-2. **セレクター特定**: 対象サイトの Developer Tools で本文の CSS セレクターを特定。
-3. **優先度設定**: サイト固有ルールは `priority: 1000` を推奨。
-4. **動作確認**: 拡張機能をリロードし、対象サイトで Console ログを確認。
-
-## 📝 注意事項
-
-- **対応言語**: Google 翻訳 TTS (google_tts) は日本語と英語に最適化されています。
-- **利用制限**: Google 翻訳 TTS は非公式であり、将来的に利用できなくなる可能性があります。安定した運用には `api_server` の利用を推奨します。
-- **プライバシー**: 読み上げるテキストは選択した音声合成サーバーに送信されます。
-- **ブラウザ互換性**: Google Chrome 向けに開発されています。
+- **Supported Languages**: Google Translate TTS (`google_tts`) is optimized for Japanese and English.
+- **Usage Limits**: Google Translate TTS is unofficial and may become unavailable in the future. Using `api_server` is recommended for stable operation.
+- **Privacy**: The text to be read is sent to the selected audio synthesis server.
+- **Browser Compatibility**: Developed for Google Chrome.
