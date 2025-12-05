@@ -8,6 +8,7 @@ import { getAudioChunk } from "@/lib/indexedDB";
 import { synthesizeSpeech } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { needsPauseBefore, needsPauseAfter, getPauseDuration } from "@/lib/paragraphParser";
+import { useMediaSession } from "./useMediaSession";
 
 interface UsePlaybackProps {
   chunks: Chunk[];
@@ -16,6 +17,8 @@ interface UsePlaybackProps {
   playbackSpeed?: number;    // 再生速度（例: 1.0, 1.5, 2.0）
   onChunkChange?: (chunkId: string) => void;
   onArticleEnd?: () => void; // 記事の再生終了時のコールバック
+  articleTitle?: string;     // 記事タイトル（Media Session用）
+  articleAuthor?: string;    // 記事著者またはサイト名（Media Session用）
 }
 
 const PREFETCH_AHEAD = 3; // 3つ先まで先読み
@@ -31,7 +34,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onChunkChange, onArticleEnd }: UsePlaybackProps) {
+export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onChunkChange, onArticleEnd, articleTitle, articleAuthor }: UsePlaybackProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState<number>(-1);
   const [isLoading, setIsLoading] = useState(false);
@@ -374,6 +377,23 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
     setCurrentIndex(-1);
   }, []);
 
+  // 次のチャンクへ移動
+  const next = useCallback(() => {
+    if (currentIndex < chunks.length - 1) {
+      playFromIndex(currentIndex + 1);
+    }
+  }, [currentIndex, chunks.length, playFromIndex]);
+
+  // 前のチャンクへ移動
+  const previous = useCallback(() => {
+    if (currentIndex > 0) {
+      playFromIndex(currentIndex - 1);
+    } else if (currentIndex === 0) {
+      // 最初のチャンクの場合は最初から再生
+      playFromIndex(0);
+    }
+  }, [currentIndex, playFromIndex]);
+
   // 特定のチャンクから再生（Seek機能）
   const seekToChunk = useCallback(
     (chunkId: string) => {
@@ -384,6 +404,18 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
     },
     [chunks, playFromIndex]
   );
+
+  // Media Session APIの設定（バックグラウンド再生対応）
+  useMediaSession({
+    title: articleTitle || "記事を読み上げ中",
+    artist: articleAuthor,
+    isPlaying,
+    onPlay: play,
+    onPause: pause,
+    onNextTrack: next,
+    onPreviousTrack: previous,
+    onStop: stop,
+  });
 
   // クリーンアップ
   useEffect(() => {
@@ -406,6 +438,8 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
     play,
     pause,
     stop,
+    next,
+    previous,
     seekToChunk,
     playbackRate,
     setPlaybackRate: updatePlaybackRate,

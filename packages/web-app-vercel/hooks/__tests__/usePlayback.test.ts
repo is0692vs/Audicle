@@ -29,6 +29,14 @@ jest.mock("@/lib/paragraphParser", () => ({
   getPauseDuration: jest.fn(() => 0),
 }));
 
+// useMediaSession フックのモック（バックグラウンド再生用）
+jest.mock("../useMediaSession", () => ({
+  useMediaSession: jest.fn(() => ({
+    updateMetadata: jest.fn(),
+    updatePlaybackState: jest.fn(),
+  })),
+}));
+
 // HTMLAudioElement のモック
 class MockAudio {
   src = "";
