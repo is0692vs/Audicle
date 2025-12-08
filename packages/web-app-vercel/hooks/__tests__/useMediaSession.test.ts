@@ -173,3 +173,41 @@ describe("useMediaSession", () => {
     expect(mockMediaSession.setActionHandler).toHaveBeenCalledWith("stop", null);
   });
 });
+
+describe('Media Session API 未対応環境', () => {
+  let originalNavigator: Navigator;
+
+  beforeEach(() => {
+    originalNavigator = global.navigator;
+  });
+
+  afterEach(() => {
+    Object.defineProperty(global, "navigator", {
+      value: originalNavigator,
+      writable: true,
+      configurable: true,
+    });
+    jest.clearAllMocks();
+  });
+
+  it('navigator.mediaSession が undefined でもエラーが発生しないこと', () => {
+    // navigator.mediaSession を undefined にする
+    Object.defineProperty(global, "navigator", {
+      value: {
+        ...originalNavigator,
+        mediaSession: undefined,
+      },
+      writable: true,
+      configurable: true,
+    });
+
+    expect(() => {
+      renderHook(() =>
+        useMediaSession({
+          title: "テスト記事",
+          isPlaying: false,
+        })
+      );
+    }).not.toThrow();
+  });
+});

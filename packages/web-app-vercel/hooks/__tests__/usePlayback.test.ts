@@ -180,4 +180,334 @@ describe("usePlayback", () => {
     );
     expect(warnCalls.length).toBeGreaterThanOrEqual(1);
   });
+
+  describe('next()', () => {
+    it('次のチャンクへ移動すること', async () => {
+      const { audioCache } = require("@/lib/audioCache");
+      const { getAudioChunk } = require("@/lib/indexedDB");
+
+      // モックの設定
+      getAudioChunk.mockResolvedValue(null);
+      audioCache.get.mockResolvedValue("blob:mock-audio-url");
+
+      const mockChunks: Chunk[] = [
+        {
+          id: "chunk-1",
+          text: "テストチャンク1",
+          cleanedText: "テストチャンク1",
+          type: "paragraph",
+        },
+        {
+          id: "chunk-2",
+          text: "テストチャンク2",
+          cleanedText: "テストチャンク2",
+          type: "paragraph",
+        },
+      ];
+
+      const { result } = renderHook(() =>
+        usePlayback({
+          chunks: mockChunks,
+          articleUrl: "https://example.com/test",
+          voiceModel: "ja-JP-Standard-B",
+        })
+      );
+
+      // 最初のチャンクを再生
+      await act(async () => {
+        result.current.play();
+      });
+
+      await waitFor(() => {
+        expect(result.current.currentIndex).toBe(0);
+      });
+
+      // next() を呼ぶ
+      act(() => {
+        result.current.next();
+      });
+
+      // 次のチャンクへ移動することを確認
+      await waitFor(() => {
+        expect(result.current.currentIndex).toBe(1);
+      });
+    });
+
+    it('最後のチャンクで next() を呼んだ場合、何もしないこと', async () => {
+      const { audioCache } = require("@/lib/audioCache");
+      const { getAudioChunk } = require("@/lib/indexedDB");
+
+      // モックの設定
+      getAudioChunk.mockResolvedValue(null);
+      audioCache.get.mockResolvedValue("blob:mock-audio-url");
+
+      const mockChunks: Chunk[] = [
+        {
+          id: "chunk-1",
+          text: "テストチャンク1",
+          cleanedText: "テストチャンク1",
+          type: "paragraph",
+        },
+      ];
+
+      const { result } = renderHook(() =>
+        usePlayback({
+          chunks: mockChunks,
+          articleUrl: "https://example.com/test",
+          voiceModel: "ja-JP-Standard-B",
+        })
+      );
+
+      // 最初のチャンクを再生
+      await act(async () => {
+        result.current.play();
+      });
+
+      await waitFor(() => {
+        expect(result.current.currentIndex).toBe(0);
+      });
+
+      // 最後のチャンクで next() を呼ぶ
+      act(() => {
+        result.current.next();
+      });
+
+      // currentIndex が変わらないことを確認（何もしない）
+      await waitFor(() => {
+        expect(result.current.currentIndex).toBe(0);
+      });
+    });
+  });
+
+  describe('previous()', () => {
+    it('前のチャンクへ移動すること', async () => {
+      const { audioCache } = require("@/lib/audioCache");
+      const { getAudioChunk } = require("@/lib/indexedDB");
+
+      // モックの設定
+      getAudioChunk.mockResolvedValue(null);
+      audioCache.get.mockResolvedValue("blob:mock-audio-url");
+
+      const mockChunks: Chunk[] = [
+        {
+          id: "chunk-1",
+          text: "テストチャンク1",
+          cleanedText: "テストチャンク1",
+          type: "paragraph",
+        },
+        {
+          id: "chunk-2",
+          text: "テストチャンク2",
+          cleanedText: "テストチャンク2",
+          type: "paragraph",
+        },
+      ];
+
+      const { result } = renderHook(() =>
+        usePlayback({
+          chunks: mockChunks,
+          articleUrl: "https://example.com/test",
+          voiceModel: "ja-JP-Standard-B",
+        })
+      );
+
+      // 2番目のチャンクを直接再生
+      await act(async () => {
+        result.current.seekToChunk("chunk-2");
+      });
+
+      await waitFor(() => {
+        expect(result.current.currentIndex).toBe(1);
+      });
+
+      // previous() を呼ぶ
+      act(() => {
+        result.current.previous();
+      });
+
+      // 前のチャンクへ移動することを確認
+      await waitFor(() => {
+        expect(result.current.currentIndex).toBe(0);
+      });
+    });
+
+    it('最初のチャンクで previous() を呼んだ場合、最初から再生すること', async () => {
+      const { audioCache } = require("@/lib/audioCache");
+      const { getAudioChunk } = require("@/lib/indexedDB");
+
+      // モックの設定
+      getAudioChunk.mockResolvedValue(null);
+      audioCache.get.mockResolvedValue("blob:mock-audio-url");
+
+      const mockChunks: Chunk[] = [
+        {
+          id: "chunk-1",
+          text: "テストチャンク1",
+          cleanedText: "テストチャンク1",
+          type: "paragraph",
+        },
+        {
+          id: "chunk-2",
+          text: "テストチャンク2",
+          cleanedText: "テストチャンク2",
+          type: "paragraph",
+        },
+      ];
+
+      const { result } = renderHook(() =>
+        usePlayback({
+          chunks: mockChunks,
+          articleUrl: "https://example.com/test",
+          voiceModel: "ja-JP-Standard-B",
+        })
+      );
+
+      // 最初のチャンクを再生
+      await act(async () => {
+        result.current.play();
+      });
+
+      await waitFor(() => {
+        expect(result.current.currentIndex).toBe(0);
+      });
+
+      // 最初のチャンクで previous() を呼ぶ
+      act(() => {
+        result.current.previous();
+      });
+
+      // currentIndex が 0 のまま（最初から再生）
+      await waitFor(() => {
+        expect(result.current.currentIndex).toBe(0);
+      });
+    });
+  });
+
+  describe('境界条件', () => {
+    it('空のchunks配列でエラーが発生しないこと', () => {
+      const mockChunks: Chunk[] = [];
+
+      expect(() => {
+        renderHook(() =>
+          usePlayback({
+            chunks: mockChunks,
+          })
+        );
+      }).not.toThrow();
+    });
+
+    it('単一チャンクでのnext/previous動作', async () => {
+      const { audioCache } = require("@/lib/audioCache");
+      const { getAudioChunk } = require("@/lib/indexedDB");
+
+      // モックの設定
+      getAudioChunk.mockResolvedValue(null);
+      audioCache.get.mockResolvedValue("blob:mock-audio-url");
+
+      const mockChunks: Chunk[] = [
+        {
+          id: "chunk-1",
+          text: "テストチャンク1",
+          cleanedText: "テストチャンク1",
+          type: "paragraph",
+        },
+      ];
+
+      const { result } = renderHook(() =>
+        usePlayback({
+          chunks: mockChunks,
+          articleUrl: "https://example.com/test",
+          voiceModel: "ja-JP-Standard-B",
+        })
+      );
+
+      // 再生を開始
+      await act(async () => {
+        result.current.play();
+      });
+
+      await waitFor(() => {
+        expect(result.current.currentIndex).toBe(0);
+      });
+
+      // next() を呼んでも何もしない
+      act(() => {
+        result.current.next();
+      });
+
+      expect(result.current.currentIndex).toBe(0);
+
+      // previous() を呼んでも最初から再生
+      act(() => {
+        result.current.previous();
+      });
+
+      expect(result.current.currentIndex).toBe(0);
+    });
+  });
+
+  describe('Media Session メタデータ連携', () => {
+    it('articleTitle が useMediaSession に渡されること', () => {
+      const { useMediaSession } = require("../useMediaSession");
+
+      const mockChunks: Chunk[] = [
+        {
+          id: "chunk-1",
+          text: "テストチャンク1",
+          cleanedText: "テストチャンク1",
+          type: "paragraph",
+        },
+      ];
+
+      const articleTitle = "テスト記事タイトル";
+      const articleAuthor = "テスト著者";
+
+      renderHook(() =>
+        usePlayback({
+          chunks: mockChunks,
+          articleTitle,
+          articleAuthor,
+        })
+      );
+
+      // useMediaSession が呼ばれたことを確認
+      expect(useMediaSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: articleTitle,
+          artist: articleAuthor,
+        })
+      );
+    });
+
+    it('articleAuthor が useMediaSession に渡されること', () => {
+      const { useMediaSession } = require("../useMediaSession");
+
+      const mockChunks: Chunk[] = [
+        {
+          id: "chunk-1",
+          text: "テストチャンク1",
+          cleanedText: "テストチャンク1",
+          type: "paragraph",
+        },
+      ];
+
+      const articleTitle = "テスト記事タイトル";
+      const articleAuthor = "テスト著者";
+
+      renderHook(() =>
+        usePlayback({
+          chunks: mockChunks,
+          articleTitle,
+          articleAuthor,
+        })
+      );
+
+      // useMediaSession が呼ばれたことを確認
+      expect(useMediaSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          artist: articleAuthor,
+        })
+      );
+    });
+  });
 });
