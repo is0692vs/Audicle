@@ -50,6 +50,25 @@ describe('paragraphParser', () => {
             expect(paragraphs[2].originalText).toBe('以上です。');
         });
 
+        it('コードブロックを含む日本語記事でjaと判定されること', () => {
+            const html = `
+                <p>これはJavaScriptの解説です。</p>
+                <pre><code>function test() { return 1; }</code></pre>
+                <p>以上です。</p>
+            `;
+            const result = parseHTMLToParagraphs(html);
+            expect(result.detectedLanguage).toBe('ja');
+        });
+
+        it('コードブロックのみでも誤判定しないこと', () => {
+            const html = `
+                <p>コード例：</p>
+                <pre><code>const a = 1; const b = 2; const c = a + b;</code></pre>
+            `;
+            const result = parseHTMLToParagraphs(html);
+            expect(result.detectedLanguage).toBe('ja');
+        });
+
         it('should extract table cells (td/th elements)', () => {
             const html = '<table><tr><th>項目</th><th>値</th></tr><tr><td>名前</td><td>テスト</td></tr></table>';
             const { paragraphs } = parseHTMLToParagraphs(html);

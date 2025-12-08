@@ -275,7 +275,10 @@ export function parseHTMLToParagraphs(htmlContent: string): ParseResult {
   // チャンクリサイズを適用（5000バイト超過チャンクを分割）
   const resized = resizeChunksIfNeeded(paragraphs);
 
-  const fullText = resized.map((p) => p.cleanedText).join(' ');
+  const fullText = resized
+    .filter((p) => p.type !== 'pre') // コードブロック(pre)を言語検出から除外
+    .map((p) => p.cleanedText)
+    .join(' ');
   const detectedLanguage = detectLanguage(fullText);
 
   return { paragraphs: resized, detectedLanguage };
