@@ -28,10 +28,6 @@ export default function RootLayout({
   return (
     <html lang="ja" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/favicon.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#0ea5e9" />
         <script
           dangerouslySetInnerHTML={{
             __html: `(() => { try { var theme = localStorage.getItem('${THEME_STORAGE_KEY}') || '${DEFAULT_SETTINGS.color_theme}'; document.documentElement.setAttribute('data-theme', theme); if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) { document.documentElement.classList.add('dark'); } } catch(e){} })();`,
@@ -57,6 +53,10 @@ export const metadata: Metadata = {
   description:
     "音楽アプリの歌詞表示のような体験で、Webページの本文を読み上げます",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/favicon.png",
+    apple: "/apple-touch-icon.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -67,5 +67,5 @@ export const metadata: Metadata = {
 // `viewport.themeColor` is used by Next to set color for mobile browser
 // UI elements; keep it at module scope so it is included in the app HTML.
 export const viewport = {
-  themeColor: "#000000",
+  themeColor: "#0ea5e9",
 };
