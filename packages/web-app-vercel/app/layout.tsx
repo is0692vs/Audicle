@@ -53,6 +53,10 @@ export const metadata: Metadata = {
   description:
     "音楽アプリの歌詞表示のような体験で、Webページの本文を読み上げます",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/favicon.png",
+    apple: "/apple-touch-icon.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -63,5 +67,5 @@ export const metadata: Metadata = {
 // `viewport.themeColor` is used by Next to set color for mobile browser
 // UI elements; keep it at module scope so it is included in the app HTML.
 export const viewport = {
-  themeColor: "#000000",
+  themeColor: "#0ea5e9",
 };
