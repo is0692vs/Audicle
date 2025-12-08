@@ -19,6 +19,8 @@ import { MobileArticleMenu } from "@/components/MobileArticleMenu";
 import { PlaybackSpeedDial } from "@/components/PlaybackSpeedDial";
 import { recordArticleStats } from "@/lib/articleStats";
 import { parseHTMLToParagraphs } from "@/lib/paragraphParser";
+import { type DetectedLanguage } from "@/lib/languageDetector";
+import { selectVoiceModel } from "@/lib/voiceSelector";
 import { UserSettings, DEFAULT_SETTINGS } from "@/types/settings";
 import { createReaderUrl } from "@/lib/urlBuilder";
 import { zIndex } from "@/lib/zIndex";
@@ -33,17 +35,21 @@ import {
   Download,
 } from "lucide-react";
 
-function convertParagraphsToChunks(htmlContent: string): Chunk[] {
+function convertParagraphsToChunks(
+  htmlContent: string
+): { chunks: Chunk[]; detectedLanguage: DetectedLanguage } {
   // HTML構造を保持して段落を抽出
-  const paragraphs = parseHTMLToParagraphs(htmlContent);
+  const { paragraphs, detectedLanguage } = parseHTMLToParagraphs(htmlContent);
 
   // Chunk形式に変換
-  return paragraphs.map((para) => ({
+  const chunks = paragraphs.map((para) => ({
     id: para.id,
     text: para.originalText,
     cleanedText: para.cleanedText,
     type: para.type,
   }));
+
+  return { chunks, detectedLanguage };
 }
 
 export default function ReaderPageClient() {
@@ -74,6 +80,8 @@ export default function ReaderPageClient() {
   const [title, setTitle] = useState("");
   const [error, setError] = useState("");
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
+  const [detectedLanguage, setDetectedLanguage] = useState<DetectedLanguage>("unknown");
+  const [effectiveVoiceModel, setEffectiveVoiceModel] = useState<string>(DEFAULT_SETTINGS.voice_model);
   const [articleId, setArticleId] = useState<string | null>(null);
   const [itemId, setItemId] = useState<string | null>(null);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
@@ -126,7 +134,7 @@ export default function ReaderPageClient() {
   } = usePlayback({
     chunks,
     articleUrl: url,
-    voiceModel: settings.voice_model,
+    voiceModel: effectiveVoiceModel,
     playbackSpeed: settings.playback_speed,
     articleTitle: title,
     articleAuthor: url ? new URL(url).hostname : undefined,
@@ -155,7 +163,7 @@ export default function ReaderPageClient() {
   const { status: downloadStatus, startDownload } = useDownload({
     articleUrl: url,
     chunks,
-    voiceModel: settings.voice_model,
+    voiceModel: effectiveVoiceModel,
     speed: playbackRate,
   });
 
@@ -166,8 +174,9 @@ export default function ReaderPageClient() {
       setError("");
       try {
         const response = await extractContent(articleUrl);
-        const chunksWithId = convertParagraphsToChunks(response.content);
+        const { chunks: chunksWithId, detectedLanguage } = convertParagraphsToChunks(response.content);
         setChunks(chunksWithId);
+        setDetectedLanguage(detectedLanguage);
         setUrl(articleUrl);
         setTitle(response.title);
 
@@ -324,12 +333,13 @@ export default function ReaderPageClient() {
           return;
         }
         const data = await extractRes.json();
-        const chunksWithId = convertParagraphsToChunks(data.content);
+        const { chunks: chunksWithId, detectedLanguage } = convertParagraphsToChunks(data.content);
 
         setTitle(
           isPlaylistMode ? resolvedTitle : data.title || resolvedTitle || ""
         );
         setChunks(chunksWithId);
+        setDetectedLanguage(detectedLanguage);
         setUrl(resolvedUrl);
         setArticleId(resolvedId);
         hasInitiatedAutoplayRef.current = false;
@@ -385,6 +395,12 @@ export default function ReaderPageClient() {
 
     loadSettings();
   }, []);
+
+  useEffect(() => {
+    setEffectiveVoiceModel(
+      selectVoiceModel(settings.voice_model, detectedLanguage)
+    );
+  }, [settings.voice_model, detectedLanguage]);
 
   // プレイリスト一覧を取得
   useEffect(() => {
@@ -966,7 +982,7 @@ export default function ReaderPageClient() {
             chunks={chunks}
             currentChunkId={currentChunkId}
             articleUrl={url}
-            voiceModel={settings.voice_model}
+            voiceModel={effectiveVoiceModel}
             speed={playbackRate}
             onChunkClick={seekToChunk}
           />
