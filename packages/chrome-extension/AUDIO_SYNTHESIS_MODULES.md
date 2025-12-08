@@ -1,26 +1,17 @@
-# 音声合成モジュール一覧
+# Audio Synthesis Modules List
 
-Audicle で使用可能な音声合成エンジンとその設定方法
+List of available audio synthesis engines for Audicle and how to configure them.
 
-## 🎯 概要
+## 🎯 Overview
 
-Audicle は疎結合な音声合成モジュール設計を採用しており、複数の音声合成エンジンを切り替えて使用できます。  
-`config.json` の `synthesizerType` で使用するエンジンを指定します。
+Audicle adopts a loosely coupled audio synthesis module design, allowing you to switch between multiple audio synthesis engines.
+Specify the engine to use in `config.json` under `synthesizerType`.
 
-## 📋 利用可能なモジュール
+## 📋 Available Modules
 
-### 1. Go**LAN アクセス設定**:
+### 1. Google TTS (Default)
 
-Docker 版は固定で `localhost:8001` を使用します。LAN 内の他 PC から利用する場合は、Docker 側でポート公開設定を調整するか、ポートフォワーディングを使用してください：
-
-```bash
-# 例: SSH ポートフォワーディング
-ssh -L 8001:localhost:8001 server-pc
-```
-
-## 🔧 設定方法
-
-**設定値**: `"google_tts"`
+**Value**: `"google_tts"`
 
 ```json
 {
@@ -28,32 +19,83 @@ ssh -L 8001:localhost:8001 server-pc
 }
 ```
 
-**特徴**:
+**Features**:
 
-- ✅ **高品質**: Google 翻訳の音声合成エンジンを使用
-- ✅ **日本語対応**: 自然な日本語読み上げ
-- ✅ **英語対応**: 英語テキストも適切に読み上げ
-- ✅ **無料**: 追加コストなし
-- ⚠️ **ネット必須**: インターネット接続が必要
-- ⚠️ **非公式**: Google 翻訳の非公式利用
+- ✅ **High Quality**: Uses Google Translate's audio synthesis engine.
+- ✅ **Japanese Support**: Natural Japanese reading.
+- ✅ **English Support**: Appropriately reads English text as well.
+- ✅ **Free**: No additional cost.
+- ⚠️ **Internet Required**: Internet connection is required.
+- ⚠️ **Unofficial**: Unofficial use of Google Translate.
 
-**適用場面**:
+**Use Cases**:
 
-- 一般的な記事の読み上げ
-- 日本語・英語混在コンテンツ
-- 高品質な音声が必要な場合
+- Reading general articles.
+- Content mixed with Japanese and English.
+- When high-quality audio is required without setup.
 
-**技術詳細**:
+**Technical Details**:
 
-- エンドポイント: `https://translate.google.com/translate_tts`
-- 音声形式: MP3
-- 言語: 日本語 (tl=ja)
+- Endpoint: `https://translate.google.com/translate_tts`
+- Audio Format: MP3
+- Language: Japanese (tl=ja)
 
 ---
 
-### 2. Test Synthesizer (開発用)
+### 2. API Server (New Standard Backend)
 
-**設定値**: `"test"`
+**Value**: `"api_server"`
+
+```json
+{
+  "synthesizerType": "api_server"
+}
+```
+
+**Features**:
+
+- ✅ **High Quality**: Uses Google Cloud Text-to-Speech API (WaveNet / Neural2).
+- ✅ **Stability**: Stable operation via official API.
+- ✅ **Customizable**: Voice type and speed can be adjusted.
+- ✅ **Secure**: API keys are managed on the server side.
+- ⚠️ **Server Required**: Requires `packages/api-server` to be running.
+
+**Use Cases**:
+
+- Long-term operation in a stable production environment.
+- When the highest quality audio is required.
+- When fine-grained control over reading parameters is needed.
+
+**Technical Details**:
+
+- Server: `packages/api-server` (http://localhost:8000)
+- Audio Format: MP3
+- Default Voice: ja-JP-Neural2-B (Google Cloud TTS)
+
+**Setup Instructions**:
+
+1. **Start API Server**:
+
+   ```bash
+   cd packages/api-server
+   docker-compose up -d
+   ```
+
+2. **Change Configuration**:
+
+   ```json
+   {
+     "synthesizerType": "api_server"
+   }
+   ```
+
+3. **Reload Extension**: Update the Chrome extension.
+
+---
+
+### 3. Test Synthesizer (For Development)
+
+**Value**: `"test"`
 
 ```json
 {
@@ -61,257 +103,76 @@ ssh -L 8001:localhost:8001 server-pc
 }
 ```
 
-**特徴**:
+**Features**:
 
-- 🔧 **開発専用**: テスト・デバッグ用途
-- ✅ **オフライン**: ネット接続不要
-- ✅ **高速**: 即座に応答
-- ⚠️ **固定音声**: 常に同じサンプル音声を再生
-- ❌ **テキスト無視**: 実際のテキスト内容を読まない
+- 🔧 **Dev Only**: For testing and debugging purposes.
+- ✅ **Offline**: No internet connection required.
+- ✅ **Fast**: Immediate response.
+- ⚠️ **Fixed Audio**: Always plays the same sample audio.
+- ❌ **Ignores Text**: Does not read the actual text content.
 
-**適用場面**:
+**Use Cases**:
 
-- 拡張機能の動作テスト
-- オフライン環境での開発
-- 音声再生機能のデバッグ
+- Testing extension functionality.
+- Development in offline environments.
+- Debugging audio playback features.
 
-**技術詳細**:
+**Technical Details**:
 
-- 音声ファイル: `sample.mp3` を使用
-- 音声形式: MP3
-- レスポンス: 固定
+- Audio File: Uses `sample.mp3`
+- Audio Format: MP3
+- Response: Fixed
 
----
+## 🔧 Configuration
 
-### 3. Edge TTS (高品質・最新)
+### 1. Edit Configuration File
 
-**設定値**: `"edge_tts"`
-
-```json
-{
-  "synthesizerType": "edge_tts"
-}
-```
-
-**特徴**:
-
-- ✅ **最高品質**: Microsoft Edge TTS エンジンによる極めて自然な音声
-- ✅ **多様な音声**: 複数の日本語音声から選択可能
-- ✅ **高速レスポンス**: ローカルサーバーによる高速処理
-- ✅ **カスタマイズ可能**: 話速・音程の細かな調整が可能
-- ✅ **安定性**: 公式 API による安定した動作
-- ⚠️ **サーバー必須**: Python TTS Server の起動が必要
-- ⚠️ **初回設定**: セットアップが必要
-
-**適用場面**:
-
-- 最高品質の音声が必要な場合
-- 長時間の音声読み上げ
-- プロフェッショナルな用途
-- 音声品質にこだわりがある場合
-
-**技術詳細**:
-
-- サーバー: Python Edge TTS Server (http://localhost:8001)
-- 音声形式: MP3
-- デフォルト音声: ja-JP-NanamiNeural (女性)
-- 利用可能音声: Nanami, Keita, Aoi, Daichi, Mayu, Naoki, Shiori
-
-**セットアップ手順**:
-
-1. **Python TTS Server 起動**:
-
-   ```bash
-   cd python-tts-server
-   ./start_server.sh
-   ```
-
-2. **設定変更**:
-
-   ```json
-   {
-     "synthesizerType": "edge_tts"
-   }
-   ```
-
-3. **拡張機能リロード**: Chrome 拡張機能を更新
-
----
-
-### 4. Edge TTS Docker (LAN 対応・高品質)
-
-**設定値**: `"edge_tts_docker"`
+Edit `packages/chrome-extension/config.json`:
 
 ```json
 {
-  "synthesizerType": "edge_tts_docker"
+  "synthesizerType": "google_tts" // or "api_server", "test"
 }
 ```
 
-**特徴**:
+### 2. Reload Extension
 
-- ✅ **最高品質**: Microsoft Edge TTS エンジンによる極めて自然な音声
-- ✅ **Docker 化**: 環境差によるトラブルを回避、一貫した動作を保証
-- ✅ **LAN アクセス**: 同じネットワーク内の他デバイスからアクセス可能
-- ✅ **設定可能**: .env ファイルでホスト・ポート設定を管理
-- ✅ **高速レスポンス**: コンテナ化されたローカルサーバーによる高速処理
-- ✅ **安定性**: 公式 API による安定した動作
-- ✅ **スケーラブル**: Docker Compose による簡単な運用管理
-- ⚠️ **Docker 必須**: Docker と Docker Compose の環境が必要
-- ⚠️ **初回セットアップ**: コンテナ構築に時間がかかる場合がある
+1. Open `chrome://extensions/`.
+2. Click the "Update" button for the Audicle extension.
+3. The settings will be applied.
 
-**適用場面**:
+### 3. Verify Operation
 
-- 複数デバイス間での音声合成サーバー共有
-- 開発チームでの統一された音声合成環境
-- LAN 内の他 PC から音声合成を利用したい場合
-- 安定した本番環境での長期運用
-- Docker 環境での統合開発
-
-**技術詳細**:
-
-- サーバー: Docker 化された Python Edge TTS Server
-- デフォルトエンドポイント: `http://localhost:8001` (固定設定)
-- 音声形式: MP3
-- デフォルト音声: ja-JP-NanamiNeural (女性)
-- LAN アクセス: 0.0.0.0 バインディングで全インターフェースに対応
-
-**セットアップ手順**:
-
-1. **Docker サーバー起動**:
-
-   ```bash
-   cd docker-tts-server
-   docker-compose up -d
-   ```
-
-2. **拡張機能設定**:
-
-   ```json
-   {
-     "synthesizerType": "edge_tts_docker"
-   }
-   ```
-
-3. **拡張機能リロード**: Chrome 拡張機能を更新
-
-4. **動作確認**:
-
-   ```bash
-   curl http://localhost:8001/
-   ```
-
-**LAN 設定例**:
-
-```json
-// PC-A (サーバー): docker-tts-server を起動
-// PC-B (クライアント): 以下の設定で PC-A のサーバーを利用
-{
-  "synthesizerType": "edge_tts_docker",
-  "dockerHost": "192.168.1.100", // PC-A の IP アドレス
-  "dockerPort": "8001"
-}
-```
-
----
-
-### 5. Google Cloud TTS Docker (GCP / WaveNet)
-
-**設定値**: `"google_cloud_tts_docker"`
-
-```json
-{
-  "synthesizerType": "google_cloud_tts_docker"
-}
-```
-
-**特徴**:
-
-- ✅ **WaveNet 品質**: Google Cloud Text-to-Speech の WaveNet 音声
-- ✅ **Docker 運用**: 依存関係をコンテナに閉じ込めて環境差を解消
-- ✅ **API 拡張**: `/voices` で利用可能な音声一覧を取得可能
-- ✅ **日本語音声**: `ja-JP-Wavenet-B` を既定とした自然な日本語読み上げ
-- ⚠️ **GCP 課金**: Google Cloud プロジェクトと課金設定が必要
-- ⚠️ **資格情報**: サービスアカウント鍵を安全に保管する必要がある
-
-**セットアップ手順**:
-
-1. GCP で Text-to-Speech API を有効化し、サービスアカウント鍵 (JSON) を取得
-2. `packages/google-tts-server/credentials/service-account.json` に鍵を配置
-3. `packages/google-tts-server` で `docker compose up --build -d`
-4. `config.json` を `{"synthesizerType": "google_cloud_tts_docker"}` に設定し、拡張を更新
-
-**技術詳細**:
-
-- サーバー: Docker 化 FastAPI (`google-tts-server`)
-- 既定エンドポイント: `<http://localhost:8002>`
-- 音声形式: MP3 (Google Cloud TTS)
-- 既定音声: `ja-JP-Wavenet-B`
-
-**運用メモ**:
-
-- 環境変数 `GOOGLE_TTS_DEFAULT_VOICE` や `GOOGLE_TTS_LANGUAGE_CODE` で既定値を調整
-- `docker compose logs -f` で API エラーを確認
-- サービスアカウント鍵は必ず `.gitignore` 対象にすること
-
-## 🔧 設定方法
-
-### 1. 設定ファイルの編集
-
-`audicle/config.json` を編集：
-
-```json
-{
-  "synthesizerType": "google_tts" // または "test", "edge_tts", "edge_tts_docker"
-}
-```
-
-**Docker 版を使用する場合**:
-
-```json
-{
-  "synthesizerType": "edge_tts_docker"
-}
-```
-
-### 2. 拡張機能のリロード
-
-1. `chrome://extensions/` を開く
-2. Audicle 拡張機能の「更新」ボタンをクリック
-3. 設定が反映されます
-
-### 3. 動作確認
-
-- 任意のページで読み上げ機能を実行
-- Console で以下のログを確認:
+- Run the reading function on any page.
+- Check the following logs in the Console:
   ```
-  [GoogleTTSSynthesizer] Synthesizing: "テキスト内容"
+  [GoogleTTSSynthesizer] Synthesizing: "Text content"
   ```
-  または
+  or
   ```
-  [TestSynthesizer] Request for text: "テキスト内容" - returning sample.mp3
+  [APIServerSynthesizer] Synthesizing: "Text content"
   ```
 
-## 🚀 新しいモジュールの追加
+## 🚀 Adding New Modules
 
-### アーキテクチャ概要
+### Architecture Overview
 
 ```javascript
-// 1. 基底クラス
+// 1. Base Class
 class AudioSynthesizer {
   async synthesize(text) {
-    // 実装が必要
+    // Implementation required
   }
 }
 
-// 2. 具象クラス
+// 2. Concrete Class
 class NewSynthesizer extends AudioSynthesizer {
   async synthesize(text) {
-    // 独自の音声合成ロジック
+    // Unique audio synthesis logic
   }
 }
 
-// 3. ファクトリ登録
+// 3. Factory Registration
 class SynthesizerFactory {
   static create(type) {
     switch (type) {
@@ -323,71 +184,32 @@ class SynthesizerFactory {
 }
 ```
 
-### 実装手順
+### Implementation Steps
 
-1. **新クラス作成**: `background.js` に新しい Synthesizer クラスを追加
-2. **ファクトリ登録**: `SynthesizerFactory.create()` に新しいケースを追加
-3. **設定値追加**: `config.json` で新しい `synthesizerType` を指定可能に
-4. **テスト実行**: 動作確認とデバッグ
+1. **Create New Class**: Add a new Synthesizer class to `background.js`.
+2. **Register in Factory**: Add a new case to `SynthesizerFactory.create()`.
+3. **Add Config Value**: Enable specifying the new `synthesizerType` in `config.json`.
+4. **Run Tests**: Verify operation and debug.
 
-### 推奨される追加候補
+## 🚨 Notes
 
-- **Azure Cognitive Services**: 高品質な商用 TTS
-- **Amazon Polly**: AWS の音声合成サービス
-- **Web Speech API**: ブラウザ内蔵の音声合成
-- **ElevenLabs**: AI 音声合成サービス
-- **OpenAI TTS**: ChatGPT の音声合成
+### When Using Google TTS (Unofficial)
 
-## 🚨 注意事項
+- **Usage Limits**: Possibility of being blocked with large request volumes.
+- **Privacy**: Text is sent to Google servers.
+- **Stability**: Possibility of becoming unavailable in the future due to unofficial API.
 
-### Google TTS 使用時
+### When Using API Server
 
-- **利用制限**: 大量リクエストでブロックされる可能性
-- **プライバシー**: テキストが Google サーバーに送信される
-- **安定性**: 非公式 API のため将来利用不可の可能性
+- **Docker Required**: Docker and Docker Compose environment required.
+- **GCP Credentials**: Google Cloud service account key required.
 
-### Test Synthesizer 使用時
+### When Using Test Synthesizer
 
-- **本番非推奨**: 開発・テスト専用
-- **音声品質**: 実際の読み上げ品質は確認不可
+- **Not for Production**: Dedicated for development/testing.
+- **Audio Quality**: Actual reading quality cannot be verified.
 
-### Edge TTS Docker 使用時
+### When Changing Settings
 
-- **Docker 必須**: Docker と Docker Compose の環境が必要
-- **ポート開放**: LAN アクセスの場合はファイアウォール設定を確認
-- **リソース使用量**: メモリ 200-400MB、ディスク容量 約 800MB が必要
-- **初回起動**: 依存関係のダウンロードで時間がかかる場合がある
-- **ネットワーク**: 初回は Edge TTS ライブラリのダウンロードでインターネット接続が必要
-
-### 設定変更時
-
-- **拡張機能リロード必須**: 設定変更後は必ずリロード
-- **キャッシュクリア**: 古い音声データがキャッシュされる場合あり
-
-## ✅ トラブルシューティング
-
-### Q1: 音声が再生されない
-
-- 設定値が正しいか config.json を確認
-- 拡張機能をリロードしたか確認
-- Console でエラーログを確認
-
-### Q2: Google TTS が動作しない
-
-- インターネット接続を確認
-- ファイアウォール・プロキシ設定を確認
-- 一時的に"test"に切り替えて動作確認
-
-### Q3: 新しいモジュールを追加したい
-
-- 上記の「新しいモジュールの追加」セクションを参照
-- 基底クラス `AudioSynthesizer` を継承
-- `SynthesizerFactory` への登録を忘れずに
-
----
-
-**関連ファイル**:
-
-- `/audicle/config.json`: 音声合成エンジン設定
-- `/audicle/background.js`: 音声合成モジュール実装
-- `/README.md`: 基本的な使用方法
+- **Reload Required**: Must reload the extension after changing settings.
+- **Cache Clear**: Old audio data might be cached.

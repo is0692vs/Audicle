@@ -17,7 +17,7 @@ Audicleは、利用スタイルに合わせて選べる3つの形態で提供さ
 - **特徴**:
   - アカウント作成やサーバー設定が不要
   - 最新の機能をすぐに利用可能
-  - 高品質な音声を安定して提供
+  - 高品質な音声を安定して提供（Supabase + Vercel Storage）
 - **アクセス**:
   - 現在、招待制で運用しています。利用をご希望の方はお問い合わせください。
 
@@ -26,11 +26,11 @@ Audicleは、利用スタイルに合わせて選べる3つの形態で提供さ
 ご自身のサーバー環境でAudicleを運用したい方向けのバージョンです。
 
 - **特徴**:
-  - 全ての機能を自由にカスタマイズ可能
+  - 軽量でシンプル
   - 外部サービスへの依存が少ない
-  - Docker Composeで簡単にデプロイ可能
+  - 簡単にデプロイ可能
 - **セットアップ**:
-  - `packages/web-app` および `packages/api-server` を参照してください。
+  - `packages/web-app` を参照してください。
 
 ### 3. Chrome拡張機能
 
@@ -39,6 +39,7 @@ Audicleは、利用スタイルに合わせて選べる3つの形態で提供さ
 - **特徴**:
   - Webサイトを離れることなく、ワンクリックで読み上げを開始
   - シンプルで直感的な操作
+  - Google TTS（デフォルト）または自前の `api-server` を利用可能
 - **インストール**:
   - `packages/chrome-extension` を参照し、デベロッパーモードで読み込んでください。
 
@@ -53,17 +54,23 @@ Audicleは、利用スタイルに合わせて選べる3つの形態で提供さ
 
 本プロジェクトは、以下の技術スタックで構築されています。
 
+- **`web-app-vercel` (フル機能フロントエンド)**
+  - **フレームワーク**: Next.js 16, React 19
+  - **言語**: TypeScript
+  - **UI**: Tailwind CSS
+  - **テスト**: Jest, Playwright
+  - **データベース**: Supabase, Vercel Storage
+  - **認証**: NextAuth.js
+
+- **`web-app` (シンプル版フロントエンド)**
+  - **フレームワーク**: Next.js 15, React 19
+  - **言語**: TypeScript
+  - **UI**: Tailwind CSS
+
 - **`api-server` (バックエンド)**
   - **フレームワーク**: FastAPI (Python)
   - **TTSエンジン**: Google Cloud Text-to-Speech
   - **デプロイ**: Docker
-
-- **`web-app` / `web-app-vercel` (フロントエンド)**
-  - **フレームワーク**: Next.js, React
-  - **言語**: TypeScript
-  - **UI**: Tailwind CSS
-  - **テスト**: Jest, Playwright
-  - **データベース**: Supabase (Vercel版)
 
 - **`chrome-extension` (ブラウザ拡張機能)**
   - **言語**: JavaScript
@@ -75,16 +82,17 @@ Audicleは、モノリポ構成の複数のパッケージから成り立って�
 
 ```
 /packages
-├── api-server/        # 音声合成を行うAPIサーバー
+├── api-server/        # 音声合成を行うAPIサーバー (Python/FastAPI)
 ├── chrome-extension/  # ブラウザ拡張機能
-├── db/                # データベーススキーマ
-└── web-app/           # セルフホスト用Webアプリ
-└── web-app-vercel/    # Vercelホスティング版Webアプリ
+├── db/                # データベーススキーマ管理
+├── web-app/           # シンプルなセルフホスト用Webアプリ
+└── web-app-vercel/    # Vercelホスティング用フル機能Webアプリ
 ```
 
-- **`chrome-extension`** は、閲覧中のページの本文を抽出し、**`api-server`** に送信して音声データを受け取ります。
-- **`web-app`** は、指定されたURLの記事をサーバーサイドで取得・解析し、音声合成を行います。セルフホスト版はこちらを利用します。
-- **`web-app-vercel`** は、Vercelでのホスティングに最適化されており、ユーザー認証やデータベース連携機能が追加されています。
+- **`chrome-extension`** は、閲覧中のページの本文を抽出します。TTSは直接行うか、**`api-server`** に送信して行います。
+- **`web-app`** は、軽量な記事ビューワー兼読み上げアプリです。
+- **`web-app-vercel`** は、Vercelでのホスティングに最適化されており、ユーザー認証、データベース連携、高度な再生機能を含みます。
+- **`api-server`** は、Google Cloud Text-to-Speech を利用した堅牢な TTS API を提供し、Chrome拡張機能やセルフホスト環境から利用されます。
 
 ## APIエンドポイントの例
 
@@ -93,7 +101,7 @@ Audicleは、モノリポ構成の複数のパッケージから成り立って�
 ### テキストを音声合成する
 
 ```bash
-curl -X POST "http://localhost:8001/synthesize/simple" \
+curl -X POST "http://localhost:8000/synthesize" \
 -H "Content-Type: application/json" \
 -d '{"text": "これはテストです"}' \
 --output test.mp3
@@ -114,8 +122,8 @@ curl -X POST "http://localhost:8001/synthesize/simple" \
 
 - **問題**: 拡張機能のアイコンをクリックしても反応がない、または読み上げが開始されない。
 - **解決策**:
-  - `api-server`が正しく起動しているか確認してください。
-  - 拡張機能の設定で、APIサーバーのURLが正しく設定されているか確認してください (`http://localhost:8001`)。
+  - `api-server`モードを使用している場合、サーバーが正しく起動しているか確認してください。
+  - 拡張機能の設定で、APIサーバーのURLが正しく設定されているか確認してください (`http://localhost:8000`)。
   - デベロッパーツールのコンソールにエラーメッセージが表示されていないか確認してください。
 
 ## 貢献
