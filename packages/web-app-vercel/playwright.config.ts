@@ -55,6 +55,12 @@ export default defineConfig({
             },
             dependencies: ['setup'],
         },
+        // Theme FOUC test project (no auth required)
+        {
+            name: 'theme-fouc',
+            testMatch: /theme-fouc\.spec\.ts/,
+            use: { ...devices['Desktop Chrome'] },
+        },
     ],
     webServer: {
         command: process.env.CI_WEB_SERVER_COMMAND || 'AUTH_ENV=test npm run dev',

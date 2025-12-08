@@ -283,7 +283,7 @@ jobs:
         run: npx playwright install --with-deps
         working-directory: packages/web-app-vercel
       - name: Run theme FOUC tests
-        run: npx playwright test tests/e2e/theme-fouc.spec.ts --project=chromium
+        run: npx playwright test tests/e2e/theme-fouc.spec.ts --project=theme-fouc
         working-directory: packages/web-app-vercel
         env:
           NODE_ENV: test
