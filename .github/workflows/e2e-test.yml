@@ -201,3 +201,34 @@ jobs:
         with:
           name: article-test-results
           path: packages/web-app-vercel/playwright-report/
+
+  test-theme-fouc:
+    name: テーマ FOUC 防止
+    needs:
+      - seed-test-db
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: packages/web-app-vercel
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "packages/web-app-vercel/package-lock.json"
+      - run: npm ci
+      - run: npx playwright install --with-deps
+      - name: Run theme FOUC tests
+        env:
+          NEXTAUTH_URL: http://localhost:3000
+          NODE_ENV: test
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: npx playwright test tests/e2e/theme-fouc.spec.ts
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: theme-fouc-test-results
+          path: packages/web-app-vercel/playwright-report/

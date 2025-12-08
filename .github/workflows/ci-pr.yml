@@ -246,6 +246,58 @@ jobs:
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
           CI_WEB_SERVER_COMMAND: npm run start
 
+  e2e-theme-fouc:
+    name: E2E Theme FOUC
+    needs: [setup, seed-test-db]
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+      NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+      - name: Restore npm cache
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: packages/web-app-vercel/node_modules
+          key: npm-deps-${{ runner.os }}-node-20-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
+          restore-keys: |
+            npm-deps-${{ runner.os }}-node-20-
+      - name: Install dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: npm ci
+        working-directory: packages/web-app-vercel
+      - name: Restore Playwright browsers
+        id: playwright-cache-e2e
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-pr-${{ runner.os }}-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
+      - name: Install Playwright browsers
+        if: steps.playwright-cache-e2e.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps
+        working-directory: packages/web-app-vercel
+      - name: Run theme FOUC tests
+        run: npx playwright test tests/e2e/theme-fouc.spec.ts --project=chromium
+        working-directory: packages/web-app-vercel
+        env:
+          NODE_ENV: test
+          AUTH_ENV: test
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: theme-fouc-test-results
+          path: packages/web-app-vercel/playwright-report/
+
   e2e-auth:
     name: E2E Auth Setup
     needs: [setup, build]
