@@ -91,6 +91,11 @@ const ALLOWED_EMAILS = process.env.ALLOWED_EMAILS?.split(',').map(e => e.trim())
 // 現在は2に設定して開発/テスト環境での最適化検証を行う
 const POPULAR_ARTICLE_READ_COUNT_THRESHOLD = 2;
 
+function getLanguageCode(voiceModel: string): string {
+    const match = voiceModel.match(/^([a-z]{2}-[A-Z]{2})/);
+    return match ? match[1] : 'ja-JP';
+}
+
 // 記事ハッシュ計算関数を追加
 function calculateArticleHash(chunks: string[]): string {
     const content = chunks.join('\n');
@@ -132,6 +137,7 @@ function getTTSClient(): TextToSpeechClient | null {
         try {
             return JSON.parse(s);
         } catch (e) {
+            void e;
             return null;
         }
     };
@@ -175,6 +181,8 @@ function getTTSClient(): TextToSpeechClient | null {
             }
         } catch (_e) {
             // ignore
+            void _e;
+            void _e;
         }
     }
 
@@ -186,7 +194,7 @@ function getTTSClient(): TextToSpeechClient | null {
     // expects a credential-like object. We'll pass it as `credentials` after a
     // best-effort cast.
     ttsCLient = new TextToSpeechClient({
-         
+
         credentials: credentials as any,
     });
     return ttsCLient;
@@ -236,8 +244,10 @@ async function synthesizeToBuffer(text: string, voice: string, speakingRate: num
         text: text,
     };
 
+    const languageCode = getLanguageCode(voice);
+
     const voiceParams: protos.google.cloud.texttospeech.v1.IVoiceSelectionParams = {
-        languageCode: 'ja-JP',
+        languageCode,
         name: voice || 'ja-JP-Neural2-B',
     };
 

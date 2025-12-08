@@ -3,12 +3,19 @@
  * HTMLから段落単位でテキストを抽出し、各段落に情報を付与する
  */
 
+import { detectLanguage, type DetectedLanguage } from './languageDetector';
+
 export interface Paragraph {
   id: string; // 段落ID（連番）
   type: string; // 要素タイプ（p, h1, h2, li等）
   originalText: string; // 元のテキスト（表示用）
   cleanedText: string; // クリーンアップ済みテキスト（TTS送信用）
   isSplitChunk?: boolean; // true の場合、元の段落が分割されたもの
+}
+
+export interface ParseResult {
+  paragraphs: Paragraph[];
+  detectedLanguage: DetectedLanguage;
 }
 
 // Google Cloud TTS APIの最大リクエストバイト数
@@ -192,7 +199,7 @@ export function resizeChunksIfNeeded(paragraphs: Paragraph[]): Paragraph[] {
  * @param htmlContent Readability.jsの.contentで取得したHTML文字列
  * @returns 段落情報の配列
  */
-export function parseHTMLToParagraphs(htmlContent: string): Paragraph[] {
+export function parseHTMLToParagraphs(htmlContent: string): ParseResult {
   // DOMパーサーを使用してHTMLを解析
   const parser = new DOMParser();
   const doc = parser.parseFromString(htmlContent, 'text/html');
@@ -266,7 +273,15 @@ export function parseHTMLToParagraphs(htmlContent: string): Paragraph[] {
   }
 
   // チャンクリサイズを適用（5000バイト超過チャンクを分割）
-  return resizeChunksIfNeeded(paragraphs);
+  const resized = resizeChunksIfNeeded(paragraphs);
+
+  const fullText = resized
+    .filter((p) => p.type !== 'pre') // コードブロック(pre)を言語検出から除外
+    .map((p) => p.cleanedText)
+    .join(' ');
+  const detectedLanguage = detectLanguage(fullText);
+
+  return { paragraphs: resized, detectedLanguage };
 }
 
 /**
