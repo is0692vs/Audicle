@@ -194,7 +194,7 @@ function getTTSClient(): TextToSpeechClient | null {
     // expects a credential-like object. We'll pass it as `credentials` after a
     // best-effort cast.
     ttsCLient = new TextToSpeechClient({
-         
+
         credentials: credentials as any,
     });
     return ttsCLient;

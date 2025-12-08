@@ -35,9 +35,10 @@ import {
   Download,
 } from "lucide-react";
 
-function convertParagraphsToChunks(
-  htmlContent: string
-): { chunks: Chunk[]; detectedLanguage: DetectedLanguage } {
+function convertParagraphsToChunks(htmlContent: string): {
+  chunks: Chunk[];
+  detectedLanguage: DetectedLanguage;
+} {
   // HTML構造を保持して段落を抽出
   const { paragraphs, detectedLanguage } = parseHTMLToParagraphs(htmlContent);
 
@@ -80,8 +81,11 @@ export default function ReaderPageClient() {
   const [title, setTitle] = useState("");
   const [error, setError] = useState("");
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
-  const [detectedLanguage, setDetectedLanguage] = useState<DetectedLanguage>("unknown");
-  const [effectiveVoiceModel, setEffectiveVoiceModel] = useState<string>(DEFAULT_SETTINGS.voice_model);
+  const [detectedLanguage, setDetectedLanguage] =
+    useState<DetectedLanguage>("unknown");
+  const [effectiveVoiceModel, setEffectiveVoiceModel] = useState<string>(
+    DEFAULT_SETTINGS.voice_model
+  );
   const [articleId, setArticleId] = useState<string | null>(null);
   const [itemId, setItemId] = useState<string | null>(null);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
@@ -174,7 +178,8 @@ export default function ReaderPageClient() {
       setError("");
       try {
         const response = await extractContent(articleUrl);
-        const { chunks: chunksWithId, detectedLanguage } = convertParagraphsToChunks(response.content);
+        const { chunks: chunksWithId, detectedLanguage } =
+          convertParagraphsToChunks(response.content);
         setChunks(chunksWithId);
         setDetectedLanguage(detectedLanguage);
         setUrl(articleUrl);
@@ -333,7 +338,8 @@ export default function ReaderPageClient() {
           return;
         }
         const data = await extractRes.json();
-        const { chunks: chunksWithId, detectedLanguage } = convertParagraphsToChunks(data.content);
+        const { chunks: chunksWithId, detectedLanguage } =
+          convertParagraphsToChunks(data.content);
 
         setTitle(
           isPlaylistMode ? resolvedTitle : data.title || resolvedTitle || ""
