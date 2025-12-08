@@ -1,7 +1,6 @@
 // path and url helpers are not required in this config
 import js from "@eslint/js";
 import * as nextConfigPkg from "eslint-config-next";
-import typescriptPlugin from "@typescript-eslint/eslint-plugin";
 import typescriptParser from "@typescript-eslint/parser";
 import reactPlugin from "eslint-plugin-react";
 import reactHooksPlugin from "eslint-plugin-react-hooks";
@@ -28,7 +27,6 @@ const eslintConfig = [
       globals: { ...globals.browser, ...globals.node, React: true },
     },
     plugins: {
-      "@typescript-eslint": typescriptPlugin,
       react: reactPlugin,
       "react-hooks": reactHooksPlugin,
     },
