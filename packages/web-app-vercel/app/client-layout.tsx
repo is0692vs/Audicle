@@ -8,7 +8,7 @@ import { PlaylistPlaybackProvider } from "@/contexts/PlaylistPlaybackContext";
 import { useSession } from "next-auth/react";
 import { useUserSettings } from "@/lib/hooks/useUserSettings";
 import SessionProviderWrapper from "./session-provider-wrapper";
-import { applyTheme } from "@/lib/theme";
+import { applyTheme, getCurrentTheme } from "@/lib/theme";
 import { DEFAULT_SETTINGS, ColorTheme } from "@/types/settings";
 
 export default function ClientLayout({ children }: { children: ReactNode }) {
@@ -42,33 +42,31 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
 }
 
 function Content({ children }: { children: ReactNode }) {
-    const { data: session, status } = useSession();
-    const { data: userSettings } = useUserSettings();
+  const { data: session, status } = useSession();
+  const { data: userSettings } = useUserSettings();
 
-    // Initialize theme on mount
-    useEffect(() => {
-      if (status === "loading") {
-        return; // セッション状態が確定するまで待機
-      }
+  // Initialize theme on mount
+  useEffect(() => {
+    if (status === "loading") {
+      return; // セッション状態が確定するまで待機
+    }
 
-      if (status === "authenticated" && userSettings) {
-        // Logged in user: use DB settings
+    if (status === "authenticated" && userSettings) {
+      // Logged in user: if DB theme differs from current DOM theme, apply DB setting
+      const current = getCurrentTheme();
+      if (current !== userSettings.color_theme) {
         applyTheme(userSettings.color_theme);
-      } else {
-        // Guest user: use localStorage or default
-        const storedTheme = localStorage.getItem(
-          "audicle-color-theme"
-        ) as string;
-        const theme = storedTheme || DEFAULT_SETTINGS.color_theme;
-        applyTheme(theme as ColorTheme);
       }
-    }, [status, userSettings]);
+    } else {
+      // For guest users, the theme is pre-applied by the blocking inline script
+      // No-op here to avoid FOUC by reapplying theme after hydration
+    }
+  }, [status, userSettings]);
 
-    return (
-      <PlaylistPlaybackProvider>
-        <Toaster position="top-right" />
-        {children}
-      </PlaylistPlaybackProvider>
-    );
-  }
-
+  return (
+    <PlaylistPlaybackProvider>
+      <Toaster position="top-right" />
+      {children}
+    </PlaylistPlaybackProvider>
+  );
+}
