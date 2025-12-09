@@ -55,7 +55,7 @@ Audicleは、利用スタイルに合わせて選べる3つの形態で提供さ
 本プロジェクトは、以下の技術スタックで構築されています。
 
 - **`web-app-vercel` (フル機能フロントエンド)**
-  - **フレームワーク**: Next.js 16, React 19
+  - **フレームワーク**: Next.js 15, React 19
   - **言語**: TypeScript
   - **UI**: Tailwind CSS
   - **テスト**: Jest, Playwright
