@@ -36,8 +36,20 @@ describe('getOrCreateDefaultPlaylist', () => {
     const userEmail = 'test@example.com';
 
     it('should return existing default playlist', async () => {
-      const existingPlaylist = { id: '1', is_default: true, playlist_items: [] };
-      mockedSupabaseLocal.getPlaylistsForOwner.mockResolvedValue([existingPlaylist as any]);
+      const existingPlaylist = {
+        id: '1',
+        is_default: true,
+        playlist_items: [],
+        items: [],
+        owner_email: userEmail,
+        name: 'Default Playlist',
+        description: 'Default playlist description',
+        visibility: 'private' as const,
+        allow_fork: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      mockedSupabaseLocal.getPlaylistsForOwner.mockResolvedValue([existingPlaylist]);
 
       const { playlist, error } = await getOrCreateDefaultPlaylist(userEmail);
 
@@ -51,9 +63,19 @@ describe('getOrCreateDefaultPlaylist', () => {
     });
 
     it('should create a new default playlist if one does not exist', async () => {
-      const newPlaylist = { id: '2' };
+      const newPlaylist = {
+        id: '2',
+        owner_email: userEmail,
+        name: '読み込んだ記事',
+        description: '読み込んだ記事が自動的に追加されます',
+        visibility: 'private' as const,
+        is_default: false,
+        allow_fork: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
       mockedSupabaseLocal.getPlaylistsForOwner.mockResolvedValue([]);
-      mockedSupabaseLocal.createPlaylist.mockResolvedValue(newPlaylist as any);
+      mockedSupabaseLocal.createPlaylist.mockResolvedValue(newPlaylist);
 
       const { playlist, error } = await getOrCreateDefaultPlaylist(userEmail);
 
@@ -73,7 +95,32 @@ describe('getOrCreateDefaultPlaylist', () => {
     });
 
     it('should return existing default playlist from Supabase', async () => {
-      const existingPlaylist = { id: 'supabase-1', is_default: true, playlist_items: [{ id: 1 }] };
+      const existingPlaylist = {
+        id: 'supabase-1',
+        is_default: true,
+        owner_email: userEmail,
+        name: 'Default Playlist',
+        description: '',
+        visibility: 'private' as const,
+        allow_fork: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        playlist_items: [{
+          id: 'item-1',
+          playlist_id: 'supabase-1',
+          article_id: 'article-1',
+          position: 1,
+          added_at: new Date().toISOString(),
+          article: {
+            id: 'article-1',
+            owner_email: userEmail,
+            url: 'http://example.com',
+            title: 'Test Article',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }
+        }],
+      };
       mockedSupabase.from.mockReturnValue({
         select: jest.fn().mockReturnThis(),
         eq: jest.fn().mockReturnThis(),
@@ -91,7 +138,17 @@ describe('getOrCreateDefaultPlaylist', () => {
     });
 
     it('should create a new playlist if not found in Supabase', async () => {
-      const newPlaylist = { id: 'supabase-new-1' };
+      const newPlaylist = {
+        id: 'supabase-new-1',
+        owner_email: userEmail,
+        name: '読み込んだ記事',
+        description: '読み込んだ記事が自動的に追加されます',
+        visibility: 'private' as const,
+        is_default: true,
+        allow_fork: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
       // 1. Find operation fails with PGRST116
       const findMock = {
