@@ -24,34 +24,19 @@ export async function isSafeUrl(urlString: string): Promise<boolean> {
             return false;
         }
 
-        // Resolve hostname to IP
-        // options: { all: true } could be used to check all resolved IPs,
-        // but fetch() usually uses the first one. For strict security,
-        // we should check the IP we actually connect to, but in Node fetch
-        // we can't easily control that without a custom agent.
-        // Checking the resolved IP is a good first line of defense.
-        const { address, family } = await lookup(hostname);
+        // Resolve hostname to all IPs and check each resolved address
+        const addresses = await lookup(hostname, { all: true }) as Array<{ address: string; family: number }>;
 
-        if (!address) {
+        if (!addresses || addresses.length === 0) {
             return false;
         }
 
-        const ip = ipaddr.parse(address);
-
-        // Check for private ranges
-        if (ip.range() === 'private' ||
-            ip.range() === 'loopback' ||
-            ip.range() === 'linkLocal' ||
-            ip.range() === 'uniqueLocal' || // IPv6 private
-            ip.range() === 'broadcast' ||
-            ip.range() === 'carrierGradeNat' // 100.64.0.0/10
-           ) {
-            return false;
-        }
-
-        // Explicitly block AWS/Cloud metadata service if not caught by linkLocal
-        if (address === '169.254.169.254') {
-            return false;
+        // Use allowlist policy: only unicast addresses are allowed
+        for (const { address } of addresses) {
+            const ip = ipaddr.parse(address);
+            if (ip.range() !== 'unicast') {
+                return false;
+            }
         }
 
         return true;
