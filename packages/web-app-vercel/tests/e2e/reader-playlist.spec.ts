@@ -18,7 +18,9 @@ test.describe('Reader - Playlist related navigation', () => {
 
         // Wait for article list and click the first article (Position 0: テスト記事1)
         await page.waitForSelector('a[data-testid="playlist-article"]', { state: 'visible' });
-        const link = page.getByText('テスト記事1', { exact: true });
+
+        // Use more specific locator to avoid strict mode violations if text appears elsewhere
+        const link = page.getByTestId('playlist-article').filter({ hasText: 'テスト記事1' });
         await expect(link).toBeVisible();
 
         const href = await link.getAttribute('href');
@@ -82,7 +84,7 @@ test.describe('Reader - Playlist related navigation', () => {
         // 3. 人気記事1
 
         // Click first: テスト記事1
-        await page.getByText('テスト記事1', { exact: true }).click();
+        await page.getByTestId('playlist-article').filter({ hasText: 'テスト記事1' }).click();
 
         // Wait for navigation
         await page.waitForURL(/\/reader.*/);
@@ -100,7 +102,9 @@ test.describe('Reader - Playlist related navigation', () => {
         // Click next -> テスト記事2
         const initialUrl = page.url();
         await next.click();
-        await page.waitForURL((url) => url.toString() !== initialUrl);
+
+        // Wait for URL to change to index=1
+        await page.waitForURL(/index=1/);
 
         const afterNextUrl = page.url();
         expect(afterNextUrl).not.toBe(initialUrl);
@@ -111,7 +115,9 @@ test.describe('Reader - Playlist related navigation', () => {
 
         // Click previous -> テスト記事1
         await prev.click();
-        await page.waitForURL((url) => url.toString() !== afterNextUrl);
+
+        // Wait for URL to change back to index=0
+        await page.waitForURL(/index=0/);
 
         // Should return to initial article (index=0)
         await page.waitForSelector('[data-testid="article-title"]', { state: 'visible' });
@@ -157,7 +163,7 @@ test.describe('Reader - Playlist related navigation', () => {
         const next = page.getByTestId('desktop-next-button');
         await next.click();
 
-        // Wait for navigation
+        // Wait for navigation. Index should be 1.
         await page.waitForURL(/index=1/);
         await expect(page.getByTestId('article-title')).toContainText('テスト記事2');
 
