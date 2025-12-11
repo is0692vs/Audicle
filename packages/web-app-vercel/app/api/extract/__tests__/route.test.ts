@@ -4,6 +4,11 @@ jest.mock('@/lib/api-auth', () => ({
     getUserEmailFromRequest: jest.fn(() => Promise.resolve('test@example.com'))
 }))
 
+// SSRFチェックをモック（常に許可）
+jest.mock('@/lib/ssrf', () => ({
+    isSafeUrl: jest.fn().mockResolvedValue(true)
+}))
+
 // fetchをモック
 global.fetch = jest.fn(() =>
     Promise.resolve({
