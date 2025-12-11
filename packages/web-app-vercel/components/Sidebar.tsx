@@ -51,6 +51,7 @@ export default function Sidebar() {
           size="icon"
           variant="ghost"
           onClick={() => setSidebarOpen(true)}
+          aria-label="メニューを開く"
         >
           <Menu className="h-5 w-5" />
         </Button>
@@ -75,6 +76,7 @@ export default function Sidebar() {
             variant="ghost"
             className="lg:hidden"
             onClick={() => setSidebarOpen(false)}
+            aria-label="メニューを閉じる"
           >
             <X className="h-5 w-5" />
           </Button>
