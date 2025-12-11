@@ -14,11 +14,12 @@ test.describe('Reader - Playlist related navigation', () => {
         await page.goto('/playlists');
 
         // Click the default playlist
-        await page.getByText('デフォルトプレイリスト').click();
+        // Use exact match to avoid strict mode violation (h3 title vs p description)
+        await page.getByRole('heading', { name: 'デフォルトプレイリスト', exact: true }).click();
 
         // Wait for article list and click the first article (Position 0: テスト記事1)
         await page.waitForSelector('a[data-testid="playlist-article"]', { state: 'visible' });
-        const link = page.getByText('テスト記事1');
+        const link = page.getByText('テスト記事1', { exact: true });
         await expect(link).toBeVisible();
 
         const href = await link.getAttribute('href');
@@ -40,13 +41,19 @@ test.describe('Reader - Playlist related navigation', () => {
         // Seed insertion: Article 1, 2, 3. Article 3 is newest.
         await page.goto('/');
 
+        // Ensure default playlist items are loaded
         await page.waitForSelector('a[data-testid="playlist-article"]', { state: 'visible' });
 
         // Click the first article
         const first = page.locator('a[data-testid="playlist-article"]').first();
+        // Wait for the element to be enabled and stable before clicking
+        await first.waitFor({ state: 'visible' });
         await first.click();
 
-        // Now page should navigate to /reader?url=... and initialize default playlist, showing prev/next
+        // Verify navigation to reader
+        await page.waitForURL(/\/reader/, { timeout: 10000 });
+
+        // Now page should initialize default playlist, showing prev/next
         await page.waitForSelector('[data-testid="audio-player-desktop"]', { state: 'visible' });
         const prev = page.getByTestId('desktop-prev-button');
         const next = page.getByTestId('desktop-next-button');
@@ -57,7 +64,7 @@ test.describe('Reader - Playlist related navigation', () => {
     test('Prev/Next transitions within playlist navigate correctly', async ({ page }) => {
         // Go to playlist page
         await page.goto('/playlists');
-        await page.getByText('デフォルトプレイリスト').click();
+        await page.getByRole('heading', { name: 'デフォルトプレイリスト', exact: true }).click();
 
         await page.waitForSelector('a[data-testid="playlist-article"]', { state: 'visible' });
 
@@ -67,7 +74,7 @@ test.describe('Reader - Playlist related navigation', () => {
         // 3. 人気記事1
 
         // Click first: テスト記事1
-        await page.getByText('テスト記事1').click();
+        await page.getByText('テスト記事1', { exact: true }).click();
 
         // ensure in playlist mode
         await page.waitForSelector('[data-testid="audio-player-desktop"]', { state: 'visible' });
@@ -101,7 +108,7 @@ test.describe('Reader - Playlist related navigation', () => {
 
         // Visit playlist page
         await page.goto('/playlists');
-        await page.getByText('デフォルトプレイリスト').click();
+        await page.getByRole('heading', { name: 'デフォルトプレイリスト', exact: true }).click();
 
         // Change sort to Title Descending (Z-A)
         // Japanese Sort Order (UTF-8):
