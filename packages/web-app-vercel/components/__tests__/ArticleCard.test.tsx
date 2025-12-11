@@ -88,9 +88,10 @@ describe("ArticleCard", () => {
 
     const plusIcon = screen.getByTestId("icon-plus");
     const addButton = plusIcon.closest("button");
-    expect(addButton).toBeInTheDocument();
-
-    fireEvent.click(addButton!);
+    if (!addButton) {
+      fail("Add button not found");
+    }
+    fireEvent.click(addButton);
 
     expect(mockOnPlaylistAdd).toHaveBeenCalledWith(mockItem.article_id);
     expect(mockOnArticleClick).not.toHaveBeenCalled(); // Propagation stopped
