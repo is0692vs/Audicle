@@ -4,6 +4,11 @@ jest.mock('@/lib/api-auth', () => ({
     getUserEmailFromRequest: jest.fn(() => Promise.resolve('test@example.com'))
 }))
 
+// SSRFチェックをモック（常に許可）
+jest.mock('@/lib/ssrf', () => ({
+    isSafeUrl: jest.fn().mockResolvedValue(true)
+}))
+
 // fetchをモック
 global.fetch = jest.fn(() =>
     Promise.resolve({
@@ -83,5 +88,21 @@ describe('/api/extract route', () => {
         expect(res.status).toBe(403)
         const body = await res.json()
         expect(body.error).toBe('このURLは認証が必要なサイトです。ログインが必要なページは読み込めません。')
+    })
+
+    it('returns 403 when SSRF check fails (isSafeUrl false)', async () => {
+        const { isSafeUrl } = require('@/lib/ssrf');
+        (isSafeUrl as jest.Mock).mockResolvedValueOnce(false);
+
+        const mockRequest = new Request('http://localhost:3000/api/extract', {
+            method: 'POST',
+            body: JSON.stringify({ url: 'http://internal-server/' }),
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        const res = await routeModule.POST(mockRequest);
+        expect(res.status).toBe(403);
+        const body = await res.json();
+        expect(body.error).toContain('restricted');
     })
 })
