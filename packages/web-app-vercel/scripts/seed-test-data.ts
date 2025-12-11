@@ -228,17 +228,18 @@ async function seedTestData() {
     // 4. 音声キャッシュインデックス（すべての記事に作成）
     console.log("4. 音声キャッシュインデックスを作成中...");
     for (const article of createdArticles) {
-        const { error: cacheError } = await supabase.from("audio_cache_index").insert({
-            url: article.url,
-            voice_model: "ja-JP-Wavenet-A",
-            cached_chunks: JSON.stringify([
-                { id: "chunk-1", text: "テスト用チャンク1", type: "p" },
-                { id: "chunk-2", text: "テスト用チャンク2", type: "p" },
-                { id: "chunk-3", text: "テスト用チャンク3", type: "p" },
-            ]),
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-        });
+        const { error: cacheError } = await supabase
+            .from("audio_cache_index")
+            .upsert(
+                {
+                    article_url: article.url,
+                    voice: "ja-JP",
+                    cached_chunks: ["chunk-1", "chunk-2", "chunk-3"],
+                    completed_playback: true,
+                    read_count: 1,
+                },
+                { onConflict: "article_url,voice" }
+            );
 
         if (cacheError) {
             console.error("キャッシュインデックスの作成に失敗:", cacheError);
