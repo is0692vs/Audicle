@@ -4,6 +4,7 @@
 
 import { Chunk } from '@/types/api';
 import { logger } from './logger';
+import { getArticleChunks } from './indexedDB';
 
 interface RecordStatsParams {
     url: string;
@@ -57,17 +58,41 @@ function extractDomain(url: string): string {
 }
 
 /**
- * キャッシュヒット/ミスを計算（仮実装）
- * 実際のキャッシュ状況に応じて調整が必要
+ * キャッシュヒット/ミスを計算
+ * IndexedDBをチェックして実際のキャッシュ状況を返す
  */
-async function calculateCacheStats(chunks: Chunk[]) {
-    // TODO: 実際のIndexedDBキャッシュ状況をチェックする
-    // 現時点では仮の値を返す
-    return {
-        cacheHits: 0,
-        cacheMisses: chunks.length,
-        isFullyCached: false,
-    };
+export async function calculateCacheStats(url: string, chunks: Chunk[]) {
+    try {
+        const cachedChunks = await getArticleChunks(url);
+
+        // chunkIndexの範囲チェック＆重複除去を行いながらSet生成
+        // 不正なインデックス（負数、配列長超過）は除外
+        const validIndices = new Set(
+            cachedChunks
+                .map(c => c.chunkIndex)
+                .filter((i) => Number.isInteger(i) && i >= 0 && i < chunks.length)
+        );
+
+        // Set.sizeで重複を自動排除したカウントを取得
+        const cacheHits = validIndices.size;
+
+        const cacheMisses = chunks.length - cacheHits;
+        const isFullyCached = cacheHits === chunks.length && chunks.length > 0;
+
+        return {
+            cacheHits,
+            cacheMisses,
+            isFullyCached,
+        };
+    } catch (error) {
+        logger.warn('Failed to calculate cache stats from IndexedDB:', error);
+        // エラー時は全てミスとして扱う（安全策）
+        return {
+            cacheHits: 0,
+            cacheMisses: chunks.length,
+            isFullyCached: false,
+        };
+    }
 }
 
 /**
@@ -88,7 +113,7 @@ export async function recordArticleStats({
         const domain = extractDomain(url);
 
         // キャッシュ統計を計算
-        const { cacheHits, cacheMisses, isFullyCached } = await calculateCacheStats(chunks);
+        const { cacheHits, cacheMisses, isFullyCached } = await calculateCacheStats(url, chunks);
 
         // 統計APIを呼び出し（非同期、エラー無視）
         const response = await retryFetch(() =>
