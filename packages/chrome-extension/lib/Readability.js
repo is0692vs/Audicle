@@ -394,6 +394,21 @@ Readability.prototype = {
     return Array.prototype.every.call(nodeList, fn, this);
   },
 
+  /**
+   * Iterate over a NodeList, reducing it to a single value.
+   *
+   * For convenience, the current object context is applied to the provided
+   * iterate function.
+   *
+   * @param  NodeList nodeList The NodeList.
+   * @param  Function fn       The iterate function.
+   * @param  Object   acc      The initial value.
+   * @return Object
+   */
+  _reduceNodeList(nodeList, fn, acc) {
+    return Array.prototype.reduce.call(nodeList, fn.bind(this), acc);
+  },
+
   _getAllNodesWithTag(node, tagNames) {
     if (node.querySelectorAll) {
       return node.querySelectorAll(tagNames.join(","));
@@ -2129,14 +2144,15 @@ Readability.prototype = {
       return 0;
     }
 
-    var linkLength = 0;
-
-    // XXX implement _reduceNodeList?
-    this._forEachNode(element.getElementsByTagName("a"), function (linkNode) {
-      var href = linkNode.getAttribute("href");
-      var coefficient = href && this.REGEXPS.hashUrl.test(href) ? 0.3 : 1;
-      linkLength += this._getInnerText(linkNode).length * coefficient;
-    });
+    var linkLength = this._reduceNodeList(
+      element.getElementsByTagName("a"),
+      function (linkLength, linkNode) {
+        var href = linkNode.getAttribute("href");
+        var coefficient = href && this.REGEXPS.hashUrl.test(href) ? 0.3 : 1;
+        return linkLength + this._getInnerText(linkNode).length * coefficient;
+      },
+      0
+    );
 
     return linkLength / textLength;
   },
