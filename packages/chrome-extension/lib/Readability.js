@@ -2090,7 +2090,6 @@ Readability.prototype = {
 
   /**
    * Remove the style attribute on every e and under.
-   * TODO: Test if getElementsByTagName(*) is faster.
    *
    * @param Element
    * @return void
