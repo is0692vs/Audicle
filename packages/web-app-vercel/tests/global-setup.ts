@@ -1,11 +1,15 @@
 import { execSync } from 'child_process';
 import path from 'path';
 
-async function globalSetup() {
+export default async function globalSetup() {
+    if (process.env.SKIP_SEED === 'true') {
+        console.log('[GLOBAL SETUP] Skipping test data seeding (SKIP_SEED=true)');
+        return;
+    }
+
     console.log('[GLOBAL SETUP] Starting test data seeding...');
 
     try {
-        // Run the seed script
         execSync('npm run seed-test-data', {
             cwd: path.resolve(__dirname, '..'),
             stdio: 'inherit',
@@ -18,5 +22,3 @@ async function globalSetup() {
         throw error;
     }
 }
-
-export default globalSetup;
