@@ -68,15 +68,9 @@ export async function calculateCacheStats(url: string, chunks: Chunk[]) {
         // chunkIndexごとの存在有無をチェックするためのSet
         const cachedIndices = new Set(cachedChunks.map(c => c.chunkIndex));
 
-        let cacheHits = 0;
-
         // 各チャンクがキャッシュに存在するか確認
         // チャンク配列のインデックスとキャッシュのchunkIndexが対応すると仮定
-        for (let i = 0; i < chunks.length; i++) {
-            if (cachedIndices.has(i)) {
-                cacheHits++;
-            }
-        }
+        const cacheHits = chunks.filter((_, i) => cachedIndices.has(i)).length;
 
         const cacheMisses = chunks.length - cacheHits;
         const isFullyCached = cacheHits === chunks.length && chunks.length > 0;
