@@ -28,7 +28,10 @@ export function PopularArticleCard({
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="flex-1 min-w-0">
             {/* タイトル */}
-            <h3 className="text-lg lg:text-xl font-semibold text-white mb-3 line-clamp-2">
+            <h3
+              className="text-lg lg:text-xl font-semibold text-white mb-3 line-clamp-2"
+              title={article.title}
+            >
               {article.title}
             </h3>
 
@@ -82,6 +85,8 @@ export function PopularArticleCard({
               e.stopPropagation()
             }
             className="text-primary/70 hover:text-primary/80 hover:bg-primary/10"
+            aria-label="プレイリストに追加"
+            title="プレイリストに追加"
           >
             <Plus className="size-4" />
           </Button>
