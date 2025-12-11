@@ -2449,7 +2449,6 @@ Readability.prototype = {
     // Traverse backwards so we can remove nodes at the same time
     // without effecting the traversal.
     //
-    // TODO: Consider taking into account original contentScore here.
     this._removeNodes(this._getAllNodesWithTag(e, [tag]), function (node) {
       // First check if this node IS data table, in which case don't remove it.
       var isDataTable = function (t) {
@@ -2494,6 +2493,10 @@ Readability.prototype = {
       this.log("Cleaning Conditionally", node);
 
       var contentScore = 0;
+
+      if (node.readability) {
+        contentScore = node.readability.contentScore;
+      }
 
       if (weight + contentScore < 0) {
         return true;
