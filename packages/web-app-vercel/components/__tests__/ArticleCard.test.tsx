@@ -109,9 +109,10 @@ describe("ArticleCard", () => {
 
     const minusIcon = screen.getByTestId("icon-minus");
     const removeButton = minusIcon.closest("button");
-    expect(removeButton).toBeInTheDocument();
-
-    fireEvent.click(removeButton!);
+    if (!removeButton) {
+      fail("Remove button not found");
+    }
+    fireEvent.click(removeButton);
 
     expect(mockOnRemove).toHaveBeenCalledWith(mockItem.id);
     expect(mockOnArticleClick).not.toHaveBeenCalled(); // Propagation stopped
