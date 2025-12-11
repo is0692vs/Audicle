@@ -49,12 +49,8 @@ test.describe('Reader - Playlist related navigation', () => {
         await page.goto('/');
 
         // Ensure default playlist items are loaded
-        await page.waitForSelector('a[data-testid="playlist-article"]', { state: 'visible' });
-
-        // Click the first article
-        const first = page.locator('a[data-testid="playlist-article"]').first();
-        // Wait for the element to be enabled and stable before clicking
-        await first.waitFor({ state: 'visible' });
+        const first = page.getByTestId('playlist-article').first();
+        await expect(first).toBeVisible();
         await first.click();
 
         // Verify navigation to reader

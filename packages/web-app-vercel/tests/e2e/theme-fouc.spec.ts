@@ -10,6 +10,17 @@ const COLOR_MAP: Record<string, string> = {
     orange: 'hsl(25 95% 53%)',
 }
 
+async function waitForPrimaryColor(page: Parameters<typeof test>[0]['page'], expected: string) {
+    await page.waitForFunction(
+        (expectedColor) => {
+            const style = getComputedStyle(document.documentElement)
+            return style.getPropertyValue('--color-primary').trim() === expectedColor
+        },
+        expected,
+        { timeout: 5000 }
+    )
+}
+
 test.describe('Theme FOUC prevention', () => {
     test.beforeEach(async ({ page }) => {
         // No-op: keep default context handling. We'll create unauthenticated contexts per-test.
@@ -21,7 +32,7 @@ test.describe('Theme FOUC prevention', () => {
         await ctx.addInitScript({ content: `localStorage.setItem('${THEME_STORAGE_KEY}', '${theme}')` })
         const p = await ctx.newPage()
         p.on('console', msg => console.log('PAGE LOG:', msg.type(), msg.text()))
-        await p.goto('/', { waitUntil: 'domcontentloaded' })
+        await p.goto('/', { waitUntil: 'load' })
 
         const stored = await p.evaluate((k) => localStorage.getItem(k), THEME_STORAGE_KEY)
         console.log('stored localStorage theme', stored)
@@ -32,6 +43,7 @@ test.describe('Theme FOUC prevention', () => {
         const domTheme = await p.evaluate(() => document.documentElement.getAttribute('data-theme'))
         expect(domTheme).toBe(theme)
 
+        await waitForPrimaryColor(p, COLOR_MAP[theme])
         const computedPrimary = await p.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--color-primary'))
         expect(computedPrimary.trim()).toBe(COLOR_MAP[theme])
         await ctx.close()
@@ -44,11 +56,12 @@ test.describe('Theme FOUC prevention', () => {
                 await ctx.addInitScript({ content: `localStorage.setItem('${THEME_STORAGE_KEY}', '${theme}')` })
                 const p = await ctx.newPage()
                 p.on('console', msg => console.log('PAGE LOG:', msg.type(), msg.text()))
-                await p.goto('/', { waitUntil: 'domcontentloaded' })
+                await p.goto('/', { waitUntil: 'load' })
 
                 const domTheme = await p.evaluate(() => document.documentElement.getAttribute('data-theme'))
                 expect(domTheme).toBe(theme)
 
+                await waitForPrimaryColor(p, COLOR_MAP[theme])
                 const computedPrimary = await p.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--color-primary'))
                 expect(computedPrimary.trim()).toBe(COLOR_MAP[theme])
                 await ctx.close()
@@ -63,13 +76,14 @@ test.describe('Theme FOUC prevention', () => {
         const p = await ctx.newPage()
         p.on('console', msg => console.log('PAGE LOG:', msg.type(), msg.text()))
         await p.setDefaultNavigationTimeout(45000)
-        await p.goto('/', { waitUntil: 'domcontentloaded' })
+        await p.goto('/', { waitUntil: 'load' })
 
         const domTheme = await p.evaluate(() => document.documentElement.getAttribute('data-theme'))
         const isDark = await p.evaluate(() => document.documentElement.classList.contains('dark'))
         expect(domTheme).toBe(theme)
         expect(isDark).toBe(true)
 
+        await waitForPrimaryColor(p, COLOR_MAP[theme])
         const computedPrimary = await p.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--color-primary'))
         expect(computedPrimary.trim()).toBe(COLOR_MAP[theme])
         await ctx.close()
@@ -80,7 +94,7 @@ test.describe('Theme FOUC prevention', () => {
         const ctx = await browser.newContext()
         const p = await ctx.newPage()
         p.on('console', msg => console.log('PAGE LOG:', msg.type(), msg.text()))
-        await p.goto('/', { waitUntil: 'domcontentloaded' })
+        await p.goto('/', { waitUntil: 'load' })
 
         const domTheme = await p.evaluate(() => document.documentElement.getAttribute('data-theme'))
         expect(domTheme).toBe('ocean')
