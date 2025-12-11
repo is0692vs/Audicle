@@ -17,6 +17,7 @@ export default defineConfig({
     reporter: 'html',
     timeout: 120000,
     expect: { timeout: 30000 },
+    globalSetup: require.resolve('./tests/global-setup.ts'),
     use: {
         baseURL: 'http://localhost:3000',
         trace: 'on-first-retry',
