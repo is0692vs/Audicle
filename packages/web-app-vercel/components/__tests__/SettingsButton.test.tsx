@@ -11,8 +11,7 @@ describe("SettingsButton", () => {
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute("href", "/settings");
 
-    // Check if SVG icon is present (by checking for svg element)
-    // Note: getByRole('link') includes its children, but we can verify internal structure if needed.
-    // Since title="設定" is on the Link (anchor), getByRole with name should find it.
+    // Check if SVG icon is present
+    expect(link.querySelector("svg")).toBeInTheDocument();
   });
 });
