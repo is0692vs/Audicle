@@ -3,6 +3,7 @@ import { Readability } from '@mozilla/readability';
 import { normalizeArticleText } from '@/lib/parseArticle';
 import { parseHTML } from 'linkedom';
 import { ExtractResponse } from '@/types/api';
+import { isSafeUrl } from '@/lib/ssrf';
 
 // Node.js runtimeを明示的に指定（JSDOMはEdge Runtimeで動作しない）
 export const runtime = 'nodejs';
@@ -46,6 +47,15 @@ export async function POST(request: NextRequest) {
             return NextResponse.json(
                 { error: 'Invalid URL format' },
                 { status: 400, headers: corsHeaders }
+            );
+        }
+
+        // SSRFチェック
+        if (!(await isSafeUrl(url))) {
+            console.warn('[Extract API] SSRF attempt blocked:', url);
+            return NextResponse.json(
+                { error: 'Access to this URL is restricted for security reasons' },
+                { status: 403, headers: corsHeaders }
             );
         }
 
