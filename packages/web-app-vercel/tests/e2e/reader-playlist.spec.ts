@@ -14,7 +14,6 @@ test.describe('Reader - Playlist related navigation', () => {
         await page.goto('/playlists');
 
         // Click the default playlist
-        // Use exact match to avoid strict mode violation (h3 title vs p description)
         await page.getByRole('heading', { name: 'デフォルトプレイリスト', exact: true }).click();
 
         // Wait for article list and click the first article (Position 0: テスト記事1)
@@ -26,6 +25,12 @@ test.describe('Reader - Playlist related navigation', () => {
         expect(href).toContain('playlist=');
 
         await link.click();
+
+        // Wait for navigation to complete
+        await page.waitForURL(/\/reader.*/);
+
+        // Ensure reader loaded: wait for title first as it renders earlier than player
+        await page.waitForSelector('[data-testid="article-title"]', { state: 'visible' });
 
         // Ensure audio player is visible and prev/next are present
         await page.waitForSelector('[data-testid="audio-player-desktop"]', { state: 'visible' });
@@ -51,7 +56,10 @@ test.describe('Reader - Playlist related navigation', () => {
         await first.click();
 
         // Verify navigation to reader
-        await page.waitForURL(/\/reader/, { timeout: 10000 });
+        await page.waitForURL(/\/reader.*/);
+
+        // Ensure reader loaded: wait for title first
+        await page.waitForSelector('[data-testid="article-title"]', { state: 'visible' });
 
         // Now page should initialize default playlist, showing prev/next
         await page.waitForSelector('[data-testid="audio-player-desktop"]', { state: 'visible' });
@@ -76,10 +84,14 @@ test.describe('Reader - Playlist related navigation', () => {
         // Click first: テスト記事1
         await page.getByText('テスト記事1', { exact: true }).click();
 
+        // Wait for navigation
+        await page.waitForURL(/\/reader.*/);
+
         // ensure in playlist mode
-        await page.waitForSelector('[data-testid="audio-player-desktop"]', { state: 'visible' });
+        await page.waitForSelector('[data-testid="article-title"]', { state: 'visible' });
         await expect(page.getByTestId('article-title')).toContainText('テスト記事1');
 
+        await page.waitForSelector('[data-testid="audio-player-desktop"]', { state: 'visible' });
         const next = page.getByTestId('desktop-next-button');
         const prev = page.getByTestId('desktop-prev-button');
         await expect(next).toBeVisible();
@@ -93,6 +105,8 @@ test.describe('Reader - Playlist related navigation', () => {
         const afterNextUrl = page.url();
         expect(afterNextUrl).not.toBe(initialUrl);
         expect(afterNextUrl).toContain('index=');
+
+        await page.waitForSelector('[data-testid="article-title"]', { state: 'visible' });
         await expect(page.getByTestId('article-title')).toContainText('テスト記事2');
 
         // Click previous -> テスト記事1
@@ -100,6 +114,7 @@ test.describe('Reader - Playlist related navigation', () => {
         await page.waitForURL((url) => url.toString() !== afterNextUrl);
 
         // Should return to initial article (index=0)
+        await page.waitForSelector('[data-testid="article-title"]', { state: 'visible' });
         await expect(page.getByTestId('article-title')).toContainText('テスト記事1');
     });
 
@@ -127,7 +142,12 @@ test.describe('Reader - Playlist related navigation', () => {
         // Click the first article
         await page.locator('a[data-testid="playlist-article"]').first().click();
 
+        // Wait for navigation
+        await page.waitForURL(/\/reader.*/);
+
         // Ensure reader loaded
+        await page.waitForSelector('[data-testid="article-title"]', { state: 'visible' });
+
         await page.waitForSelector('[data-testid="audio-player-desktop"]', { state: 'visible' });
 
         // Check title
