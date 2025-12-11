@@ -2496,6 +2496,10 @@ Readability.prototype = {
 
       var contentScore = 0;
 
+      if (node.readability) {
+        contentScore = node.readability.contentScore;
+      }
+
       if (weight + contentScore < 0) {
         return true;
       }
