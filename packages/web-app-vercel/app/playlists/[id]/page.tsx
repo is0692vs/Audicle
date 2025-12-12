@@ -293,10 +293,10 @@ export default function PlaylistDetailPage() {
               </div>
               <button
                 onClick={() => {
-                  const firstArticleUrl =
-                    playlist.items && playlist.items.length > 0
-                      ? playlist.items[0].article?.url
-                      : undefined;
+                    const firstArticleUrl =
+                      sortedItems && sortedItems.length > 0
+                        ? sortedItems[0].article?.url
+                        : undefined;
 
                   router.push(
                     createReaderUrl({
