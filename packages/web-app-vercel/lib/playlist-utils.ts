@@ -27,7 +27,11 @@ export function getPlaylistSortKey(playlistId: string): string {
 export function setPlaylistSortKey(playlistId: string, sortKey: string): void {
     if (typeof window === "undefined") return;
     const storageKey = `${STORAGE_KEYS.PLAYLIST_SORT_PREFIX}${playlistId}`;
-    localStorage.setItem(storageKey, sortKey);
+    try {
+        localStorage.setItem(storageKey, sortKey);
+    } catch (e) {
+        console.warn("Failed to save playlist sort key:", e);
+    }
 }
 
 /**

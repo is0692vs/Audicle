@@ -722,10 +722,10 @@ export default function ReaderPageClient() {
     // Initialize playlist from query if either:
     //  - playlistState is not already in playlist mode
     //  - OR we are in playlist mode but the playlistId does not match the query
+    //  - OR sortKey does not match (sort order has changed)
     if (
       playlistIdFromQuery &&
-      (!playlistState.isPlaylistMode ||
-        playlistState.playlistId !== playlistIdFromQuery) &&
+      !isPlaylistContextReady &&
       session?.user?.email
     ) {
       logger.info("Reader opened with playlist query, initializing playlist", {
@@ -740,7 +740,7 @@ export default function ReaderPageClient() {
     }
   }, [
     playlistIdFromQuery,
-    playlistState.isPlaylistMode,
+    isPlaylistContextReady,
     initializeFromPlaylist,
     indexFromQuery,
     session,

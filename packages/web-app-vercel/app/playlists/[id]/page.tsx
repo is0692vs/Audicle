@@ -276,7 +276,7 @@ export default function PlaylistDetailPage() {
                   onValueChange={(value) => {
                     if (isSortOption(value)) {
                       setSortOption(value);
-                      // 追加: 並び替え変更時に即座にlocalStorageに保存
+                      // 即座にlocalStorageに保存（useEffectによる保存より前にナビゲーションが発生する可能性があるため）
                       setPlaylistSortKey(playlistId, value);
                     }
                   }}

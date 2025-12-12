@@ -162,6 +162,7 @@ export function PlaylistPlaybackProvider({
         isPlaylistMode: true,
         sortField: null,
         sortOrder: null,
+        sortKey: null,
       });
 
       // 最初の記事に遷移（自動再生フラグ付き）
@@ -278,6 +279,7 @@ export function PlaylistPlaybackProvider({
       isPlaylistMode: false,
       sortField: null,
       sortOrder: null,
+      sortKey: null,
     });
   }, []);
 
