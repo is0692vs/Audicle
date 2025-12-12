@@ -10,6 +10,7 @@ import { getCacheIndex, addCachedChunk, isCachedInIndex } from '@/lib/db/cacheIn
 import { calculateTextHash } from '@/lib/textHash';
 import { getStorageProvider } from '@/lib/storage';
 import { GoogleError } from 'google-gax';
+import { isValidVoice, isValidSpeakingRate } from '@/lib/validation';
 
 // Node.js runtimeを明示的に指定（Google Cloud TTS SDKはEdge Runtimeで動作しない）
 export const runtime = 'nodejs';
@@ -365,6 +366,14 @@ export async function POST(request: NextRequest) {
         }
 
         const speakingRate = body.speakingRate || 1.0;
+        if (!isValidSpeakingRate(speakingRate)) {
+            log('warn', '無効なspeakingRateです', { speakingRate });
+            return NextResponse.json(
+                { error: 'Invalid speakingRate. Must be between 0.25 and 4.0' },
+                { status: 400, headers: corsHeaders }
+            );
+        }
+
         const storage = getStorageProvider();
         const signedUrlTtlSeconds = 60 * 60;
 
@@ -374,6 +383,14 @@ export async function POST(request: NextRequest) {
             : [body.text];
 
         const voiceToUse = body.voice || body.voice_model || 'ja-JP-Standard-B';
+        if (!isValidVoice(voiceToUse)) {
+            log('warn', '無効なvoice指定です', { voiceToUse });
+            return NextResponse.json(
+                { error: 'Invalid voice parameter' },
+                { status: 400, headers: corsHeaders }
+            );
+        }
+
         const { articleUrl, chunks, chunkIndex } = body;
 
         // 記事メタデータ処理
