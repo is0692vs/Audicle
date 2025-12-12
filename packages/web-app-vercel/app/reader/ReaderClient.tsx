@@ -786,13 +786,7 @@ export default function ReaderPageClient() {
         router.push(readerUrl);
       }
     },
-    [
-      playlistIdFromQuery,
-      playlistState,
-      router,
-      stop,
-      currentPlaylistIndex,
-    ]
+    [playlistIdFromQuery, playlistState, router, stop, currentPlaylistIndex]
   );
 
   // プレイリストのインデックスを循環させるユーティリティ
