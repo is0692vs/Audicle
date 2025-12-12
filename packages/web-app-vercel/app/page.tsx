@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { logger } from "@/lib/logger";
@@ -22,6 +22,7 @@ import {
 import { Plus, RotateCcw } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import { STORAGE_KEYS } from "@/lib/constants";
+import type { PlaylistItemWithArticle } from "@/types/playlist";
 
 const ARTICLE_SORT_BY_OPTIONS = [
   "newest",
@@ -87,43 +88,63 @@ export default function Home() {
 
   const { showConfirm, confirmDialog } = useConfirmDialog();
 
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     queryClient.invalidateQueries({
       queryKey: ["defaultPlaylist", "items"],
     });
-  };
+  }, [queryClient]);
 
-  const handleRemoveFromHome = async (itemId: string) => {
-    const item = items.find((i) => i.id === itemId);
-    if (!item || !playlistId) return;
+  const handleRemoveFromHome = useCallback(
+    async (itemId: string) => {
+      const item = items.find((i) => i.id === itemId);
+      if (!item || !playlistId) return;
 
-    const confirmed = await showConfirm({
-      title: "ホームから除く",
-      message: `「${item.article?.title}」をホームから除きますか?\n\n他のプレイリストには残ります。`,
-      confirmText: "除く",
-      cancelText: "キャンセル",
-      isDangerous: false,
-    });
+      const confirmed = await showConfirm({
+        title: "ホームから除く",
+        message: `「${item.article?.title}」をホームから除きますか?\n\n他のプレイリストには残ります。`,
+        confirmText: "除く",
+        cancelText: "キャンセル",
+        isDangerous: false,
+      });
 
-    if (confirmed) {
-      try {
-        await removeFromPlaylistMutation.mutateAsync({
-          playlistId,
-          itemId,
-        });
-        logger.success("アイテムを削除", {
-          itemId,
-          title: item.article?.title || "",
-        });
-      } catch (error) {
-        logger.error("アイテムの削除に失敗", error);
+      if (confirmed) {
+        try {
+          await removeFromPlaylistMutation.mutateAsync({
+            playlistId,
+            itemId,
+          });
+          logger.success("アイテムを削除", {
+            itemId,
+            title: item.article?.title || "",
+          });
+        } catch (error) {
+          logger.error("アイテムの削除に失敗", error);
+        }
       }
-    }
-  };
+    },
+    [items, playlistId, showConfirm, removeFromPlaylistMutation]
+  );
 
-  const handleArticleClick = (item: (typeof items)[0]) => {
-    router.push(`/reader?url=${encodeURIComponent(item.article!.url)}`);
-  };
+  const handleArticleClick = useCallback(
+    (item: PlaylistItemWithArticle) => {
+      router.push(`/reader?url=${encodeURIComponent(item.article!.url)}`);
+    },
+    [router]
+  );
+
+  const handlePlaylistAdd = useCallback((id: string) => {
+    setSelectedItemId(id);
+    setIsPlaylistModalOpen(true);
+  }, []);
+
+  const handleModalClose = useCallback(() => {
+    setIsPlaylistModalOpen(false);
+    setSelectedItemId(null);
+  }, []);
+
+  const handlePlaylistsUpdated = useCallback(async () => {
+    handleRefresh();
+  }, [handleRefresh]);
 
   return (
     <div className="h-screen bg-black text-white flex flex-col lg:flex-row">
@@ -136,16 +157,11 @@ export default function Home() {
           {selectedItem && selectedItemId && (
             <PlaylistSelectorModal
               isOpen={isPlaylistModalOpen}
-              onClose={() => {
-                setIsPlaylistModalOpen(false);
-                setSelectedItemId(null);
-              }}
+              onClose={handleModalClose}
               itemId={undefined}
               articleId={selectedItem.article_id}
               articleTitle={selectedItem.article?.title || ""}
-              onPlaylistsUpdated={async () => {
-                handleRefresh();
-              }}
+              onPlaylistsUpdated={handlePlaylistsUpdated}
             />
           )}
 
@@ -231,10 +247,7 @@ export default function Home() {
                   key={item.id}
                   item={item}
                   onArticleClick={handleArticleClick}
-                  onPlaylistAdd={(id) => {
-                    setSelectedItemId(id);
-                    setIsPlaylistModalOpen(true);
-                  }}
+                  onPlaylistAdd={handlePlaylistAdd}
                   onRemove={handleRemoveFromHome}
                 />
               ))}

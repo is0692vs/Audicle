@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Minus } from "lucide-react";
@@ -16,7 +16,7 @@ interface ArticleCardProps {
   href?: string;
 }
 
-export function ArticleCard({
+export const ArticleCard = memo(function ArticleCard({
   item,
   onArticleClick,
   onPlaylistAdd,
@@ -99,4 +99,4 @@ export function ArticleCard({
       </Card>
     </a>
   );
-}
+});
