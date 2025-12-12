@@ -6,6 +6,7 @@ import { Play, ArrowUpDown } from "lucide-react";
 import { createReaderUrl } from "@/lib/urlBuilder";
 import { logger } from "@/lib/logger";
 import { STORAGE_KEYS } from "@/lib/constants";
+import { setPlaylistSortKey } from "@/lib/playlist-utils";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
 import { usePlaylistPlayback } from "@/contexts/PlaylistPlaybackContext";
 import {
@@ -275,6 +276,8 @@ export default function PlaylistDetailPage() {
                   onValueChange={(value) => {
                     if (isSortOption(value)) {
                       setSortOption(value);
+                      // 即座にlocalStorageに保存（useEffectによる保存より前にナビゲーションが発生する可能性があるため）
+                      setPlaylistSortKey(playlistId, value);
                     }
                   }}
                 >

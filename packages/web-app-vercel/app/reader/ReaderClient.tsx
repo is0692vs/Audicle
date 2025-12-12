@@ -24,6 +24,7 @@ import { selectVoiceModel } from "@/lib/voiceSelector";
 import { UserSettings, DEFAULT_SETTINGS } from "@/types/settings";
 import { createReaderUrl } from "@/lib/urlBuilder";
 import { zIndex } from "@/lib/zIndex";
+import { getPlaylistSortKey } from "@/lib/playlist-utils";
 import {
   Play,
   Pause,
@@ -110,11 +111,16 @@ export default function ReaderPageClient() {
   const [isPlaylistMode] = useState<boolean>(!!playlistIdFromQuery);
   const [showCompletionScreen, setShowCompletionScreen] = useState(false);
 
+  // プレイリストコンテキストの準備状態チェック（sortKey一致も確認）
+  const currentSortKey = playlistIdFromQuery
+    ? getPlaylistSortKey(playlistIdFromQuery)
+    : null;
   const isPlaylistContextReady =
     !!playlistIdFromQuery &&
     playlistState.isPlaylistMode &&
     playlistState.playlistId === playlistIdFromQuery &&
-    playlistState.items.length > 0;
+    playlistState.items.length > 0 &&
+    playlistState.sortKey === currentSortKey; // 追加: sortKey一致チェック
 
   // 自動再生の参照フラグ（useEffectの無限ループを防ぐため）
   const hasInitiatedAutoplayRef = useRef(false);
@@ -716,10 +722,10 @@ export default function ReaderPageClient() {
     // Initialize playlist from query if either:
     //  - playlistState is not already in playlist mode
     //  - OR we are in playlist mode but the playlistId does not match the query
+    //  - OR sortKey does not match (sort order has changed)
     if (
       playlistIdFromQuery &&
-      (!playlistState.isPlaylistMode ||
-        playlistState.playlistId !== playlistIdFromQuery) &&
+      !isPlaylistContextReady &&
       session?.user?.email
     ) {
       logger.info("Reader opened with playlist query, initializing playlist", {
@@ -734,7 +740,7 @@ export default function ReaderPageClient() {
     }
   }, [
     playlistIdFromQuery,
-    playlistState.isPlaylistMode,
+    isPlaylistContextReady,
     initializeFromPlaylist,
     indexFromQuery,
     session,
