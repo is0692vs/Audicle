@@ -200,12 +200,11 @@ export function PlaybackSpeedDial({
                   const currentIndex = speeds.indexOf(currentSpeed);
                   if (currentIndex === -1) return;
 
-                  let nextIndex = currentIndex;
-                  if (e.key === "ArrowRight") {
-                    nextIndex = Math.min(speeds.length - 1, currentIndex + 1);
-                  } else {
-                    nextIndex = Math.max(0, currentIndex - 1);
-                  }
+                  const direction = e.key === "ArrowRight" ? 1 : -1;
+                  const nextIndex = Math.max(
+                    0,
+                    Math.min(speeds.length - 1, currentIndex + direction)
+                  );
 
                   if (nextIndex !== currentIndex) {
                     onValueChange(speeds[nextIndex]);
