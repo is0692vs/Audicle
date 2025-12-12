@@ -183,10 +183,35 @@ export function PlaybackSpeedDial({
             {/* ドラッグ可能なトラック */}
             <div
               ref={trackRef}
-              className="relative h-full cursor-pointer"
+              className="relative h-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-inset rounded-lg"
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
+              role="slider"
+              tabIndex={0}
+              aria-label="再生速度"
+              aria-valuemin={speeds[0]}
+              aria-valuemax={speeds[speeds.length - 1]}
+              aria-valuenow={currentSpeed}
+              aria-valuetext={`${currentSpeed.toFixed(1)}x`}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+                  e.preventDefault();
+                  const currentIndex = speeds.indexOf(currentSpeed);
+                  if (currentIndex === -1) return;
+
+                  let nextIndex = currentIndex;
+                  if (e.key === "ArrowRight") {
+                    nextIndex = Math.min(speeds.length - 1, currentIndex + 1);
+                  } else {
+                    nextIndex = Math.max(0, currentIndex - 1);
+                  }
+
+                  if (nextIndex !== currentIndex) {
+                    onValueChange(speeds[nextIndex]);
+                  }
+                }
+              }}
             >
               {/* 移動する数字リスト */}
               <div
