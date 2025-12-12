@@ -204,7 +204,9 @@ export default function PlaylistDetailPage() {
           <div className="mb-6 lg:mb-8">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <h2 className="text-2xl lg:text-3xl font-bold">{playlist.name}</h2>
+                <h2 className="text-2xl lg:text-3xl font-bold">
+                  {playlist.name}
+                </h2>
                 {playlist.is_default && (
                   <span className="px-2 py-1 text-xs bg-primary/20 text-primary/80 rounded">
                     デフォルト
@@ -294,8 +296,8 @@ export default function PlaylistDetailPage() {
               <button
                 onClick={() => {
                   const firstArticleUrl =
-                    playlist.items && playlist.items.length > 0
-                      ? playlist.items[0].article?.url
+                    sortedItems && sortedItems.length > 0
+                      ? sortedItems[0].article?.url
                       : undefined;
 
                   router.push(

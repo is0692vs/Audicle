@@ -110,6 +110,12 @@ export default function ReaderPageClient() {
   const [isPlaylistMode] = useState<boolean>(!!playlistIdFromQuery);
   const [showCompletionScreen, setShowCompletionScreen] = useState(false);
 
+  const isPlaylistContextReady =
+    !!playlistIdFromQuery &&
+    playlistState.isPlaylistMode &&
+    playlistState.playlistId === playlistIdFromQuery &&
+    playlistState.items.length > 0;
+
   // 自動再生の参照フラグ（useEffectの無限ループを防ぐため）
   const hasInitiatedAutoplayRef = useRef(false);
 
@@ -466,82 +472,111 @@ export default function ReaderPageClient() {
 
   // インデックスパラメータが変わったときに該当記事を読み込む
   useEffect(() => {
-    if (
-      indexFromQuery !== null &&
-      playlistIdFromQuery &&
-      playlistState.items.length > 0
-    ) {
-      const newIndex = parseInt(indexFromQuery, 10);
+    if (indexFromQuery === null || !playlistIdFromQuery) return;
 
-      // インデックスが変わった場合のみ処理（無限ループを防ぐ）
-      if (newIndex !== currentPlaylistIndex || !chunks.length) {
-        setCurrentPlaylistIndex(newIndex);
+    const newIndexRaw = parseInt(indexFromQuery, 10);
+    if (Number.isNaN(newIndexRaw)) {
+      logger.warn("Reader index param is NaN", {
+        indexFromQuery,
+        playlistIdFromQuery,
+      });
+      return;
+    }
 
-        // プレイリストから該当記事を取得
-        const item = playlistState.items[newIndex];
-        if (item) {
-          logger.info("プレイリストから記事を読み込み", {
-            newIndex,
-            playlistId: playlistIdFromQuery,
-            articleId: item.article_id,
-            articleUrl: item.article?.url,
+    logger.info("Reader playlist index effect", {
+      playlistIdFromQuery,
+      playlistStatePlaylistId: playlistState.playlistId,
+      playlistStateCurrentIndex: playlistState.currentIndex,
+      currentPlaylistIndex,
+      newIndex: newIndexRaw,
+      itemsLength: playlistState.items.length,
+      isPlaylistContextReady,
+    });
+
+    // URL由来のindexは常にローカルstateに反映（Prev/Nextの基準を一本化）
+    if (newIndexRaw !== currentPlaylistIndex) {
+      setCurrentPlaylistIndex(newIndexRaw);
+    }
+
+    // playlistId が一致するまで items を参照しない（localStorage復元の誤爆防止）
+    if (!isPlaylistContextReady) {
+      return;
+    }
+
+    // インデックスが変わった場合のみ処理（無限ループを防ぐ）
+    if (newIndexRaw !== currentPlaylistIndex || !chunks.length) {
+      // プレイリストから該当記事を取得
+      const item = playlistState.items[newIndexRaw];
+      if (item) {
+        logger.info("プレイリストから記事を読み込み", {
+          newIndex: newIndexRaw,
+          playlistId: playlistIdFromQuery,
+          articleId: item.article_id,
+          articleUrl: item.article?.url,
+        });
+
+        // 前の再生状態をクリア
+        stop();
+
+        // 正常にロードできる場合は、過去のエラー表示をクリア
+        setError("");
+
+        // 記事をlocalStorageから読み込む。なければサーバーからフェッチ（/api/extract経由）
+        const article = articleStorage.getById(item.article_id);
+        if (article) {
+          setTitle(article.title);
+          setChunks(article.chunks);
+          setUrl(article.url);
+          setArticleId(article.id);
+          // 新しい記事が読み込まれたら、自動再生フラグをリセット
+          hasInitiatedAutoplayRef.current = false;
+          logger.success("記事を読み込み完了", {
+            id: article.id,
+            title: article.title,
+            chunkCount: article.chunks.length,
           });
-
-          // 前の再生状態をクリア
-          stop();
-
-          // 記事をlocalStorageから読み込む。なければサーバーからフェッチ（/api/extract経由）
-          const article = articleStorage.getById(item.article_id);
-          if (article) {
-            setTitle(article.title);
-            setChunks(article.chunks);
-            setUrl(article.url);
-            setArticleId(article.id);
-            // 新しい記事が読み込まれたら、自動再生フラグをリセット
-            hasInitiatedAutoplayRef.current = false;
-            logger.success("記事を読み込み完了", {
-              id: article.id,
-              title: article.title,
-              chunkCount: article.chunks.length,
-            });
-          } else {
-            logger.warn(
-              "記事がlocalStorageに見つかりません。サーバーからフェッチします",
-              {
-                articleId: item.article_id,
-              }
-            );
-
-            // localStorageに記事が見つからない場合、サーバーから取得してstateにセット
-            fetchArticleAndSetState({
-              id: item.article_id,
-              url: item.article?.url,
-              titleFallback: item.article?.title,
-              isPlaylistMode: true,
-            });
-          }
         } else {
-          logger.error("プレイリストにインデックスが存在しません", {
-            newIndex,
-            itemsLength: playlistState.items.length,
+          logger.warn(
+            "記事がlocalStorageに見つかりません。サーバーからフェッチします",
+            {
+              articleId: item.article_id,
+            }
+          );
+
+          // localStorageに記事が見つからない場合、サーバーから取得してstateにセット
+          fetchArticleAndSetState({
+            id: item.article_id,
+            url: item.article?.url,
+            titleFallback: item.article?.title,
+            isPlaylistMode: true,
           });
-          setError("無効な記事インデックスです。");
-          // 以前の記事情報をクリア
-          setTitle("");
-          setChunks([]);
-          setUrl("");
-          setArticleId(null);
         }
+      } else {
+        logger.error("プレイリストにインデックスが存在しません", {
+          newIndex: newIndexRaw,
+          itemsLength: playlistState.items.length,
+          playlistIdFromQuery,
+          playlistStatePlaylistId: playlistState.playlistId,
+        });
+        setError("無効な記事インデックスです。");
+        // 以前の記事情報をクリア
+        setTitle("");
+        setChunks([]);
+        setUrl("");
+        setArticleId(null);
       }
     }
   }, [
     indexFromQuery,
     playlistIdFromQuery,
     playlistState.items,
+    playlistState.playlistId,
+    playlistState.currentIndex,
     currentPlaylistIndex,
     chunks.length,
     stop,
     fetchArticleAndSetState,
+    isPlaylistContextReady,
   ]); // URLクエリパラメータが指定されている場合は記事を自動取得
   useEffect(() => {
     // プレイリスト読み込みが完了してから記事を読み込む
@@ -708,19 +743,50 @@ export default function ReaderPageClient() {
   // プレイリスト内の特定の記事に遷移するヘルパー関数
   const navigateToPlaylistItem = useCallback(
     (index: number) => {
+      logger.info("Prev/Next navigation requested", {
+        playlistIdFromQuery,
+        playlistStatePlaylistId: playlistState.playlistId,
+        currentPlaylistIndex,
+        playlistStateCurrentIndex: playlistState.currentIndex,
+        targetIndex: index,
+        itemsLength: playlistState.items.length,
+      });
+
+      // 同一URLへのpushを避ける（無反応に見えるのを防ぐ）
+      if (index === currentPlaylistIndex) {
+        logger.info("Skip navigation: same index", {
+          index,
+          currentPlaylistIndex,
+        });
+        return;
+      }
+
+      // クエリのplaylistIdと一致するまで items を参照しない
+      if (
+        playlistIdFromQuery &&
+        playlistState.playlistId !== playlistIdFromQuery
+      ) {
+        logger.info("Skip navigation: playlist context not ready", {
+          playlistIdFromQuery,
+          playlistStatePlaylistId: playlistState.playlistId,
+        });
+        return;
+      }
+
       stop(); // ページ遷移前に再生を停止
       const item = playlistState.items[index];
-      if (item && item.article?.url && playlistState.playlistId) {
+      const targetPlaylistId = playlistIdFromQuery || playlistState.playlistId;
+      if (item && item.article?.url && targetPlaylistId) {
         const readerUrl = createReaderUrl({
           articleUrl: item.article.url,
-          playlistId: playlistState.playlistId,
+          playlistId: targetPlaylistId,
           playlistIndex: index,
           autoplay: false,
         });
         router.push(readerUrl);
       }
     },
-    [playlistState, router, stop]
+    [playlistIdFromQuery, playlistState, router, stop, currentPlaylistIndex]
   );
 
   // プレイリストのインデックスを循環させるユーティリティ
@@ -867,13 +933,13 @@ export default function ReaderPageClient() {
                     {playlistState.isPlaylistMode && (
                       <button
                         onClick={() => {
-                          if (canMovePrevious) {
+                          if (isPlaylistContextReady && canMovePrevious) {
                             navigateToPlaylistItem(
-                              wrapIndex(playlistState.currentIndex - 1)
+                              wrapIndex(currentPlaylistIndex - 1)
                             );
                           }
                         }}
-                        disabled={!canMovePrevious}
+                        disabled={!isPlaylistContextReady || !canMovePrevious}
                         className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         data-testid="desktop-prev-button"
                         title="前の記事"
@@ -912,13 +978,13 @@ export default function ReaderPageClient() {
                     {playlistState.isPlaylistMode && (
                       <button
                         onClick={() => {
-                          if (canMoveNext) {
+                          if (isPlaylistContextReady && canMoveNext) {
                             navigateToPlaylistItem(
-                              wrapIndex(playlistState.currentIndex + 1)
+                              wrapIndex(currentPlaylistIndex + 1)
                             );
                           }
                         }}
-                        disabled={!canMoveNext}
+                        disabled={!isPlaylistContextReady || !canMoveNext}
                         className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         data-testid="desktop-next-button"
                         title="次の記事"
@@ -1041,13 +1107,13 @@ export default function ReaderPageClient() {
               {playlistState.isPlaylistMode && (
                 <button
                   onClick={() => {
-                    if (canMovePrevious) {
+                    if (isPlaylistContextReady && canMovePrevious) {
                       navigateToPlaylistItem(
-                        wrapIndex(playlistState.currentIndex - 1)
+                        wrapIndex(currentPlaylistIndex - 1)
                       );
                     }
                   }}
-                  disabled={!canMovePrevious}
+                  disabled={!isPlaylistContextReady || !canMovePrevious}
                   className="mr-2 p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   title="前の記事"
                   aria-label="前の記事"
@@ -1085,13 +1151,13 @@ export default function ReaderPageClient() {
               {playlistState.isPlaylistMode && (
                 <button
                   onClick={() => {
-                    if (canMoveNext) {
+                    if (isPlaylistContextReady && canMoveNext) {
                       navigateToPlaylistItem(
-                        wrapIndex(playlistState.currentIndex + 1)
+                        wrapIndex(currentPlaylistIndex + 1)
                       );
                     }
                   }}
-                  disabled={!canMoveNext}
+                  disabled={!isPlaylistContextReady || !canMoveNext}
                   className="ml-2 p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   title="次の記事"
                   aria-label="次の記事"
