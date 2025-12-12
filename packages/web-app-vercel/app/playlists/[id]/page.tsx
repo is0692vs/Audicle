@@ -126,7 +126,7 @@ export default function PlaylistDetailPage() {
 
   const handleRemoveFromPlaylist = useCallback(
     async (itemId: string) => {
-      const item = sortedItems.find((i) => i.id === itemId);
+      const item = playlist?.items?.find((i) => i.id === itemId);
       const title = item?.article?.title || "";
 
       const confirmed = await showConfirm({
@@ -150,7 +150,7 @@ export default function PlaylistDetailPage() {
       }
     },
     [
-      sortedItems,
+      playlist?.items,
       playlist?.name,
       playlistId,
       showConfirm,
@@ -160,14 +160,14 @@ export default function PlaylistDetailPage() {
 
   const handlePlaylistAdd = useCallback(
     (articleId: string) => {
-      const item = sortedItems.find((item) => item.article_id === articleId);
+      const item = playlist?.items?.find((item) => item.article_id === articleId);
       if (item) {
         setSelectedArticleId(articleId);
         setSelectedArticleTitle(item.article?.title || "");
         setIsPlaylistModalOpen(true);
       }
     },
-    [sortedItems]
+    [playlist?.items]
   );
 
   const handleArticleClick = useCallback(
