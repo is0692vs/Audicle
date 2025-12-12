@@ -1,10 +1,33 @@
 import { supabase } from './supabase'
 import * as supabaseLocal from './supabaseLocal'
 import type { PlaylistWithItems } from '@/types/playlist'
+import { STORAGE_KEYS } from './constants'
 
 export interface DefaultPlaylistResult {
     playlist?: PlaylistWithItems
     error?: string
+}
+
+/**
+ * プレイリストのsortKeyをlocalStorageから取得
+ * @param playlistId プレイリストID
+ * @returns sortKey (例: "position", "title", "title-desc" など)
+ */
+export function getPlaylistSortKey(playlistId: string): string {
+    if (typeof window === "undefined") return "position";
+    const storageKey = `${STORAGE_KEYS.PLAYLIST_SORT_PREFIX}${playlistId}`;
+    return localStorage.getItem(storageKey) || "position";
+}
+
+/**
+ * プレイリストのsortKeyをlocalStorageに保存
+ * @param playlistId プレイリストID
+ * @param sortKey sortKey (例: "position", "title", "title-desc" など)
+ */
+export function setPlaylistSortKey(playlistId: string, sortKey: string): void {
+    if (typeof window === "undefined") return;
+    const storageKey = `${STORAGE_KEYS.PLAYLIST_SORT_PREFIX}${playlistId}`;
+    localStorage.setItem(storageKey, sortKey);
 }
 
 /**

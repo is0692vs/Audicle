@@ -22,6 +22,7 @@ export interface PlaylistPlaybackState {
   isPlaylistMode: boolean;
   sortField: string | null;
   sortOrder: "asc" | "desc" | null;
+  sortKey: string | null; // "position", "title", "title-desc", "added_at", "added_at-desc" など
 }
 
 export interface PlaylistPlaybackContextType {
@@ -88,6 +89,7 @@ function savePlaybackState(state: PlaylistPlaybackState): void {
           isPlaylistMode: state.isPlaylistMode,
           sortField: state.sortField,
           sortOrder: state.sortOrder,
+          sortKey: state.sortKey, // 追加: sortKeyも保存
         })
       );
     } catch (error) {
@@ -129,6 +131,7 @@ export function PlaylistPlaybackProvider({
       isPlaylistMode: saved?.isPlaylistMode || false,
       sortField: saved?.sortField || null,
       sortOrder: saved?.sortOrder || null,
+      sortKey: saved?.sortKey || null, // 追加: sortKeyを読み込み
     };
   });
 
@@ -411,6 +414,7 @@ export function PlaylistPlaybackProvider({
         isPlaylistMode: true,
         sortField,
         sortOrder,
+        sortKey: savedSortOption || "position", // 追加: sortKeyを保存
       });
     } catch (error) {
       logger.error("プレイリスト初期化エラー", error);
@@ -466,6 +470,7 @@ export function PlaylistPlaybackProvider({
           isPlaylistMode: true,
           sortField,
           sortOrder,
+          sortKey: savedSortOption || "position", // 追加: sortKeyを保存
         });
       } catch (error) {
         logger.error("initializeFromPlaylist error", error);
