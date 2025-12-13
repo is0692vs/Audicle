@@ -127,7 +127,9 @@ export default function Home() {
 
   const handleArticleClick = useCallback(
     (item: PlaylistItemWithArticle) => {
-      router.push(`/reader?url=${encodeURIComponent(item.article!.url)}`);
+      if (item.article?.url) {
+        router.push(`/reader?url=${encodeURIComponent(item.article.url)}`);
+      }
     },
     [router]
   );
