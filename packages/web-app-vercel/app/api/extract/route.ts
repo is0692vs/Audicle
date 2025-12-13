@@ -129,6 +129,13 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        if (error instanceof TooManyRedirectsError) {
+            return NextResponse.json(
+                { error: 'Too many redirects' },
+                { status: 400, headers: corsHeaders }
+            );
+        }
+
         console.error('Extract error:', error);
         return NextResponse.json(
             { error: 'Failed to extract content' },
@@ -151,7 +158,7 @@ async function fetchWithTimeout(url: string, timeout: number = 8000): Promise<st
     let redirectCount = 0;
 
     try {
-        while (redirectCount <= maxRedirects) {
+        while (redirectCount < maxRedirects) {
             const response = await fetch(currentUrl, {
                 signal: controller.signal,
                 redirect: 'manual', // 自動リダイレクトを無効化
@@ -171,6 +178,10 @@ async function fetchWithTimeout(url: string, timeout: number = 8000): Promise<st
 
             // リダイレクト処理
             if (response.status >= 300 && response.status < 400) {
+                // レスポンスボディを破棄してリソースを解放
+                // biome-ignore lint/suspicious/noExplicitAny: response.body might be missing in some environments
+                await response.body?.cancel();
+
                 const location = response.headers.get('Location');
                 if (!location) {
                     throw new Error(`HTTP ${response.status} Redirect without Location header`);
@@ -198,7 +209,7 @@ async function fetchWithTimeout(url: string, timeout: number = 8000): Promise<st
             return await response.text();
         }
 
-        throw new Error('Too many redirects');
+        throw new TooManyRedirectsError('Too many redirects');
 
     } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') {
@@ -230,5 +241,12 @@ class SSRFBlockedError extends Error {
     constructor(message: string) {
         super(message);
         this.name = 'SSRFBlockedError';
+    }
+}
+
+class TooManyRedirectsError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'TooManyRedirectsError';
     }
 }
