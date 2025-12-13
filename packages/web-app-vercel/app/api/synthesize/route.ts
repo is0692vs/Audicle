@@ -10,6 +10,7 @@ import { getCacheIndex, addCachedChunk, isCachedInIndex } from '@/lib/db/cacheIn
 import { calculateTextHash } from '@/lib/textHash';
 import { getStorageProvider } from '@/lib/storage';
 import { GoogleError } from 'google-gax';
+import { isValidVoice, isValidSpeakingRate } from '@/lib/validation';
 
 // Node.js runtimeを明示的に指定（Google Cloud TTS SDKはEdge Runtimeで動作しない）
 export const runtime = 'nodejs';
@@ -364,7 +365,18 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const speakingRate = body.speakingRate || 1.0;
+        let speakingRate = 1.0;
+        if (body.speakingRate !== undefined && body.speakingRate !== null) {
+            if (!isValidSpeakingRate(body.speakingRate)) {
+                log('warn', '無効なspeakingRateです', { speakingRate: body.speakingRate });
+                return NextResponse.json(
+                    { error: 'Invalid speakingRate. Must be between 0.25 and 4.0' },
+                    { status: 400, headers: corsHeaders }
+                );
+            }
+            speakingRate = body.speakingRate;
+        }
+
         const storage = getStorageProvider();
         const signedUrlTtlSeconds = 60 * 60;
 
@@ -373,7 +385,20 @@ export async function POST(request: NextRequest) {
             ? body.chunks.map((c: SynthesizeChunk) => c.text)
             : [body.text];
 
-        const voiceToUse = body.voice || body.voice_model || 'ja-JP-Standard-B';
+        // Validate voice if provided, otherwise fall back to default
+        const providedVoice = body.voice || body.voice_model;
+        if (providedVoice) {
+            if (!isValidVoice(providedVoice)) {
+                log('warn', '無効なvoice指定です', { providedVoice });
+                return NextResponse.json(
+                    { error: 'Invalid voice parameter' },
+                    { status: 400, headers: corsHeaders }
+                );
+            }
+        }
+
+        const voiceToUse = providedVoice || 'ja-JP-Standard-B';
+
         const { articleUrl, chunks, chunkIndex } = body;
 
         // 記事メタデータ処理
