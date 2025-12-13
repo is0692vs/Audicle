@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // SSRFチェック
+        // SSRFチェック (initial check)
         if (!(await isSafeUrl(url))) {
             console.warn('[Extract API] SSRF attempt blocked:', url);
             return NextResponse.json(
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // HTMLを取得
+        // HTMLを取得 (with secure redirect handling)
         const html = await fetchWithTimeout(url);
 
         // linkedomでパース
@@ -122,6 +122,13 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        if (error instanceof SSRFBlockedError) {
+            return NextResponse.json(
+                { error: 'Access to the redirect URL is restricted for security reasons' },
+                { status: 403, headers: corsHeaders }
+            );
+        }
+
         console.error('Extract error:', error);
         return NextResponse.json(
             { error: 'Failed to extract content' },
@@ -133,33 +140,66 @@ export async function POST(request: NextRequest) {
 /**
  * タイムアウト付きでURLをフェッチ
  * Vercelのサーバーレス関数は10秒制限があるため、8秒に設定
+ *
+ * NOTE: SSRF保護のため、リダイレクトは手動で処理し、ホップごとに `isSafeUrl` をチェックします。
  */
 async function fetchWithTimeout(url: string, timeout: number = 8000): Promise<string> {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeout);
+    const maxRedirects = 5;
+    let currentUrl = url;
+    let redirectCount = 0;
 
     try {
-        const response = await fetch(url, {
-            signal: controller.signal,
-            headers: {
-                'User-Agent':
-                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            },
-        });
+        while (redirectCount <= maxRedirects) {
+            const response = await fetch(currentUrl, {
+                signal: controller.signal,
+                redirect: 'manual', // 自動リダイレクトを無効化
+                headers: {
+                    'User-Agent':
+                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                },
+            });
 
-        // 認証が必要なサイトの場合は専用エラーをスロー
-        if (response.status === 401 || response.status === 403) {
-            throw new AuthenticationRequiredError(
-                `このURLには認証が必要です（HTTP ${response.status}）`,
-                response.status
-            );
+            // 認証が必要なサイトの場合は専用エラーをスロー
+            if (response.status === 401 || response.status === 403) {
+                throw new AuthenticationRequiredError(
+                    `このURLには認証が必要です（HTTP ${response.status}）`,
+                    response.status
+                );
+            }
+
+            // リダイレクト処理
+            if (response.status >= 300 && response.status < 400) {
+                const location = response.headers.get('Location');
+                if (!location) {
+                    throw new Error(`HTTP ${response.status} Redirect without Location header`);
+                }
+
+                // 相対パスの場合は絶対パスに変換
+                const nextUrlObj = new URL(location, currentUrl);
+                const nextUrl = nextUrlObj.toString();
+
+                // SSRFチェック（リダイレクト先もチェック）
+                if (!(await isSafeUrl(nextUrl))) {
+                    console.warn('[Extract API] Blocked unsafe redirect to:', nextUrl);
+                    throw new SSRFBlockedError('Access to the redirect URL is restricted for security reasons');
+                }
+
+                currentUrl = nextUrl;
+                redirectCount++;
+                continue;
+            }
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            return await response.text();
         }
 
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
+        throw new Error('Too many redirects');
 
-        return await response.text();
     } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') {
             throw new TimeoutError('Fetch timeout');
@@ -183,5 +223,12 @@ class AuthenticationRequiredError extends Error {
         super(message);
         this.name = 'AuthenticationRequiredError';
         this.statusCode = statusCode;
+    }
+}
+
+class SSRFBlockedError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'SSRFBlockedError';
     }
 }
