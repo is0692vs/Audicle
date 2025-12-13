@@ -144,13 +144,29 @@ export default function ReaderView({
         ? new ResizeObserver(handleResize)
         : undefined;
 
-    container.addEventListener("scroll", updateGradientState, {
+    // Scroll optimization: Throttle scroll event updates using requestAnimationFrame
+    // to prevent excessive reflows and main thread blocking during scrolling.
+    let ticking = false;
+    let rafId: number;
+
+    const onScroll = () => {
+      if (!ticking) {
+        rafId = window.requestAnimationFrame(() => {
+          updateGradientState();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    container.addEventListener("scroll", onScroll, {
       passive: true,
     });
     resizeObserver?.observe(container);
 
     return () => {
-      container.removeEventListener("scroll", updateGradientState);
+      if (rafId) window.cancelAnimationFrame(rafId);
+      container.removeEventListener("scroll", onScroll);
       resizeObserver?.disconnect();
     };
   }, [chunkSignature]);
