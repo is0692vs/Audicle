@@ -135,22 +135,25 @@ export default function PopularPage() {
     }
   }, [period, fetchPopularArticles]);
 
-  const handleRead = (url: string) => {
-    router.push(`/reader?url=${encodeURIComponent(url)}`);
-  };
+  const handleRead = useCallback(
+    (url: string) => {
+      router.push(`/reader?url=${encodeURIComponent(url)}`);
+    },
+    [router]
+  );
 
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     if (isFresh(lastFetchedAt)) {
       setNotice("人気記事は期間ごとに1日1回まで取得できます。");
       return;
     }
     fetchPopularArticles(period);
-  };
+  }, [lastFetchedAt, period, fetchPopularArticles]);
 
-  const handlePlaylistAdd = (article: PopularArticle) => {
+  const handlePlaylistAdd = useCallback((article: PopularArticle) => {
     setSelectedArticle(article);
     setIsPlaylistModalOpen(true);
-  };
+  }, []);
 
   const formattedLastFetchedAt =
     lastFetchedAt !== null ? new Date(lastFetchedAt).toLocaleString() : null;
