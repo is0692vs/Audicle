@@ -114,7 +114,7 @@ describe("ArticleCard", () => {
     }
     fireEvent.click(removeButton);
 
-    expect(mockOnRemove).toHaveBeenCalledWith(mockItem.id);
+    expect(mockOnRemove).toHaveBeenCalledWith(mockItem);
     expect(mockOnArticleClick).not.toHaveBeenCalled(); // Propagation stopped
   });
 

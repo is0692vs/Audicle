@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Play, ArrowUpDown } from "lucide-react";
 import { createReaderUrl } from "@/lib/urlBuilder";
@@ -24,10 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type {
-  PlaylistWithItems,
-  PlaylistItemWithArticle,
-} from "@/types/playlist";
+import type { PlaylistItemWithArticle } from "@/types/playlist";
 
 const SORT_OPTIONS = {
   position: "位置順",
@@ -127,36 +124,83 @@ export default function PlaylistDetailPage() {
     }
   };
 
-  const handleRemoveFromPlaylist = async (itemId: string, title: string) => {
-    const confirmed = await showConfirm({
-      title: "プレイリストから除く",
-      message: `「${title}」を「${playlist?.name}」から除きますか?\n\n他のプレイリストには残ります。`,
-      confirmText: "除く",
-      cancelText: "キャンセル",
-      isDangerous: false,
-    });
+  const handleRemoveFromPlaylist = useCallback(
+    async (item: PlaylistItemWithArticle) => {
+      const confirmed = await showConfirm({
+        title: "プレイリストから除く",
+        message: `「${item.article?.title || ""}」を「${
+          playlist?.name
+        }」から除きますか?\n\n他のプレイリストには残ります。`,
+        confirmText: "除く",
+        cancelText: "キャンセル",
+        isDangerous: false,
+      });
 
-    if (confirmed) {
-      try {
-        await removeFromPlaylistMutation.mutateAsync({
-          playlistId,
-          itemId,
-        });
-        logger.success("アイテムをプレイリストから削除", { itemId, title });
-      } catch (error) {
-        logger.error("アイテムの削除に失敗", error);
+      if (confirmed) {
+        try {
+          await removeFromPlaylistMutation.mutateAsync({
+            playlistId,
+            itemId: item.id,
+          });
+          logger.success("アイテムをプレイリストから削除", {
+            itemId: item.id,
+            title: item.article?.title || "",
+          });
+        } catch (error) {
+          logger.error("アイテムの削除に失敗", error);
+        }
       }
-    }
-  };
+    },
+    [playlistId, playlist?.name, showConfirm, removeFromPlaylistMutation]
+  );
 
-  const handlePlaylistAdd = (articleId: string) => {
-    const item = sortedItems.find((item) => item.article_id === articleId);
-    if (item) {
-      setSelectedArticleId(articleId);
-      setSelectedArticleTitle(item.article?.title || "");
-      setIsPlaylistModalOpen(true);
-    }
-  };
+  const handlePlaylistAdd = useCallback(
+    (articleId: string) => {
+      // Note: This relies on sortedItems which updates with sort.
+      // Since sortedItems is a dependency, this callback updates when sort changes.
+      // This is acceptable as the list re-renders anyway.
+      // However, to make it completely stable for memoization purposes, we'd need a stable way to lookup title.
+      // But ArticleCard passes article_id.
+      // If we used the article object passed from ArticleCard (if we changed signature), we wouldn't need lookups.
+      // But here we need to set selectedArticleTitle.
+      // Let's optimize: ArticleCard doesn't pass article to onPlaylistAdd, only ID.
+      // We can look it up in sortedItems.
+      const item = sortedItems.find((item) => item.article_id === articleId);
+      if (item) {
+        setSelectedArticleId(articleId);
+        setSelectedArticleTitle(item.article?.title || "");
+        setIsPlaylistModalOpen(true);
+      }
+    },
+    [sortedItems]
+  );
+  // Wait, if handlePlaylistAdd depends on sortedItems, it changes every time sortedItems changes.
+  // And sortedItems changes when sortOption changes.
+  // This means ArticleCards re-render when sort order changes. That is expected.
+  // But does it re-render when other unrelated state changes?
+  // Only if sortedItems is re-created. sortedItems depends on playlist.items and sortOption.
+  // So it's fine.
+
+  const handleArticleClick = useCallback(
+    (playlistItem: PlaylistItemWithArticle) => {
+      if (playlistItem.article?.url) {
+        // We need the index for the playlist playback.
+        // Finding index in sortedItems is O(N).
+        // If we just navigated to reader without playlist context it would be easier,
+        // but here we want playlist context.
+        const index = sortedItems.findIndex((i) => i.id === playlistItem.id);
+        router.push(
+          createReaderUrl({
+            articleUrl: playlistItem.article.url,
+            playlistId: playlistId, // Use playlistId from scope instead of playlist.id to avoid dependency on playlist object if id is stable
+            playlistIndex: index >= 0 ? index : 0,
+            autoplay: true,
+          })
+        );
+      }
+    },
+    [router, playlistId, sortedItems]
+  );
 
   if (isLoading) {
     return (
@@ -331,18 +375,7 @@ export default function PlaylistDetailPage() {
                 <ArticleCard
                   key={item.id}
                   item={item}
-                  onArticleClick={(playlistItem) => {
-                    if (playlistItem.article?.url) {
-                      router.push(
-                        createReaderUrl({
-                          articleUrl: playlistItem.article.url,
-                          playlistId: playlist.id,
-                          playlistIndex: index,
-                          autoplay: true,
-                        })
-                      );
-                    }
-                  }}
+                  onArticleClick={handleArticleClick}
                   href={
                     item.article?.url
                       ? createReaderUrl({
@@ -354,9 +387,7 @@ export default function PlaylistDetailPage() {
                       : undefined
                   }
                   onPlaylistAdd={handlePlaylistAdd}
-                  onRemove={(id) =>
-                    handleRemoveFromPlaylist(id, item.article?.title || "")
-                  }
+                  onRemove={handleRemoveFromPlaylist}
                 />
               ))}
             </div>

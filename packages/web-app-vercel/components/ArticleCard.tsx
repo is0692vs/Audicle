@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Minus } from "lucide-react";
@@ -12,11 +12,11 @@ interface ArticleCardProps {
   item: PlaylistItemWithArticle;
   onArticleClick: (item: PlaylistItemWithArticle) => void;
   onPlaylistAdd: (itemId: string) => void;
-  onRemove: (itemId: string) => void;
+  onRemove: (item: PlaylistItemWithArticle) => void;
   href?: string;
 }
 
-export function ArticleCard({
+export const ArticleCard = memo(function ArticleCard({
   item,
   onArticleClick,
   onPlaylistAdd,
@@ -85,7 +85,7 @@ export function ArticleCard({
                 variant="ghost"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onRemove(item.id);
+                  onRemove(item);
                 }}
                 className="text-orange-400 hover:text-orange-300 hover:bg-orange-950/30"
                 aria-label="プレイリストから削除"
@@ -99,4 +99,4 @@ export function ArticleCard({
       </Card>
     </a>
   );
-}
+});
