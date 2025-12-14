@@ -64,6 +64,7 @@ describe("ArticleCard", () => {
     render(
       <ArticleCard
         item={mockItem}
+        index={5}
         onArticleClick={mockOnArticleClick}
         onPlaylistAdd={mockOnPlaylistAdd}
         onRemove={mockOnRemove}
@@ -73,7 +74,7 @@ describe("ArticleCard", () => {
     const link = screen.getByTestId("playlist-article");
     fireEvent.click(link);
 
-    expect(mockOnArticleClick).toHaveBeenCalledWith(mockItem);
+    expect(mockOnArticleClick).toHaveBeenCalledWith(mockItem, 5);
   });
 
   it("handles playlist add button click", () => {
@@ -93,7 +94,10 @@ describe("ArticleCard", () => {
     }
     fireEvent.click(addButton);
 
-    expect(mockOnPlaylistAdd).toHaveBeenCalledWith(mockItem.article_id);
+    expect(mockOnPlaylistAdd).toHaveBeenCalledWith({
+      id: mockItem.article_id,
+      title: mockItem.article?.title,
+    });
     expect(mockOnArticleClick).not.toHaveBeenCalled(); // Propagation stopped
   });
 

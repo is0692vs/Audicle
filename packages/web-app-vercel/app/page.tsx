@@ -10,7 +10,10 @@ import { useConfirmDialog } from "@/components/ConfirmDialog";
 import { useDefaultPlaylistItems } from "@/lib/hooks/useDefaultPlaylistItems";
 import { useRemoveFromPlaylistMutation } from "@/lib/hooks/usePlaylists";
 import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
-import { ArticleCard } from "@/components/ArticleCard";
+import {
+  ArticleCard,
+  ArticleCardAddPayload,
+} from "@/components/ArticleCard";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -49,7 +52,9 @@ export default function Home() {
       ? (saved as ArticleSortBy)
       : "newest";
   });
-  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+
+  // Use state for the selected article to add to playlist, instead of just ID.
+  const [selectedArticleToAdd, setSelectedArticleToAdd] = useState<ArticleCardAddPayload | null>(null);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
 
   const { items = [], playlistId, playlistName } = playlistData ?? {};
@@ -80,11 +85,6 @@ export default function Home() {
     if (typeof window === "undefined") return;
     localStorage.setItem(HOME_SORT_KEY, sortBy);
   }, [sortBy]);
-
-  const selectedItem = useMemo(
-    () => items.find((item) => item.article_id === selectedItemId),
-    [items, selectedItemId]
-  );
 
   const { showConfirm, confirmDialog } = useConfirmDialog();
 
@@ -131,8 +131,8 @@ export default function Home() {
     [router]
   );
 
-  const handlePlaylistAdd = useCallback((id: string) => {
-    setSelectedItemId(id);
+  const handlePlaylistAdd = useCallback((article: ArticleCardAddPayload) => {
+    setSelectedArticleToAdd(article);
     setIsPlaylistModalOpen(true);
   }, []);
 
@@ -144,16 +144,16 @@ export default function Home() {
         <div className="p-4 sm:p-6 lg:p-8">
           {confirmDialog}
 
-          {selectedItem && selectedItemId && (
+          {selectedArticleToAdd && (
             <PlaylistSelectorModal
               isOpen={isPlaylistModalOpen}
               onClose={() => {
                 setIsPlaylistModalOpen(false);
-                setSelectedItemId(null);
+                setSelectedArticleToAdd(null);
               }}
               itemId={undefined}
-              articleId={selectedItem.article_id}
-              articleTitle={selectedItem.article?.title || ""}
+              articleId={selectedArticleToAdd.id}
+              articleTitle={selectedArticleToAdd.title}
               onPlaylistsUpdated={async () => {
                 handleRefresh();
               }}
@@ -237,10 +237,11 @@ export default function Home() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8">
-              {sortedItems.map((item) => (
+              {sortedItems.map((item, index) => (
                 <ArticleCard
                   key={item.id}
                   item={item}
+                  index={index}
                   onArticleClick={handleArticleClick}
                   onPlaylistAdd={handlePlaylistAdd}
                   onRemove={handleRemoveFromHome}

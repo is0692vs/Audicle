@@ -14,7 +14,10 @@ import {
   useUpdatePlaylistMutation,
   useRemoveFromPlaylistMutation,
 } from "@/lib/hooks/usePlaylists";
-import { ArticleCard } from "@/components/ArticleCard";
+import {
+  ArticleCard,
+  ArticleCardAddPayload,
+} from "@/components/ArticleCard";
 import { PlaylistSelectorModal } from "@/components/PlaylistSelectorModal";
 import Sidebar from "@/components/Sidebar";
 import {
@@ -155,51 +158,32 @@ export default function PlaylistDetailPage() {
   );
 
   const handlePlaylistAdd = useCallback(
-    (articleId: string) => {
-      // Note: This relies on sortedItems which updates with sort.
-      // Since sortedItems is a dependency, this callback updates when sort changes.
-      // This is acceptable as the list re-renders anyway.
-      // However, to make it completely stable for memoization purposes, we'd need a stable way to lookup title.
-      // But ArticleCard passes article_id.
-      // If we used the article object passed from ArticleCard (if we changed signature), we wouldn't need lookups.
-      // But here we need to set selectedArticleTitle.
-      // Let's optimize: ArticleCard doesn't pass article to onPlaylistAdd, only ID.
-      // We can look it up in sortedItems.
-      const item = sortedItems.find((item) => item.article_id === articleId);
-      if (item) {
-        setSelectedArticleId(articleId);
-        setSelectedArticleTitle(item.article?.title || "");
-        setIsPlaylistModalOpen(true);
-      }
+    (article: ArticleCardAddPayload) => {
+      setSelectedArticleId(article.id);
+      setSelectedArticleTitle(article.title);
+      setIsPlaylistModalOpen(true);
     },
-    [sortedItems]
+    []
   );
-  // Wait, if handlePlaylistAdd depends on sortedItems, it changes every time sortedItems changes.
-  // And sortedItems changes when sortOption changes.
-  // This means ArticleCards re-render when sort order changes. That is expected.
-  // But does it re-render when other unrelated state changes?
-  // Only if sortedItems is re-created. sortedItems depends on playlist.items and sortOption.
-  // So it's fine.
 
   const handleArticleClick = useCallback(
-    (playlistItem: PlaylistItemWithArticle) => {
+    (playlistItem: PlaylistItemWithArticle, index?: number) => {
       if (playlistItem.article?.url) {
-        // We need the index for the playlist playback.
-        // Finding index in sortedItems is O(N).
-        // If we just navigated to reader without playlist context it would be easier,
-        // but here we want playlist context.
-        const index = sortedItems.findIndex((i) => i.id === playlistItem.id);
+        // Use index passed from component if available, fallback to 0.
+        // This removes the need to findIndex in sortedItems, which is O(N) and creates a dependency on sortedItems.
+        const playlistIndex = index ?? 0;
+
         router.push(
           createReaderUrl({
             articleUrl: playlistItem.article.url,
-            playlistId: playlistId, // Use playlistId from scope instead of playlist.id to avoid dependency on playlist object if id is stable
-            playlistIndex: index >= 0 ? index : 0,
+            playlistId: playlistId,
+            playlistIndex: playlistIndex,
             autoplay: true,
           })
         );
       }
     },
-    [router, playlistId, sortedItems]
+    [router, playlistId]
   );
 
   if (isLoading) {
@@ -375,6 +359,7 @@ export default function PlaylistDetailPage() {
                 <ArticleCard
                   key={item.id}
                   item={item}
+                  index={index}
                   onArticleClick={handleArticleClick}
                   href={
                     item.article?.url

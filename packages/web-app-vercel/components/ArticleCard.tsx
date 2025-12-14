@@ -8,16 +8,23 @@ import { extractDomain } from "@/lib/utils";
 import { createReaderUrl } from "@/lib/urlBuilder";
 import type { PlaylistItemWithArticle } from "@/types/playlist";
 
+export interface ArticleCardAddPayload {
+  id: string;
+  title: string;
+}
+
 interface ArticleCardProps {
   item: PlaylistItemWithArticle;
-  onArticleClick: (item: PlaylistItemWithArticle) => void;
-  onPlaylistAdd: (itemId: string) => void;
+  index?: number;
+  onArticleClick: (item: PlaylistItemWithArticle, index?: number) => void;
+  onPlaylistAdd: (article: ArticleCardAddPayload) => void;
   onRemove: (item: PlaylistItemWithArticle) => void;
   href?: string;
 }
 
 export const ArticleCard = memo(function ArticleCard({
   item,
+  index,
   onArticleClick,
   onPlaylistAdd,
   onRemove,
@@ -39,7 +46,7 @@ export const ArticleCard = memo(function ArticleCard({
         // an actual anchor href for tests and non-JS navigation. Prevent
         // default to use client routing when handler is provided.
         e.preventDefault();
-        onArticleClick(item);
+        onArticleClick(item, index);
       }}
     >
       <Card className="bg-zinc-900/50 border-zinc-800 hover:bg-zinc-800/50 transition-colors cursor-pointer">
@@ -72,7 +79,10 @@ export const ArticleCard = memo(function ArticleCard({
                 variant="ghost"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onPlaylistAdd(item.article_id);
+                  onPlaylistAdd({
+                    id: item.article_id,
+                    title: item.article?.title || "",
+                  });
                 }}
                 className="text-primary/70 hover:text-primary/80 hover:bg-primary/10"
                 aria-label="プレイリストに追加"
