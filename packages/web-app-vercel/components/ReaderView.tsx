@@ -19,6 +19,21 @@ interface ReaderViewProps {
   onChunkClick?: (chunkId: string) => void;
 }
 
+/**
+ * Render the article reader UI with chunked content, gradient overlays, auto-scroll, and download controls.
+ *
+ * Renders a scrollable reader containing chunked article content, a DownloadPanel (status, progress, error, estimated time),
+ * top/bottom gradient overlays that reflect scroll position, and automatic centering of the active chunk. When no chunks
+ * are provided, shows an instructional placeholder.
+ *
+ * @param chunks - Parsed article chunks to render in order.
+ * @param currentChunkId - ID of the currently active chunk; the view will auto-scroll to center this chunk.
+ * @param articleUrl - Optional source URL used to derive the article title and for download operations.
+ * @param voiceModel - Identifier for the voice model to use when preparing downloads.
+ * @param speed - Playback/download speed modifier used when preparing downloads.
+ * @param onChunkClick - Callback invoked with a chunk when a chunk is clicked.
+ * @returns The reader view React element.
+ */
 export default function ReaderView({
   chunks = [],
   currentChunkId,
