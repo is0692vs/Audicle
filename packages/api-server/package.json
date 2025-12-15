@@ -4,30 +4,13 @@
   "description": "API server for text extraction using Readability.js",
   "main": "readability_script.js",
   "scripts": {
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
     "ipaddr.js": "^2.3.0",
     "jsdom": "^23.0.1",
     "node-fetch": "^2.6.7"
-  },
-  "devDependencies": {
-    "jest": "^29.7.0"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "coverageDirectory": "coverage",
-    "collectCoverageFrom": [
-      "*.js",
-      "!jest.config.js",
-      "!coverage/**"
-    ],
-    "testMatch": [
-      "**/__tests__/**/*.test.js"
-    ]
   },
   "author": "",
   "license": "MIT"
