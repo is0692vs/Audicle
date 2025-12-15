@@ -14,13 +14,23 @@ interface DownloadPanelProps {
   onCancel: () => void;
 }
 
-const DownloadPanel = memo(function DownloadPanel({
-  status,
-  progress,
-  error,
-  estimatedTime,
-  onCancel,
-}: DownloadPanelProps) {
+const DownloadPanel = memo(
+  function DownloadPanel({
+    status,
+    progress,
+    error,
+    estimatedTime,
+    onCancel,
+  }: DownloadPanelProps) {
+,
+  (prev, next) =>
+    prev.status === next.status &&
+    prev.error === next.error &&
+    prev.estimatedTime === next.estimatedTime &&
+    prev.onCancel === next.onCancel &&
+    prev.progress.current === next.progress.current &&
+    prev.progress.total === next.progress.total
+);
   if ((status === "idle" || status === "completed") && !error) {
     return null;
   }
