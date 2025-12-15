@@ -41,7 +41,7 @@ export function ArticleCard({
               <a
                 href={readerHref}
                 data-testid="playlist-article"
-                className="after:absolute after:inset-0 focus:outline-none focus:underline"
+                className="after:content-[''] after:absolute after:inset-0 after:z-10 focus:outline-none focus:underline"
                 onClick={(e) => {
                   // If modifier keys are pressed (e.g. Cmd/Ctrl for new tab),
                   // let the browser handle the default anchor behavior.
@@ -69,7 +69,7 @@ export function ArticleCard({
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-2 relative z-10">
+          <div className="flex items-center gap-2 relative z-20">
             <Button
               size="sm"
               variant="ghost"
