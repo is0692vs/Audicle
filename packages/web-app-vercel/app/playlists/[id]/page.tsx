@@ -128,17 +128,8 @@ export default function PlaylistDetailPage() {
   };
 
   const handleRemoveFromPlaylist = useCallback(
-    async (itemId: string) => {
-      // Find item in sortedItems to get title.
-      // This dependency on sortedItems means handler changes when sort changes,
-      // but that is acceptable as list is re-rendering anyway.
-      // We need to be careful if we pass this to memoized ArticleCard.
-      // Ideally we pass title as argument to this function, but ArticleCard calls onRemove(id).
-      // Let's find it in sortedItems.
-      const item = sortedItems.find((i) => i.id === itemId);
-      if (!item) return;
-      const title = item.article?.title || "";
-
+    async (itemId: string, title: string) => {
+      // With title passed as argument, we don't need to depend on sortedItems
       const confirmed = await showConfirm({
         title: "プレイリストから除く",
         message: `「${title}」を「${playlist?.name}」から除きますか?\n\n他のプレイリストには残ります。`,
@@ -160,7 +151,6 @@ export default function PlaylistDetailPage() {
       }
     },
     [
-      sortedItems,
       playlist?.name,
       playlistId,
       showConfirm,

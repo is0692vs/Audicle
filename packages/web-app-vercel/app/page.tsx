@@ -94,18 +94,12 @@ export default function Home() {
   };
 
   const handleRemoveFromHome = useCallback(
-    async (itemId: string) => {
-      // Note: We need access to 'items' and 'playlistId' here.
-      // Since 'items' changes frequently (when list updates), this callback might update frequently.
-      // However, if we just look up by ID, we might not need 'items' in the dependency array
-      // if we trust the caller to pass a valid ID, but we do need 'playlistId'.
-      // Wait, 'items' is used to get the title for the confirmation message.
-      const item = items.find((i) => i.id === itemId);
-      if (!item || !playlistId) return;
+    async (itemId: string, title: string) => {
+      if (!playlistId) return;
 
       const confirmed = await showConfirm({
         title: "ホームから除く",
-        message: `「${item.article?.title}」をホームから除きますか?\n\n他のプレイリストには残ります。`,
+        message: `「${title}」をホームから除きますか?\n\n他のプレイリストには残ります。`,
         confirmText: "除く",
         cancelText: "キャンセル",
         isDangerous: false,
@@ -119,14 +113,14 @@ export default function Home() {
           });
           logger.success("アイテムを削除", {
             itemId,
-            title: item.article?.title || "",
+            title,
           });
         } catch (error) {
           logger.error("アイテムの削除に失敗", error);
         }
       }
     },
-    [items, playlistId, showConfirm, removeFromPlaylistMutation]
+    [playlistId, showConfirm, removeFromPlaylistMutation]
   );
 
   const handleArticleClick = useCallback(

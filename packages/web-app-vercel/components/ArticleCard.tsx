@@ -12,7 +12,7 @@ interface ArticleCardProps {
   item: PlaylistItemWithArticle;
   onArticleClick: (item: PlaylistItemWithArticle) => void;
   onPlaylistAdd: (itemId: string) => void;
-  onRemove: (itemId: string) => void;
+  onRemove: (itemId: string, title: string) => void;
   href?: string;
 }
 
@@ -85,7 +85,7 @@ export const ArticleCard = memo(function ArticleCard({
                 variant="ghost"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onRemove(item.id);
+                  onRemove(item.id, item.article?.title || "");
                 }}
                 className="text-orange-400 hover:text-orange-300 hover:bg-orange-950/30"
                 aria-label="プレイリストから削除"
