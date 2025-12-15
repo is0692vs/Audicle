@@ -1,8 +1,10 @@
 import { memo } from "react";
 import { cn } from "@/lib/utils";
 
+type DownloadStatus = "idle" | "downloading" | "completed" | "error" | "cancelled";
+
 interface DownloadPanelProps {
-  status: string;
+  status: DownloadStatus;
   progress: {
     current: number;
     total: number;
