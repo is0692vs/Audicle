@@ -8,9 +8,16 @@ const ipaddr = require("ipaddr.js");
 const lookup = promisify(dns.lookup);
 
 /**
- * Validates if a URL is safe to fetch (SSRF protection).
- * Rejects private IPs, loopback, link-local, and non-http/https protocols.
- * Throws an error if the URL is unsafe.
+ * Ensure a URL is safe to fetch by validating its protocol and resolved IP addresses.
+ *
+ * @param {string} urlString - The URL to validate.
+ * @throws {Error} If the input is not a valid URL ("Invalid URL format").
+ * @throws {Error} If the URL protocol is not HTTP or HTTPS ("Unsafe protocol: <protocol>").
+ * @throws {Error} If the hostname is localhost or ends with .localhost ("Access to localhost is denied").
+ * @throws {Error} If the hostname cannot be resolved ("Could not resolve hostname: <hostname>").
+ * @throws {Error} If a resolved address is not a valid IP ("Invalid IP address: <address>").
+ * @throws {Error} If any resolved address is not a global unicast address
+ *                 ("Access to internal/private IP denied: <address> (<range>)").
  */
 async function validateUrl(urlString) {
   let url;
@@ -65,7 +72,12 @@ async function validateUrl(urlString) {
 }
 
 /**
- * Safe fetch with SSRF protection including redirect handling.
+ * Fetch a URL with SSRF-safe validation and manual redirect handling.
+ * @param {string} initialUrl - The starting URL to validate and fetch.
+ * @returns {Response} The final HTTP response after following validated redirects.
+ * @throws {Error} If a redirect response is missing its Location header.
+ * @throws {Error} If a redirect Location cannot be resolved to a valid URL.
+ * @throws {Error} If the number of redirects exceeds the allowed maximum.
  */
 async function safeFetch(initialUrl) {
   let currentUrl = initialUrl;
@@ -107,6 +119,13 @@ async function safeFetch(initialUrl) {
   throw new Error(`Too many redirects (max: ${maxRedirects})`);
 }
 
+/**
+ * Fetches a web page, extracts the main article text, and prints a JSON object with the article title and paragraph chunks to stdout.
+ *
+ * The function validates and fetches the provided URL, parses the HTML, extracts the article content, splits the article text into up to 50 paragraph-like chunks (filtering out very short chunks), and writes the result as JSON to stdout. If any error occurs it writes a JSON error message to stderr and exits the process with code 1.
+ *
+ * @param {string} url - The URL of the page to retrieve and extract content from.
+ */
 async function extractContent(url) {
   try {
     // Use safeFetch instead of direct fetch
