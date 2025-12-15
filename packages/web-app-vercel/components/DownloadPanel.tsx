@@ -19,10 +19,12 @@ const DownloadPanel = memo(function DownloadPanel({
   estimatedTime,
   onCancel,
 }: DownloadPanelProps) {
-  if (status === "idle" || status === "completed") {
-    if (!error) {
-      return null;
-    }
+  if ((status === "idle" || status === "completed") && !error) {
+    return null;
+  }
+
+  if (status === "idle" && error) {
+    status = "error";
   }
 
   const percentage = progress.total
