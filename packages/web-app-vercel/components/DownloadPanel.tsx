@@ -80,6 +80,11 @@ const DownloadPanel = memo(function DownloadPanel({
           <div
             className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out"
             style={{ width: `${percentage}%` }}
+            role="progressbar"
+            aria-valuenow={percentage}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="ダウンロード進行状況"
           />
         </div>
       )}
