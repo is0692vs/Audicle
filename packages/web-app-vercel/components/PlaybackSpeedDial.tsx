@@ -41,8 +41,9 @@ export function PlaybackSpeedDial({
     const newIndex = speeds.indexOf(value);
     const index = newIndex !== -1 ? newIndex : speeds.indexOf(1);
     const clampedIndex = Math.max(0, Math.min(speeds.length - 1, index));
-    setSelectedIndex(clampedIndex);
-    setPreviewIndex(clampedIndex);
+
+    setSelectedIndex((prev) => (prev !== clampedIndex ? clampedIndex : prev));
+    setPreviewIndex((prev) => (prev !== clampedIndex ? clampedIndex : prev));
   }, [value, speeds]);
 
   const handlePointerDown = useCallback(
@@ -137,12 +138,36 @@ export function PlaybackSpeedDial({
     if (open) {
       document.addEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "hidden";
+      // Open時にトラックにフォーカスを当てる
+      requestAnimationFrame(() => {
+        trackRef.current?.focus();
+      });
       return () => {
         document.removeEventListener("keydown", handleKeyDown);
         document.body.style.overflow = "";
       };
     }
   }, [open, onOpenChange]);
+
+  const handleTrackKeyDown = (e: React.KeyboardEvent) => {
+    let newIndex = selectedIndex;
+    if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+      newIndex = Math.max(0, selectedIndex - 1);
+    } else if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+      newIndex = Math.min(speeds.length - 1, selectedIndex + 1);
+    } else if (e.key === "Home") {
+      newIndex = 0;
+    } else if (e.key === "End") {
+      newIndex = speeds.length - 1;
+    } else {
+      return;
+    }
+
+    e.preventDefault();
+    if (newIndex !== selectedIndex) {
+      onValueChange(speeds[newIndex]);
+    }
+  };
 
   if (!open) return null;
 
@@ -183,7 +208,15 @@ export function PlaybackSpeedDial({
             {/* ドラッグ可能なトラック */}
             <div
               ref={trackRef}
-              className="relative h-full cursor-pointer"
+              className="relative h-full cursor-pointer focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:outline-none rounded-lg"
+              role="slider"
+              aria-label="再生速度"
+              aria-valuemin={speeds[0]}
+              aria-valuemax={speeds[speeds.length - 1]}
+              aria-valuenow={currentSpeed}
+              aria-valuetext={`${currentSpeed?.toFixed(1)}x`}
+              tabIndex={0}
+              onKeyDown={handleTrackKeyDown}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
