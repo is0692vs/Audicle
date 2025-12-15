@@ -27,3 +27,5 @@ playwright/.auth/user.json
 packages/web-app-vercel/coverage.json
 
 packages/web-app-vercel/temp_credentials.json
+packages/api-server/node_modules
+packages/api-server/node_modules
