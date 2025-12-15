@@ -41,8 +41,9 @@ export function PlaybackSpeedDial({
     const newIndex = speeds.indexOf(value);
     const index = newIndex !== -1 ? newIndex : speeds.indexOf(1);
     const clampedIndex = Math.max(0, Math.min(speeds.length - 1, index));
-    setSelectedIndex(clampedIndex);
-    setPreviewIndex(clampedIndex);
+
+    setSelectedIndex((prev) => (prev !== clampedIndex ? clampedIndex : prev));
+    setPreviewIndex((prev) => (prev !== clampedIndex ? clampedIndex : prev));
   }, [value, speeds]);
 
   const handlePointerDown = useCallback(
@@ -164,8 +165,6 @@ export function PlaybackSpeedDial({
 
     e.preventDefault();
     if (newIndex !== selectedIndex) {
-      setSelectedIndex(newIndex);
-      setPreviewIndex(newIndex);
       onValueChange(speeds[newIndex]);
     }
   };
