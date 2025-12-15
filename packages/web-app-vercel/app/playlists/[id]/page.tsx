@@ -171,24 +171,19 @@ export default function PlaylistDetailPage() {
   );
 
   const handleArticleClick = useCallback(
-    (item: PlaylistItemWithArticle) => {
-      // We need to find index in sortedItems to pass to createReaderUrl?
-      // Wait, createReaderUrl needs playlistIndex.
-      // If we sort, the index changes.
-      // We can find the index in sortedItems.
-      const index = sortedItems.findIndex((i) => i.id === item.id);
-      if (item.article?.url && index !== -1) {
+    (item: PlaylistItemWithArticle, index?: number) => {
+      if (item.article?.url && typeof index === "number") {
         router.push(
           createReaderUrl({
             articleUrl: item.article.url,
-            playlistId: playlistId, // Use playlistId from params/scope
+            playlistId: playlistId,
             playlistIndex: index,
             autoplay: true,
           })
         );
       }
     },
-    [sortedItems, playlistId, router]
+    [playlistId, router]
   );
 
   if (isLoading) {
@@ -364,6 +359,7 @@ export default function PlaylistDetailPage() {
                 <ArticleCard
                   key={item.id}
                   item={item}
+                  index={index}
                   onArticleClick={handleArticleClick}
                   href={
                     item.article?.url

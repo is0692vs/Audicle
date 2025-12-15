@@ -236,10 +236,11 @@ export default function Home() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8">
-              {sortedItems.map((item) => (
+              {sortedItems.map((item, index) => (
                 <ArticleCard
                   key={item.id}
                   item={item}
+                  index={index}
                   onArticleClick={handleArticleClick}
                   onPlaylistAdd={handlePlaylistAdd}
                   onRemove={handleRemoveFromHome}

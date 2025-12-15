@@ -10,7 +10,8 @@ import type { PlaylistItemWithArticle } from "@/types/playlist";
 
 interface ArticleCardProps {
   item: PlaylistItemWithArticle;
-  onArticleClick: (item: PlaylistItemWithArticle) => void;
+  index?: number;
+  onArticleClick: (item: PlaylistItemWithArticle, index?: number) => void;
   onPlaylistAdd: (itemId: string) => void;
   onRemove: (itemId: string, title: string) => void;
   href?: string;
@@ -18,6 +19,7 @@ interface ArticleCardProps {
 
 export const ArticleCard = memo(function ArticleCard({
   item,
+  index,
   onArticleClick,
   onPlaylistAdd,
   onRemove,
@@ -39,7 +41,7 @@ export const ArticleCard = memo(function ArticleCard({
         // an actual anchor href for tests and non-JS navigation. Prevent
         // default to use client routing when handler is provided.
         e.preventDefault();
-        onArticleClick(item);
+        onArticleClick(item, index);
       }}
     >
       <Card className="bg-zinc-900/50 border-zinc-800 hover:bg-zinc-800/50 transition-colors cursor-pointer">

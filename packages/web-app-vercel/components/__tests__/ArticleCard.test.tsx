@@ -64,6 +64,7 @@ describe("ArticleCard", () => {
     render(
       <ArticleCard
         item={mockItem}
+        index={5}
         onArticleClick={mockOnArticleClick}
         onPlaylistAdd={mockOnPlaylistAdd}
         onRemove={mockOnRemove}
@@ -73,7 +74,7 @@ describe("ArticleCard", () => {
     const link = screen.getByTestId("playlist-article");
     fireEvent.click(link);
 
-    expect(mockOnArticleClick).toHaveBeenCalledWith(mockItem);
+    expect(mockOnArticleClick).toHaveBeenCalledWith(mockItem, 5);
   });
 
   it("handles playlist add button click", () => {
