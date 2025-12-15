@@ -76,6 +76,25 @@ describe("ArticleCard", () => {
     expect(mockOnArticleClick).toHaveBeenCalledWith(mockItem);
   });
 
+  it("allows native browser behavior (no custom handler) when modifier key is pressed", () => {
+    render(
+      <ArticleCard
+        item={mockItem}
+        onArticleClick={mockOnArticleClick}
+        onPlaylistAdd={mockOnPlaylistAdd}
+        onRemove={mockOnRemove}
+      />
+    );
+
+    const link = screen.getByTestId("playlist-article");
+
+    // Simulate Ctrl+Click (open in new tab)
+    fireEvent.click(link, { ctrlKey: true });
+
+    // Ensure our custom client-side handler was NOT called
+    expect(mockOnArticleClick).not.toHaveBeenCalled();
+  });
+
   it("handles playlist add button click", () => {
     render(
       <ArticleCard

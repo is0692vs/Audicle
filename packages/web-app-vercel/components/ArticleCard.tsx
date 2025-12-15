@@ -43,6 +43,11 @@ export function ArticleCard({
                 data-testid="playlist-article"
                 className="after:absolute after:inset-0 focus:outline-none focus:underline"
                 onClick={(e) => {
+                  // If modifier keys are pressed (e.g. Cmd/Ctrl for new tab),
+                  // let the browser handle the default anchor behavior.
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+                    return;
+                  }
                   e.preventDefault();
                   onArticleClick(item);
                 }}
