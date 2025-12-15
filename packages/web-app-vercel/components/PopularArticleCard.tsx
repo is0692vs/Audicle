@@ -1,5 +1,6 @@
 "use client";
 
+import React, { memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DomainBadge } from "@/components/DomainBadge";
@@ -13,7 +14,7 @@ interface PopularArticleCardProps {
   onPlaylistAdd: (article: PopularArticle) => void;
 }
 
-export function PopularArticleCard({
+export const PopularArticleCard = memo(function PopularArticleCard({
   article,
   onRead,
   onPlaylistAdd,
@@ -94,4 +95,4 @@ export function PopularArticleCard({
       </CardContent>
     </Card>
   );
-}
+});

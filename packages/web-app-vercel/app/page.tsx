@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { logger } from "@/lib/logger";
@@ -93,37 +93,53 @@ export default function Home() {
     });
   };
 
-  const handleRemoveFromHome = async (itemId: string) => {
-    const item = items.find((i) => i.id === itemId);
-    if (!item || !playlistId) return;
+  const handleRemoveFromHome = useCallback(
+    async (itemId: string) => {
+      // Note: We need access to 'items' and 'playlistId' here.
+      // Since 'items' changes frequently (when list updates), this callback might update frequently.
+      // However, if we just look up by ID, we might not need 'items' in the dependency array
+      // if we trust the caller to pass a valid ID, but we do need 'playlistId'.
+      // Wait, 'items' is used to get the title for the confirmation message.
+      const item = items.find((i) => i.id === itemId);
+      if (!item || !playlistId) return;
 
-    const confirmed = await showConfirm({
-      title: "ホームから除く",
-      message: `「${item.article?.title}」をホームから除きますか?\n\n他のプレイリストには残ります。`,
-      confirmText: "除く",
-      cancelText: "キャンセル",
-      isDangerous: false,
-    });
+      const confirmed = await showConfirm({
+        title: "ホームから除く",
+        message: `「${item.article?.title}」をホームから除きますか?\n\n他のプレイリストには残ります。`,
+        confirmText: "除く",
+        cancelText: "キャンセル",
+        isDangerous: false,
+      });
 
-    if (confirmed) {
-      try {
-        await removeFromPlaylistMutation.mutateAsync({
-          playlistId,
-          itemId,
-        });
-        logger.success("アイテムを削除", {
-          itemId,
-          title: item.article?.title || "",
-        });
-      } catch (error) {
-        logger.error("アイテムの削除に失敗", error);
+      if (confirmed) {
+        try {
+          await removeFromPlaylistMutation.mutateAsync({
+            playlistId,
+            itemId,
+          });
+          logger.success("アイテムを削除", {
+            itemId,
+            title: item.article?.title || "",
+          });
+        } catch (error) {
+          logger.error("アイテムの削除に失敗", error);
+        }
       }
-    }
-  };
+    },
+    [items, playlistId, showConfirm, removeFromPlaylistMutation]
+  );
 
-  const handleArticleClick = (item: (typeof items)[0]) => {
-    router.push(`/reader?url=${encodeURIComponent(item.article!.url)}`);
-  };
+  const handleArticleClick = useCallback(
+    (item: (typeof items)[0]) => {
+      router.push(`/reader?url=${encodeURIComponent(item.article!.url)}`);
+    },
+    [router]
+  );
+
+  const handlePlaylistAdd = useCallback((id: string) => {
+    setSelectedItemId(id);
+    setIsPlaylistModalOpen(true);
+  }, []);
 
   return (
     <div className="h-screen bg-black text-white flex flex-col lg:flex-row">
@@ -231,10 +247,7 @@ export default function Home() {
                   key={item.id}
                   item={item}
                   onArticleClick={handleArticleClick}
-                  onPlaylistAdd={(id) => {
-                    setSelectedItemId(id);
-                    setIsPlaylistModalOpen(true);
-                  }}
+                  onPlaylistAdd={handlePlaylistAdd}
                   onRemove={handleRemoveFromHome}
                 />
               ))}

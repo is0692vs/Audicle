@@ -135,9 +135,12 @@ export default function PopularPage() {
     }
   }, [period, fetchPopularArticles]);
 
-  const handleRead = (url: string) => {
-    router.push(`/reader?url=${encodeURIComponent(url)}`);
-  };
+  const handleRead = useCallback(
+    (url: string) => {
+      router.push(`/reader?url=${encodeURIComponent(url)}`);
+    },
+    [router]
+  );
 
   const handleRefresh = () => {
     if (isFresh(lastFetchedAt)) {
@@ -147,10 +150,10 @@ export default function PopularPage() {
     fetchPopularArticles(period);
   };
 
-  const handlePlaylistAdd = (article: PopularArticle) => {
+  const handlePlaylistAdd = useCallback((article: PopularArticle) => {
     setSelectedArticle(article);
     setIsPlaylistModalOpen(true);
-  };
+  }, []);
 
   const formattedLastFetchedAt =
     lastFetchedAt !== null ? new Date(lastFetchedAt).toLocaleString() : null;
