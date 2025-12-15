@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Play, ArrowUpDown } from "lucide-react";
 import { createReaderUrl } from "@/lib/urlBuilder";
@@ -127,36 +127,79 @@ export default function PlaylistDetailPage() {
     }
   };
 
-  const handleRemoveFromPlaylist = async (itemId: string, title: string) => {
-    const confirmed = await showConfirm({
-      title: "プレイリストから除く",
-      message: `「${title}」を「${playlist?.name}」から除きますか?\n\n他のプレイリストには残ります。`,
-      confirmText: "除く",
-      cancelText: "キャンセル",
-      isDangerous: false,
-    });
+  const handleRemoveFromPlaylist = useCallback(
+    async (itemId: string) => {
+      // Find item in sortedItems to get title.
+      // This dependency on sortedItems means handler changes when sort changes,
+      // but that is acceptable as list is re-rendering anyway.
+      // We need to be careful if we pass this to memoized ArticleCard.
+      // Ideally we pass title as argument to this function, but ArticleCard calls onRemove(id).
+      // Let's find it in sortedItems.
+      const item = sortedItems.find((i) => i.id === itemId);
+      if (!item) return;
+      const title = item.article?.title || "";
 
-    if (confirmed) {
-      try {
-        await removeFromPlaylistMutation.mutateAsync({
-          playlistId,
-          itemId,
-        });
-        logger.success("アイテムをプレイリストから削除", { itemId, title });
-      } catch (error) {
-        logger.error("アイテムの削除に失敗", error);
+      const confirmed = await showConfirm({
+        title: "プレイリストから除く",
+        message: `「${title}」を「${playlist?.name}」から除きますか?\n\n他のプレイリストには残ります。`,
+        confirmText: "除く",
+        cancelText: "キャンセル",
+        isDangerous: false,
+      });
+
+      if (confirmed) {
+        try {
+          await removeFromPlaylistMutation.mutateAsync({
+            playlistId,
+            itemId,
+          });
+          logger.success("アイテムをプレイリストから削除", { itemId, title });
+        } catch (error) {
+          logger.error("アイテムの削除に失敗", error);
+        }
       }
-    }
-  };
+    },
+    [
+      sortedItems,
+      playlist?.name,
+      playlistId,
+      showConfirm,
+      removeFromPlaylistMutation,
+    ]
+  );
 
-  const handlePlaylistAdd = (articleId: string) => {
-    const item = sortedItems.find((item) => item.article_id === articleId);
-    if (item) {
-      setSelectedArticleId(articleId);
-      setSelectedArticleTitle(item.article?.title || "");
-      setIsPlaylistModalOpen(true);
-    }
-  };
+  const handlePlaylistAdd = useCallback(
+    (articleId: string) => {
+      const item = sortedItems.find((item) => item.article_id === articleId);
+      if (item) {
+        setSelectedArticleId(articleId);
+        setSelectedArticleTitle(item.article?.title || "");
+        setIsPlaylistModalOpen(true);
+      }
+    },
+    [sortedItems]
+  );
+
+  const handleArticleClick = useCallback(
+    (item: PlaylistItemWithArticle) => {
+      // We need to find index in sortedItems to pass to createReaderUrl?
+      // Wait, createReaderUrl needs playlistIndex.
+      // If we sort, the index changes.
+      // We can find the index in sortedItems.
+      const index = sortedItems.findIndex((i) => i.id === item.id);
+      if (item.article?.url && index !== -1) {
+        router.push(
+          createReaderUrl({
+            articleUrl: item.article.url,
+            playlistId: playlistId, // Use playlistId from params/scope
+            playlistIndex: index,
+            autoplay: true,
+          })
+        );
+      }
+    },
+    [sortedItems, playlistId, router]
+  );
 
   if (isLoading) {
     return (
@@ -331,18 +374,7 @@ export default function PlaylistDetailPage() {
                 <ArticleCard
                   key={item.id}
                   item={item}
-                  onArticleClick={(playlistItem) => {
-                    if (playlistItem.article?.url) {
-                      router.push(
-                        createReaderUrl({
-                          articleUrl: playlistItem.article.url,
-                          playlistId: playlist.id,
-                          playlistIndex: index,
-                          autoplay: true,
-                        })
-                      );
-                    }
-                  }}
+                  onArticleClick={handleArticleClick}
                   href={
                     item.article?.url
                       ? createReaderUrl({
@@ -354,9 +386,7 @@ export default function PlaylistDetailPage() {
                       : undefined
                   }
                   onPlaylistAdd={handlePlaylistAdd}
-                  onRemove={(id) =>
-                    handleRemoveFromPlaylist(id, item.article?.title || "")
-                  }
+                  onRemove={handleRemoveFromPlaylist}
                 />
               ))}
             </div>
