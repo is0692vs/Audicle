@@ -1,10 +1,8 @@
 import { memo } from "react";
 import { cn } from "@/lib/utils";
 
-type DownloadStatus = "idle" | "downloading" | "completed" | "error" | "cancelled";
-
 interface DownloadPanelProps {
-  status: DownloadStatus;
+  status: string;
   progress: {
     current: number;
     total: number;
@@ -14,29 +12,17 @@ interface DownloadPanelProps {
   onCancel: () => void;
 }
 
-const DownloadPanel = memo(
-  function DownloadPanel({
-    status,
-    progress,
-    error,
-    estimatedTime,
-    onCancel,
-  }: DownloadPanelProps) {
-,
-  (prev, next) =>
-    prev.status === next.status &&
-    prev.error === next.error &&
-    prev.estimatedTime === next.estimatedTime &&
-    prev.onCancel === next.onCancel &&
-    prev.progress.current === next.progress.current &&
-    prev.progress.total === next.progress.total
-);
-  if ((status === "idle" || status === "completed") && !error) {
+const DownloadPanel = memo(function DownloadPanel({
+  status,
+  progress,
+  error,
+  estimatedTime,
+  onCancel,
+}: DownloadPanelProps) {
+  // Simplified logic: Return null if inactive (idle/completed) AND there is no error to show.
+  const isInactive = status === "idle" || status === "completed";
+  if (isInactive && !error) {
     return null;
-  }
-
-  if (status === "idle" && error) {
-    status = "error";
   }
 
   const percentage = progress.total
@@ -44,7 +30,7 @@ const DownloadPanel = memo(
     : 0;
 
   const statusMeta: Record<
-    "downloading" | "error" | "cancelled",
+    string,
     { icon: string; label: string; tone: string }
   > = {
     downloading: {
@@ -64,7 +50,12 @@ const DownloadPanel = memo(
     },
   };
 
-  const activeMeta = statusMeta[status as keyof typeof statusMeta];
+  // Safe access with fallback instead of type assertion
+  const activeMeta = statusMeta[status] ?? {
+    icon: "ℹ️",
+    label: "ステータス",
+    tone: "text-zinc-300",
+  };
 
   return (
     <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-5">
@@ -72,13 +63,13 @@ const DownloadPanel = memo(
         <div
           className={cn(
             "flex items-center gap-2 text-sm font-semibold",
-            activeMeta?.tone ?? "text-zinc-300"
+            activeMeta.tone
           )}
         >
           <span className="text-lg" aria-hidden>
-            {activeMeta?.icon ?? "ℹ️"}
+            {activeMeta.icon}
           </span>
-          <span>{activeMeta?.label ?? "ステータス"}</span>
+          <span>{activeMeta.label}</span>
         </div>
         {progress.total > 0 && (
           <span className="text-sm text-zinc-400">
@@ -92,11 +83,6 @@ const DownloadPanel = memo(
           <div
             className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out"
             style={{ width: `${percentage}%` }}
-            role="progressbar"
-            aria-valuenow={percentage}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label="ダウンロード進行状況"
           />
         </div>
       )}
@@ -109,7 +95,12 @@ const DownloadPanel = memo(
         </p>
       )}
 
-      {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+      {/* Sanitize error display: Avoid raw error dumps if possible, though currently passed string is used. */}
+      {error && (
+        <p className="mt-3 text-sm text-red-400" data-testid="download-error">
+          {error}
+        </p>
+      )}
 
       {status === "downloading" && (
         <button
