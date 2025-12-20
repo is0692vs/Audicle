@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Chunk } from "@/types/api";
 import { audioCache } from "@/lib/audioCache";
 import { getAudioChunk } from "@/lib/indexedDB";
- 
+
 import { synthesizeSpeech } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { needsPauseBefore, needsPauseAfter, getPauseDuration } from "@/lib/paragraphParser";
@@ -154,7 +154,8 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
       const endIndex = Math.min(startIndex + PREFETCH_AHEAD, chunks.length);
       const textsToFetch = chunks
         .slice(startIndex, endIndex)
-        .map((chunk) => chunk.cleanedText);
+        .map((chunk) => chunk.cleanedText)
+        .filter((text) => text.trim() !== '');
 
       if (textsToFetch.length > 0) {
         await audioCache.prefetch(textsToFetch, voiceModel, articleUrl);
@@ -200,6 +201,23 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
       try {
         // --- まず非同期処理で音声データを取得 ---
         const chunk = chunks[index];
+
+        // セパレータ（空のcleanedText）の場合はスキップして次のチャンクを再生
+        if (!chunk.cleanedText.trim()) {
+          logger.info(
+            `⏭️ スキップ: チャンク ${index + 1}/${chunks.length} はセパレータです`
+          );
+          // 次のチャンクがあれば再生、なければ終了
+          if (index + 1 < chunks.length) {
+            await playFromIndex(index + 1);
+          } else {
+            setCurrentIndex(chunks.length);
+            setIsPlaying(false);
+          }
+          isPlayingRequestInProgressRef.current = false;
+          return;
+        }
+
         logger.info(
           `▶️ 再生開始: チャンク ${index + 1}/${chunks.length} (${chunk.type})`
         );
