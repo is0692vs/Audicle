@@ -48,6 +48,7 @@ export function ReaderHeader({
         {/* トップバー: ナビゲーションとタイトル */}
         <div className="relative flex items-center justify-center gap-2 mb-2">
           <button
+            type="button"
             onClick={() => {
               stop(); // ページ遷移前に再生を停止
               if (isPlaylistMode && playlistState.playlistId) {
@@ -89,10 +90,14 @@ export function ReaderHeader({
             />
 
             <div className="flex gap-2 items-center">
-              <label className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
+              <label
+                htmlFor="playlist-select"
+                className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap"
+              >
                 追加先:
               </label>
               <select
+                id="playlist-select"
                 value={selectedPlaylistId}
                 onChange={(e) => setSelectedPlaylistId(e.target.value)}
                 className="flex-1 px-2 sm:px-4 py-1.5 sm:py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"

@@ -1,30 +1,7 @@
-import { PlaylistPlaybackState } from "@/contexts/PlaylistPlaybackContext";
 import { zIndex } from "@/lib/zIndex";
-import { Chunk } from "@/types/api";
 import { MobileArticleMenu } from "@/components/MobileArticleMenu";
 import { Play, Pause, SkipBack, SkipForward, Plus } from "lucide-react";
-
-interface ReaderMobileControlsProps {
-  chunks: Chunk[];
-  playbackRate: number;
-  setIsSpeedModalOpen: (open: boolean) => void;
-  playlistState: PlaylistPlaybackState;
-  isPlaylistContextReady: boolean;
-  canMovePrevious: boolean;
-  canMoveNext: boolean;
-  navigateToPlaylistItem: (index: number) => void;
-  wrapIndex: (index: number) => number;
-  currentPlaylistIndex: number;
-  isPlaying: boolean;
-  isPlaybackLoading: boolean;
-  pause: () => void;
-  play: () => void;
-  articleId: string | null;
-  setIsPlaylistModalOpen: (open: boolean) => void;
-  url: string;
-  downloadStatus: string;
-  startDownload: () => void;
-}
+import { ReaderControlsProps } from "@/types/reader";
 
 export function ReaderMobileControls({
   chunks,
@@ -46,17 +23,19 @@ export function ReaderMobileControls({
   url,
   downloadStatus,
   startDownload,
-}: ReaderMobileControlsProps) {
+}: ReaderControlsProps) {
   if (chunks.length === 0) return null;
 
   return (
     <div
-      className={`sm:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 shadow-lg z-[${zIndex.mobileControls}]`}
+      className="sm:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 shadow-lg"
+      style={{ zIndex: zIndex.mobileControls }}
       data-testid="audio-player"
     >
       <div className="flex items-center">
         {/* 左側: 再生速度ボタン */}
         <button
+          type="button"
           onClick={() => setIsSpeedModalOpen(true)}
           className="flex items-center gap-1 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
           data-testid="speed-button-mobile"
@@ -70,6 +49,7 @@ export function ReaderMobileControls({
           {/* Prev - Play - Next (center aligned) */}
           {playlistState.isPlaylistMode && (
             <button
+              type="button"
               onClick={() => {
                 if (isPlaylistContextReady && canMovePrevious) {
                   navigateToPlaylistItem(wrapIndex(currentPlaylistIndex - 1));
@@ -85,6 +65,7 @@ export function ReaderMobileControls({
           )}
 
           <button
+            type="button"
             onClick={isPlaying ? pause : play}
             disabled={isPlaybackLoading}
             className="px-6 py-3 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-lg"
@@ -108,6 +89,7 @@ export function ReaderMobileControls({
 
           {playlistState.isPlaylistMode && (
             <button
+              type="button"
               onClick={() => {
                 if (isPlaylistContextReady && canMoveNext) {
                   navigateToPlaylistItem(wrapIndex(currentPlaylistIndex + 1));
@@ -127,6 +109,7 @@ export function ReaderMobileControls({
         <div className="flex items-center gap-2">
           {articleId && (
             <button
+              type="button"
               onClick={() => setIsPlaylistModalOpen(true)}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               data-testid="playlist-add-button"

@@ -1,6 +1,4 @@
-import { PlaylistPlaybackState } from "@/contexts/PlaylistPlaybackContext";
 import { zIndex } from "@/lib/zIndex";
-import { Chunk } from "@/types/api";
 import {
   Play,
   Pause,
@@ -10,28 +8,7 @@ import {
   ExternalLink,
   Download,
 } from "lucide-react";
-
-interface ReaderDesktopControlsProps {
-  chunks: Chunk[];
-  playbackRate: number;
-  setIsSpeedModalOpen: (open: boolean) => void;
-  playlistState: PlaylistPlaybackState;
-  isPlaylistContextReady: boolean;
-  canMovePrevious: boolean;
-  canMoveNext: boolean;
-  navigateToPlaylistItem: (index: number) => void;
-  wrapIndex: (index: number) => number;
-  currentPlaylistIndex: number;
-  isPlaying: boolean;
-  isPlaybackLoading: boolean;
-  pause: () => void;
-  play: () => void;
-  articleId: string | null;
-  setIsPlaylistModalOpen: (open: boolean) => void;
-  url: string;
-  downloadStatus: string;
-  startDownload: () => void;
-}
+import { ReaderControlsProps } from "@/types/reader";
 
 export function ReaderDesktopControls({
   chunks,
@@ -53,17 +30,19 @@ export function ReaderDesktopControls({
   url,
   downloadStatus,
   startDownload,
-}: ReaderDesktopControlsProps) {
+}: ReaderControlsProps) {
   if (chunks.length === 0) return null;
 
   return (
     <div
-      className={`hidden sm:flex sm:fixed sm:bottom-0 sm:left-0 sm:right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 shadow-lg z-[${zIndex.desktopControls}]`}
+      className="hidden sm:flex sm:fixed sm:bottom-0 sm:left-0 sm:right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 shadow-lg"
+      style={{ zIndex: zIndex.desktopControls }}
       data-testid="audio-player-desktop"
     >
       <div className="max-w-4xl mx-auto flex items-center gap-4 px-2 sm:px-6">
         {/* 左側: 再生速度ダイアル */}
         <button
+          type="button"
           onClick={() => setIsSpeedModalOpen(true)}
           className="flex items-center gap-1 px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
           data-testid="speed-button"
@@ -77,6 +56,7 @@ export function ReaderDesktopControls({
           <div className="flex items-center gap-3 sm:gap-4">
             {playlistState.isPlaylistMode && (
               <button
+                type="button"
                 onClick={() => {
                   if (isPlaylistContextReady && canMovePrevious) {
                     navigateToPlaylistItem(wrapIndex(currentPlaylistIndex - 1));
@@ -93,6 +73,7 @@ export function ReaderDesktopControls({
             )}
 
             <button
+              type="button"
               onClick={isPlaying ? pause : play}
               disabled={isPlaybackLoading}
               className="w-12 h-12 p-0 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center text-2xl"
@@ -120,6 +101,7 @@ export function ReaderDesktopControls({
 
             {playlistState.isPlaylistMode && (
               <button
+                type="button"
                 onClick={() => {
                   if (isPlaylistContextReady && canMoveNext) {
                     navigateToPlaylistItem(wrapIndex(currentPlaylistIndex + 1));
@@ -141,6 +123,7 @@ export function ReaderDesktopControls({
         <div className="flex items-center gap-1 sm:gap-2">
           {articleId && (
             <button
+              type="button"
               onClick={() => setIsPlaylistModalOpen(true)}
               className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
               data-testid="playlist-add-button"
@@ -163,6 +146,7 @@ export function ReaderDesktopControls({
           )}
           {/* Desktop-only: full-article download button */}
           <button
+            type="button"
             onClick={() => startDownload()}
             disabled={downloadStatus === "downloading"}
             className="hidden sm:inline-flex p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full disabled:opacity-50 transition-colors"
