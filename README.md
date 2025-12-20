@@ -1,4 +1,4 @@
-[日本語版はこちら](./README.ja.md)
+[日本語版はこちらです](./README.ja.md)
 
 # Audicle
 
@@ -55,6 +55,7 @@ An extension to install directly into your browser to read the article you are c
 This project is built with the following tech stack.
 
 - **`web-app-vercel` (Full-Featured Frontend)**
+
   - **Framework**: Next.js 16, React 19
   - **Language**: TypeScript
   - **UI**: Tailwind CSS
@@ -63,11 +64,13 @@ This project is built with the following tech stack.
   - **Authentication**: NextAuth.js
 
 - **`web-app` (Simple Frontend)**
+
   - **Framework**: Next.js 15, React 19
   - **Language**: TypeScript
   - **UI**: Tailwind CSS
 
 - **`api-server` (Backend)**
+
   - **Framework**: FastAPI (Python)
   - **TTS Engine**: Google Cloud Text-to-Speech
   - **Deployment**: Docker
