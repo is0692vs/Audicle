@@ -483,7 +483,8 @@ export async function POST(request: NextRequest) {
 
         for (let i = 0; i < textChunks.length; i++) {
             const chunkText = textChunks[i];
-            const textHash = calculateTextHash(chunkText, i);
+            const cleanedChunkText = removeSeparatorCharacters(chunkText);
+            const textHash = calculateTextHash(cleanedChunkText, i);
             const cacheKey = `${textHash}:${voiceToUse}.mp3`;
             const isCachedByIndex = cacheIndex ? isCachedInIndex(cacheIndex, textHash) : false;
 
@@ -586,7 +587,7 @@ export async function POST(request: NextRequest) {
             // 2. キャッシュミス：TTS生成
             log('info', `❌ R2キャッシュミス: ${cacheKey}。Google TTS APIを呼び出します。`);
             cacheMisses++;
-            const audioBuffer = await synthesizeToBuffer(chunkText, voiceToUse, speakingRate);
+            const audioBuffer = await synthesizeToBuffer(cleanedChunkText, voiceToUse, speakingRate);
 
             // 音声バッファを保存
             audioBuffers.push(audioBuffer);

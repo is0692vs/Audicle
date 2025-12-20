@@ -72,4 +72,16 @@ describe('removeSeparatorCharacters', () => {
         const expected = '== -- __ ** ~~ ##';
         expect(removeSeparatorCharacters(input)).toBe(expected);
     });
+
+    it('should remove 4 consecutive equals signs', () => {
+        const input = 'a====b';
+        const expected = 'ab';
+        expect(removeSeparatorCharacters(input)).toBe(expected);
+    });
+
+    it('should handle mixed consecutive separators correctly', () => {
+        const input = '====----****テスト';
+        const expected = 'テスト';
+        expect(removeSeparatorCharacters(input)).toBe(expected);
+    });
 });
