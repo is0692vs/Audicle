@@ -10,6 +10,7 @@ import { getCacheIndex, addCachedChunk, isCachedInIndex } from '@/lib/db/cacheIn
 import { calculateTextHash } from '@/lib/textHash';
 import { getStorageProvider } from '@/lib/storage';
 import { GoogleError } from 'google-gax';
+import { removeSeparatorCharacters } from '@/lib/textCleaner';
 
 // Node.js runtimeを明示的に指定（Google Cloud TTS SDKはEdge Runtimeで動作しない）
 export const runtime = 'nodejs';
@@ -240,8 +241,11 @@ async function synthesizeToBuffer(text: string, voice: string, speakingRate: num
         );
     }
 
+    // TTS APIに送信する前にセパレータ文字を除去
+    const cleanedText = removeSeparatorCharacters(text);
+
     const synthesisInput: protos.google.cloud.texttospeech.v1.ISynthesisInput = {
-        text: text,
+        text: cleanedText,
     };
 
     const languageCode = getLanguageCode(voice);
