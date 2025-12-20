@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.1
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -35,7 +35,7 @@ jobs:
     name: Setup
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.1
       - uses: actions/setup-node@v6
         with:
           node-version: "20"
@@ -51,13 +51,13 @@ jobs:
     needs: setup
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.1
       - uses: actions/setup-node@v6
         with:
           node-version: "20"
       - name: Restore npm cache
         id: cache-deps
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: packages/web-app-vercel/node_modules
           key: npm-deps-${{ runner.os }}-node-20-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
@@ -69,7 +69,7 @@ jobs:
         working-directory: packages/web-app-vercel
       - name: Restore Playwright cache
         id: playwright-cache-pr
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/ms-playwright
           key: playwright-pr-${{ runner.os }}-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
@@ -79,7 +79,7 @@ jobs:
         working-directory: packages/web-app-vercel
       - name: Restore Playwright cache
         id: playwright-cache-lint
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
@@ -100,13 +100,13 @@ jobs:
     needs: setup
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.1
       - uses: actions/setup-node@v6
         with:
           node-version: "20"
       - name: Restore npm cache
         id: cache-deps
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: packages/web-app-vercel/node_modules
           key: npm-deps-${{ runner.os }}-node-20-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
@@ -127,13 +127,13 @@ jobs:
     needs: setup
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.1
       - uses: actions/setup-node@v6
         with:
           node-version: "20"
       - name: Restore npm cache
         id: cache-deps-integration
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: packages/web-app-vercel/node_modules
           key: npm-deps-${{ runner.os }}-node-20-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
@@ -154,13 +154,13 @@ jobs:
     needs: [setup, seed-test-db]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.1
       - uses: actions/setup-node@v6
         with:
           node-version: "20"
       - name: Restore node_modules
         id: cache-deps
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: packages/web-app-vercel/node_modules
           key: npm-deps-${{ runner.os }}-node-20-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
@@ -178,7 +178,7 @@ jobs:
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
           NEXT_PUBLIC_AUTH_ENV: test
       - name: Upload build artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: next-build
           path: packages/web-app-vercel/.next
@@ -197,13 +197,13 @@ jobs:
       R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
       R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.1
       - uses: actions/setup-node@v6
         with:
           node-version: "20"
       - name: Restore npm cache
         id: cache-deps
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: packages/web-app-vercel/node_modules
           key: npm-deps-${{ runner.os }}-node-20-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
@@ -215,7 +215,7 @@ jobs:
         working-directory: packages/web-app-vercel
       - name: Restore Playwright browsers
         id: playwright-cache-e2e
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/ms-playwright
           key: playwright-pr-${{ runner.os }}-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
@@ -224,12 +224,12 @@ jobs:
         run: npx playwright install --with-deps chromium
         working-directory: packages/web-app-vercel
       - name: Download auth state (if available)
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: playwright-auth-state
           path: ${{ github.workspace }}/packages/web-app-vercel/playwright/.auth/
       - name: Download build
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: next-build
           path: packages/web-app-vercel/.next
@@ -256,13 +256,13 @@ jobs:
       NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
       NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.1
       - uses: actions/setup-node@v6
         with:
           node-version: "20"
       - name: Restore npm cache
         id: cache-deps
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: packages/web-app-vercel/node_modules
           key: npm-deps-${{ runner.os }}-node-20-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
@@ -274,7 +274,7 @@ jobs:
         working-directory: packages/web-app-vercel
       - name: Restore Playwright browsers
         id: playwright-cache-e2e
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/ms-playwright
           key: playwright-pr-${{ runner.os }}-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
@@ -292,7 +292,7 @@ jobs:
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: theme-fouc-test-results
@@ -308,13 +308,13 @@ jobs:
       NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
       NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.1
       - uses: actions/setup-node@v6
         with:
           node-version: "20"
       - name: Restore npm cache
         id: cache-deps
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: packages/web-app-vercel/node_modules
           key: npm-deps-${{ runner.os }}-node-20-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
@@ -326,7 +326,7 @@ jobs:
         working-directory: packages/web-app-vercel
       - name: Restore Playwright cache
         id: playwright-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('packages/web-app-vercel/package-lock.json') }}
@@ -335,7 +335,7 @@ jobs:
         run: npx playwright install --with-deps chromium
         working-directory: packages/web-app-vercel
       - name: Download build
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: next-build
           path: packages/web-app-vercel/.next
@@ -363,7 +363,7 @@ jobs:
             echo "❌ user.json not found"
           fi
       - name: Upload auth state
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: playwright-auth-state
           # Upload the actual auth file (explicit file path) — safer than directory upload
