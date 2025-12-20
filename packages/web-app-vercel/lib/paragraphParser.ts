@@ -299,7 +299,7 @@ function cleanText(text: string): string {
   // 繰り返し記号のスキップ（区切り線など）
   // 同じ記号が3回以上連続している行は空文字列に置き換える
   // 対象記号: = - * _ # ~
-  if (/^([=\-*_#~])\1{2,}$/.test(cleaned.trim())) {
+  if (/^([=*\-_#~])\1{2,}$/.test(cleaned.trim())) {
     return '';
   }
 
