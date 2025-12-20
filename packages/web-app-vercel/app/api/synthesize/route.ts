@@ -243,6 +243,14 @@ async function synthesizeToBuffer(text: string, voice: string, speakingRate: num
 
     // TTS APIに送信する前にセパレータ文字を除去
     const cleanedText = removeSeparatorCharacters(text);
+    const cleanedByteSize = Buffer.byteLength(cleanedText);
+    if (cleanedByteSize > MAX_TTS_BYTES) {
+        throw new GoogleError(
+            `テキストが最大バイトサイズを超えています: ${cleanedByteSize} bytes (最大: ${MAX_TTS_BYTES})`,
+            'INVALID_ARGUMENT',
+            400
+        );
+    }
 
     const synthesisInput: protos.google.cloud.texttospeech.v1.ISynthesisInput = {
         text: cleanedText,
