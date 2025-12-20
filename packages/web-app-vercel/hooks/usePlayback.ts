@@ -211,12 +211,12 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         // 全てスキップして終了した場合
         if (actualIndex >= chunks.length) {
           logger.info('📝 全てのチャンクを再生完了しました');
-          
+
           // 既存のオーディオURLをクリーンアップ
           if (currentAudioUrlRef.current?.startsWith('blob:')) {
             URL.revokeObjectURL(currentAudioUrlRef.current);
           }
-          
+
           setIsPlaying(false);
           setCurrentIndex(-1);
           setIsLoading(false);
