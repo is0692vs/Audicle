@@ -245,7 +245,7 @@ async function synthesizeToBuffer(text: string, voice: string, speakingRate: num
     const cleanedText = removeSeparatorCharacters(text);
     const cleanedByteSize = Buffer.byteLength(cleanedText);
     if (cleanedByteSize > MAX_TTS_BYTES) {
-        throw new GoogleError(
+        throw new TTSError(
             `テキストが最大バイトサイズを超えています: ${cleanedByteSize} bytes (最大: ${MAX_TTS_BYTES})`,
             'INVALID_ARGUMENT',
             400
