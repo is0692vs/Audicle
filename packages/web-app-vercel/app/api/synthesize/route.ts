@@ -10,6 +10,7 @@ import { getCacheIndex, addCachedChunk, isCachedInIndex } from '@/lib/db/cacheIn
 import { calculateTextHash } from '@/lib/textHash';
 import { getStorageProvider } from '@/lib/storage';
 import { GoogleError } from 'google-gax';
+import { removeSeparatorCharacters } from '@/lib/textCleaner';
 
 // Node.js runtimeを明示的に指定（Google Cloud TTS SDKはEdge Runtimeで動作しない）
 export const runtime = 'nodejs';
@@ -240,8 +241,19 @@ async function synthesizeToBuffer(text: string, voice: string, speakingRate: num
         );
     }
 
+    // TTS APIに送信する前にセパレータ文字を除去
+    const cleanedText = removeSeparatorCharacters(text);
+    const cleanedByteSize = Buffer.byteLength(cleanedText);
+    if (cleanedByteSize > MAX_TTS_BYTES) {
+        throw new TTSError(
+            `テキストが最大バイトサイズを超えています: ${cleanedByteSize} bytes (最大: ${MAX_TTS_BYTES})`,
+            'INVALID_ARGUMENT',
+            400
+        );
+    }
+
     const synthesisInput: protos.google.cloud.texttospeech.v1.ISynthesisInput = {
-        text: text,
+        text: cleanedText,
     };
 
     const languageCode = getLanguageCode(voice);
@@ -479,7 +491,8 @@ export async function POST(request: NextRequest) {
 
         for (let i = 0; i < textChunks.length; i++) {
             const chunkText = textChunks[i];
-            const textHash = calculateTextHash(chunkText, i);
+            const cleanedChunkText = removeSeparatorCharacters(chunkText);
+            const textHash = calculateTextHash(cleanedChunkText, i);
             const cacheKey = `${textHash}:${voiceToUse}.mp3`;
             const isCachedByIndex = cacheIndex ? isCachedInIndex(cacheIndex, textHash) : false;
 
@@ -582,7 +595,7 @@ export async function POST(request: NextRequest) {
             // 2. キャッシュミス：TTS生成
             log('info', `❌ R2キャッシュミス: ${cacheKey}。Google TTS APIを呼び出します。`);
             cacheMisses++;
-            const audioBuffer = await synthesizeToBuffer(chunkText, voiceToUse, speakingRate);
+            const audioBuffer = await synthesizeToBuffer(cleanedChunkText, voiceToUse, speakingRate);
 
             // 音声バッファを保存
             audioBuffers.push(audioBuffer);
