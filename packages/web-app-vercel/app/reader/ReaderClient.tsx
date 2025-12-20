@@ -797,14 +797,6 @@ export default function ReaderPageClient() {
     [playlistState.items.length]
   );
 
-  // 再生速度変更ハンドラー（デスクトップ版とモバイル版で共通）
-  const handlePlaybackRateChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setPlaybackRate(parseFloat(e.target.value));
-    },
-    [setPlaybackRate]
-  );
-
   return (
     <div className="h-screen overflow-hidden flex flex-col">
       <ReaderHeader
