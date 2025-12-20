@@ -97,55 +97,22 @@ describe('paragraphParser', () => {
     });
 
     describe('repeated symbol skipping', () => {
-        it('should skip lines with repeated equal signs', () => {
-            const html = '<p>見出し</p><p>============</p><p>本文</p>';
+        it.each([
+            { symbol: '=', name: 'equal signs', displayName: 'イコール' },
+            { symbol: '-', name: 'dashes', displayName: 'ダッシュ' },
+            { symbol: '*', name: 'asterisks', displayName: 'アスタリスク' },
+            { symbol: '_', name: 'underscores', displayName: 'アンダースコア' },
+            { symbol: '#', name: 'hash symbols', displayName: 'ハッシュ' },
+            { symbol: '~', name: 'tildes', displayName: 'チルダ' },
+        ])('should skip lines with repeated $name', ({ symbol }) => {
+            const separator = symbol.repeat(10);
+            const html = `<p>見出し</p><p>${separator}</p><p>本文</p>`;
             const { paragraphs } = parseHTMLToParagraphs(html);
 
-            // 繰り返し記号の段落はcleanedTextが空になる
             expect(paragraphs.length).toBe(3);
             expect(paragraphs[0].cleanedText).toBe('見出し');
             expect(paragraphs[1].cleanedText).toBe('');
             expect(paragraphs[2].cleanedText).toBe('本文');
-        });
-
-        it('should skip lines with repeated dashes', () => {
-            const html = '<p>段落1</p><p>-----------</p><p>段落2</p>';
-            const { paragraphs } = parseHTMLToParagraphs(html);
-
-            expect(paragraphs.length).toBe(3);
-            expect(paragraphs[1].cleanedText).toBe('');
-        });
-
-        it('should skip lines with repeated asterisks', () => {
-            const html = '<p>段落1</p><p>***********</p><p>段落2</p>';
-            const { paragraphs } = parseHTMLToParagraphs(html);
-
-            expect(paragraphs.length).toBe(3);
-            expect(paragraphs[1].cleanedText).toBe('');
-        });
-
-        it('should skip lines with repeated underscores', () => {
-            const html = '<p>段落1</p><p>___________</p><p>段落2</p>';
-            const { paragraphs } = parseHTMLToParagraphs(html);
-
-            expect(paragraphs.length).toBe(3);
-            expect(paragraphs[1].cleanedText).toBe('');
-        });
-
-        it('should skip lines with repeated hash symbols', () => {
-            const html = '<p>段落1</p><p>###########</p><p>段落2</p>';
-            const { paragraphs } = parseHTMLToParagraphs(html);
-
-            expect(paragraphs.length).toBe(3);
-            expect(paragraphs[1].cleanedText).toBe('');
-        });
-
-        it('should skip lines with repeated tildes', () => {
-            const html = '<p>段落1</p><p>~~~~~~~~~~~</p><p>段落2</p>';
-            const { paragraphs } = parseHTMLToParagraphs(html);
-
-            expect(paragraphs.length).toBe(3);
-            expect(paragraphs[1].cleanedText).toBe('');
         });
 
         it('should not skip lines with less than 3 repeated symbols', () => {
@@ -277,7 +244,7 @@ describe('paragraphParser', () => {
             // セパレータのみの段落のテキストは空であることを確認
             const separatorParagraphs = paragraphs.filter(p => {
                 const trimmed = p.cleanedText.trim();
-                return /^[=\-*_#~]+$/.test(trimmed);
+                return /^[=*\-_#~]+$/.test(trimmed);
             });
             expect(separatorParagraphs.length).toBe(0); // 完全なセパレータはない（空文字列）
         });
