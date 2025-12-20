@@ -286,6 +286,7 @@ export function parseHTMLToParagraphs(htmlContent: string): ParseResult {
 
 /**
  * テキストをクリーンアップする（TTS送信用）
+ * - 繰り返し記号のスキップ
  * - Markdown記法を削除
  * - HTML実体参照を変換
  * - 連続空白を正規化
@@ -294,6 +295,13 @@ export function parseHTMLToParagraphs(htmlContent: string): ParseResult {
  */
 function cleanText(text: string): string {
   let cleaned = text;
+
+  // 繰り返し記号のスキップ（区切り線など）
+  // 同じ記号が3回以上連続している行は空文字列に置き換える
+  // 対象記号: = - * _ # ~
+  if (/^([=\-*_#~])\1{2,}$/.test(cleaned.trim())) {
+    return '';
+  }
 
   // HTML実体参照を変換
   cleaned = cleaned

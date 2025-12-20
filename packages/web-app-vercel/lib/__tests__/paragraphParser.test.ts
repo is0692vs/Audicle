@@ -96,6 +96,102 @@ describe('paragraphParser', () => {
         });
     });
 
+    describe('repeated symbol skipping', () => {
+        it('should skip lines with repeated equal signs', () => {
+            const html = '<p>見出し</p><p>============</p><p>本文</p>';
+            const { paragraphs } = parseHTMLToParagraphs(html);
+            
+            // 繰り返し記号の段落はcleanedTextが空になる
+            expect(paragraphs.length).toBe(3);
+            expect(paragraphs[0].cleanedText).toBe('見出し');
+            expect(paragraphs[1].cleanedText).toBe('');
+            expect(paragraphs[2].cleanedText).toBe('本文');
+        });
+
+        it('should skip lines with repeated dashes', () => {
+            const html = '<p>段落1</p><p>-----------</p><p>段落2</p>';
+            const { paragraphs } = parseHTMLToParagraphs(html);
+            
+            expect(paragraphs.length).toBe(3);
+            expect(paragraphs[1].cleanedText).toBe('');
+        });
+
+        it('should skip lines with repeated asterisks', () => {
+            const html = '<p>段落1</p><p>***********</p><p>段落2</p>';
+            const { paragraphs } = parseHTMLToParagraphs(html);
+            
+            expect(paragraphs.length).toBe(3);
+            expect(paragraphs[1].cleanedText).toBe('');
+        });
+
+        it('should skip lines with repeated underscores', () => {
+            const html = '<p>段落1</p><p>___________</p><p>段落2</p>';
+            const { paragraphs } = parseHTMLToParagraphs(html);
+            
+            expect(paragraphs.length).toBe(3);
+            expect(paragraphs[1].cleanedText).toBe('');
+        });
+
+        it('should skip lines with repeated hash symbols', () => {
+            const html = '<p>段落1</p><p>###########</p><p>段落2</p>';
+            const { paragraphs } = parseHTMLToParagraphs(html);
+            
+            expect(paragraphs.length).toBe(3);
+            expect(paragraphs[1].cleanedText).toBe('');
+        });
+
+        it('should skip lines with repeated tildes', () => {
+            const html = '<p>段落1</p><p>~~~~~~~~~~~</p><p>段落2</p>';
+            const { paragraphs } = parseHTMLToParagraphs(html);
+            
+            expect(paragraphs.length).toBe(3);
+            expect(paragraphs[1].cleanedText).toBe('');
+        });
+
+        it('should not skip lines with less than 3 repeated symbols', () => {
+            const html = '<p>段落1</p><p>==</p><p>段落2</p>';
+            const { paragraphs } = parseHTMLToParagraphs(html);
+            
+            // 2つの記号は残る（スキップされない）
+            expect(paragraphs.length).toBe(3);
+            expect(paragraphs[1].cleanedText).toBe('==');
+        });
+
+        it('should not skip lines with mixed content', () => {
+            const html = '<p>テキスト === more text</p>';
+            const { paragraphs } = parseHTMLToParagraphs(html);
+            
+            // 混在したコンテンツはスキップされない
+            expect(paragraphs.length).toBe(1);
+            expect(paragraphs[0].cleanedText).not.toBe('');
+            expect(paragraphs[0].cleanedText).toContain('テキスト');
+        });
+
+        it('should handle Qiita-style separator lines', () => {
+            const html = `
+                <h2>見出し</h2>
+                <p>============</p>
+                <p>本文が続きます。</p>
+            `;
+            const { paragraphs } = parseHTMLToParagraphs(html);
+            
+            // 見出し、区切り線（空）、本文
+            expect(paragraphs.length).toBe(3);
+            expect(paragraphs[0].type).toBe('h2');
+            expect(paragraphs[0].cleanedText).toBe('見出し');
+            expect(paragraphs[1].cleanedText).toBe('');
+            expect(paragraphs[2].cleanedText).toBe('本文が続きます。');
+        });
+
+        it('should handle very long repeated symbol lines', () => {
+            const html = `<p>${'='.repeat(100)}</p>`;
+            const { paragraphs } = parseHTMLToParagraphs(html);
+            
+            expect(paragraphs.length).toBe(1);
+            expect(paragraphs[0].cleanedText).toBe('');
+        });
+    });
+
     describe('chunk resizing', () => {
         it('should split text exceeding 5000 bytes at punctuation', () => {
             // 日本語の「あ」は3バイト、1667文字で約5000バイト
