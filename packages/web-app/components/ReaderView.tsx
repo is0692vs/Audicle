@@ -2,6 +2,7 @@
 
 import { Chunk } from "@/types/api";
 import { useEffect, useRef } from "react";
+import { ReaderChunk } from "./ReaderChunk";
 
 interface ReaderViewProps {
   chunks?: Chunk[];
@@ -58,22 +59,13 @@ export default function ReaderView({
             {chunks.map((chunk) => {
               const isActive = chunk.id === currentChunkId;
               return (
-                <p
+                <ReaderChunk
                   key={chunk.id}
+                  chunk={chunk}
+                  isActive={isActive}
+                  onClick={onChunkClick}
                   ref={isActive ? activeChunkRef : null}
-                  data-audicle-id={chunk.id}
-                  onClick={() => onChunkClick?.(chunk.id)}
-                  className={`
-                    text-lg leading-relaxed cursor-pointer transition-all duration-200 p-4 rounded-lg
-                    ${
-                      isActive
-                        ? "bg-yellow-100 dark:bg-yellow-900/30 font-medium scale-105"
-                        : "hover:bg-gray-100 dark:hover:bg-gray-900"
-                    }
-                  `}
-                >
-                  {chunk.text}
-                </p>
+                />
               );
             })}
           </div>
