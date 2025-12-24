@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { articleStorage, type Article } from "@/lib/storage";
 import { logger } from "@/lib/logger";
 
 export default function Home() {
-  const router = useRouter();
   const [articles, setArticles] = useState<Article[]>([]);
 
   // 記事一覧を読み込み
@@ -49,12 +48,12 @@ export default function Home() {
       <header className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
         <div className="max-w-4xl mx-auto p-4">
           <h1 className="text-2xl font-bold mb-4">Audicle - 記事一覧</h1>
-          <button
-            onClick={() => router.push("/reader")}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          <Link
+            href="/reader"
+            className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             + 新しい記事を読む
-          </button>
+          </Link>
         </div>
       </header>
 
@@ -75,15 +74,11 @@ export default function Home() {
                 className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4 hover:shadow-md transition-shadow"
               >
                 <div className="flex items-start justify-between gap-4">
-                  <div
-                    className="flex-1 cursor-pointer"
-                    onClick={() =>
-                      router.push(
-                        `/reader?url=${encodeURIComponent(article.url)}`
-                      )
-                    }
+                  <Link
+                    href={`/reader?url=${encodeURIComponent(article.url)}`}
+                    className="flex-1 group"
                   >
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                       {article.title}
                     </h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -93,11 +88,12 @@ export default function Home() {
                       <span>{formatDate(article.createdAt)}</span>
                       <span>{article.chunks.length} チャンク</span>
                     </div>
-                  </div>
+                  </Link>
                   <button
                     onClick={() => handleDelete(article.id)}
                     className="px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 rounded transition-colors"
                     title="削除"
+                    aria-label={`「${article.title}」を削除`}
                   >
                     削除
                   </button>
