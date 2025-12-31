@@ -11,19 +11,27 @@ export function AutoCloseComponent({ articleTitle }: AutoCloseComponentProps) {
   const router = useRouter();
 
   useEffect(() => {
+    let redirectTimer: NodeJS.Timeout | null = null;
+
     // 1秒待機してから自動的に閉じる
-    const timer = setTimeout(() => {
+    const closeTimer = setTimeout(() => {
       // PWAウィンドウを閉じようと試みる
       window.close();
-      
+
       // window.close()が機能しない場合（一部のブラウザでは制限される）、
       // ホームページにリダイレクト
-      setTimeout(() => {
-        router.push('/');
+      redirectTimer = setTimeout(() => {
+        router.push("/");
       }, 500);
     }, 1000);
 
-    return () => clearTimeout(timer);
+    // クリーンアップ関数で両方のタイマーをクリア
+    return () => {
+      clearTimeout(closeTimer);
+      if (redirectTimer) {
+        clearTimeout(redirectTimer);
+      }
+    };
   }, [router]);
 
   return (
@@ -45,9 +53,7 @@ export function AutoCloseComponent({ articleTitle }: AutoCloseComponentProps) {
           </svg>
         </div>
         <h1 className="text-2xl font-bold mb-2">追加しました</h1>
-        <p className="text-zinc-400 mb-4">
-          {articleTitle}
-        </p>
+        <p className="text-zinc-400 mb-4">{articleTitle}</p>
         <p className="text-sm text-zinc-500">
           読み込みプレイリストに追加されました
         </p>
