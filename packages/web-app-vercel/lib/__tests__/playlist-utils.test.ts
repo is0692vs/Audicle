@@ -3,6 +3,8 @@ import { getOrCreateDefaultPlaylist } from '../playlist-utils';
 import * as supabaseLocal from '../supabaseLocal';
 import { supabase } from '../supabase';
 
+const ORIGINAL_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
 // supabaseLocalモジュールのモック
 jest.mock('../supabaseLocal', () => ({
   getPlaylistsForOwner: jest.fn(),
@@ -29,11 +31,23 @@ const mockedSupabase = supabase as jest.Mocked<any>;
 describe('getOrCreateDefaultPlaylist', () => {
   afterEach(() => {
     jest.clearAllMocks();
-    delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+    // Restore env to avoid leaking state across tests/suites.
+    if (typeof ORIGINAL_SUPABASE_URL === "string") {
+      process.env.NEXT_PUBLIC_SUPABASE_URL = ORIGINAL_SUPABASE_URL;
+    } else {
+      delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+    }
   });
 
   describe('local fallback (no SUPABASE_URL)', () => {
     const userEmail = 'test@example.com';
+
+    beforeEach(() => {
+      // Ensure we always test the local fallback path, even if the host
+      // environment sets NEXT_PUBLIC_SUPABASE_URL.
+      delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+    });
 
     it('should return existing default playlist', async () => {
       const existingPlaylist = {

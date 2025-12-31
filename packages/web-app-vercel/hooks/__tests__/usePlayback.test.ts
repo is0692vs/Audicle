@@ -125,7 +125,7 @@ describe("usePlayback", () => {
     // play()が一度だけ呼ばれたことを確認
     // 修正前は2回呼ばれていたが、修正後は1回のみ
     expect(mockAudioInstance.playCallCount).toBe(1);
-    
+
     // 音声ソースが設定されていることを確認
     expect(mockAudioInstance.src).toBe("blob:mock-audio-url");
   });

@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Chunk } from "@/types/api";
 import { audioCache } from "@/lib/audioCache";
 import { getAudioChunk } from "@/lib/indexedDB";
- 
+
 import { synthesizeSpeech } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { needsPauseBefore, needsPauseAfter, getPauseDuration } from "@/lib/paragraphParser";
@@ -32,6 +32,13 @@ const DEFAULT_PLAYBACK_RATE = 1.0;
  */
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function shouldRespectInterChunkDelay(): boolean {
+  // iOS PWA(standalone)やロック画面/バックグラウンドではタイマーが強く制限され、
+  // onended後の遅延が次チャンク開始を妨げることがある。
+  if (typeof document === "undefined") return true;
+  return document.visibilityState === "visible";
 }
 
 export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onChunkChange, onArticleEnd, articleTitle, articleAuthor }: UsePlaybackProps) {
@@ -62,6 +69,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
   // `playFromIndex` も `handleAudioEnded` に依存しているため、単純に依存配列に加えると循環参照が発生します。
   // このRefを通じて呼び出すことで、常に最新の `playFromIndex` を参照できるようにし、循環参照を回避します。
   const playFromIndexRef = useRef<(index: number) => Promise<void>>(async () => { });
+  const positionStateCleanupRef = useRef<(() => void) | null>(null);
 
   // 現在のチャンクID
   const currentChunkId =
@@ -108,15 +116,18 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
   const handleAudioEnded = useCallback(async (currentIndex: number) => {
     const chunk = chunks[currentIndex];
     // 見出しの後、または段落間にポーズ
-    if (needsPauseAfter(chunk.type)) {
-      await sleep(getPauseDuration('heading'));
-    } else {
-      await sleep(getPauseDuration('paragraph'));
+    if (shouldRespectInterChunkDelay()) {
+      if (needsPauseAfter(chunk.type)) {
+        await sleep(getPauseDuration('heading'));
+      } else {
+        await sleep(getPauseDuration('paragraph'));
+      }
     }
 
     // 次のチャンクがあれば自動的に再生
     if (currentIndex + 1 < chunks.length) {
-      playFromIndexRef.current(currentIndex + 1);
+      // onended からの連続再生は await せず非同期で開始
+      void playFromIndexRef.current(currentIndex + 1);
     } else {
       // 最後のチャンク終了時も URL を解放
       if (currentAudioUrlRef.current?.startsWith('blob:')) {
@@ -146,6 +157,89 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
       onArticleEndRef.current?.();
     }
   }, [chunks, setIsPlaying, setCurrentIndex, articleUrl, voiceModel]);
+
+  const updateMediaSessionPositionState = useCallback(() => {
+    if (!("mediaSession" in navigator)) return;
+    const mediaSession = navigator.mediaSession;
+    const setPositionState = (mediaSession as unknown as {
+      setPositionState?: (state: {
+        duration: number;
+        position?: number;
+        playbackRate?: number;
+      }) => void;
+    }).setPositionState;
+
+    if (!setPositionState) return;
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const duration = audio.duration;
+    if (typeof duration !== "number" || !Number.isFinite(duration) || duration <= 0) {
+      return;
+    }
+    const position =
+      typeof audio.currentTime === "number" && Number.isFinite(audio.currentTime)
+        ? Math.min(Math.max(audio.currentTime, 0), duration)
+        : undefined;
+
+    const playbackRate =
+      typeof audio.playbackRate === "number" && Number.isFinite(audio.playbackRate)
+        ? audio.playbackRate
+        : undefined;
+
+    try {
+      setPositionState({ duration, position, playbackRate });
+    } catch {
+      // noop
+    }
+  }, []);
+
+  const installPositionStateUpdater = useCallback((audio: HTMLAudioElement) => {
+    if (typeof (audio as any).addEventListener !== "function") {
+      return;
+    }
+
+    positionStateCleanupRef.current?.();
+
+    const handler = () => updateMediaSessionPositionState();
+    audio.addEventListener("timeupdate", handler);
+    audio.addEventListener("durationchange", handler);
+    audio.addEventListener("ratechange", handler);
+    audio.addEventListener("loadedmetadata", handler);
+
+    // 初回反映
+    handler();
+
+    positionStateCleanupRef.current = () => {
+      audio.removeEventListener("timeupdate", handler);
+      audio.removeEventListener("durationchange", handler);
+      audio.removeEventListener("ratechange", handler);
+      audio.removeEventListener("loadedmetadata", handler);
+    };
+  }, [updateMediaSessionPositionState]);
+
+  const seekToSeconds = useCallback((positionSeconds: number) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const duration = audio.duration;
+    // durationが不明でもとりあえず設定（ブラウザ側がクランプする）
+    const next =
+      typeof duration === "number" && Number.isFinite(duration) && duration > 0
+        ? Math.min(Math.max(positionSeconds, 0), duration)
+        : Math.max(positionSeconds, 0);
+    audio.currentTime = next;
+    updateMediaSessionPositionState();
+  }, [updateMediaSessionPositionState]);
+
+  const seekBySeconds = useCallback((deltaSeconds: number) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const base =
+      typeof audio.currentTime === "number" && Number.isFinite(audio.currentTime)
+        ? audio.currentTime
+        : 0;
+    seekToSeconds(base + deltaSeconds);
+  }, [seekToSeconds]);
 
 
   // 先読み処理（クリーンアップ済みテキストを使用）
@@ -204,7 +298,7 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
           `▶️ 再生開始: チャンク ${index + 1}/${chunks.length} (${chunk.type})`
         );
 
-        if (needsPauseBefore(chunk.type)) {
+        if (shouldRespectInterChunkDelay() && needsPauseBefore(chunk.type)) {
           await sleep(getPauseDuration("heading"));
         }
 
@@ -243,11 +337,21 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
         // 先読み
         prefetchAudio(index + 1);
 
-        // Audio要素を作成し、音声データをセット
-        const audio = new Audio();
+        // Audio要素を再利用し、音声データをセット
+        const audio = audioRef.current ?? new Audio();
         audioRef.current = audio;
+        try {
+          audio.preload = "auto";
+          audio.setAttribute("playsinline", "");
+          audio.setAttribute("webkit-playsinline", "");
+        } catch {
+          // noop
+        }
+
         audio.src = audioUrl;
         currentAudioUrlRef.current = audioUrl;
+
+        installPositionStateUpdater(audio);
 
         // 再生速度を設定
         const rate = parseFloat(
@@ -415,11 +519,24 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
     onNextTrack: next,
     onPreviousTrack: previous,
     onStop: stop,
+    onSeekTo: seekToSeconds,
+    onSeekForward: (offsetSeconds?: number) => seekBySeconds(typeof offsetSeconds === "number" ? offsetSeconds : 10),
+    onSeekBackward: (offsetSeconds?: number) => seekBySeconds(-1 * (typeof offsetSeconds === "number" ? offsetSeconds : 10)),
+    getPositionState: () => {
+      const audio = audioRef.current;
+      if (!audio) return {};
+      return {
+        duration: audio.duration,
+        position: audio.currentTime,
+        playbackRate: audio.playbackRate,
+      };
+    },
   });
 
   // クリーンアップ
   useEffect(() => {
     return () => {
+      positionStateCleanupRef.current?.();
       if (audioRef.current) {
         audioRef.current.pause();
       }
