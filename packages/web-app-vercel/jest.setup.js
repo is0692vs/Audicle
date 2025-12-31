@@ -2,8 +2,14 @@ import "@testing-library/jest-dom";
 
 // Next.js のグローバル変数をモック
 global.Request = class Request {
-  constructor(input, init) {
-    this.url = input;
+  constructor(input, init = {}) {
+    // URL プロパティを getter として定義
+    Object.defineProperty(this, "url", {
+      value: typeof input === "string" ? input : input.url,
+      writable: false,
+      enumerable: true,
+    });
+
     this.method = init?.method || "GET";
     this.headers = new Headers(init?.headers || {});
     this.body = init?.body;
@@ -12,6 +18,11 @@ global.Request = class Request {
   async json() {
     return JSON.parse(this.body);
   }
+
+  async formData() {
+    // FormData のモック
+    return this.body instanceof FormData ? this.body : new FormData();
+  }
 };
 
 global.Response = class Response {
@@ -19,6 +30,7 @@ global.Response = class Response {
     this.body = body;
     this.status = init?.status || 200;
     this.headers = new Headers(init?.headers || {});
+    this.redirected = false;
   }
 
   static json(data, init) {
@@ -31,6 +43,17 @@ global.Response = class Response {
     });
   }
 
+  static redirect(url, status = 307) {
+    const response = new Response(null, {
+      status,
+      headers: {
+        Location: url instanceof URL ? url.href : url,
+      },
+    });
+    response.redirected = true;
+    return response;
+  }
+
   async json() {
     return JSON.parse(this.body);
   }
@@ -38,15 +61,56 @@ global.Response = class Response {
 
 global.Headers = class Headers {
   constructor(init) {
-    this.map = new Map(Object.entries(init || {}));
+    if (init instanceof Headers) {
+      this.map = new Map(init.map);
+    } else {
+      this.map = new Map(Object.entries(init || {}));
+    }
   }
 
   get(name) {
-    return this.map.get(name);
+    // Case-insensitiveな検索
+    const lowerName = name.toLowerCase();
+    for (const [key, value] of this.map.entries()) {
+      if (key.toLowerCase() === lowerName) {
+        return value;
+      }
+    }
+    return null;
   }
 
   set(name, value) {
     this.map.set(name, value);
+  }
+
+  entries() {
+    return this.map.entries();
+  }
+
+  keys() {
+    return this.map.keys();
+  }
+
+  values() {
+    return this.map.values();
+  }
+
+  has(name) {
+    const lowerName = name.toLowerCase();
+    for (const key of this.map.keys()) {
+      if (key.toLowerCase() === lowerName) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  delete(name) {
+    return this.map.delete(name);
+  }
+
+  forEach(callback, thisArg) {
+    this.map.forEach(callback, thisArg);
   }
 };
 
@@ -100,5 +164,5 @@ global.TransformStream = class TransformStream {
 };
 
 // URL.createObjectURL のモック（ブラウザAPI）
-global.URL.createObjectURL = jest.fn(() => 'blob:mock-url')
-global.URL.revokeObjectURL = jest.fn()
+global.URL.createObjectURL = jest.fn(() => "blob:mock-url");
+global.URL.revokeObjectURL = jest.fn();
