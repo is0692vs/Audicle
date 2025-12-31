@@ -286,7 +286,7 @@ export function useMediaSession({
   useEffect(() => {
     updatePlaybackState(isPlaying);
     updatePositionState();
-  }, [isPlaying, updatePlaybackState]);
+  }, [isPlaying, updatePlaybackState, updatePositionState]);
 
   return {
     updateMetadata,

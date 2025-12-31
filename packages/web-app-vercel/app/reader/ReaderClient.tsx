@@ -129,8 +129,15 @@ export default function ReaderPageClient() {
 
   useEffect(() => {
     if (!url) return;
+    let safeUrlForLog: string | undefined;
+    try {
+      const u = new URL(url);
+      safeUrlForLog = `${u.origin}${u.pathname}`;
+    } catch {
+      safeUrlForLog = undefined;
+    }
     logger.info("ReaderClient articleUrl ready", {
-      articleUrl: url,
+      articleUrl: safeUrlForLog,
       chunkCount,
     });
   }, [url, chunkCount]);
