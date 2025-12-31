@@ -180,7 +180,8 @@ describe('ShareTargetPage', () => {
     const mockUpsertArticle = supabaseLocal.upsertArticle as jest.MockedFunction<
       typeof supabaseLocal.upsertArticle
     >
-    mockUpsertArticle.mockResolvedValue(null as any)
+    // 記事作成が失敗した場合（nullを返す）
+    mockUpsertArticle.mockResolvedValue(null!)
 
     const searchParams = Promise.resolve({
       url: 'https://example.com/article',

@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 interface AutoCloseComponentProps {
   articleTitle: string;
 }
 
 export function AutoCloseComponent({ articleTitle }: AutoCloseComponentProps) {
+  const router = useRouter();
+
   useEffect(() => {
     // 1秒待機してから自動的に閉じる
     const timer = setTimeout(() => {
@@ -16,12 +19,12 @@ export function AutoCloseComponent({ articleTitle }: AutoCloseComponentProps) {
       // window.close()が機能しない場合（一部のブラウザでは制限される）、
       // ホームページにリダイレクト
       setTimeout(() => {
-        window.location.href = '/';
+        router.push('/');
       }, 500);
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [router]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-900">
