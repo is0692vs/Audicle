@@ -215,7 +215,7 @@ async function handleShareTarget(
                     p_article_id: article.id,
                 })
                 .single()) as {
-                    data: { position: number; already_exists: boolean } | null;
+                    data: { item_position: number; already_exists: boolean } | null;
                     error: any;
                 }
 
@@ -228,7 +228,7 @@ async function handleShareTarget(
                 action: 'playlist_item_added',
                 user_id: userEmail,
                 timestamp: new Date().toISOString(),
-                position: rpcResult?.position,
+                item_position: rpcResult?.item_position,
                 already_exists: rpcResult?.already_exists
             }))
         }
