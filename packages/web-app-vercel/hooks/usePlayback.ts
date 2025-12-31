@@ -455,9 +455,9 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
   }, [playFromIndex]);
 
   // 再生開始
-  const play = useCallback(() => {
+  const play = useCallback(async () => {
     const startIndex = currentIndex >= 0 ? currentIndex : 0;
-    playFromIndex(startIndex);
+    await playFromIndex(startIndex);
   }, [currentIndex, playFromIndex]);
 
   // 一時停止
@@ -482,28 +482,28 @@ export function usePlayback({ chunks, articleUrl, voiceModel, playbackSpeed, onC
   }, []);
 
   // 次のチャンクへ移動
-  const next = useCallback(() => {
+  const next = useCallback(async () => {
     if (currentIndex < chunks.length - 1) {
-      playFromIndex(currentIndex + 1);
+      await playFromIndex(currentIndex + 1);
     }
   }, [currentIndex, chunks.length, playFromIndex]);
 
   // 前のチャンクへ移動
-  const previous = useCallback(() => {
+  const previous = useCallback(async () => {
     if (currentIndex > 0) {
-      playFromIndex(currentIndex - 1);
+      await playFromIndex(currentIndex - 1);
     } else if (currentIndex === 0) {
       // 最初のチャンクの場合は最初から再生
-      playFromIndex(0);
+      await playFromIndex(0);
     }
   }, [currentIndex, playFromIndex]);
 
   // 特定のチャンクから再生（Seek機能）
   const seekToChunk = useCallback(
-    (chunkId: string) => {
+    async (chunkId: string) => {
       const index = chunks.findIndex((chunk) => chunk.id === chunkId);
       if (index >= 0) {
-        playFromIndex(index);
+        await playFromIndex(index);
       }
     },
     [chunks, playFromIndex]

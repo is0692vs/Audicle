@@ -221,18 +221,18 @@ describe('getOrCreateDefaultPlaylist', () => {
     });
 
     it('should return an error on unexpected Supabase find error', async () => {
-        const findError = { message: 'Unexpected error' };
-        mockedSupabase.from.mockReturnValue({
-          select: jest.fn().mockReturnThis(),
-          eq: jest.fn().mockReturnThis(),
-          order: jest.fn().mockReturnThis(),
-          single: jest.fn().mockResolvedValue({ data: null, error: findError }),
-        });
-
-        const { playlist, error } = await getOrCreateDefaultPlaylist(userEmail);
-
-        expect(playlist).toBeUndefined();
-        expect(error).toBe('Failed to find default playlist');
+      const findError = { message: 'Unexpected error' };
+      mockedSupabase.from.mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        order: jest.fn().mockReturnThis(),
+        single: jest.fn().mockResolvedValue({ data: null, error: findError }),
       });
+
+      const { playlist, error } = await getOrCreateDefaultPlaylist(userEmail);
+
+      expect(playlist).toBeUndefined();
+      expect(error).toBe('Failed to find default playlist');
+    });
   });
 });
