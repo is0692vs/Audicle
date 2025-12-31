@@ -209,14 +209,14 @@ async function handleShareTarget(
             await supabaseLocal.addPlaylistItem(playlistId, article.id)
         } else {
             // RPC関数を使用してアトミックに追加（race condition対策）
-            const { data: rpcResult, error: rpcError } = await supabase
+            const { data: rpcResult, error: rpcError } = (await supabase
                 .rpc('add_playlist_item_at_end', {
                     p_playlist_id: playlistId,
                     p_article_id: article.id,
                 })
-                .single() as {
-                    data: { position: number; already_exists: boolean } | null,
-                    error: any
+                .single()) as {
+                    data: { position: number; already_exists: boolean } | null;
+                    error: any;
                 }
 
             if (rpcError) {

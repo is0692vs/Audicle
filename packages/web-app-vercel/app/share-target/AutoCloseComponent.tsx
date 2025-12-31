@@ -11,7 +11,7 @@ export function AutoCloseComponent({ articleTitle }: AutoCloseComponentProps) {
   const router = useRouter();
 
   useEffect(() => {
-    let redirectTimer: NodeJS.Timeout | null = null;
+    let redirectTimer: ReturnType<typeof setTimeout> | null = null;
 
     // 1秒待機してから自動的に閉じる
     const closeTimer = setTimeout(() => {
@@ -43,6 +43,8 @@ export function AutoCloseComponent({ articleTitle }: AutoCloseComponentProps) {
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            role="img"
+            aria-label="成功"
           >
             <path
               strokeLinecap="round"
