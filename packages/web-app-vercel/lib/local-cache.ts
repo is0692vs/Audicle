@@ -7,19 +7,44 @@ export interface CachedPlaylistData {
     items: PlaylistItemWithArticle[];
 }
 
-export function getArticlesCache(): CachedPlaylistData | null {
-    if (typeof window === "undefined") return null;
+export function getArticlesCache(userId: string): CachedPlaylistData | null {
+    if (typeof window === "undefined" || !userId) return null;
     try {
-        const cached = localStorage.getItem(STORAGE_KEYS.ARTICLES_CACHE);
-        return cached ? JSON.parse(cached) : null;
-    } catch {
+        const key = `${STORAGE_KEYS.ARTICLES_CACHE}-${userId}`;
+        const cached = localStorage.getItem(key);
+        if (!cached) return null;
+
+        const parsed = JSON.parse(cached);
+
+        // Runtime validation
+        if (isValidCachedData(parsed)) {
+            return parsed;
+        }
+
+        console.warn("Invalid cache structure detected");
+        return null;
+    } catch (error) {
+        console.error("Failed to read articles cache:", error);
         return null;
     }
 }
 
-export function setArticlesCache(data: CachedPlaylistData): void {
-    if (typeof window === "undefined") return;
+function isValidCachedData(data: any): data is CachedPlaylistData {
+    return (
+        typeof data === "object" &&
+        data !== null &&
+        typeof data.playlistId === "string" &&
+        typeof data.playlistName === "string" &&
+        Array.isArray(data.items)
+    );
+}
+
+export function setArticlesCache(userId: string, data: CachedPlaylistData): void {
+    if (typeof window === "undefined" || !userId) return;
     try {
-        localStorage.setItem(STORAGE_KEYS.ARTICLES_CACHE, JSON.stringify(data));
-    } catch { }
+        const key = `${STORAGE_KEYS.ARTICLES_CACHE}-${userId}`;
+        localStorage.setItem(key, JSON.stringify(data));
+    } catch (error) {
+        console.warn("Failed to save articles to cache:", error);
+    }
 }

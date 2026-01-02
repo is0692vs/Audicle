@@ -4,6 +4,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { logger } from "@/lib/logger";
 import { useConfirmDialog } from "@/components/ConfirmDialog";
@@ -40,7 +41,12 @@ const HOME_SORT_KEY = STORAGE_KEYS.HOME_SORT;
 export default function Home() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [cachedPlaylist] = useState(getArticlesCache);
+  const { data: session } = useSession();
+  const userId = session?.user?.email;
+  const cachedPlaylist = useMemo(() => {
+    if (!userId) return null;
+    return getArticlesCache(userId);
+  }, [userId]);
   const { data: fetchedPlaylistData, isLoading, error } = useDefaultPlaylistItems();
   const playlistData = fetchedPlaylistData || cachedPlaylist;
   const removeFromPlaylistMutation = useRemoveFromPlaylistMutation();

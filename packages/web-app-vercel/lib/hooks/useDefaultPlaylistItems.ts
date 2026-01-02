@@ -31,10 +31,10 @@ export function useDefaultPlaylistItems() {
     });
 
     useEffect(() => {
-        if (query.data) {
-            setArticlesCache(query.data);
+        if (query.isSuccess && query.data && userEmail) {
+            setArticlesCache(userEmail, query.data);
         }
-    }, [query.data]);
+    }, [query.isSuccess, query.data, userEmail]);
 
     return query;
 }
