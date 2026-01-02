@@ -17,7 +17,7 @@ describe("useMediaSession", () => {
     playbackState: MediaSessionPlaybackState;
     setActionHandler: jest.Mock;
   };
-  
+
   const originalNavigator = global.navigator;
 
   beforeEach(() => {
@@ -112,6 +112,9 @@ describe("useMediaSession", () => {
     expect(mockMediaSession.setActionHandler).toHaveBeenCalledWith("nexttrack", expect.any(Function));
     expect(mockMediaSession.setActionHandler).toHaveBeenCalledWith("previoustrack", expect.any(Function));
     expect(mockMediaSession.setActionHandler).toHaveBeenCalledWith("stop", expect.any(Function));
+    expect(mockMediaSession.setActionHandler).toHaveBeenCalledWith("seekto", expect.any(Function));
+    expect(mockMediaSession.setActionHandler).toHaveBeenCalledWith("seekforward", expect.any(Function));
+    expect(mockMediaSession.setActionHandler).toHaveBeenCalledWith("seekbackward", expect.any(Function));
   });
 
   it("playアクションがトリガーされたとき、onPlayコールバックを呼び出すこと", () => {
@@ -171,6 +174,9 @@ describe("useMediaSession", () => {
     expect(mockMediaSession.setActionHandler).toHaveBeenCalledWith("nexttrack", null);
     expect(mockMediaSession.setActionHandler).toHaveBeenCalledWith("previoustrack", null);
     expect(mockMediaSession.setActionHandler).toHaveBeenCalledWith("stop", null);
+    expect(mockMediaSession.setActionHandler).toHaveBeenCalledWith("seekto", null);
+    expect(mockMediaSession.setActionHandler).toHaveBeenCalledWith("seekforward", null);
+    expect(mockMediaSession.setActionHandler).toHaveBeenCalledWith("seekbackward", null);
   });
 });
 
