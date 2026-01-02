@@ -23,6 +23,8 @@ import { Plus, RotateCcw } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import { STORAGE_KEYS } from "@/lib/constants";
 import type { PlaylistItemWithArticle } from "@/types/playlist";
+import { getArticlesCache } from "@/lib/local-cache";
+import { ArticleListSkeleton } from "@/components/ArticleListSkeleton";
 
 const ARTICLE_SORT_BY_OPTIONS = [
   "newest",
@@ -38,7 +40,9 @@ const HOME_SORT_KEY = STORAGE_KEYS.HOME_SORT;
 export default function Home() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: playlistData, isLoading, error } = useDefaultPlaylistItems();
+  const [cachedPlaylist] = useState(getArticlesCache);
+  const { data: fetchedPlaylistData, isLoading, error } = useDefaultPlaylistItems();
+  const playlistData = fetchedPlaylistData || cachedPlaylist;
   const removeFromPlaylistMutation = useRemoveFromPlaylistMutation();
 
   const [sortBy, setSortBy] = useState<ArticleSortBy>(() => {
@@ -208,11 +212,9 @@ export default function Home() {
           </div>
 
           {/* Content */}
-          {isLoading ? (
-            <div className="text-center py-12 text-zinc-500">
-              <p className="text-lg">読み込み中...</p>
-            </div>
-          ) : error ? (
+          {isLoading && !playlistData ? (
+            <ArticleListSkeleton />
+          ) : error && !playlistData ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">⚠️</div>
               <h3 className="text-xl font-semibold text-white mb-2">

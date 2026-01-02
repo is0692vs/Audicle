@@ -5,6 +5,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import dynamic from "next/dynamic";
 import ClientLayout from "./client-layout";
 import { DEFAULT_SETTINGS } from "@/types/settings";
+import { STORAGE_KEYS } from "@/lib/constants";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 
@@ -23,14 +24,24 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const THEME_STORAGE_KEY = "audicle-color-theme";
+
 
   return (
     <html lang="ja" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(() => { try { var theme = localStorage.getItem('${THEME_STORAGE_KEY}') || '${DEFAULT_SETTINGS.color_theme}'; document.documentElement.setAttribute('data-theme', theme); if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) { document.documentElement.classList.add('dark'); } } catch(e){} })();`,
+            __html: `
+              (function() {
+                try {
+                  const theme = localStorage.getItem('${STORAGE_KEYS.COLOR_THEME}') || '${DEFAULT_SETTINGS.color_theme}';
+                  document.documentElement.setAttribute('data-theme', theme);
+                  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.classList.add('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
           }}
         />
       </head>

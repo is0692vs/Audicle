@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
+import { setArticlesCache } from "@/lib/local-cache";
 import type { PlaylistWithItems } from "@/types/playlist";
 
 /**
@@ -11,7 +13,7 @@ export function useDefaultPlaylistItems() {
     const { data: session } = useSession();
     const userEmail = session?.user?.email;
 
-    return useQuery({
+    const query = useQuery({
         queryKey: ["defaultPlaylist", "items", userEmail],
         queryFn: async () => {
             const response = await fetch("/api/playlists/default");
@@ -27,4 +29,12 @@ export function useDefaultPlaylistItems() {
         },
         enabled: !!userEmail,
     });
+
+    useEffect(() => {
+        if (query.data) {
+            setArticlesCache(query.data);
+        }
+    }, [query.data]);
+
+    return query;
 }
