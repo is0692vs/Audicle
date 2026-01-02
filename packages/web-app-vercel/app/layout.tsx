@@ -39,7 +39,7 @@ export default function RootLayout({
                   if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                     document.documentElement.classList.add('dark');
                   }
-                } catch (e) {}
+                } catch (e) { console.warn('Failed to initialize theme from localStorage:', e); }
               })();
             `,
           }}
