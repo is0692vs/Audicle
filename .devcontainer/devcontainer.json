@@ -7,8 +7,7 @@
   "features": {
     "ghcr.io/devcontainers/features/python:1": {
       "version": "3.11"
-    },
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    }
   },
   "customizations": {
     "vscode": {
@@ -57,7 +56,10 @@
       }
     }
   },
-  "forwardPorts": [3000, 8000],
+  "forwardPorts": [
+    3000,
+    8000
+  ],
   "postCreateCommand": "bash .devcontainer/postCreateCommand.sh",
   "remoteUser": "vscode",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
